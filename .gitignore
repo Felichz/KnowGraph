@@ -1,0 +1,14 @@
+.env
+.env.local
+server/.env
+server/.env.local
+node_modules/
+dist/
+test-results/
+*.log
+server/node_modules/
+elevenlabs-tts-cache/
+tts-server*.log
+tts-*.wav
+first-react-card-segment*.wav
+__pycache__/
