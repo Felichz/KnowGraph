@@ -202,6 +202,40 @@ Diseñá una experiencia de aprendizaje para un grafo de conceptos técnicos. El
 
 Usá el controller como única fuente de verdad. La presentación puede convertir eventos de click, teclado, drag, hover o shortcuts en llamadas al controller, pero no debe mutar el snapshot ni inventar reglas. Si una decisión visual necesita datos nuevos, agregá un selector o un campo al contrato de lógica; no leas directamente módulos de storage o AI desde un componente.
 
+### Instrucciones específicas para Kimi K3
+
+Kimi K3 debe encargarse de dos tareas: pensar la experiencia visual completa y luego implementarla en React. Debe leer primero este documento, `README.md`, `src/logic/index.js`, `src/logic/learningController.js`, `src/logic/selectors.js` y los grafos antes de escribir componentes.
+
+El objetivo visual no es mostrar un dashboard genérico. Es comunicar una ruta de aprendizaje viva y hacer que el usuario entienda en todo momento:
+
+1. qué concepto está estudiando;
+2. cuál es el siguiente concepto recomendado y por qué;
+3. qué parte de su comprensión ya cubrió;
+4. qué feedback está llegando mientras evalúa su respuesta;
+5. qué es cobertura suficiente para completar el nodo;
+6. qué es profundidad opcional y excepcional.
+
+El score debe tener dos lecturas visuales claramente distintas:
+
+- `0–100`: cobertura conceptual. Llegar a 100 significa que la respuesta cubrió la superficie necesaria de la card y permite considerar el nodo completo.
+- `101–120`: excelencia opcional. No debe parecer una continuación obligatoria de la barra normal. Debe sentirse como una zona especial —por ejemplo, con un tratamiento dorado, brillo sutil o una transición celebratoria contenida— que comunique profundidad adicional sin generar ansiedad por no alcanzarla.
+
+La evaluación streaming debe diseñarse como una transición progresiva, no como un bloque que aparece de golpe. La UI debe poder mostrar skeletons inmediatamente, revelar primero las barras de cada rúbrica cuando llegan sus scores, derivar un score provisional claramente etiquetado y completar después las explicaciones textuales. El estado provisional nunca debe confundirse con un intento confirmado.
+
+La presentación puede implementar libremente layout, tipografía, color, animaciones, canvas/SVG, responsive design, microinteracciones, tooltips, accesibilidad y controles de audio. No puede cambiar las reglas de scoring, declarar completo un nodo por su cuenta, bloquear por prerequisitos ni llamar directamente a IndexedDB o al gateway.
+
+Antes de implementar, Kimi debe producir una propuesta breve que describa:
+
+- jerarquía visual de la pantalla principal;
+- tratamiento de grupos y filtros;
+- estados visuales de nodo pendiente, sugerido, activo, completo y excelente;
+- transición entre grafo, detalle y flashcards;
+- flujo de evaluación desde draft hasta feedback confirmado;
+- comportamiento responsive para escritorio y móvil;
+- estrategia de accesibilidad y reducción de movimiento.
+
+Después debe implementar esa propuesta consumiendo únicamente el controller y el snapshot. Si detecta que falta información para representar un estado importante, debe señalar el hueco y proponer una extensión pequeña del contrato antes de duplicar lógica en la UI.
+
 ## Validación
 
 Los comandos mínimos son:
