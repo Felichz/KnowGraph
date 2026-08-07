@@ -4,7 +4,7 @@
 
 Este proyecto separa el sistema de aprendizaje de su representación visual. La capa de lógica contiene el catálogo de grafos, reglas de navegación, progreso, drafts, intentos, scoring, evaluación con IA, streaming, audio y persistencia. La capa presentacional debe decidir cómo se ve todo: layout, componentes, CSS, animaciones, transiciones, accesibilidad visual y event handlers de UI.
 
-La implementación visual anterior fue retirada intencionalmente. El entrypoint de Vite no monta una interfaz: expone `window.learningGraphApi` para facilitar el trabajo de otra capa React o de cualquier consumidor compatible.
+La presentación visual original fue restaurada en `src/App.jsx` y `src/components/`. El núcleo headless sigue disponible para futuras iteraciones o para una presentación alternativa: el entrypoint actual monta la UI original y también puede exponer el controller desde una integración separada.
 
 ## Frontera de capas
 
@@ -247,4 +247,4 @@ npm run build
 npm run audit:react
 ```
 
-El build actual valida que el paquete headless pueda ser servido por Vite aunque todavía no exista una presentación visual montada.
+El build actual valida la presentación original y el núcleo headless. La guía sigue funcionando como contrato para cualquier rediseño futuro, pero la UI activa no está obligada a consumir todavía el controller.

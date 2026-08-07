@@ -1,9 +1,10 @@
-import { createLearningController, getGraph, listGraphs } from "./logic/index.js";
+import React from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App.jsx";
+import "./styles.css";
 
-// Este entrypoint es deliberadamente headless. La app visual que consuma la
-// API puede montarse en React, otra librería o una integración embebida.
-export { createLearningController, getGraph, listGraphs };
-
-if (typeof window !== "undefined") {
-  window.learningGraphApi = { createLearningController, getGraph, listGraphs };
-}
+createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
