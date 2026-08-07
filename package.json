@@ -8,17 +8,15 @@
     "build": "vite build",
     "preview": "vite preview",
     "audit:react": "node scripts/audit-react-graph.mjs",
+    "test:logic": "node tests/logic/learning-controller.mjs",
     "check": "npm run audit:react && npm run build"
   },
   "dependencies": {
-    "d3": "^7.9.0",
     "idb": "^8.0.0",
-    "mermaid": "^11.16.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^6.4.3"
   }
