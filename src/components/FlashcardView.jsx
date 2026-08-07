@@ -13,8 +13,9 @@ const FILTERS = [
 export function FlashcardView({ graph, onOpenNode }) {
   const [attempts, setAttempts] = useState([]);
   const [filter, setFilter] = useState("all");
-  const [flippedIds, setFlippedIds] = useState(() => new Set());
   const [spotlightId, setSpotlightId] = useState(null);
+  const [activeCardId, setActiveCardId] = useState(null);
+  const [modalFlipped, setModalFlipped] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,17 +49,19 @@ export function FlashcardView({ graph, onOpenNode }) {
   }, [bestByNode, filter, graph.nodes]);
 
   useEffect(() => {
-    setFlippedIds(new Set());
     setSpotlightId(null);
+    setActiveCardId(null);
+    setModalFlipped(false);
   }, [filter, graph.id]);
 
-  const toggleCard = useCallback((nodeId) => {
-    setFlippedIds((current) => {
-      const next = new Set(current);
-      if (next.has(nodeId)) next.delete(nodeId);
-      else next.add(nodeId);
-      return next;
-    });
+  const openCard = useCallback((nodeId) => {
+    setActiveCardId(nodeId);
+    setModalFlipped(false);
+  }, []);
+
+  const closeCard = useCallback(() => {
+    setActiveCardId(null);
+    setModalFlipped(false);
   }, []);
 
   const pickRandom = useCallback(() => {
@@ -67,6 +70,15 @@ export function FlashcardView({ graph, onOpenNode }) {
     setSpotlightId(card.node.id);
     document.getElementById(`flashcard-${card.node.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [cards]);
+
+  useEffect(() => {
+    if (!activeCardId) return undefined;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") closeCard();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeCardId, closeCard]);
 
   if (!cards.length) {
     return (
@@ -100,7 +112,6 @@ export function FlashcardView({ graph, onOpenNode }) {
 
       <div className="flashcards__grid">
         {cards.map(({ node, attempt }) => {
-          const isFlipped = flippedIds.has(node.id);
           const score = attempt ? getScoreView(attempt.evaluation) : null;
           const status = score?.status;
           return (
@@ -111,10 +122,9 @@ export function FlashcardView({ graph, onOpenNode }) {
             >
               <button
                 type="button"
-                className={`flashcard ${isFlipped ? "is-flipped" : ""}`}
-                onClick={() => toggleCard(node.id)}
-                aria-pressed={isFlipped}
-                aria-label={isFlipped ? "Voltear para ver el frente" : "Voltear para ver tu explicación"}
+                className="flashcard"
+                onClick={() => openCard(node.id)}
+                aria-label={`Abrir flashcard ampliada: ${node.label ?? node.title}`}
               >
                 <div className="flashcard__face flashcard__face--front">
                   <span className="flashcard__cat">{node.cat ?? ""}</span>
@@ -127,21 +137,7 @@ export function FlashcardView({ graph, onOpenNode }) {
                   <p className="flashcard__hint">Tocá para ver tu explicación</p>
                 </div>
 
-                <div className="flashcard__face flashcard__face--back">
-                  <span className="flashcard__cat">{node.cat ?? ""}</span>
-                  <h3 className="flashcard__title">{node.label ?? node.title}</h3>
-                  {attempt ? (
-                    <>
-                      <p className="flashcard__answer-label">Tu explicación evaluada:</p>
-                      <p className="flashcard__answer">{attempt.answer}</p>
-                      <p className={`flashcard__verdict flashcard__verdict--${status}`}>
-                        {score.displayScore}/120 · {STATUS_LABEL[status]} · {new Date(attempt.createdAt).toLocaleDateString("es-AR")}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="flashcard__empty">Todavía no escribiste una explicación para esta card. Abrila desde el grafo para completar la autoevaluación.</p>
-                  )}
-                </div>
+                <div className="flashcard__peek">Click para ampliar</div>
               </button>
               <button type="button" className="flashcard__open" onClick={() => onOpenNode?.(node)}>
                 Abrir card completa <span aria-hidden="true">↗</span>
@@ -150,6 +146,60 @@ export function FlashcardView({ graph, onOpenNode }) {
           );
         })}
       </div>
+
+      {activeCardId && (() => {
+        const active = cards.find(({ node }) => node.id === activeCardId);
+        if (!active) return null;
+        const { node, attempt } = active;
+        const score = attempt ? getScoreView(attempt.evaluation) : null;
+        const status = score?.status;
+        return (
+          <div className="flashcard-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCard(); }}>
+            <section className="flashcard-modal" role="dialog" aria-modal="true" aria-labelledby="flashcard-modal-title">
+              <header className="flashcard-modal__header">
+                <div>
+                  <span className="flashcard__cat">{node.cat ?? ""}</span>
+                  <h2 id="flashcard-modal-title">{node.label ?? node.title}</h2>
+                </div>
+                <button type="button" className="modal-close" onClick={closeCard} aria-label="Cerrar flashcard">×</button>
+              </header>
+
+              <div className={`flashcard-modal__body ${modalFlipped ? "is-flipped" : ""}`}>
+                {!modalFlipped ? (
+                  <div className="flashcard-modal__front">
+                    <span className="flashcard-modal__eyebrow">REPASO RÁPIDO</span>
+                    <p>Recordá el concepto con tus propias palabras. Luego podés abrir la card completa para estudiar toda la explicación.</p>
+                    {attempt && <span className={`flashcard__badge flashcard__badge--${status}`}>{score.displayScore}/120 · {STATUS_LABEL[status]}</span>}
+                  </div>
+                ) : (
+                  <div className="flashcard-modal__answer">
+                    <span className="flashcard-modal__eyebrow">TU EXPLICACIÓN EVALUADA</span>
+                    {attempt ? (
+                      <>
+                        <p className="flashcard-modal__long-answer">{attempt.answer}</p>
+                        <p className={`flashcard__verdict flashcard__verdict--${status}`}>
+                          {score.displayScore}/120 · {STATUS_LABEL[status]} · {new Date(attempt.createdAt).toLocaleDateString("es-AR")}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="flashcard__empty">Todavía no escribiste una explicación para esta card. Abrila desde el grafo y completá la autoevaluación.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <footer className="flashcard-modal__footer">
+                <button type="button" className="quiz-secondary-button" onClick={() => setModalFlipped((value) => !value)}>
+                  {modalFlipped ? "Ver frente" : "Ver mi explicación"}
+                </button>
+                <button type="button" className="quiz-primary-button" onClick={() => { closeCard(); onOpenNode?.(node); }}>
+                  Abrir card completa ↗
+                </button>
+              </footer>
+            </section>
+          </div>
+        );
+      })()}
     </div>
   );
 }

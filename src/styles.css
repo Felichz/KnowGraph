@@ -819,6 +819,90 @@ h1 { font-size: clamp(28px, 3.2vw, 42px); letter-spacing: -.04em; line-height: 1
 
 .flashcard__open span { float: right; color: #61dafb; font-size: 13px; }
 
+.flashcard__peek {
+  margin-top: auto;
+  color: #61dafb;
+  font: 700 10px "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.flashcard-modal-backdrop {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 4vw, 44px);
+  background: rgba(3, 5, 9, .82);
+  backdrop-filter: blur(10px);
+}
+
+.flashcard-modal {
+  display: flex;
+  width: min(760px, 100%);
+  max-height: min(760px, calc(100vh - 28px));
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, .3);
+  border-radius: 18px;
+  background: #10141d;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, .68), 0 0 0 1px rgba(255,255,255,.035);
+}
+
+.flashcard-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid #292e3a;
+  background: linear-gradient(120deg, rgba(97, 218, 251, .09), transparent 60%);
+}
+
+.flashcard-modal__header h2 {
+  margin: 8px 0 0;
+  color: #f5f1e8;
+  font-size: clamp(22px, 3vw, 32px);
+  letter-spacing: -.03em;
+  line-height: 1.12;
+}
+
+.flashcard-modal__body {
+  min-height: 280px;
+  overflow: auto;
+  padding: 30px 32px;
+  scrollbar-color: #465266 #11151d;
+  scrollbar-width: thin;
+}
+
+.flashcard-modal__body::-webkit-scrollbar { width: 10px; }
+.flashcard-modal__body::-webkit-scrollbar-track { background: #11151d; }
+.flashcard-modal__body::-webkit-scrollbar-thumb { border: 3px solid #11151d; border-radius: 999px; background: #465266; }
+.flashcard-modal__front,
+.flashcard-modal__answer { max-width: 660px; margin: 0 auto; }
+.flashcard-modal__front { padding: 28px 0; }
+.flashcard-modal__front p { color: #c9ccd6; font-size: 18px; line-height: 1.65; }
+.flashcard-modal__eyebrow { color: #61dafb; font: 700 10px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .13em; }
+.flashcard-modal__long-answer { margin: 14px 0 18px; color: #e7e5df; font-size: 16px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.flashcard-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 16px 24px;
+  border-top: 1px solid #292e3a;
+  background: #0d1017;
+}
+
+@media (max-width: 600px) {
+  .flashcard-modal-backdrop { align-items: end; padding: 0; }
+  .flashcard-modal { max-height: 94vh; border-radius: 17px 17px 0 0; }
+  .flashcard-modal__body { padding: 22px 18px; }
+  .flashcard-modal__footer { flex-direction: column-reverse; padding: 14px 18px 18px; }
+  .flashcard-modal__footer button { width: 100%; }
+}
+
 @media (max-width: 600px) {
   .flashcards__grid { grid-template-columns: 1fr; }
   .flashcard { height: 260px; }
