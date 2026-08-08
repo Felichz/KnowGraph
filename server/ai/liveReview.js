@@ -1,44 +1,63 @@
 import { z } from "zod";
 import { chatCompletion } from "./llmClient.js";
 import { parseStructuredResponse } from "./parse.js";
-import { buildEvaluationUserPayload } from "./schemas.js";
+import {
+  buildEvaluationUserPayload,
+  RUBRIC_MAX,
+  ScoreSummaryZod,
+} from "./schemas.js";
 import { normalizeLiveReview } from "./liveReviewContract.js";
 import { config } from "../config.js";
 
 const LIVE_REVIEW_TIMEOUT_MS = 45_000;
 
-const LivePointZod = z.object({
-  id: z.string().min(1).max(80),
-  status: z.enum(["covered", "partial", "missing"]),
+const LiveGapZod = z.object({
+  topic: z.string().min(1),
+  severity: z.enum(["high", "medium", "low"]),
+  explanation: z.string().min(1),
+  revisionHint: z.string().min(1),
 });
 
 export const LiveReviewZod = z.object({
-  points: z.array(LivePointZod).min(1).max(10),
+  scoreSummary: ScoreSummaryZod,
   hint: z.object({
     id: z.string().min(1).max(80),
     kind: z.enum(["gap", "refinement"]),
     label: z.string().min(1).max(140),
-    text: z.string().min(1).max(220),
+    text: z.string().min(1),
   }),
+  additionalGaps: z.array(LiveGapZod).max(8),
 });
+
+function rubricScoreJsonSchema(max) {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["score", "max"],
+    properties: {
+      score: { type: "number", minimum: 0, maximum: max },
+      max: { type: "integer", enum: [max] },
+    },
+  };
+}
 
 export const LiveReviewJsonSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["points", "hint"],
+  required: ["scoreSummary", "hint", "additionalGaps"],
   properties: {
-    // points va primero para que la UI pueda calcular la cobertura antes del gap textual.
-    points: {
-      type: "array",
-      minItems: 1,
-      maxItems: 10,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["id", "status"],
-        properties: {
-          id: { type: "string", minLength: 1, maxLength: 80 },
-          status: { type: "string", enum: ["covered", "partial", "missing"] },
+    scoreSummary: {
+      type: "object",
+      additionalProperties: false,
+      required: ["rubric"],
+      properties: {
+        rubric: {
+          type: "object",
+          additionalProperties: false,
+          required: ["accuracy", "causalityAndTradeoffs", "application", "completeness"],
+          properties: Object.fromEntries(
+            Object.entries(RUBRIC_MAX).map(([key, max]) => [key, rubricScoreJsonSchema(max)]),
+          ),
         },
       },
     },
@@ -50,32 +69,46 @@ export const LiveReviewJsonSchema = {
         id: { type: "string", minLength: 1, maxLength: 80 },
         kind: { type: "string", enum: ["gap", "refinement"] },
         label: { type: "string", minLength: 1, maxLength: 140 },
-        text: { type: "string", minLength: 1, maxLength: 220 },
+        text: { type: "string", minLength: 1 },
+      },
+    },
+    additionalGaps: {
+      type: "array",
+      maxItems: 8,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["topic", "severity", "explanation", "revisionHint"],
+        properties: {
+          topic: { type: "string", minLength: 1 },
+          severity: { type: "string", enum: ["high", "medium", "low"] },
+          explanation: { type: "string", minLength: 1 },
+          revisionHint: { type: "string", minLength: 1 },
+        },
       },
     },
   },
 };
 
 export const LIVE_REVIEW_SYSTEM_PROMPT = `
-Sos un coach de aprendizaje para un desarrollador que explica una card técnica.
+Sos un coach de aprendizaje para un desarrollador que explica una card tecnica.
 
-Revisá rápidamente el borrador contra la card proporcionada y evaluá exclusivamente su contenido.
-Construí un checklist corto de 3 a 10 ideas esenciales que la persona debería poder explicar.
-Cada punto solo necesita un id corto y un estado:
-- "covered" si aparece correctamente en el borrador.
-- "partial" si aparece pero falta una relación, consecuencia o precisión importante.
-- "missing" si todavía no aparece.
+Evaluá el borrador exclusivamente contra el contenido de la card proporcionada.
+Asigná los mismos cuatro subscores de la evaluación completa:
+- accuracy (0..40): identifica qué es el concepto y cómo funciona.
+- causalityAndTradeoffs (0..25): explica por qué importa, consecuencias, límites y errores.
+- application (0..20): conecta el concepto con un caso o decisión realista.
+- completeness (0..15): cubre las ideas esenciales de la card; no exige ejemplos explícitos.
 
-No devuelvas explicaciones, evidencia, fortalezas ni una lista de gaps.
-Devolvé únicamente "hint", un único texto breve para orientar al estudiante.
-Si falta una idea esencial, usá kind "gap", elegí el punto más prioritario y escribí qué concepto falta
-y qué aspecto concreto debería explicar el estudiante. Usá en hint.id exactamente el mismo id del punto elegido.
-No uses frases genéricas como "¿Qué idea esencial todavía falta explicar?".
-Si todos los puntos están cubiertos, usá kind "refinement" y sugerí un único trade-off o relación
-que valga la pena profundizar. Nunca devuelvas más de un hint.
+No generes un score total: el gateway lo calcula de forma determinista y lo transforma al rango visible 0..120.
+Después de scoreSummary, escribí un único hint principal. Si falta algo esencial, elegí el gap más prioritario.
+Si ya está cubierta la superficie, sugerí una sola mejora de profundidad o trade-off.
+El texto de hint.text no tiene límite de longitud: devolvé completo todo lo que escribas.
+Después del hint, devolvé additionalGaps con los demás gaps relevantes, sin repetir el hint principal.
+Los gaps secundarios no deben reemplazar ni retrasar el hint principal.
 
-Ordená el JSON así: primero "points" y después "hint".
-Devolvé únicamente JSON válido y respondé en español rioplatense claro.
+Orden obligatorio del JSON: scoreSummary, hint, additionalGaps.
+Devolvé únicamente JSON válido en español rioplatense claro.
 `.trim();
 
 export async function reviewLive({ node, learnerAnswer, contentHash, signal, onChunk, onSection }) {

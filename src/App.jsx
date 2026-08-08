@@ -1084,11 +1084,15 @@ function getStaticNodeLayout(graph, canvasWidth) {
   const maxNodesInLayer = Math.max(1, ...[...layers.values()].map((layer) => layer.length));
   const horizontalPadding = 150;
   const verticalPadding = 68;
-  const xGap = 142;
+  const xGap = maxLayer === 0
+    ? 0
+    : Math.max(154, Math.min(210, (canvasWidth - horizontalPadding * 2) / maxLayer));
   const yGap = maxNodesInLayer === 1
     ? 0
     : Math.max(64, Math.min(104, (HEIGHT - verticalPadding * 2) / (maxNodesInLayer - 1)));
   const layoutWidth = Math.max(canvasWidth, horizontalPadding * 2 + maxLayer * xGap);
+  const graphSpan = maxLayer * xGap;
+  const startX = Math.max(horizontalPadding, (layoutWidth - graphSpan) / 2);
 
   return {
     width: layoutWidth,
@@ -1098,7 +1102,7 @@ function getStaticNodeLayout(graph, canvasWidth) {
       const startY = Math.max(verticalPadding, (HEIGHT - totalHeight) / 2);
       return ordered.map((node, index) => ({
         ...node,
-        x: horizontalPadding + layer * xGap,
+        x: startX + layer * xGap,
         y: startY + index * yGap,
       }));
     }),
@@ -1689,7 +1693,7 @@ export default function App() {
   };
 
   return (
-    <main className="page">
+    <main className="page" data-graph={graphKey}>
       <header className="header">
         <div>
           <div className="eyebrow">ENTREVISTA · RUTA GUIADA</div>
@@ -1717,7 +1721,7 @@ export default function App() {
           const active = activeCats.has(key);
           const categoryNodes = graph.nodes.filter((node) => node.cat === key);
           const focused = activeCats.size === 1 && active;
-          return <button key={key} className={`category-chip ${focused ? "is-focused" : ""}`} onClick={() => focusCategory(key)} aria-pressed={focused} style={{ borderColor: active ? category.color : "#2A2E3A", opacity: active ? 1 : 0.42 }}>
+          return <button key={key} className={`category-chip ${focused ? "is-focused" : ""}`} onClick={() => focusCategory(key)} aria-pressed={focused} style={{ "--category-color": category.color, opacity: active ? 1 : 0.42 }}>
             <span className="category-dot" style={{ background: category.color }} />{category.label}<span className="category-count">{categoryNodes.filter((node) => checked.has(node.id)).length}/{categoryNodes.length}</span>
           </button>;
         })}
@@ -1934,14 +1938,26 @@ export default function App() {
       {selected && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeLesson(); }}>
         <section ref={lessonModalRef} className="lesson-modal" role="dialog" aria-modal="true" aria-labelledby="lesson-title" aria-describedby="lesson-summary" onKeyDown={keepFocusInsideLesson} style={{ "--lesson-color": graph.categories[selected.cat].color }}>
           <header className="lesson-header">
-            <div>
+            <div className="lesson-header-copy">
               <div className="lesson-kicker">{graph.categories[selected.cat].label} · PRIORIDAD #{selected.priority}</div>
+              <div className="lesson-title-row">
               <h2 id="lesson-title">{selected.label}</h2>
+              <div className={`lesson-header-score ${selectedScore?.isExtra ? "is-extra" : ""}`} aria-label={selectedScore ? `Score canónico ${selectedScore.displayScore} de ${selectedScore.displayMax}` : "Sin evaluación canónica"}>
+                <div className="lesson-header-score__topline">
+                  <span className="lesson-header-score__label">SCORE CANÓNICO</span>
+                  {selectedScore ? <><strong>{selectedScore.displayScore}</strong><span className="lesson-header-score__max">/{selectedScore.displayMax}</span></> : <span className="lesson-header-score__empty">SIN CHECKPOINT</span>}
+                </div>
+                <div className="lesson-header-score__track" aria-hidden="true">
+                  {selectedScore && <span style={{ width: `${Math.min(100, (selectedScore.displayScore / selectedScore.displayMax) * 100)}%` }} />}
+                </div>
+                <span className="lesson-header-score__detail">{selectedScore ? `${selectedScore.coveragePercent}% de cobertura · ${selectedScore.isExtra ? "excelencia extra" : "base"}` : "Evaluá tu draft cuando estés listo"}</span>
+              </div>
+              </div>
               <div className="lesson-status-row">
                 {ttsState.status === "loading" && ttsState.chunkCount > 0 && <span className="tts-source-state tts-progress-state">PARTE {ttsState.chunkIndex}/{ttsState.chunkCount}</span>}
                 {ttsState.status === "playing" && <span className="tts-source-state">PARTE {ttsState.chunkIndex}/{ttsState.chunkCount} · LECTURA DEL NAVEGADOR</span>}
                 {ttsState.status === "paused" && <span className="tts-source-state tts-paused-state">LECTURA EN PAUSA · PARTE {ttsState.chunkIndex}/{ttsState.chunkCount}</span>}
-                {checked.has(selected.id) ? <span className="status-badge completion-state">SUPERFICIE CUBIERTA 100%</span> : selectedCompletion ? <span className="unavailable-state">SCORE {selectedScore.displayScore}/120 · COBERTURA {selectedCompletion.percent}%</span> : guidance.levelById.has(selected.id) ? <span className={`status-badge guide-state-${guidance.levelById.get(selected.id)}`}>{guidance.levelById.get(selected.id) === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${guidance.levelById.get(selected.id)}`}</span> : missingSelectedPrerequisites.length ? <span className="unavailable-state">PRERREQUISITOS RECOMENDADOS</span> : <span className="unavailable-state">DISPONIBLE</span>}
+                {checked.has(selected.id) ? <span className="status-badge completion-state">SUPERFICIE CUBIERTA 100%</span> : selectedCompletion ? <span className="unavailable-state">CHECKPOINT · COBERTURA {selectedCompletion.percent}%</span> : guidance.levelById.has(selected.id) ? <span className={`status-badge guide-state-${guidance.levelById.get(selected.id)}`}>{guidance.levelById.get(selected.id) === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${guidance.levelById.get(selected.id)}`}</span> : missingSelectedPrerequisites.length ? <span className="unavailable-state">PRERREQUISITOS RECOMENDADOS</span> : <span className="unavailable-state">DISPONIBLE</span>}
                 <span className="lesson-close-hint">Esc para cerrar · clic afuera también</span>
               </div>
             </div>
@@ -1967,20 +1983,20 @@ export default function App() {
             </div>
           </header>
 
-          <nav className="lesson-view-tabs" aria-label="Vistas de la card">
-            <button type="button" className={lessonView === "read" ? "is-active" : ""} aria-current={lessonView === "read" ? "page" : undefined} onClick={() => { setActiveDeepDive(null); setLessonView("read"); }}>
+          <nav className="lesson-view-tabs" role="tablist" aria-label="Vistas de la card">
+            <button type="button" role="tab" className={lessonView === "read" ? "is-active" : ""} aria-selected={lessonView === "read"} onClick={() => { setActiveDeepDive(null); setLessonView("read"); }}>
               <span>01</span> Lectura
             </button>
-            <button type="button" className={lessonView === "coach" ? "is-active" : ""} aria-current={lessonView === "coach" ? "page" : undefined} onClick={() => { setActiveDeepDive(null); setLessonView("coach"); }}>
+            <button type="button" role="tab" className={lessonView === "coach" ? "is-active" : ""} aria-selected={lessonView === "coach"} onClick={() => { setActiveDeepDive(null); setLessonView("coach"); }}>
               <span>02</span> Coaching
             </button>
-            <button type="button" className={lessonView === "evaluate" ? "is-active" : ""} aria-current={lessonView === "evaluate" ? "page" : undefined} onClick={() => { setActiveDeepDive(null); setLessonView("evaluate"); }}>
+            <button type="button" role="tab" className={lessonView === "evaluate" ? "is-active" : ""} aria-selected={lessonView === "evaluate"} onClick={() => { setActiveDeepDive(null); setLessonView("evaluate"); }}>
               <span>03</span> Evaluar{selectedLatestAttempt ? " · checkpoint" : ""}
             </button>
           </nav>
 
-          <div className="lesson-layout">
-            <article className="lesson-content" onScroll={() => { if (activeDeepDive) setActiveDeepDive(null); }}>
+          <div className={`lesson-layout lesson-layout--${lessonView}`}>
+            <article className={`lesson-content lesson-content--${lessonView}`} aria-label={lessonView === "read" ? "Contenido de lectura" : lessonView === "coach" ? "Coaching de la explicación" : "Evaluación e historial"} onScroll={() => { if (activeDeepDive) setActiveDeepDive(null); }}>
               {lessonView === "read" && <>
               {ttsState.error && <div className="tts-error" role="alert">{ttsState.error}</div>}
               <section className="lesson-intro">
@@ -2020,12 +2036,12 @@ export default function App() {
                 <p>{selected.lesson.prompt}</p>
               </section>}
 
-              {selected.lesson.table && <section className={`lesson-section ${ttsState.activeSegmentId === "table" ? "tts-reading-section" : ""}`}>
+              {selected.lesson.table && <section className={`lesson-section lesson-table-section ${ttsState.activeSegmentId === "table" ? "tts-reading-section" : ""}`}>
                 <div className="lesson-section-heading"><div className="lesson-heading-copy"><span className="lesson-section-label">{selected.lesson.tableTitle ?? "MAPA RÁPIDO"}</span><span>{selected.lesson.tableLabel ?? "Relación entre conceptos"}</span></div>{speechSegmentIds.has("table") && <SectionAudioButton segmentId="table" active={ttsState.activeSegmentId === "table"} onClick={playSectionSpeech} />}</div>
                 <div className="lesson-table-wrap"><table className="lesson-table"><thead><tr>{selected.lesson.table.columns.map((column) => <th key={column}>{column}</th>)}</tr></thead><tbody>{selected.lesson.table.rows.map((row) => <tr key={row[0]}>{row.map((cell) => <td key={cell}>{cell}</td>)}</tr>)}</tbody></table></div>
               </section>}
 
-              {(selected.lesson.mermaid || selected.lesson.diagram) && <section className={`lesson-section ${ttsState.activeSegmentId === "diagram" ? "tts-reading-section" : ""}`}>
+              {(selected.lesson.mermaid || selected.lesson.diagram) && <section className={`lesson-section lesson-diagram-section ${ttsState.activeSegmentId === "diagram" ? "tts-reading-section" : ""}`}>
                 <div className="lesson-section-heading"><div className="lesson-heading-copy"><span className="lesson-section-label">DIAGRAMA</span><span>{selected.lesson.diagramTitle}</span></div>{speechSegmentIds.has("diagram") && <SectionAudioButton segmentId="diagram" active={ttsState.activeSegmentId === "diagram"} onClick={playSectionSpeech} />}</div>
                 {selected.lesson.mermaid ? <MermaidDiagram chart={selected.lesson.mermaid} /> : <div className="business-diagram">
                   {selected.lesson.diagram.map((item, index) => <React.Fragment key={`${item.label}-${index}`}>
@@ -2035,7 +2051,7 @@ export default function App() {
                 </div>}
               </section>}
 
-              <section className={`lesson-section ${ttsState.activeSegmentId === "example" ? "tts-reading-section" : ""}`}>
+              <section className={`lesson-section lesson-example-section ${ttsState.activeSegmentId === "example" ? "tts-reading-section" : ""}`}>
                 <div className="lesson-section-heading lesson-code-heading">
                   <div className="lesson-code-title"><span className="lesson-section-label">EJEMPLO</span><span>{selected.lesson.codeLabel}</span></div>
                   <div className="lesson-code-actions">

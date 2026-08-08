@@ -39,7 +39,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
   const textareaRef = useRef(null);
   const draftRef = useRef("");
   const initialLoadRef = useRef(true);
-  const skipNextLiveEffectRef = useRef(false);
+  const userEditedDraftRef = useRef(false);
   const liveControllerRef = useRef(null);
   const liveRequestRef = useRef(null);
   const pendingControllerRef = useRef(null);
@@ -69,7 +69,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
         && storedLiveReview.contentHash === contentHash
         ? storedLiveReview.review
         : null;
-      skipNextLiveEffectRef.current = true;
+      userEditedDraftRef.current = false;
       draftRef.current = initialText;
       setDraftState(initialText);
       setAttempts(list);
@@ -114,14 +114,15 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
     if (!textarea) return;
     const scroller = textarea.closest(".lesson-content");
     const scrollTop = scroller?.scrollTop;
-    textarea.style.height = "auto";
-    textarea.style.height = `${textarea.scrollHeight}px`;
+    textarea.style.height = "0px";
+    textarea.style.height = `${Math.max(textarea.scrollHeight, 190)}px`;
     if (scroller && Number.isFinite(scrollTop)) scroller.scrollTop = scrollTop;
-  }, [draft]);
+  }, [draft, viewMode]);
 
   const handleDraftChange = useCallback((event) => {
     const scroller = event.currentTarget.closest(".lesson-content");
     const scrollTop = scroller?.scrollTop;
+    userEditedDraftRef.current = true;
     setDraftState(event.target.value);
     if (scroller && Number.isFinite(scrollTop)) {
       requestAnimationFrame(() => {
@@ -157,10 +158,16 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
         signal: controller.signal,
         onSection: (field, value) => {
           if (liveRequestRef.current !== requestId) return;
-          if (field === "points") {
-            setLiveReview((previous) => buildLiveReviewState(value, previous?.hint ?? null));
+          if (field === "scoreSummary") {
+            setLiveReview((previous) => buildLiveReviewState(value, previous?.hint ?? null, previous?.additionalGaps ?? []));
           } else if (field === "hint") {
-            setLiveReview((previous) => previous ? { ...previous, hint: value, nextGapId: value?.kind === "gap" ? value.id : null } : previous);
+            setLiveReview((previous) => previous
+              ? { ...previous, hint: value, nextGapId: value?.kind === "gap" ? value.id : null }
+              : previous);
+          } else if (field === "additionalGaps") {
+            setLiveReview((previous) => previous
+              ? { ...previous, additionalGaps: Array.isArray(value) ? value : [] }
+              : previous);
           }
         },
         onProgress: () => {},
@@ -190,10 +197,10 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
 
   useEffect(() => {
     if (initialLoadRef.current) return undefined;
-    if (skipNextLiveEffectRef.current) {
-      skipNextLiveEffectRef.current = false;
+    if (!userEditedDraftRef.current) {
       return undefined;
     }
+    userEditedDraftRef.current = false;
     if (liveDebounceRef.current) clearTimeout(liveDebounceRef.current);
     liveControllerRef.current?.abort();
     liveRequestRef.current = null;
@@ -205,8 +212,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
     }
     setLiveStatus("waiting");
     // Mientras editás solo se actualiza el coaching liviano; el checkpoint completo es manual.
-    const currentAnswerKey = hashAnswer(draft.trim());
-    if (pendingControllerRef.current && pending?.answerKey !== currentAnswerKey) {
+    if (pendingControllerRef.current) {
       pendingControllerRef.current.abort();
     }
     const startedAt = Date.now();
@@ -222,7 +228,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
       if (liveDebounceRef.current) clearTimeout(liveDebounceRef.current);
       clearInterval(clock);
     };
-  }, [draft, pending, startLiveReview]);
+  }, [draft, startLiveReview]);
 
   const submitFullEvaluation = useCallback(async (answerOverride = draft, source = "manual") => {
     const answer = answerOverride.trim();
@@ -314,6 +320,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
 
   const startEdit = useCallback(async () => {
     const text = attempts[view.index]?.answer ?? "";
+    userEditedDraftRef.current = false;
     draftRef.current = text;
     setDraftState(text);
     await setDraft(graphId, node.id, text);
@@ -332,7 +339,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
   if (viewMode === "hidden") return null;
 
   return (
-    <section className="paraphrase-review" aria-labelledby="paraphrase-review-title">
+    <section className={`paraphrase-review paraphrase-review--${viewMode}`} aria-labelledby="paraphrase-review-title">
       {viewMode !== "evaluate" && <>
       <div className="paraphrase-review__head">
         <div>
@@ -379,11 +386,6 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
                       {charCount} caracteres{tooShort ? " · un poco corta" : ""}
                     </span>
                   </div>
-                  <div className="paraphrase-review__actions">
-                    <button type="button" className="quiz-secondary-button" onClick={() => submitFullEvaluation(draft, "manual")} disabled={!draft.trim() || Boolean(pending)}>
-                      {pending ? "Confirmando..." : "Forzar checkpoint completo"}
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -414,7 +416,12 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
             <span className="lesson-section-label">EVALUACIÓN COMPLETA</span>
             <h3 id="canonical-review-title">Score canónico y feedback profundo</h3>
           </div>
-          <span className="canonical-review__badge">CHECKPOINT</span>
+          <div className="canonical-review__header-actions">
+            <span className="canonical-review__badge">CHECKPOINT</span>
+            <button type="button" className="quiz-primary-button canonical-review__evaluate-button" onClick={() => submitFullEvaluation(draft, "manual")} disabled={!draft.trim() || Boolean(pending)}>
+              {pending ? "Procesando..." : "Procesar evaluación completa"}
+            </button>
+          </div>
         </header>
         {canonicalAttempt ? (
           <div className="paraphrase-review__result">

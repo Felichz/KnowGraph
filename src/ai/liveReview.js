@@ -1,19 +1,27 @@
-export function buildLiveReviewState(points = [], hint = null) {
-  const normalizedPoints = Array.isArray(points) ? points.map((point) => ({ ...point })) : [];
-  const covered = normalizedPoints.filter((point) => point.status === "covered").length;
-  const partial = normalizedPoints.filter((point) => point.status === "partial").length;
-  const total = normalizedPoints.length;
-  const coveragePercent = total > 0 ? Math.round(((covered + partial * 0.5) / total) * 100) : 0;
+import { displayScoreFromRaw } from "./types.js";
+
+const RUBRIC_KEYS = ["accuracy", "causalityAndTradeoffs", "application", "completeness"];
+
+export function buildLiveReviewState(scoreSummary = null, hint = null, additionalGaps = []) {
+  const rubric = scoreSummary?.rubric ?? null;
+  const hasScores = rubric && RUBRIC_KEYS.every((key) => Number.isFinite(Number(rubric[key]?.score)));
+  const rawScore = hasScores
+    ? RUBRIC_KEYS.reduce((sum, key) => sum + Number(rubric[key].score), 0)
+    : null;
+  const displayScore = rawScore === null ? null : displayScoreFromRaw(rawScore);
+  const completeness = rubric?.completeness;
+  const allEssentialCovered = Boolean(completeness && Number(completeness.score) >= Number(completeness.max));
 
   return {
-    points: normalizedPoints,
+    scoreSummary: scoreSummary ? { rubric } : null,
+    rawScore,
+    displayScore,
+    displayMax: 120,
+    isExtra: displayScore !== null && displayScore > 100,
     hint,
-    coveragePercent: Math.max(0, Math.min(100, coveragePercent)),
-    coveredCount: covered,
-    partialCount: partial,
-    missingCount: Math.max(0, total - covered - partial),
-    totalEssential: total,
-    allEssentialCovered: total > 0 && covered === total,
+    additionalGaps: Array.isArray(additionalGaps) ? additionalGaps : [],
+    coveragePercent: displayScore === null ? 0 : Math.min(100, displayScore),
+    allEssentialCovered,
     nextGapId: hint?.kind === "gap" ? hint.id : null,
   };
 }
