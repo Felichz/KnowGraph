@@ -1047,32 +1047,62 @@ const WIDTH = 1500;
 const HEIGHT = 980;
 
 // The classic map is a study surface, not an emergent data visualization.
-// Keep its coordinates deterministic so opening a graph never starts a force
-// simulation or moves every node while the browser is already rendering UI.
+// Keep its coordinates deterministic and derived from dependency depth so
+// opening a graph never starts a force simulation or moves every node while
+// the browser is already rendering UI.
 function getStaticNodeLayout(graph, canvasWidth) {
-  const ordered = [...graph.nodes].sort((a, b) => a.priority - b.priority);
-  const columns = ordered.length > 70 ? 12 : ordered.length > 38 ? 8 : 6;
-  const rows = Math.max(1, Math.ceil(ordered.length / columns));
-  const horizontalPadding = Math.min(170, Math.max(120, canvasWidth * 0.08));
-  const verticalPadding = 88;
-  const xGap = columns === 1
-    ? 0
-    : (canvasWidth - horizontalPadding * 2) / (columns - 1);
-  const yGap = rows === 1
-    ? 0
-    : Math.max(92, (HEIGHT - verticalPadding * 2) / (rows - 1));
-
-  return ordered.map((node, index) => {
-    const row = Math.floor(index / columns);
-    const column = index % columns;
-    // Snake rows keep consecutive concepts close while using the whole canvas.
-    const visualColumn = row % 2 === 0 ? column : columns - 1 - column;
-    return {
-      ...node,
-      x: horizontalPadding + visualColumn * xGap,
-      y: verticalPadding + row * yGap,
-    };
+  const nodeIds = new Set(graph.nodes.map((node) => node.id));
+  const prerequisites = new Map(graph.nodes.map((node) => [node.id, new Set()]));
+  graph.edges.forEach(([source, target]) => {
+    if (nodeIds.has(source) && nodeIds.has(target)) prerequisites.get(target).add(source);
   });
+
+  const depths = new Map();
+  const visiting = new Set();
+  const getDepth = (nodeId) => {
+    if (depths.has(nodeId)) return depths.get(nodeId);
+    // A cycle should not destroy the layout. Treat the repeated branch as a
+    // root-like continuation; the graph audit still remains responsible for
+    // reporting the invalid dependency.
+    if (visiting.has(nodeId)) return 0;
+    visiting.add(nodeId);
+    const depth = Math.max(0, ...[...prerequisites.get(nodeId)].map(getDepth)) + 1;
+    visiting.delete(nodeId);
+    depths.set(nodeId, depth);
+    return depth;
+  };
+
+  graph.nodes.forEach((node) => getDepth(node.id));
+  const layers = new Map();
+  graph.nodes.forEach((node) => {
+    const layer = depths.get(node.id) - 1;
+    if (!layers.has(layer)) layers.set(layer, []);
+    layers.get(layer).push(node);
+  });
+
+  const maxLayer = Math.max(0, ...layers.keys());
+  const maxNodesInLayer = Math.max(1, ...[...layers.values()].map((layer) => layer.length));
+  const horizontalPadding = 150;
+  const verticalPadding = 68;
+  const xGap = 142;
+  const yGap = maxNodesInLayer === 1
+    ? 0
+    : Math.max(64, Math.min(104, (HEIGHT - verticalPadding * 2) / (maxNodesInLayer - 1)));
+  const layoutWidth = Math.max(canvasWidth, horizontalPadding * 2 + maxLayer * xGap);
+
+  return {
+    width: layoutWidth,
+    nodes: [...layers.entries()].flatMap(([layer, layerNodes]) => {
+      const ordered = layerNodes.sort((a, b) => a.cat.localeCompare(b.cat) || a.priority - b.priority);
+      const totalHeight = (ordered.length - 1) * yGap;
+      const startY = Math.max(verticalPadding, (HEIGHT - totalHeight) / 2);
+      return ordered.map((node, index) => ({
+        ...node,
+        x: horizontalPadding + layer * xGap,
+        y: startY + index * yGap,
+      }));
+    }),
+  };
 }
 
 function getGuidance(nodes, checked, activeCats) {
@@ -1193,6 +1223,7 @@ export default function App() {
   const modalWasOpenRef = useRef(false);
   const simRef = useRef(null);
   const nodesRef = useRef([]);
+  const layoutWidthRef = useRef(WIDTH);
   const dragRef = useRef({ id: null, moved: false });
   const [, forceTick] = useState(0);
   const [graphKey, setGraphKey] = useState("rails");
@@ -1464,9 +1495,11 @@ export default function App() {
   }, [graphKey, graph]);
 
   useEffect(() => {
-    const nodes = getStaticNodeLayout(graph, canvasWidth);
+    const layout = getStaticNodeLayout(graph, canvasWidth);
+    const nodes = layout.nodes;
     const links = graph.edges.map(([source, target]) => ({ source, target }));
     nodesRef.current = nodes;
+    layoutWidthRef.current = layout.width;
     simRef.current = { links };
     forceTick((value) => value + 1);
   }, [canvasWidth, graph]);
@@ -1500,7 +1533,7 @@ export default function App() {
       if (Math.abs(dx) + Math.abs(dy) > 3) dragRef.current.moved = true;
       if (!dragRef.current.moved) return;
       const point = toSvgCoords(moveEvent.clientX, moveEvent.clientY);
-      node.x = Math.max(100, Math.min(canvasWidth - 100, point.x));
+      node.x = Math.max(100, Math.min(layoutWidthRef.current - 100, point.x));
       node.y = Math.max(60, Math.min(HEIGHT - 60, point.y));
       forceTick((value) => value + 1);
     };
@@ -1551,6 +1584,7 @@ export default function App() {
   // Refs update outside React's render cycle. During the one render between changing
   // graphs and creating the new simulation, never paint nodes from the previous graph.
   const nodes = nodesRef.current.filter((node) => graph.nodeIds.has(node.id) && graph.categories[node.cat]);
+  const graphWidth = Math.max(canvasWidth, layoutWidthRef.current);
   const links = (simRef.current?.links ?? []).filter((link) => {
     const sourceId = typeof link.source === "object" ? link.source.id : link.source;
     const targetId = typeof link.target === "object" ? link.target.id : link.target;
@@ -1759,12 +1793,12 @@ export default function App() {
         <div className="graph-area">
         <GraphViewTabs mode={graphView} onChange={setGraphView} />
         {graphView === "classic" ? (
-        <svg ref={svgRef} viewBox={`0 0 ${canvasWidth} ${HEIGHT}`} className="graph" onClick={(event) => { if (!event.target.closest(".node-group")) closeLesson(); }}>
+        <svg ref={svgRef} viewBox={`0 0 ${graphWidth} ${HEIGHT}`} className="graph" onClick={(event) => { if (!event.target.closest(".node-group")) closeLesson(); }}>
           <defs>
             <radialGradient id="bgGlow" cx="50%" cy="35%" r="75%"><stop offset="0%" stopColor="#161A24" /><stop offset="100%" stopColor="#0B0D13" /></radialGradient>
             <marker id="dependency-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#667080" /></marker>
           </defs>
-          <rect width={canvasWidth} height={HEIGHT} fill="url(#bgGlow)" />
+          <rect width={graphWidth} height={HEIGHT} fill="url(#bgGlow)" />
           <g transform={`translate(${transform.x},${transform.y}) scale(${transform.k})`}>
             <g className="seniority-territories" pointerEvents="none">
               {seniorityBoundaries.map((band) => (
