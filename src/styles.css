@@ -118,6 +118,7 @@ h1 { margin: 0; font-size: 26px; letter-spacing: -.01em; }
 .milestone-node-ring { animation: node-energy 2.4s ease-in-out infinite; pointer-events: none; }
 .excellence-aura { fill: none; stroke: #f5c451; stroke-width: 5px; stroke-opacity: .2; pointer-events: none; animation: excellence-aura 2.8s ease-in-out infinite; }
 .excellence-ring { fill: none; stroke: #f5c451; stroke-width: 1.5px; stroke-opacity: .7; stroke-dasharray: 4 7; pointer-events: none; animation: excellence-ring 3.4s linear infinite; }
+.excellence-border { stroke-opacity: .82; pointer-events: none; }
 .node-circle-excellence { filter: drop-shadow(0 0 5px rgba(245, 196, 81, .26)); }
 @keyframes energy-flow { to { stroke-dashoffset: -32; } }
 @keyframes seniority-energy-flow { to { stroke-dashoffset: -56; } }

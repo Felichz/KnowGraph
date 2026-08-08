@@ -1879,7 +1879,8 @@ export default function App() {
                 {hasExcellence && <circle r={radius + 11} className="excellence-aura" />}
                 {hasExcellence && <circle r={radius + 6} className="excellence-ring" />}
                 {guideLevel === 1 && <circle r={radius + 10} fill="none" stroke="#F5F1E8" strokeOpacity=".44" strokeWidth="2.5" className="primary-halo" />}
-                <circle className={`node-circle ${hasExcellence ? "node-circle-excellence" : ""}`} r={radius} fill={isChecked ? category.color : "#12141C"} stroke={isSelected ? "#F5F1E8" : hasExcellence ? "#F5C451" : category.color} strokeWidth={isSelected ? 2.8 : hasExcellence ? 1.9 : isChecked ? 1.5 : guideLevel === 1 ? 2.4 : 1.8} />
+                <circle className={`node-circle ${hasExcellence ? "node-circle-excellence" : ""}`} r={hasExcellence ? radius - 3 : radius} fill={isChecked ? category.color : "#12141C"} stroke={isSelected ? "#F5F1E8" : category.color} strokeWidth={isSelected ? 2.8 : isChecked ? 1.5 : guideLevel === 1 ? 2.4 : 1.8} />
+                {hasExcellence && <circle className="excellence-border" r={radius} fill="none" stroke="#F5C451" strokeWidth="1.8" />}
                 {isChecked && !isSelected && <path d="M -6 0 L -1.5 5 L 7 -6" stroke="#0B0D13" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />}
                 {isGuideBadgeAnchor && <text y={-radius - 8} textAnchor="middle" className={`guide-badge guide-badge-${guideLevel}`}>{guideLevel === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${guideLevel}`}</text>}
                 <text y={radius + 17} textAnchor="middle" className={`node-label ${isChecked ? "is-checked" : ""}`}>{mapLabel}</text>
