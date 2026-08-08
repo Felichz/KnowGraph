@@ -134,6 +134,10 @@ h1 { margin: 0; font-size: 26px; letter-spacing: -.01em; }
 .guide-badge-1 { fill: #f5f1e8; }
 .guide-badge-2 { fill: #e8a33d; }
 .guide-badge-3 { fill: #5aa9ff; }
+.node-hover-tooltip { filter: drop-shadow(0 8px 16px rgba(0,0,0,.38)); }
+.node-hover-tooltip rect { fill: #18202c; stroke: #61dafb; stroke-width: 1.2px; opacity: .98; }
+.node-hover-tooltip text { fill: #f5f1e8; font: 700 11px Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: -.01em; paint-order: stroke; stroke: #18202c; stroke-width: 2px; stroke-linejoin: round; }
+.node-hover-tooltip.is-above rect { stroke: #a78bfa; }
 .priority-badge, .status-badge { display: inline-block; border: 1px solid #303644; border-radius: 4px; padding: 4px 5px; color: #8a8f9c; font-size: 8.5px; letter-spacing: .04em; }
 .status-badge { border-color: #4ade80; color: #4ade80; }
 .guide-state-1 { border-color: #f5f1e8; color: #f5f1e8; }

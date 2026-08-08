@@ -1234,6 +1234,7 @@ export default function App() {
   const [latestAttemptsByNode, setLatestAttemptsByNode] = useState(() => new Map());
   const [activeCats, setActiveCats] = useState(() => new Set(Object.keys(GRAPH_CONFIGS.rails.categories)));
   const [selected, setSelected] = useState(null);
+  const [hoveredNodeId, setHoveredNodeId] = useState(null);
   const [lessonHistory, setLessonHistory] = useState([]);
   const [showCodeExplanation, setShowCodeExplanation] = useState(false);
   const [activeDeepDive, setActiveDeepDive] = useState(null);
@@ -1257,6 +1258,7 @@ export default function App() {
   const closeLesson = useCallback(() => {
     stopSpeech();
     setSelected(null);
+    setHoveredNodeId(null);
     setLessonHistory([]);
     setShowCodeExplanation(false);
     setActiveDeepDive(null);
@@ -1585,6 +1587,7 @@ export default function App() {
   // graphs and creating the new simulation, never paint nodes from the previous graph.
   const nodes = nodesRef.current.filter((node) => graph.nodeIds.has(node.id) && graph.categories[node.cat]);
   const graphWidth = Math.max(canvasWidth, layoutWidthRef.current);
+  const hoveredNode = hoveredNodeId ? nodes.find((node) => node.id === hoveredNodeId) : null;
   const links = (simRef.current?.links ?? []).filter((link) => {
     const sourceId = typeof link.source === "object" ? link.source.id : link.source;
     const targetId = typeof link.target === "object" ? link.target.id : link.target;
@@ -1856,8 +1859,9 @@ export default function App() {
               const radius = isSelected ? 29 : guideLevel === 1 ? 23 : guideLevel === 2 ? 19 : guideLevel === 3 ? 17 : 15;
               const nodeOpacity = !activeCats.has(node.cat) ? 0.12 : isChecked ? 0.74 : guideLevel ? 1 : 0.82;
               const mapLabel = node.label.length > 20 ? `${node.label.slice(0, 18)}…` : node.label;
+              const isGuideBadgeAnchor = guideLevel > 0 && guidance.levels[guideLevel - 1]?.[0]?.id === node.id;
               const nodeAccessibleLabel = `${node.label}. Prioridad ${node.priority}.${node.prerequisites.length ? ` Depende de ${node.prerequisites.map((id) => graph.nodes.find((item) => item.id === id)?.label).join(", ")}.` : " Punto de partida."}`;
-              return <g className={`node-group guide-node-${guideLevel} ${completedMilestone ? "milestone-node-complete" : inProgressMilestone ? "milestone-node-progress" : ""}`} key={node.id} transform={`translate(${node.x},${node.y})`} opacity={nodeOpacity} role="button" tabIndex={activeCats.has(node.cat) ? 0 : -1} aria-label={nodeAccessibleLabel} aria-pressed={isSelected} onPointerDown={onNodePointerDown(node)} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => {
+              return <g className={`node-group guide-node-${guideLevel} ${completedMilestone ? "milestone-node-complete" : inProgressMilestone ? "milestone-node-progress" : ""}`} key={node.id} transform={`translate(${node.x},${node.y})`} opacity={nodeOpacity} role="button" tabIndex={activeCats.has(node.cat) ? 0 : -1} aria-label={nodeAccessibleLabel} aria-pressed={isSelected} onPointerEnter={() => setHoveredNodeId(node.id)} onPointerLeave={() => setHoveredNodeId(null)} onFocus={() => setHoveredNodeId(node.id)} onBlur={() => setHoveredNodeId(null)} onPointerDown={onNodePointerDown(node)} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => {
                 if (event.key !== "Enter" && event.key !== " ") return;
                 event.preventDefault();
                 if (isSelected) closeLesson();
@@ -1869,10 +1873,21 @@ export default function App() {
                 {guideLevel === 1 && <circle r={radius + 10} fill="none" stroke="#F5F1E8" strokeOpacity=".44" strokeWidth="2.5" className="primary-halo" />}
                 <circle className="node-circle" r={radius} fill={isChecked ? category.color : "#12141C"} stroke={isSelected ? "#F5F1E8" : category.color} strokeWidth={isSelected ? 2.8 : isChecked ? 1.5 : guideLevel === 1 ? 2.4 : 1.8} />
                 {isChecked && !isSelected && <path d="M -6 0 L -1.5 5 L 7 -6" stroke="#0B0D13" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />}
-                {guideLevel > 0 && <text y={-radius - 8} textAnchor="middle" className={`guide-badge guide-badge-${guideLevel}`}>{guideLevel === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${guideLevel}`}</text>}
+                {isGuideBadgeAnchor && <text y={-radius - 8} textAnchor="middle" className={`guide-badge guide-badge-${guideLevel}`}>{guideLevel === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${guideLevel}`}</text>}
                 <text y={radius + 17} textAnchor="middle" className={`node-label ${isChecked ? "is-checked" : ""}`}>{mapLabel}</text>
               </g>;
             })}
+            {hoveredNode && (() => {
+              const radius = selected?.id === hoveredNode.id ? 29 : 15;
+              const tooltipWidth = Math.min(360, Math.max(150, hoveredNode.label.length * 7 + 28));
+              const tooltipX = Math.max(tooltipWidth / 2 + 12, Math.min(graphWidth - tooltipWidth / 2 - 12, hoveredNode.x));
+              const below = hoveredNode.y < HEIGHT - 125;
+              const tooltipY = below ? hoveredNode.y + radius + 38 : hoveredNode.y - radius - 25;
+              return <g className={`node-hover-tooltip ${below ? "is-below" : "is-above"}`} transform={`translate(${tooltipX},${tooltipY})`} pointerEvents="none">
+                <rect x={-tooltipWidth / 2} y="-16" width={tooltipWidth} height="25" rx="6" />
+                <text y="1" textAnchor="middle">{hoveredNode.label}</text>
+              </g>;
+            })()}
           </g>
         </svg>
         ) : graphView === "lanes" ? (
