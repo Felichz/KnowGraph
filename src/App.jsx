@@ -11,6 +11,10 @@ import { getInterviewQuestionPrerequisites } from "./reactQuiz";
 import { ParaphraseReview } from "./components/ParaphraseReview.jsx";
 import { FlashcardView } from "./components/FlashcardView.jsx";
 import { ViewModeToggle } from "./components/ViewModeToggle.jsx";
+import GraphLanesView from "./components/graphViews/GraphLanesView.jsx";
+import GraphRadialView from "./components/graphViews/GraphRadialView.jsx";
+import GraphPathView from "./components/graphViews/GraphPathView.jsx";
+import { GraphViewTabs } from "./components/graphViews/GraphViewTabs.jsx";
 import { listAllAttempts } from "./ai/learningStore.js";
 import { hashCardContent } from "./ai/contentHash.js";
 import { getCompletionView, getScoreView, isEvaluationSurfaceComplete } from "./ai/types.js";
@@ -1042,6 +1046,35 @@ const GRAPH_CONFIGS = {
 const WIDTH = 1500;
 const HEIGHT = 980;
 
+// The classic map is a study surface, not an emergent data visualization.
+// Keep its coordinates deterministic so opening a graph never starts a force
+// simulation or moves every node while the browser is already rendering UI.
+function getStaticNodeLayout(graph, canvasWidth) {
+  const ordered = [...graph.nodes].sort((a, b) => a.priority - b.priority);
+  const columns = ordered.length > 70 ? 12 : ordered.length > 38 ? 8 : 6;
+  const rows = Math.max(1, Math.ceil(ordered.length / columns));
+  const horizontalPadding = Math.min(170, Math.max(120, canvasWidth * 0.08));
+  const verticalPadding = 88;
+  const xGap = columns === 1
+    ? 0
+    : (canvasWidth - horizontalPadding * 2) / (columns - 1);
+  const yGap = rows === 1
+    ? 0
+    : Math.max(92, (HEIGHT - verticalPadding * 2) / (rows - 1));
+
+  return ordered.map((node, index) => {
+    const row = Math.floor(index / columns);
+    const column = index % columns;
+    // Snake rows keep consecutive concepts close while using the whole canvas.
+    const visualColumn = row % 2 === 0 ? column : columns - 1 - column;
+    return {
+      ...node,
+      x: horizontalPadding + visualColumn * xGap,
+      y: verticalPadding + row * yGap,
+    };
+  });
+}
+
 function getGuidance(nodes, checked, activeCats) {
   const known = new Set(checked);
   const levels = [];
@@ -1178,6 +1211,7 @@ export default function App() {
   const [ttsSpeed, setTtsSpeed] = useState(1);
   const [ttsState, setTtsState] = useState({ status: "idle", error: "", chunkIndex: 0, chunkCount: 0, activeSegmentId: "", paused: false });
   const [viewMode, setViewMode] = useState("graph"); // "graph" | "flashcards"
+  const [graphView, setGraphView] = useState("classic"); // "classic" | "lanes" | "radial" | "path"
   const ttsSpeechRef = useRef(null);
   const ttsSpeedRef = useRef(1);
   const ttsPlaybackRef = useRef({ segments: [], index: 0, generation: 0 });
@@ -1392,7 +1426,8 @@ export default function App() {
     const observer = new ResizeObserver(updateCanvasWidth);
     observer.observe(svgRef.current);
     return () => observer.disconnect();
-  }, []);
+    // El svg clásico se desmonta al cambiar de variante: reenganchar al volver.
+  }, [graphView]);
 
   useEffect(() => {
     setSelected(null);
@@ -1429,37 +1464,21 @@ export default function App() {
   }, [graphKey, graph]);
 
   useEffect(() => {
-    const nodes = graph.nodes.map((node) => ({ ...node, x: canvasWidth / 2 + (Math.random() - 0.5) * Math.min(500, canvasWidth * 0.34), y: HEIGHT / 2 + (Math.random() - 0.5) * 400 }));
+    const nodes = getStaticNodeLayout(graph, canvasWidth);
     const links = graph.edges.map(([source, target]) => ({ source, target }));
-    const seniorityByNodeId = new Map();
-    (graph.seniorityBands ?? []).forEach((band) => band.nodeIds.forEach((id) => seniorityByNodeId.set(id, band)));
     nodesRef.current = nodes;
-    const sim = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links).id((d) => d.id).distance(88).strength(0.5))
-      .force("charge", d3.forceManyBody().strength(-260))
-      .force("center", d3.forceCenter(canvasWidth / 2, HEIGHT / 2))
-      .force("seniorityX", d3.forceX((node) => (seniorityByNodeId.get(node.id)?.position.x ?? 0.5) * canvasWidth).strength(graph.seniorityBands ? 0.12 : 0))
-      .force("seniorityY", d3.forceY((node) => (seniorityByNodeId.get(node.id)?.position.y ?? 0.5) * HEIGHT).strength(graph.seniorityBands ? 0.12 : 0))
-      .force("collide", d3.forceCollide(48))
-      .on("tick", () => {
-        // Force simulations do not provide viewport bounds. Keep nodes and their
-        // labels inside the learning canvas as larger topic graphs settle.
-        nodes.forEach((node) => {
-          node.x = Math.max(140, Math.min(canvasWidth - 140, node.x));
-          node.y = Math.max(54, Math.min(HEIGHT - 54, node.y));
-        });
-        forceTick((value) => value + 1);
-      });
-    simRef.current = { sim, links };
-    return () => sim.stop();
+    simRef.current = { links };
+    forceTick((value) => value + 1);
   }, [canvasWidth, graph]);
 
   useEffect(() => {
+    if (!svgRef.current) return undefined;
     const svg = d3.select(svgRef.current);
     const zoom = d3.zoom().scaleExtent([0.4, 2.2]).on("zoom", (event) => setTransform(event.transform));
     svg.call(zoom);
     return () => svg.on(".zoom", null);
-  }, []);
+    // Mismo motivo: reenganchar el zoom cuando se vuelve a la vista clásica.
+  }, [graphView]);
 
   const toSvgCoords = (clientX, clientY) => {
     const point = svgRef.current.createSVGPoint();
@@ -1474,7 +1493,6 @@ export default function App() {
     if (event.button !== undefined && event.button !== 0) return;
     const nodeElement = event.currentTarget;
     dragRef.current = { id: node.id, moved: false };
-    simRef.current?.sim.alphaTarget(0.25).restart();
     const move = (moveEvent) => {
       if (dragRef.current.id !== node.id) return;
       const dx = moveEvent.clientX - event.clientX;
@@ -1482,11 +1500,11 @@ export default function App() {
       if (Math.abs(dx) + Math.abs(dy) > 3) dragRef.current.moved = true;
       if (!dragRef.current.moved) return;
       const point = toSvgCoords(moveEvent.clientX, moveEvent.clientY);
-      node.fx = point.x; node.fy = point.y;
+      node.x = Math.max(100, Math.min(canvasWidth - 100, point.x));
+      node.y = Math.max(60, Math.min(HEIGHT - 60, point.y));
       forceTick((value) => value + 1);
     };
     const finishPointer = (cancelled) => {
-      simRef.current?.sim.alphaTarget(0);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", cancel);
@@ -1521,7 +1539,7 @@ export default function App() {
 
   const switchGraph = (nextGraphKey) => {
     if (nextGraphKey === graphKey) return;
-    simRef.current?.sim.stop();
+    simRef.current?.sim?.stop?.();
     simRef.current = null;
     nodesRef.current = [];
     setSelected(null);
@@ -1590,6 +1608,24 @@ export default function App() {
   });
   const unlockedInterviewQuestions = interviewQuestionStates.filter((item) => item.missingNodes.length === 0).map((item) => item.question);
   const richText = (text, limit = 3) => <RichText text={text} nodeId={selected?.id} enabled={graphKey === "react"} onDeepDive={openDeepDive} activeDeepDiveKey={activeDeepDive?.triggerKey} limit={limit} />;
+
+  // Contexto compartido por las variantes del grafo (Carriles, Radial, Ruta).
+  const graphViewContext = {
+    graph,
+    checked,
+    latestAttemptsByNode,
+    activeCats,
+    guidance,
+    milestoneProgress,
+    seniorityProgress,
+    milestoneByNodeId,
+    seniorityByNodeId,
+  };
+  const toggleLessonNode = (node) => {
+    if (selected?.id === node.id) closeLesson();
+    else openLesson(node);
+  };
+
   return (
     <main className="page">
       <header className="header">
@@ -1720,6 +1756,9 @@ export default function App() {
             onOpenNode={(node) => { setViewMode("graph"); openLesson(node, false); }}
           />
         ) : (
+        <div className="graph-area">
+        <GraphViewTabs mode={graphView} onChange={setGraphView} />
+        {graphView === "classic" ? (
         <svg ref={svgRef} viewBox={`0 0 ${canvasWidth} ${HEIGHT}`} className="graph" onClick={(event) => { if (!event.target.closest(".node-group")) closeLesson(); }}>
           <defs>
             <radialGradient id="bgGlow" cx="50%" cy="35%" r="75%"><stop offset="0%" stopColor="#161A24" /><stop offset="100%" stopColor="#0B0D13" /></radialGradient>
@@ -1801,6 +1840,14 @@ export default function App() {
             })}
           </g>
         </svg>
+        ) : graphView === "lanes" ? (
+          <GraphLanesView context={graphViewContext} selected={selected} onToggleNode={toggleLessonNode} onBackgroundClick={closeLesson} />
+        ) : graphView === "radial" ? (
+          <GraphRadialView context={graphViewContext} selected={selected} onToggleNode={toggleLessonNode} onBackgroundClick={closeLesson} />
+        ) : (
+          <GraphPathView context={graphViewContext} selected={selected} onToggleNode={toggleLessonNode} onBackgroundClick={closeLesson} />
+        )}
+        </div>
         )}
 
       </section>

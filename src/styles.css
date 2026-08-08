@@ -907,3 +907,51 @@ h1 { font-size: clamp(28px, 3.2vw, 42px); letter-spacing: -.04em; line-height: 1
   .flashcards__grid { grid-template-columns: 1fr; }
   .flashcard { height: 260px; }
 }
+
+
+/* ── Variantes del grafo (Carriles / Radial / Ruta) ────────────────────── */
+
+.graph-area { flex: 1 1 auto; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+.graph-view-tabs { display: inline-flex; align-self: flex-start; border: 1px solid #303644; border-radius: 8px; overflow: hidden; background: #0e1118; }
+.graph-view-tabs__btn { border: none; background: transparent; color: #8f96a5; padding: 7px 14px; font: 700 10px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .03em; cursor: pointer; }
+.graph-view-tabs__btn:hover { color: #f5f1e8; }
+.graph-view-tabs__btn.is-active { background: #17222c; color: #61dafb; }
+.graph-view-tabs__btn:focus-visible { outline: 2px solid #61dafb; outline-offset: -2px; }
+
+.gv-node { cursor: pointer; outline: none; }
+.gv-node:focus-visible .gv-card { stroke: #61dafb; stroke-opacity: 1; }
+.gv-edge { fill: none; }
+.gv-bonus { fill: #e8a33d; font: 700 11px "JetBrains Mono", ui-monospace, monospace; pointer-events: none; }
+.gv-percent { fill: #8f96a5; font-size: 9px; pointer-events: none; }
+
+/* Carriles */
+.gv-lane-bg { fill: rgba(255,255,255,.015); stroke: var(--lane-color); stroke-opacity: .16; }
+.gv-lane-title { fill: var(--lane-color); font: 700 14px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .02em; }
+.gv-lane-progress { fill: #8f96a5; font-size: 11px; }
+.gv-card { fill: #12151e; stroke: var(--node-color); stroke-opacity: .45; stroke-width: 1.5; transition: stroke-opacity .15s ease; }
+.gv-node:hover .gv-card { stroke-opacity: 1; }
+.gv-card.is-checked { stroke-opacity: .9; fill: #151a25; }
+.gv-card.is-selected { stroke: #f5f1e8; stroke-opacity: 1; stroke-width: 2.4; }
+.gv-card-label { fill: #f5f1e8; font-size: 12.5px; pointer-events: none; }
+.gv-card-priority { fill: #667080; font-size: 10px; pointer-events: none; }
+
+/* Radial */
+.gv-sector-label { fill: var(--lane-color); font: 700 13px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .02em; }
+.gv-radial-label { fill: #c7cdd9; font-size: 11px; pointer-events: none; }
+.gv-hub-value { fill: #f5f1e8; font-size: 22px; font-weight: 700; }
+.gv-hub-label { fill: #8f96a5; font-size: 11px; }
+
+/* Ruta */
+.gv-road { fill: none; stroke: #232a38; stroke-width: 10; stroke-linecap: round; }
+.gv-road-done { fill: none; stroke: #4ade80; stroke-opacity: .5; stroke-width: 5; stroke-linecap: round; }
+.gv-road-next { fill: none; stroke: #f5f1e8; stroke-opacity: .45; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 2 10; }
+.gv-path-band { fill: var(--band-color); fill-opacity: .05; stroke: var(--band-color); stroke-opacity: .22; }
+.gv-path-band-label { fill: var(--band-color); font: 700 13px "JetBrains Mono", ui-monospace, monospace; }
+.gv-path-band-progress { fill: #8f96a5; font-size: 11px; }
+.gv-path-number { fill: #c7cdd9; font-size: 11px; font-weight: 600; pointer-events: none; }
+.gv-path-label { fill: #c7cdd9; font-size: 11.5px; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-card { transition: none; }
+}
