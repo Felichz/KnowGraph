@@ -1475,13 +1475,14 @@ export default function App() {
 
   useEffect(() => {
     if (!svgRef.current || typeof ResizeObserver === "undefined") return undefined;
+    const svgElement = svgRef.current;
     const updateCanvasWidth = () => {
-      const { width, height } = svgRef.current.getBoundingClientRect();
+      const { width, height } = svgElement.getBoundingClientRect();
       if (width > 0 && height > 0) setCanvasWidth(Math.max(WIDTH, Math.round((width / height) * HEIGHT)));
     };
     updateCanvasWidth();
     const observer = new ResizeObserver(updateCanvasWidth);
-    observer.observe(svgRef.current);
+    observer.observe(svgElement);
     return () => observer.disconnect();
     // El svg clásico se desmonta al cambiar de variante: reenganchar al volver.
   }, [graphView]);
@@ -1710,6 +1711,7 @@ export default function App() {
         </div>
       </header>
 
+      <section className="map-workspace" aria-label="Workspace de aprendizaje">
       <div className="graph-switcher" aria-label="Elegir grafo">
         {Object.values(GRAPH_CONFIGS).map((item) => <button key={item.id} className={`graph-switch ${item.id === graphKey ? "is-active" : ""}`} onClick={() => switchGraph(item.id)}>{item.label}</button>)}
         <ViewModeToggle mode={viewMode} onChange={setViewMode} />
@@ -1725,6 +1727,21 @@ export default function App() {
             <span className="category-dot" style={{ background: category.color }} />{category.label}<span className="category-count">{categoryNodes.filter((node) => checked.has(node.id)).length}/{categoryNodes.length}</span>
           </button>;
         })}
+      </div>
+
+      <div className="map-focus-strip" aria-label="Próximo desafío sugerido">
+        <div className="map-focus-strip__copy">
+          <span>PRÓXIMO DESAFÍO</span>
+          <strong>{primaryNext ? primaryNext.label : "Ruta completada"}</strong>
+        </div>
+        <span className="map-focus-strip__scope">
+          {activeCats.size === Object.keys(graph.categories).length
+            ? "Viendo la ruta completa"
+            : `Foco: ${[...activeCats].map((key) => graph.categories[key]?.label).filter(Boolean).join(", ")}`}
+        </span>
+        {primaryNext && <button type="button" onClick={() => openLesson(primaryNext)}>
+          Abrir card <span aria-hidden="true">→</span>
+        </button>}
       </div>
 
       {seniorityProgress.length > 0 && <section className="seniority-overview" aria-label="Mapa de seniority">
@@ -1934,6 +1951,7 @@ export default function App() {
         )}
 
       </section>
+      </section>
 
       {selected && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeLesson(); }}>
         <section ref={lessonModalRef} className="lesson-modal" role="dialog" aria-modal="true" aria-labelledby="lesson-title" aria-describedby="lesson-summary" onKeyDown={keepFocusInsideLesson} style={{ "--lesson-color": graph.categories[selected.cat].color }}>
@@ -1984,14 +2002,21 @@ export default function App() {
           </header>
 
           <nav className="lesson-view-tabs" role="tablist" aria-label="Vistas de la card">
+            <div className="lesson-view-tabs__heading" aria-hidden="true">
+              <span>RUTA DE ESTUDIO</span>
+              <strong>Del concepto al dominio</strong>
+            </div>
             <button type="button" role="tab" className={lessonView === "read" ? "is-active" : ""} aria-selected={lessonView === "read"} onClick={() => { setActiveDeepDive(null); setLessonView("read"); }}>
-              <span>01</span> Lectura
+              <span className="lesson-view-tabs__index">01</span>
+              <span className="lesson-view-tabs__copy"><strong>Lectura</strong><small>Entender el concepto</small></span>
             </button>
             <button type="button" role="tab" className={lessonView === "coach" ? "is-active" : ""} aria-selected={lessonView === "coach"} onClick={() => { setActiveDeepDive(null); setLessonView("coach"); }}>
-              <span>02</span> Coaching
+              <span className="lesson-view-tabs__index">02</span>
+              <span className="lesson-view-tabs__copy"><strong>Coaching</strong><small>Ensayar tu respuesta</small></span>
             </button>
             <button type="button" role="tab" className={lessonView === "evaluate" ? "is-active" : ""} aria-selected={lessonView === "evaluate"} onClick={() => { setActiveDeepDive(null); setLessonView("evaluate"); }}>
-              <span>03</span> Evaluar{selectedLatestAttempt ? " · checkpoint" : ""}
+              <span className="lesson-view-tabs__index">03</span>
+              <span className="lesson-view-tabs__copy"><strong>Evaluar{selectedLatestAttempt ? " · checkpoint" : ""}</strong><small>Confirmar dominio</small></span>
             </button>
           </nav>
 
