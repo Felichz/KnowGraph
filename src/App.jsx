@@ -1855,6 +1855,7 @@ export default function App() {
               const guideLevel = guidance.levelById.get(node.id) ?? 0;
               const radius = isSelected ? 29 : guideLevel === 1 ? 23 : guideLevel === 2 ? 19 : guideLevel === 3 ? 17 : 15;
               const nodeOpacity = !activeCats.has(node.cat) ? 0.12 : isChecked ? 0.74 : guideLevel ? 1 : 0.82;
+              const mapLabel = node.label.length > 20 ? `${node.label.slice(0, 18)}…` : node.label;
               const nodeAccessibleLabel = `${node.label}. Prioridad ${node.priority}.${node.prerequisites.length ? ` Depende de ${node.prerequisites.map((id) => graph.nodes.find((item) => item.id === id)?.label).join(", ")}.` : " Punto de partida."}`;
               return <g className={`node-group guide-node-${guideLevel} ${completedMilestone ? "milestone-node-complete" : inProgressMilestone ? "milestone-node-progress" : ""}`} key={node.id} transform={`translate(${node.x},${node.y})`} opacity={nodeOpacity} role="button" tabIndex={activeCats.has(node.cat) ? 0 : -1} aria-label={nodeAccessibleLabel} aria-pressed={isSelected} onPointerDown={onNodePointerDown(node)} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => {
                 if (event.key !== "Enter" && event.key !== " ") return;
@@ -1869,7 +1870,7 @@ export default function App() {
                 <circle className="node-circle" r={radius} fill={isChecked ? category.color : "#12141C"} stroke={isSelected ? "#F5F1E8" : category.color} strokeWidth={isSelected ? 2.8 : isChecked ? 1.5 : guideLevel === 1 ? 2.4 : 1.8} />
                 {isChecked && !isSelected && <path d="M -6 0 L -1.5 5 L 7 -6" stroke="#0B0D13" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />}
                 {guideLevel > 0 && <text y={-radius - 8} textAnchor="middle" className={`guide-badge guide-badge-${guideLevel}`}>{guideLevel === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${guideLevel}`}</text>}
-                <text y={radius + 17} textAnchor="middle" className={`node-label ${isChecked ? "is-checked" : ""}`}>{node.label.length > 26 ? `${node.label.slice(0, 24)}…` : node.label}</text>
+                <text y={radius + 17} textAnchor="middle" className={`node-label ${isChecked ? "is-checked" : ""}`}>{mapLabel}</text>
               </g>;
             })}
           </g>
