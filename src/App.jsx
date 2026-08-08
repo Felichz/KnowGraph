@@ -1588,6 +1588,11 @@ export default function App() {
   const nodes = nodesRef.current.filter((node) => graph.nodeIds.has(node.id) && graph.categories[node.cat]);
   const graphWidth = Math.max(canvasWidth, layoutWidthRef.current);
   const hoveredNode = hoveredNodeId ? nodes.find((node) => node.id === hoveredNodeId) : null;
+  const excellenceNodeIds = new Set(
+    [...latestAttemptsByNode.entries()]
+      .filter(([, attempt]) => getScoreView(attempt.evaluation)?.isExtra)
+      .map(([nodeId]) => nodeId),
+  );
   const links = (simRef.current?.links ?? []).filter((link) => {
     const sourceId = typeof link.source === "object" ? link.source.id : link.source;
     const targetId = typeof link.target === "object" ? link.target.id : link.target;
@@ -1860,6 +1865,7 @@ export default function App() {
               const nodeOpacity = !activeCats.has(node.cat) ? 0.12 : isChecked ? 0.74 : guideLevel ? 1 : 0.82;
               const mapLabel = node.label.length > 20 ? `${node.label.slice(0, 18)}…` : node.label;
               const isGuideBadgeAnchor = guideLevel > 0 && guidance.levels[guideLevel - 1]?.[0]?.id === node.id;
+              const hasExcellence = excellenceNodeIds.has(node.id);
               const nodeAccessibleLabel = `${node.label}. Prioridad ${node.priority}.${node.prerequisites.length ? ` Depende de ${node.prerequisites.map((id) => graph.nodes.find((item) => item.id === id)?.label).join(", ")}.` : " Punto de partida."}`;
               return <g className={`node-group guide-node-${guideLevel} ${completedMilestone ? "milestone-node-complete" : inProgressMilestone ? "milestone-node-progress" : ""}`} key={node.id} transform={`translate(${node.x},${node.y})`} opacity={nodeOpacity} role="button" tabIndex={activeCats.has(node.cat) ? 0 : -1} aria-label={nodeAccessibleLabel} aria-pressed={isSelected} onPointerEnter={() => setHoveredNodeId(node.id)} onPointerLeave={() => setHoveredNodeId(null)} onFocus={() => setHoveredNodeId(node.id)} onBlur={() => setHoveredNodeId(null)} onPointerDown={onNodePointerDown(node)} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => {
                 if (event.key !== "Enter" && event.key !== " ") return;
@@ -1870,8 +1876,10 @@ export default function App() {
               <title>{`${node.label} · prioridad ${node.priority}${node.prerequisites.length ? ` · depende de ${node.prerequisites.map((id) => graph.nodes.find((item) => item.id === id)?.label).join(", ")}` : " · punto de partida"}`}</title>
                 {isSelected && <circle r={36} fill="none" stroke={category.color} strokeOpacity=".22" strokeWidth="7" className="selected-halo" />}
                 {completedMilestone && <circle r={radius + 6} fill="none" stroke={milestone.color} strokeOpacity=".34" strokeWidth="1.5" className="milestone-node-ring" />}
+                {hasExcellence && <circle r={radius + 11} className="excellence-aura" />}
+                {hasExcellence && <circle r={radius + 6} className="excellence-ring" />}
                 {guideLevel === 1 && <circle r={radius + 10} fill="none" stroke="#F5F1E8" strokeOpacity=".44" strokeWidth="2.5" className="primary-halo" />}
-                <circle className="node-circle" r={radius} fill={isChecked ? category.color : "#12141C"} stroke={isSelected ? "#F5F1E8" : category.color} strokeWidth={isSelected ? 2.8 : isChecked ? 1.5 : guideLevel === 1 ? 2.4 : 1.8} />
+                <circle className={`node-circle ${hasExcellence ? "node-circle-excellence" : ""}`} r={radius} fill={isChecked ? category.color : "#12141C"} stroke={isSelected ? "#F5F1E8" : hasExcellence ? "#F5C451" : category.color} strokeWidth={isSelected ? 2.8 : hasExcellence ? 1.9 : isChecked ? 1.5 : guideLevel === 1 ? 2.4 : 1.8} />
                 {isChecked && !isSelected && <path d="M -6 0 L -1.5 5 L 7 -6" stroke="#0B0D13" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />}
                 {isGuideBadgeAnchor && <text y={-radius - 8} textAnchor="middle" className={`guide-badge guide-badge-${guideLevel}`}>{guideLevel === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${guideLevel}`}</text>}
                 <text y={radius + 17} textAnchor="middle" className={`node-label ${isChecked ? "is-checked" : ""}`}>{mapLabel}</text>

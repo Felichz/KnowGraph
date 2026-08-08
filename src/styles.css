@@ -116,11 +116,16 @@ h1 { margin: 0; font-size: 26px; letter-spacing: -.01em; }
 .milestone-energy-link { fill: none; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 16; stroke-opacity: .34; filter: none; animation: energy-flow 3.2s linear infinite; }
 .seniority-energy-link { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 8 22; stroke-opacity: .22; filter: none; animation: none; }
 .milestone-node-ring { animation: node-energy 2.4s ease-in-out infinite; pointer-events: none; }
+.excellence-aura { fill: none; stroke: #f5c451; stroke-width: 5px; stroke-opacity: .2; pointer-events: none; animation: excellence-aura 2.8s ease-in-out infinite; }
+.excellence-ring { fill: none; stroke: #f5c451; stroke-width: 1.5px; stroke-opacity: .7; stroke-dasharray: 4 7; pointer-events: none; animation: excellence-ring 3.4s linear infinite; }
+.node-circle-excellence { filter: drop-shadow(0 0 5px rgba(245, 196, 81, .26)); }
 @keyframes energy-flow { to { stroke-dashoffset: -32; } }
 @keyframes seniority-energy-flow { to { stroke-dashoffset: -56; } }
 @keyframes boundary-pulse { 50% { stroke-dashoffset: -19; opacity: .28; } }
 @keyframes seniority-territory-pulse { 50% { stroke-dashoffset: -34; stroke-opacity: .58; } }
 @keyframes node-energy { 50% { stroke-opacity: .12; transform: scale(1.12); } }
+@keyframes excellence-aura { 0%, 100% { stroke-opacity: .12; transform: scale(.98); } 50% { stroke-opacity: .34; transform: scale(1.08); } }
+@keyframes excellence-ring { to { stroke-dashoffset: -22; } }
 .node-circle { cursor: pointer; transition: r 160ms ease, stroke-width 160ms ease; }
 .node-group:focus { outline: none; }
 .node-group:focus-visible .node-circle { stroke: #fff; stroke-width: 3; filter: drop-shadow(0 0 6px rgba(245, 241, 232, .72)); }
@@ -382,7 +387,7 @@ button.flow-node:hover { border-color: var(--lesson-color); color: #f5f1e8; }
 @media (max-width: 600px) { .page { padding: 16px 12px 20px; } .progress-block { width: 100%; justify-content: space-between; } .progress-track { flex: 1; } h1 { font-size: 22px; } }
 @media (max-width: 600px) { .seniority-heading { flex-direction: column; gap: 7px; } .seniority-grid { display: flex; overflow-x: auto; padding: 0 0 8px; scroll-padding-left: 0; scroll-snap-type: x mandatory; } .seniority-card { flex: 0 0 min(82vw, 330px); scroll-snap-align: start; } .seniority-card > p { min-height: auto; } }
 @media (max-width: 600px) { .milestones-heading { flex-direction: column; gap: 5px; } .milestone-grid { display: flex; overflow-x: auto; padding-bottom: 7px; scroll-snap-type: x mandatory; } .milestone-card { flex: 0 0 min(78vw, 300px); scroll-snap-align: start; } .milestone-card p { min-height: auto; } }
-@media (prefers-reduced-motion: reduce) { .seniority-territory.is-complete path, .seniority-energy-link, .milestone-boundary.is-complete path, .milestone-energy-link, .milestone-node-ring, .selected-halo, .primary-halo { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .seniority-territory.is-complete path, .seniority-energy-link, .milestone-boundary.is-complete path, .milestone-energy-link, .milestone-node-ring, .excellence-aura, .excellence-ring, .selected-halo, .primary-halo { animation: none; } }
 
 /* ──────────── Paraphrase review ──────────── */
 .paraphrase-review { margin-top: 20px; border: 1px solid #2a2e3a; border-radius: 14px; padding: 20px 22px 24px; background: linear-gradient(165deg, #141823 0%, #10131b 100%); }
