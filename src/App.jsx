@@ -1234,6 +1234,7 @@ export default function App() {
   const [latestAttemptsByNode, setLatestAttemptsByNode] = useState(() => new Map());
   const [activeCats, setActiveCats] = useState(() => new Set(Object.keys(GRAPH_CONFIGS.rails.categories)));
   const [selected, setSelected] = useState(null);
+  const [lessonView, setLessonView] = useState("read"); // "read" | "coach" | "evaluate"
   const [hoveredNodeId, setHoveredNodeId] = useState(null);
   const [lessonHistory, setLessonHistory] = useState([]);
   const [showCodeExplanation, setShowCodeExplanation] = useState(false);
@@ -1258,6 +1259,7 @@ export default function App() {
   const closeLesson = useCallback(() => {
     stopSpeech();
     setSelected(null);
+    setLessonView("read");
     setHoveredNodeId(null);
     setLessonHistory([]);
     setShowCodeExplanation(false);
@@ -1270,6 +1272,7 @@ export default function App() {
     }
     if (selected?.id !== node.id) {
       stopSpeech();
+      setLessonView("read");
       setShowCodeExplanation(false);
       setActiveDeepDive(null);
     }
@@ -1280,6 +1283,7 @@ export default function App() {
   const goBack = useCallback(() => {
     if (!lessonHistory.length) return;
     stopSpeech();
+    setLessonView("read");
     setShowCodeExplanation(false);
     setActiveDeepDive(null);
     setSelected(lessonHistory[lessonHistory.length - 1]);
@@ -1421,6 +1425,21 @@ export default function App() {
 
   useEffect(() => {
     const isOpen = Boolean(selected);
+    let restoreScroll = () => {};
+    if (typeof document !== "undefined") {
+      const root = document.documentElement;
+      const body = document.body;
+      const previousRootOverflow = root.style.overflow;
+      const previousBodyOverflow = body.style.overflow;
+      if (isOpen) {
+        root.style.overflow = "hidden";
+        body.style.overflow = "hidden";
+        restoreScroll = () => {
+          root.style.overflow = previousRootOverflow;
+          body.style.overflow = previousBodyOverflow;
+        };
+      }
+    }
     if (isOpen && !modalWasOpenRef.current) {
       window.requestAnimationFrame(() => modalCloseRef.current?.focus());
     } else if (!isOpen && modalWasOpenRef.current) {
@@ -1429,6 +1448,7 @@ export default function App() {
       modalReturnFocusRef.current = null;
     }
     modalWasOpenRef.current = isOpen;
+    return restoreScroll;
   }, [selected]);
 
   const keepFocusInsideLesson = useCallback((event) => {
@@ -1947,8 +1967,21 @@ export default function App() {
             </div>
           </header>
 
+          <nav className="lesson-view-tabs" aria-label="Vistas de la card">
+            <button type="button" className={lessonView === "read" ? "is-active" : ""} aria-current={lessonView === "read" ? "page" : undefined} onClick={() => { setActiveDeepDive(null); setLessonView("read"); }}>
+              <span>01</span> Lectura
+            </button>
+            <button type="button" className={lessonView === "coach" ? "is-active" : ""} aria-current={lessonView === "coach" ? "page" : undefined} onClick={() => { setActiveDeepDive(null); setLessonView("coach"); }}>
+              <span>02</span> Coaching
+            </button>
+            <button type="button" className={lessonView === "evaluate" ? "is-active" : ""} aria-current={lessonView === "evaluate" ? "page" : undefined} onClick={() => { setActiveDeepDive(null); setLessonView("evaluate"); }}>
+              <span>03</span> Evaluar{selectedLatestAttempt ? " · checkpoint" : ""}
+            </button>
+          </nav>
+
           <div className="lesson-layout">
             <article className="lesson-content" onScroll={() => { if (activeDeepDive) setActiveDeepDive(null); }}>
+              {lessonView === "read" && <>
               {ttsState.error && <div className="tts-error" role="alert">{ttsState.error}</div>}
               <section className="lesson-intro">
                 <div className="lesson-section-heading"><span className="lesson-section-label">EN UNA FRASE</span>{speechSegmentIds.has("summary") && <SectionAudioButton segmentId="summary" active={ttsState.activeSegmentId === "summary"} onClick={playSectionSpeech} />}</div>
@@ -2027,16 +2060,21 @@ export default function App() {
 
               <section className={`lesson-takeaway ${ttsState.activeSegmentId === "takeaway" ? "tts-reading-section" : ""}`}><div className="lesson-section-heading"><span className="lesson-section-label">IDEA PARA RECORDAR</span>{speechSegmentIds.has("takeaway") && <SectionAudioButton segmentId="takeaway" active={ttsState.activeSegmentId === "takeaway"} onClick={playSectionSpeech} />}</div><p>{selected.lesson.takeaway}</p></section>
 
+              </>}
+
               <ParaphraseReview
                 graphId={graphKey}
                 node={selected}
+                viewMode={lessonView === "coach" ? "coach" : lessonView === "evaluate" ? "evaluate" : "hidden"}
                 onEvaluationSaved={handleEvaluationSaved}
+                onRequestCoach={() => setLessonView("coach")}
                 onNavigateBack={goBack}
                 onNavigateNext={nextFocusNode ? () => openLesson(nextFocusNode, true) : undefined}
                 hasPrevious={lessonHistory.length > 0}
                 hasNext={Boolean(nextFocusNode)}
               />
 
+              {lessonView === "read" && <>
               {selectedInterviewQuestions.length > 0 && <section className="lesson-interview-questions">
                 <details>
                   <summary><span>COBERTURA DE ENTREVISTA</span><strong>{unlockedInterviewQuestions.length}/{selectedInterviewQuestions.length} desbloqueadas</strong></summary>
@@ -2055,6 +2093,7 @@ export default function App() {
                 <p>Si necesitás repasar una pieza antes de continuar, abrila sin perder esta lección.</p>
                 <div>{selectedRelatedNodes.map((node) => <button key={node.id} className="related-link" onClick={() => openLesson(node, true)}>Abrir: {node.label} →</button>)}</div>
               </section>}
+              </>}
             </article>
 
             <aside className="lesson-aside">

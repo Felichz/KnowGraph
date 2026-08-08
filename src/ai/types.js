@@ -67,6 +67,15 @@ export function getScoreView(evaluation) {
   };
 }
 
+export function formatEvaluationDuration(durationMs) {
+  if (!Number.isFinite(durationMs) || durationMs < 0) return null;
+  const totalSeconds = durationMs / 1000;
+  if (totalSeconds < 60) return `${totalSeconds.toFixed(1)} s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  return `${minutes} min ${String(seconds).padStart(2, "0")} s`;
+}
+
 export function getCompletionView(evaluation) {
   const dimension = evaluation?.rubric?.completeness;
   const percent = dimension?.max > 0

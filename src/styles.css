@@ -384,6 +384,7 @@ button.flow-node:hover { border-color: var(--lesson-color); color: #f5f1e8; }
 @media (max-width: 760px) { .modal-backdrop { align-items: end; padding: 0; } .lesson-modal { max-height: 94vh; border-radius: 17px 17px 0 0; } .lesson-header { padding: 20px 18px 17px; } .lesson-header-actions { max-width: 48%; } .modal-back { max-width: 180px; } .lesson-layout { display: flex; flex-direction: column; } .lesson-content { padding: 20px 18px 24px; } .lesson-aside { border-top: 1px solid #292e3a; border-left: 0; padding: 18px; } .lesson-columns { grid-template-columns: 1fr; gap: 0; } .warning-section { border-top: 1px solid #292e3a; border-left: 0; padding-left: 0; } .lesson-summary { font-size: 17px; } .mermaid-diagram { min-height: 160px; padding: 10px; } .mermaid-diagram svg { max-height: 360px; } }
 @media (max-width: 760px) { .lesson-header-actions { max-width: 100%; flex-wrap: wrap; justify-content: flex-end; } .tts-button span { display: none; } }
 @media (max-width: 760px) { .deep-dive-popover, .deep-dive-popover.is-above { right: 12px; bottom: 12px; left: 12px !important; top: auto !important; width: auto; max-height: min(68vh, 520px); transform: none; } .lesson-interview-questions summary { align-items: flex-start; flex-direction: column; } .lesson-interview-questions summary strong { text-align: left; } }
+@media (max-width: 760px) { .mastery-workspace { grid-template-columns: 1fr; } .paraphrase-review__auto-badge { width: 100%; text-align: center; } }
 @media (max-width: 600px) { .lesson-quiz { padding: 14px; } .lesson-quiz-header { flex-direction: column; gap: 8px; } .quiz-options, .quiz-feedback { margin-left: 0; } .quiz-question-meta { margin-left: 0; } .quiz-result { width: 100%; margin-right: 0; } .quiz-actions > button { flex: 1 1 auto; } }
 @media (max-width: 600px) { .page { padding: 16px 12px 20px; } .progress-block { width: 100%; justify-content: space-between; } .progress-track { flex: 1; } h1 { font-size: 22px; } }
 @media (max-width: 600px) { .seniority-heading { flex-direction: column; gap: 7px; } .seniority-grid { display: flex; overflow-x: auto; padding: 0 0 8px; scroll-padding-left: 0; scroll-snap-type: x mandatory; } .seniority-card { flex: 0 0 min(82vw, 330px); scroll-snap-align: start; } .seniority-card > p { min-height: auto; } }
@@ -394,11 +395,33 @@ button.flow-node:hover { border-color: var(--lesson-color); color: #f5f1e8; }
 .paraphrase-review { margin-top: 20px; border: 1px solid #2a2e3a; border-radius: 14px; padding: 20px 22px 24px; background: linear-gradient(165deg, #141823 0%, #10131b 100%); }
 .paraphrase-review__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .paraphrase-review__head h3 { margin: 4px 0 0; color: #f5f1e8; font-size: 17px; letter-spacing: -.01em; }
+.paraphrase-review__auto-badge { border: 1px solid rgba(45, 212, 191, .35); border-radius: 999px; padding: 5px 8px; color: #5eead4; background: rgba(45, 212, 191, .07); font: 800 8px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .07em; }
 .paraphrase-review__intro { margin: 10px 0 14px; color: #8a8f9c; font-size: 12px; line-height: 1.5; }
+.mastery-workspace { display: flex; min-width: 0; flex-direction: column; gap: 14px; border: 1px solid #2a2e3a; border-radius: 14px; padding: 15px 17px 17px; background: #10151d; }
+.mastery-workspace__editor { display: flex; min-width: 0; flex-direction: column; gap: 10px; }
+.mastery-workspace > .live-review { position: sticky; z-index: 8; top: 0; margin: -15px -17px 0; border-bottom: 1px solid #27313c; padding: 15px 17px 12px; background: #10151d; box-shadow: 0 10px 18px rgba(16, 21, 29, .9); }
 .paraphrase-review__editor { display: flex; flex-direction: column; gap: 10px; }
-.paraphrase-review__textarea { width: 100%; min-height: 130px; resize: vertical; border: 1px solid #2f3441; border-radius: 9px; padding: 12px 14px; color: #e7e5df; background: #0d0f15; font: inherit; line-height: 1.5; }
+.paraphrase-review__rich-editor { min-height: 130px; overflow-y: auto; border: 1px solid #2f3441; border-radius: 9px; padding: 12px 14px; color: #e7e5df; background: #0d0f15; font: inherit; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.paraphrase-review__rich-editor:focus { outline: 2px solid #5aa9ff; outline-offset: 1px; border-color: transparent; }
+.paraphrase-review__rich-editor[data-empty="true"]::before { color: #596574; content: "Explicá qué es, cómo funciona, por qué importa y qué trade-offs tiene..."; pointer-events: none; }
+.paraphrase-review__editor-inline-hint { display: block; width: min(360px, 100%); margin: 18px 0 6px; padding: 13px 8px; color: #8295a6; background: linear-gradient(180deg, transparent, rgba(13, 15, 21, .92) 18%, rgba(13, 15, 21, .92) 82%, transparent); font-size: 12px; font-style: italic; line-height: 1.5; white-space: normal; }
+.paraphrase-review__editor-inline-hint::before, .paraphrase-review__editor-inline-hint::after { display: block; width: 28px; height: 1px; margin-bottom: 7px; background: rgba(130, 149, 166, .28); content: ""; }
+.paraphrase-review__editor-inline-hint::after { margin-top: 7px; margin-bottom: 0; opacity: .45; }
+.paraphrase-review__editor-inline-hint > span { display: block; margin-bottom: 3px; color: #5eead4; font: 800 8px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .1em; font-style: normal; }
+.paraphrase-review__editor-inline-hint.at-start { margin-top: 0; }
+.paraphrase-review__editor-inline-hint.at-end { margin-bottom: 0; }
+.paraphrase-review__editor-inline-hint.at-start::before { display: none; }
+.paraphrase-review__editor-inline-hint.at-end::after { display: none; }
+.paraphrase-review__editor-inline-hint.is-stale { opacity: .42; }
+.paraphrase-review__textarea { width: 100%; min-height: 130px; overflow: hidden; resize: none; border: 1px solid #2f3441; border-radius: 9px; padding: 12px 14px; color: #e7e5df; background: #0d0f15; font: inherit; line-height: 1.5; }
 .paraphrase-review__textarea:focus { outline: 2px solid #5aa9ff; outline-offset: 1px; border-color: transparent; }
-.paraphrase-review__editor-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.paraphrase-review__editor-bottom-dock { position: sticky; z-index: 7; bottom: 0; margin: 10px -17px -17px; border-top: 1px solid rgba(94, 234, 212, .22); padding: 0 17px; background: linear-gradient(180deg, rgba(16, 21, 29, .9), #10151d 16%); box-shadow: 0 -12px 24px rgba(16, 21, 29, .88); }
+.paraphrase-review__sticky-hint { display: block; margin: 0; padding: 12px 10px 8px; color: #8295a6; background: transparent; font-size: 12px; font-style: italic; line-height: 1.5; }
+.paraphrase-review__sticky-hint::before { display: block; width: 28px; height: 1px; margin-bottom: 7px; background: rgba(94, 234, 212, .5); content: ""; }
+.paraphrase-review__sticky-hint > span { display: block; margin-bottom: 3px; color: #5eead4; font: 800 8px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .1em; font-style: normal; }
+.paraphrase-review__sticky-hint.is-stale { opacity: .42; }
+.paraphrase-review__editor-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px 10px; flex-wrap: wrap; }
+.paraphrase-review__editor-meta { display: flex; align-items: center; gap: 9px; min-height: 25px; }
 .paraphrase-review__count { color: #5c6270; font: 11px "JetBrains Mono", ui-monospace, monospace; }
 .paraphrase-review__count.is-warn { color: #e8a33d; }
 .paraphrase-review__actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -413,6 +436,69 @@ button.flow-node:hover { border-color: var(--lesson-color); color: #f5f1e8; }
 .paraphrase-review__result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .spinner { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #2a2e3a; border-top-color: #5aa9ff; animation: spin 0.9s linear infinite; flex-shrink: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Coaching incremental mientras se escribe ── */
+.live-review { display: flex; min-width: 0; flex-direction: column; gap: 9px; padding: 0 0 12px; background: transparent; }
+.live-review.is-running { border-bottom-color: rgba(45, 212, 191, .62); }
+.live-review.is-complete { background: linear-gradient(90deg, rgba(74, 222, 128, .055), transparent 70%); }
+.live-review__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.live-review__header strong { display: block; margin-top: 4px; color: #aebbc8; font-size: 11px; font-weight: 500; }
+.live-review__connection { border: 1px solid #334153; border-radius: 999px; padding: 4px 6px; color: #8290a3; font: 800 7px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .06em; }
+.live-review__connection--running { border-color: rgba(45, 212, 191, .45); color: #5eead4; animation: live-pulse 1.7s ease-in-out infinite; }
+.live-review__connection--error { border-color: rgba(232, 115, 74, .45); color: #f0a184; }
+.live-review__status { margin: 0; color: #8b98a8; font-size: 10.5px; line-height: 1.45; }
+.live-review__score { display: flex; flex-direction: column; gap: 7px; padding: 1px 0; }
+.live-review__score > div:first-child { display: flex; align-items: baseline; gap: 8px; }
+.live-review__score-label { color: #7891a2; font: 800 8px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .08em; }
+.live-review__score strong { color: #5eead4; font: 800 20px "JetBrains Mono", ui-monospace, monospace; }
+.live-review__score-max { color: #718092; font: 9px "JetBrains Mono", ui-monospace, monospace; }
+.live-review__score-track { height: 7px; overflow: hidden; border-radius: 4px; background: #202936; }
+.live-review__score-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2dd4bf, #61dafb); transition: width .35s ease; }
+.live-review__counts { display: flex; flex-wrap: wrap; gap: 7px; color: #7b8796; font: 9px "JetBrains Mono", ui-monospace, monospace; }
+.live-review__counts .is-covered { color: #70d99a; }
+.live-review__counts .is-partial { color: #e8c269; }
+.live-review__counts .is-missing { color: #f08b76; }
+.live-review__headline { margin: 0; color: #cbd4df; font-size: 11px; line-height: 1.45; }
+.live-review__points { display: flex; flex-direction: column; gap: 6px; }
+.live-review__point { border: 1px solid #283442; border-left: 2px solid #667487; border-radius: 7px; padding: 8px 9px; background: rgba(17, 25, 34, .74); transition: border-color .2s, background .2s; }
+.live-review__point--covered { border-left-color: #46d889; }
+.live-review__point--partial { border-left-color: #e8b74d; }
+.live-review__point--missing { border-left-color: #e06f5c; }
+.live-review__point.is-active { border-color: #5eead4; background: rgba(45, 212, 191, .09); box-shadow: 0 0 0 1px rgba(45, 212, 191, .13); }
+.live-review__point-main { display: flex; align-items: flex-start; gap: 8px; }
+.live-review__point-icon { display: grid; flex: 0 0 auto; width: 17px; height: 17px; place-items: center; border: 1px solid currentColor; border-radius: 50%; font: 800 10px/1 "JetBrains Mono", ui-monospace, monospace; }
+.live-review__point--covered .live-review__point-icon { color: #70d99a; }
+.live-review__point--partial .live-review__point-icon { color: #e8c269; }
+.live-review__point--missing .live-review__point-icon { color: #f08b76; }
+.live-review__point-main strong { display: block; color: #e3e8ef; font-size: 11px; line-height: 1.3; }
+.live-review__point-main div > span { display: block; margin-top: 2px; color: #7d8999; font: 8px "JetBrains Mono", ui-monospace, monospace; text-transform: uppercase; }
+.live-review__evidence, .live-review__point-prompt { margin: 7px 0 0 25px; color: #91a0b0; font-size: 10px; line-height: 1.4; }
+.live-review__point-prompt { color: #d4bd78; }
+.live-review__focus { margin: 7px 0 0 25px; border: 1px solid #405363; border-radius: 5px; padding: 5px 7px; color: #a9d9d4; background: #17232b; font: 9px "JetBrains Mono", ui-monospace, monospace; cursor: pointer; }
+.live-review__focus:hover { border-color: #5eead4; color: #fff; }
+.live-review__next, .live-review__complete { border-radius: 7px; padding: 8px 9px; background: rgba(45, 212, 191, .08); }
+.live-review__next { border: 1px solid rgba(45, 212, 191, .28); }
+.live-review__next.is-active { border-color: #5eead4; background: rgba(45, 212, 191, .12); box-shadow: 0 0 0 1px rgba(45, 212, 191, .13); }
+.live-review__next span { color: #5eead4; font: 800 8px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .08em; }
+.live-review__next strong { display: block; margin-top: 5px; color: #f5f1e8; font-size: 12px; }
+.live-review__next p { margin: 5px 0 0; color: #d5e3e4; font-size: 10.5px; line-height: 1.45; }
+.live-review__complete { border: 1px solid rgba(74, 222, 128, .32); color: #9debb6; font-size: 10.5px; line-height: 1.4; }
+.live-review__finalizing, .live-review__checkpoint, .live-review__error { margin: 0; color: #8290a3; font: 9px/1.45 "JetBrains Mono", ui-monospace, monospace; }
+.live-review__finalizing { color: #d4bd78; }
+.live-review__checkpoint { color: #70d99a; }
+.live-review__error { color: #f0a184; }
+.live-review__skeleton { display: flex; flex-direction: column; gap: 8px; }
+.live-review__skeleton span { display: block; height: 28px; border-radius: 6px; background: linear-gradient(90deg, #17212b, #23313b, #17212b); background-size: 200% 100%; animation: live-skeleton 1.6s ease-in-out infinite; }
+.live-review__skeleton span:first-child { height: 52px; }
+@keyframes live-skeleton { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+@keyframes live-pulse { 50% { opacity: .5; } }
+.debounce-feedback { display: inline-flex; align-items: center; gap: 6px; color: #748393; font: 9px "JetBrains Mono", ui-monospace, monospace; }
+.debounce-feedback__ring { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; background: conic-gradient(#5eead4 var(--debounce-angle), #26333e 0); }
+.debounce-feedback__ring::before { grid-area: 1 / 1; width: 18px; height: 18px; border-radius: 50%; background: #10151d; content: ""; }
+.debounce-feedback__ring span { z-index: 1; grid-area: 1 / 1; color: #a8ddd7; font: 700 7px "JetBrains Mono", ui-monospace, monospace; }
+.live-request-feedback { display: inline-flex; align-items: center; gap: 6px; color: #5eead4; font: 800 9px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .02em; }
+.live-request-feedback__spinner { width: 24px; height: 24px; flex: 0 0 24px; border: 2px solid rgba(94, 234, 212, .18); border-top-color: #5eead4; border-right-color: rgba(97, 218, 251, .72); border-radius: 50%; animation: spin .85s linear infinite; }
+.live-request-feedback__detail { color: #718092; font-weight: 400; }
 
 /* ──────────── Evaluation feedback ──────────── */
 .feedback { display: flex; flex-direction: column; gap: 14px; border: 1px solid #2a2e3a; border-radius: 12px; padding: 16px 18px; background: #10131b; }
@@ -429,6 +515,7 @@ button.flow-node:hover { border-color: var(--lesson-color); color: #f5f1e8; }
 .feedback__status--developing { color: #e8a33d; background: rgba(232, 163, 61, .1); }
 .feedback__status--review { color: #cc342d; background: rgba(204, 52, 45, .1); }
 .feedback__counter { color: #8a8f9c; font: 10px "JetBrains Mono", ui-monospace, monospace; }
+.feedback__duration { color: #8a8f9c; font: 10px "JetBrains Mono", ui-monospace, monospace; align-self: center; }
 .feedback__stale { color: #e8a33d; background: rgba(232, 163, 61, .08); border: 1px solid rgba(232, 163, 61, .35); border-radius: 8px; padding: 8px 10px; font-size: 11px; }
 .feedback__section h4 { margin: 0 0 6px; color: #8a8f9c; font: 700 10px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; }
 .feedback__section ul { margin: 0; padding-left: 18px; color: #e7e5df; font-size: 13px; line-height: 1.5; }
@@ -484,6 +571,7 @@ button.flow-node:hover { border-color: var(--lesson-color); color: #f5f1e8; }
 .attempt-history__nav:disabled { opacity: 0.4; cursor: not-allowed; }
 .attempt-history__counter { color: #f5f1e8; font: 11px "JetBrains Mono", ui-monospace, monospace; flex: 1; text-align: center; }
 .attempt-history__date { display: block; color: #5c6270; font-size: 9px; }
+.attempt-history__duration { display: block; color: #8a8f9c; font-size: 9px; }
 .model-meta { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; color: #9aa6b8; font: 9px "JetBrains Mono", ui-monospace, monospace; }
 .model-meta__label { color: #61dafb; font-size: 8px; font-weight: 800; letter-spacing: .1em; }
 .model-meta code { overflow: hidden; color: #dbe4ef; text-overflow: ellipsis; white-space: nowrap; }
@@ -727,6 +815,100 @@ h1 { font-size: clamp(28px, 3.2vw, 42px); letter-spacing: -.04em; line-height: 1
 .lesson-content::-webkit-scrollbar-thumb:hover,
 .lesson-aside::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
+/* La lección es una superficie de trabajo completa; solo su contenido interno hace scroll. */
+.modal-backdrop { place-items: stretch; padding: 0; }
+.lesson-modal { width: 100%; max-width: none; height: 100dvh; max-height: none; border: 0; border-radius: 0; }
+.lesson-header { flex-shrink: 0; }
+.lesson-view-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 4px;
+  border-bottom: 1px solid #293342;
+  padding: 0 24px;
+  background: #0d1118;
+}
+.lesson-view-tabs button {
+  position: relative;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 13px 14px 11px;
+  color: #7f8b9b;
+  background: transparent;
+  font: 700 10px "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+.lesson-view-tabs button:hover { color: #e7e5df; background: rgba(255, 255, 255, .035); }
+.lesson-view-tabs button.is-active { border-bottom-color: var(--lesson-color); color: #f5f1e8; background: color-mix(in srgb, var(--lesson-color) 8%, transparent); }
+.lesson-view-tabs button span { margin-right: 7px; color: #5d6d7e; font-size: 8px; }
+.lesson-view-tabs button.is-active span { color: var(--lesson-color); }
+.lesson-layout { flex: 1; overflow: hidden; }
+.lesson-content { padding: 0 !important; }
+.paraphrase-review { margin-top: 0; padding-top: 0; padding-bottom: 0; }
+.mastery-workspace { gap: 0; padding-top: 0; padding-bottom: 0; }
+.mastery-workspace > .live-review { margin-top: 0; }
+.mastery-workspace__editor { padding-top: 14px; }
+.paraphrase-review__editor-bottom-dock { margin-bottom: 0; }
+.mastery-workspace > .live-review {
+  isolation: isolate;
+  background: #10151d !important;
+  opacity: 1;
+}
+.mastery-workspace,
+.mastery-workspace__editor,
+.live-review,
+.paraphrase-review__textarea {
+  overflow-anchor: none;
+}
+.canonical-review {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+  border: 1px solid #2a2e3a;
+  border-radius: 14px;
+  padding: 18px;
+  background: linear-gradient(165deg, #151a24 0%, #10131b 100%);
+}
+.canonical-review__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #293342;
+  padding-bottom: 12px;
+}
+.canonical-review__header h3 { margin: 4px 0 0; color: #f5f1e8; font-size: 17px; }
+.canonical-review__badge {
+  border: 1px solid rgba(245, 196, 81, .4);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #f5c451;
+  background: rgba(245, 196, 81, .08);
+  font: 800 8px "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: .08em;
+}
+.canonical-review__empty {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px dashed #354151;
+  border-radius: 10px;
+  padding: 16px;
+  color: #8b98a8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.canonical-review__empty strong { color: #dbe4ef; }
+
+@media (max-width: 600px) {
+  .lesson-view-tabs { overflow-x: auto; padding: 0 12px; scrollbar-width: none; }
+  .lesson-view-tabs::-webkit-scrollbar { display: none; }
+  .lesson-view-tabs button { flex: 1 0 auto; padding-inline: 10px; }
+}
+
 @media (max-width: 900px) {
   .page { padding-inline: 16px; }
   .header { align-items: stretch; }
@@ -903,6 +1085,7 @@ h1 { font-size: clamp(28px, 3.2vw, 42px); letter-spacing: -.04em; line-height: 1
 .flashcard-modal__front p { color: #c9ccd6; font-size: 18px; line-height: 1.65; }
 .flashcard-modal__eyebrow { color: #61dafb; font: 700 10px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .13em; }
 .flashcard-modal__long-answer { margin: 14px 0 18px; color: #e7e5df; font-size: 16px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
+.flashcard-modal__duration { margin: -6px 0 14px; color: #8a8f9c; font: 10px "JetBrains Mono", ui-monospace, monospace; }
 
 .flashcard-modal__footer {
   display: flex;

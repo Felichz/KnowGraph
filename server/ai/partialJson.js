@@ -10,6 +10,8 @@ const COMPLETABLE_FIELDS = new Set([
   "misconceptions",
   "nextAttemptPrompt",
   "conciseVerdict",
+  "points",
+  "hint",
 ]);
 
 export function extractCompletedFields(text, emitted = new Set()) {

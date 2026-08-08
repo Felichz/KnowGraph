@@ -37,7 +37,7 @@ export function ProgressLoader({
       </div>
       <div className="progress-loader__info">
         <span className="progress-loader__label">
-          {streamingChars > 0 ? `Generando feedback… (${streamingChars} chars)` : phaseLabel}
+          {streamingChars > 0 ? `Respuesta recibida… (${streamingChars} chars de salida)` : phaseLabel}
         </span>
         <span className="progress-loader__time">
           <strong>{seconds}s</strong>

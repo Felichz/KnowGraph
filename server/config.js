@@ -7,8 +7,9 @@ dotenv.config();
 const Schema = z.object({
   FREELLMAPI_BASE_URL: z.string().url(),
   FREELLMAPI_API_KEY: z.string().min(1),
-    LLM_EVALUATION_MODEL: z.string().min(1).default("auto:reliable"),
-    LLM_TUTOR_MODEL: z.string().min(1).default("auto:reliable"),
+  LLM_EVALUATION_MODEL: z.string().min(1).default("auto:reliable"),
+  LLM_TUTOR_MODEL: z.string().min(1).default("auto:reliable"),
+  LLM_LIVE_MODEL: z.string().min(1).default("auto:fastest"),
   GATEWAY_PORT: z.coerce.number().int().positive().default(4317),
   GATEWAY_HOST: z.string().min(1).default("127.0.0.1"),
 });
@@ -26,6 +27,7 @@ export const config = Object.freeze({
   freellmapiApiKey: parsed.data.FREELLMAPI_API_KEY,
   evaluationModel: parsed.data.LLM_EVALUATION_MODEL,
   tutorModel: parsed.data.LLM_TUTOR_MODEL,
+  liveModel: parsed.data.LLM_LIVE_MODEL,
   port: parsed.data.GATEWAY_PORT,
   host: parsed.data.GATEWAY_HOST,
 });

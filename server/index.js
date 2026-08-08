@@ -1,6 +1,7 @@
 import http from "node:http";
 import { config } from "./config.js";
 import { evaluateParaphrase } from "./ai/evaluator.js";
+import { reviewLive } from "./ai/liveReview.js";
 import { checkUpstream } from "./ai/llmClient.js";
 import { MAX_LEARNER_ANSWER_CHARS } from "./ai/schemas.js";
 import { GatewayError, ErrorCodes, jsonErrorResponse } from "./ai/errors.js";
@@ -31,6 +32,7 @@ const server = http.createServer(async (req, res) => {
         gateway: { configured: gatewayConfigured },
         evaluationModel: config.evaluationModel,
         tutorModel: config.tutorModel,
+        liveModel: config.liveModel,
         upstream: {
           url: config.freellmapiBaseUrl,
           reachable: upstream.reachable,
@@ -142,6 +144,58 @@ const server = http.createServer(async (req, res) => {
       } catch (e) {
         const { status, body } = jsonErrorResponse(e);
         writeEvent("error", { ...body, httpStatus: status });
+        res.end();
+      }
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/ai/live-review/stream") {
+      const body = await readJsonBody(req);
+      const { graphId, nodeId, answer, contentHash } = body ?? {};
+      if (!graphId || !nodeId || typeof answer !== "string" || !contentHash) {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, "Faltan campos: graphId, nodeId, answer, contentHash");
+      }
+      if (answer.length > MAX_LEARNER_ANSWER_CHARS) {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, `answer demasiado largo (max ${MAX_LEARNER_ANSWER_CHARS})`);
+      }
+      const { node } = body;
+      if (!node || typeof node !== "object") {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
+      }
+
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders?.();
+
+      const writeEvent = (type, data) => {
+        if (res.writableEnded) return;
+        res.write(`event: ${type}\n`);
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      };
+
+      const signal = reqAbortedSignal(req);
+      try {
+        writeEvent("progress", { stage: "live_review", length: 0 });
+        const result = await reviewLive({
+          node,
+          learnerAnswer: answer,
+          contentHash,
+          signal,
+          onChunk: (_delta, accumulated) => {
+            writeEvent("progress", { stage: "live_review", length: accumulated.length });
+          },
+          onSection: (field, value) => {
+            writeEvent("section", { field, value });
+          },
+        });
+        writeEvent("done", result);
+        res.end();
+      } catch (e) {
+        const { status, body: errorBody } = jsonErrorResponse(e);
+        writeEvent("error", { ...errorBody, httpStatus: status });
         res.end();
       }
       return;

@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { listAllAttempts } from "../ai/learningStore.js";
 import { getScoreView, STATUS_LABEL } from "../ai/types.js";
 import { ModelMeta } from "./ModelMeta.jsx";
+import { formatEvaluationDuration } from "../ai/types.js";
+import { selectRepresentativeAttempt } from "../ai/attemptSelection.js";
 
 const FILTERS = [
   { id: "all", label: "Todas" },
@@ -26,28 +28,27 @@ export function FlashcardView({ graph, onOpenNode }) {
     return () => { cancelled = true; };
   }, [graph.id]);
 
-  const bestByNode = useMemo(() => {
-    const map = new Map();
+  const representativeByNode = useMemo(() => {
+    const grouped = new Map();
     for (const attempt of attempts) {
-      const current = map.get(attempt.nodeId);
-      const score = getScoreView(attempt.evaluation);
-      const currentScore = current ? getScoreView(current.evaluation) : null;
-      if (!current || score.displayScore > currentScore.displayScore ||
-          (score.displayScore === currentScore.displayScore && attempt.createdAt > current.createdAt)) {
-        map.set(attempt.nodeId, attempt);
-      }
+      const nodeAttempts = grouped.get(attempt.nodeId) ?? [];
+      nodeAttempts.push(attempt);
+      grouped.set(attempt.nodeId, nodeAttempts);
     }
-    return map;
+    return new Map([...grouped].map(([nodeId, nodeAttempts]) => [
+      nodeId,
+      selectRepresentativeAttempt(nodeAttempts),
+    ]));
   }, [attempts]);
 
   const cards = useMemo(() => {
-    const list = (graph.nodes ?? []).map((node) => ({ node, attempt: bestByNode.get(node.id) ?? null }));
+    const list = (graph.nodes ?? []).map((node) => ({ node, attempt: representativeByNode.get(node.id) ?? null }));
     if (filter === "no-attempt") return list.filter((card) => !card.attempt);
     if (filter === "below-mastery") return list.filter((card) => card.attempt && !getScoreView(card.attempt.evaluation).isMastery);
     if (filter === "mastery") return list.filter((card) => card.attempt && getScoreView(card.attempt.evaluation).isMastery);
     if (filter === "extra") return list.filter((card) => card.attempt && getScoreView(card.attempt.evaluation).isExtra);
     return list;
-  }, [bestByNode, filter, graph.nodes]);
+  }, [representativeByNode, filter, graph.nodes]);
 
   useEffect(() => {
     setSpotlightId(null);
@@ -179,6 +180,9 @@ export function FlashcardView({ graph, onOpenNode }) {
                       <>
                         <p className="flashcard-modal__long-answer">{attempt.answer}</p>
                         <ModelMeta model={attempt.model} routedVia={attempt.routedVia} />
+                        {formatEvaluationDuration(attempt.durationMs) && (
+                          <p className="flashcard-modal__duration">Evaluación completa: {formatEvaluationDuration(attempt.durationMs)}</p>
+                        )}
                         <p className={`flashcard__verdict flashcard__verdict--${status}`}>
                           {score.displayScore}/120 · {STATUS_LABEL[status]} · {new Date(attempt.createdAt).toLocaleDateString("es-AR")}
                         </p>

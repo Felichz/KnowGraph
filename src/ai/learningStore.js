@@ -4,7 +4,7 @@ import { openDB } from "idb";
 const keyRange = typeof IDBKeyRange !== "undefined" ? IDBKeyRange : undefined;
 
 const DB_NAME = "learning-graph-ai";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const MAX_ATTEMPTS_PER_NODE = 12;
 
 let dbPromise;
@@ -19,6 +19,9 @@ function getDb() {
         }
         if (!db.objectStoreNames.contains("drafts")) {
           db.createObjectStore("drafts", { keyPath: "key" });
+        }
+        if (!db.objectStoreNames.contains("liveReviews")) {
+          db.createObjectStore("liveReviews", { keyPath: "key" });
         }
       },
     });
@@ -89,6 +92,24 @@ export async function setDraft(graphId, nodeId, text) {
 export async function deleteDraft(graphId, nodeId) {
   const db = await getDb();
   await db.delete("drafts", `${graphId}:${nodeId}`);
+}
+
+export async function getLiveReview(graphId, nodeId) {
+  const db = await getDb();
+  return (await db.get("liveReviews", `${graphId}:${nodeId}`)) ?? null;
+}
+
+export async function saveLiveReview({ graphId, nodeId, answerHash, contentHash, review }) {
+  const db = await getDb();
+  await db.put("liveReviews", {
+    key: `${graphId}:${nodeId}`,
+    graphId,
+    nodeId,
+    answerHash,
+    contentHash,
+    review,
+    updatedAt: new Date().toISOString(),
+  });
 }
 
 export async function listAllAttempts() {

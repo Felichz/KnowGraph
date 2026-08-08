@@ -1,9 +1,9 @@
 import React from "react";
 import { RubricBars } from "./RubricBars.jsx";
-import { getCompletionView, getScoreView, STATUS_LABEL, SEVERITY_LABEL } from "../ai/types.js";
+import { formatEvaluationDuration, getCompletionView, getScoreView, STATUS_LABEL, SEVERITY_LABEL } from "../ai/types.js";
 import { ModelMeta } from "./ModelMeta.jsx";
 
-export function EvaluationFeedback({ evaluation, attemptNumber, total, attemptContentHash, currentContentHash, model, routedVia }) {
+export function EvaluationFeedback({ evaluation, attemptNumber, total, attemptContentHash, currentContentHash, model, routedVia, durationMs }) {
   if (!evaluation) return null;
   const stale = Boolean(attemptContentHash && currentContentHash && attemptContentHash !== currentContentHash);
   const score = getScoreView(evaluation);
@@ -28,6 +28,9 @@ export function EvaluationFeedback({ evaluation, attemptNumber, total, attemptCo
           <div className="feedback__counter">Intento {attemptNumber} de {total}</div>
         )}
         <ModelMeta model={model} routedVia={routedVia} />
+        {formatEvaluationDuration(durationMs) && (
+          <span className="feedback__duration">Evaluación completa: {formatEvaluationDuration(durationMs)}</span>
+        )}
       </header>
 
       <ScoreMeter score={score} />
