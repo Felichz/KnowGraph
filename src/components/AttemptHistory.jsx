@@ -1,4 +1,5 @@
 import React from "react";
+import { ModelMeta } from "./ModelMeta.jsx";
 
 export function AttemptHistory({ attempts, viewIndex, onSelect, onBackToDraft }) {
   if (!attempts?.length) return null;
@@ -24,6 +25,7 @@ export function AttemptHistory({ attempts, viewIndex, onSelect, onBackToDraft })
         <span className="attempt-history__date">
           {new Date(current.createdAt).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" })}
         </span>
+        <ModelMeta model={current.model} routedVia={current.routedVia} />
       </span>
       <button
         type="button"

@@ -281,6 +281,8 @@ export function ParaphraseReview({ graphId, node, onEvaluationSaved, onNavigateB
             total={attempts.length}
             attemptContentHash={currentAttempt.contentHash}
             currentContentHash={contentHash}
+            model={currentAttempt.model}
+            routedVia={currentAttempt.routedVia}
           />
           <p className="paraphrase-review__answer-label">Tu explicación en este intento:</p>
           <blockquote className="paraphrase-review__answer">{currentAttempt.answer}</blockquote>

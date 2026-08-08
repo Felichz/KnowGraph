@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { listAllAttempts } from "../ai/learningStore.js";
 import { getScoreView, STATUS_LABEL } from "../ai/types.js";
+import { ModelMeta } from "./ModelMeta.jsx";
 
 const FILTERS = [
   { id: "all", label: "Todas" },
@@ -177,6 +178,7 @@ export function FlashcardView({ graph, onOpenNode }) {
                     {attempt ? (
                       <>
                         <p className="flashcard-modal__long-answer">{attempt.answer}</p>
+                        <ModelMeta model={attempt.model} routedVia={attempt.routedVia} />
                         <p className={`flashcard__verdict flashcard__verdict--${status}`}>
                           {score.displayScore}/120 · {STATUS_LABEL[status]} · {new Date(attempt.createdAt).toLocaleDateString("es-AR")}
                         </p>
