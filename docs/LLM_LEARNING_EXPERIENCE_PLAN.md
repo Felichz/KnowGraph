@@ -86,8 +86,8 @@ src/components/
 ```dotenv
 FREELLMAPI_BASE_URL=http://127.0.0.1:31415/v1
 FREELLMAPI_API_KEY=freellmapi-...
-LLM_EVALUATION_MODEL=auto:fastest
-LLM_TUTOR_MODEL=auto:fastest
+LLM_EVALUATION_MODEL=auto:reliable
+LLM_TUTOR_MODEL=auto:reliable
 GATEWAY_PORT=4317
 GATEWAY_HOST=127.0.0.1
 ```
@@ -118,7 +118,7 @@ Si la app se expone por túnel, el gateway queda accesible públicamente. Opcion
   answer: string,             // paraphrase del usuario
   contentHash: string,        // hash estable del contenido de la card
   evaluatorVersion: "v1",
-  model: string,              // "auto:fastest"
+  model: string,              // "auto:reliable"
   evaluation: {
     score: number,            // 0..100, COMPUTADO en el gateway
     status: "strong" | "developing" | "review",
@@ -170,7 +170,7 @@ Content-Type: application/json
   "attempt": {
     "id": "attempt_...",
     "createdAt": "2026-08-06T20:00:00.000Z",
-    "model": "auto:fastest",
+    "model": "auto:reliable",
     "routedVia": "provider/model",
     "contentHash": "sha256:...",
     "evaluatorVersion": "v1",
@@ -359,7 +359,7 @@ Cada uno tiene mensaje user-facing en español y HTTP status:
 
 ## 13. Decisiones tomadas
 
-- **Modelo**: empezar con `auto:fastest` para reducir la latencia. Probar otros modelos después con prompts reales.
+- **Modelo**: empezar con `auto:reliable` para priorizar respuestas consistentes. Probar otros modelos después con prompts reales.
 - **Search**: fuera de v1.
 - **Persistencia**: IndexedDB via `idb`.
 - **Frontend**: vanilla `idb` (no Dexie) para mantener dependencias chicas.
@@ -377,6 +377,6 @@ Cada uno tiene mensaje user-facing en español y HTTP status:
 ## 15. Decisiones que requieren confirmación
 
 1. **Token**: rotar el token actual (estuvo expuesto en chat) y configurar el nuevo en `server/.env`.
-2. **Modelo**: aceptar `auto:fastest` y revisar después.
+2. **Modelo**: aceptar `auto:reliable` y revisar después.
 3. **Search provider** (v2): Brave vs SearXNG.
 4. **ngrok**: gateway solo en 127.0.0.1 resuelve el caso más común.
