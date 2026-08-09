@@ -11,6 +11,7 @@ export function buildLiveReviewState(scoreSummary = null, hint = null, additiona
   const displayScore = rawScore === null ? null : displayScoreFromRaw(rawScore);
   const completeness = rubric?.completeness;
   const allEssentialCovered = Boolean(completeness && Number(completeness.score) >= Number(completeness.max));
+  const normalizedHint = normalizeHint(hint);
 
   return {
     scoreSummary: scoreSummary ? { rubric } : null,
@@ -18,10 +19,22 @@ export function buildLiveReviewState(scoreSummary = null, hint = null, additiona
     displayScore,
     displayMax: 120,
     isExtra: displayScore !== null && displayScore > 100,
-    hint,
+    hint: normalizedHint,
     additionalGaps: Array.isArray(additionalGaps) ? additionalGaps : [],
     coveragePercent: displayScore === null ? 0 : Math.min(100, displayScore),
     allEssentialCovered,
-    nextGapId: hint?.kind === "gap" ? hint.id : null,
+    nextGapId: normalizedHint?.kind === "gap" ? normalizedHint.id : null,
   };
+}
+
+export function normalizeLiveReviewState(review) {
+  if (!review) return null;
+  return { ...review, hint: normalizeHint(review.hint) };
+}
+
+function normalizeHint(hint) {
+  if (!hint) return null;
+  const text = String(hint.text ?? "").trim();
+  const detail = String(hint.detail ?? "").trim() || text;
+  return { ...hint, text, detail };
 }

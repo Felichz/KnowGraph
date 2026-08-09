@@ -9,7 +9,7 @@ import {
   saveLiveReview,
 } from "../ai/learningStore.js";
 import { hashAnswer, hashCardContent } from "../ai/contentHash.js";
-import { buildLiveReviewState } from "../ai/liveReview.js";
+import { buildLiveReviewState, normalizeLiveReviewState } from "../ai/liveReview.js";
 import { getCompletionView, getScoreView, isEvaluationSurfaceComplete } from "../ai/types.js";
 import { EvaluationFeedback } from "./EvaluationFeedback.jsx";
 import { AttemptHistory } from "./AttemptHistory.jsx";
@@ -76,7 +76,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
       setLastCheckpoint(list.at(-1) ?? null);
       setView({ mode: "draft" });
       setLiveStatus(reusableLiveReview ? "ready" : "idle");
-      setLiveReview(reusableLiveReview);
+      setLiveReview(normalizeLiveReviewState(reusableLiveReview));
       setLiveError(null);
       setError(null);
       setPending(null);
@@ -373,10 +373,10 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
               />
               <div className="paraphrase-review__editor-bottom-dock">
                 {liveReview?.hint && (
-                  <div className={`paraphrase-review__sticky-hint ${["waiting", "running"].includes(liveStatus) ? "is-stale" : ""}`}>
-                    <span>{liveReview.hint.kind === "gap" ? "AHORA" : "PARA PROFUNDIZAR"}</span>
-                    {liveReview.hint.text}
-                  </div>
+                  <LiveHint
+                    hint={liveReview.hint}
+                    stale={["waiting", "running"].includes(liveStatus)}
+                  />
                 )}
                 <div className="paraphrase-review__editor-footer">
                   <div className="paraphrase-review__editor-meta">
@@ -389,23 +389,6 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
                 </div>
               </div>
             </div>
-            {pending && (
-              <ProgressLoader
-                startedAt={pending.startedAt}
-                expectedMs={90_000}
-                maxMs={300_000}
-                streamingChars={streamingChars}
-                streamingSections={streamingSections}
-                streamingBlocks={streamingBlocks}
-                onCancel={cancel}
-              />
-            )}
-            {error && (
-              <div className="paraphrase-review__error" role="alert">
-                <p><strong>No se pudo completar el checkpoint.</strong> {error.message}</p>
-                <button type="button" className="quiz-primary-button" onClick={() => submitFullEvaluation(draft, "manual")}>Reintentar</button>
-              </div>
-            )}
           </div>
       </div>
       </>}
@@ -423,7 +406,31 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
             </button>
           </div>
         </header>
-        {canonicalAttempt ? (
+        <div className={`canonical-review__draft-status ${draft.trim() ? "is-ready" : "is-empty"}`}>
+          <div>
+            <span>BORRADOR ACTUAL</span>
+            <strong>{draft.trim() ? `${charCount} caracteres listos para evaluar` : "Todavía no escribiste una respuesta"}</strong>
+          </div>
+          {onRequestCoach && <button type="button" onClick={onRequestCoach}>{draft.trim() ? "Editar en Coaching" : "Ir a Coaching"} →</button>}
+        </div>
+        {pending && (
+          <ProgressLoader
+            startedAt={pending.startedAt}
+            expectedMs={90_000}
+            maxMs={300_000}
+            streamingChars={streamingChars}
+            streamingSections={streamingSections}
+            streamingBlocks={streamingBlocks}
+            onCancel={cancel}
+          />
+        )}
+        {error && (
+          <div className="paraphrase-review__error" role="alert">
+            <p><strong>No se pudo completar el checkpoint.</strong> {error.message}</p>
+            <button type="button" className="quiz-primary-button" onClick={() => submitFullEvaluation(draft, "manual")}>Reintentar</button>
+          </div>
+        )}
+        {!pending && canonicalAttempt ? (
           <div className="paraphrase-review__result">
           <AttemptHistory attempts={attempts} viewIndex={view.mode === "attempt" ? view.index : attempts.length - 1} onSelect={selectAttempt} onBackToDraft={backToDraft} />
           <EvaluationFeedback
@@ -451,14 +458,47 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
             {onNavigateNext && hasNext && <button type="button" className="quiz-next-button" onClick={onNavigateNext}>Siguiente card →</button>}
           </div>
         </div>
-        ) : (
+        ) : !pending ? (
           <div className="canonical-review__empty">
             <strong>Todavía no hay un checkpoint completo.</strong>
-            <span>El coaching de arriba es rápido y provisional; cuando confirmes una evaluación aparecerán acá el score canónico, las barras y el feedback detallado.</span>
+            <span>El coaching rápido vive en la vista anterior. Cuando proceses este borrador aparecerán acá el score canónico, las barras y el feedback detallado.</span>
           </div>
-        )}
+        ) : null}
       </section>}
     </section>
+  );
+}
+
+function LiveHint({ hint, stale }) {
+  const [expanded, setExpanded] = useState(false);
+  const detail = String(hint.detail ?? "").trim();
+  const hasDetail = Boolean(detail && detail !== String(hint.text ?? "").trim());
+
+  useEffect(() => {
+    setExpanded(false);
+  }, [hint.id, hint.text, hint.detail]);
+
+  return (
+    <div className={`paraphrase-review__sticky-hint ${stale ? "is-stale" : ""}`}>
+      <div className="paraphrase-review__hint-heading">
+        <span>{hint.kind === "gap" ? "AHORA" : "PARA PROFUNDIZAR"}</span>
+        {hint.label && <small>{hint.label}</small>}
+      </div>
+      <p className="paraphrase-review__hint-text">{hint.text}</p>
+      {hasDetail && (
+        <>
+          <button
+            type="button"
+            className="paraphrase-review__hint-toggle"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((value) => !value)}
+          >
+            {expanded ? "Ver menos" : "Ver más"}
+          </button>
+          {expanded && <p className="paraphrase-review__hint-detail">{detail}</p>}
+        </>
+      )}
+    </div>
   );
 }
 

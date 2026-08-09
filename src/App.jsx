@@ -2172,10 +2172,10 @@ export default function App() {
                   {checked.has(selected.id)
                     ? "Superficie conceptual cubierta al 100%. Ya podés avanzar; la profundización extra es opcional."
                     : selectedCompletion
-                      ? `Cobertura conceptual: ${selectedCompletion.percent}% (${selectedCompletion.score}/${selectedCompletion.max} puntos). Score global: ${selectedScore.displayScore}/120. La profundizaciÃ³n extra no reemplaza las ideas esenciales que faltan.`
+                      ? `Cobertura conceptual: ${selectedCompletion.percent}% (${selectedCompletion.score}/${selectedCompletion.max} puntos). Score global: ${selectedScore.displayScore}/120. La profundización extra no reemplaza las ideas esenciales que faltan.`
                       : "Todavía no hay una evaluación para este nodo. Escribí tu explicación y pedí una revisión para medir la cobertura de la card."}
                 </p>
-                {selectedLatestAttempt && <span className="completion-score-detail">{selectedCompletion.score}/{selectedCompletion.max} cobertura Â· score {selectedScore.displayScore}/120</span>}
+                {selectedLatestAttempt && <span className="completion-score-detail">{selectedCompletion.score}/{selectedCompletion.max} cobertura · score {selectedScore.displayScore}/120</span>}
               </section>
             </aside>
           </div>

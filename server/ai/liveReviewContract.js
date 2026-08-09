@@ -9,6 +9,7 @@ export function normalizeLiveReview(data) {
   const displayScore = displayScoreFromRaw(rawScore);
   const completeness = rubric.completeness;
   const allEssentialCovered = Number(completeness?.score) >= Number(completeness?.max);
+  const hint = normalizeHint(data.hint);
 
   return {
     scoreSummary: { rubric },
@@ -16,12 +17,12 @@ export function normalizeLiveReview(data) {
     displayScore,
     displayMax: 120,
     isExtra: displayScore > 100,
-    hint: data.hint,
+    hint,
     additionalGaps: data.additionalGaps ?? [],
     // Compatibilidad con la UI/cache anterior durante la migraciÃ³n.
     coveragePercent: Math.min(100, displayScore),
     allEssentialCovered,
-    nextGapId: data.hint?.kind === "gap" ? data.hint.id : null,
+    nextGapId: hint?.kind === "gap" ? hint.id : null,
   };
 }
 
@@ -34,14 +35,20 @@ function normalizeLegacyLiveReview(data) {
   const fallbackGap = points.find((point) => point.status !== "covered");
   const genericHint = /idea esencial todavía falta|qué idea esencial|todavía falta explicar/i.test(data.hint?.text ?? "");
   const hint = fallbackGap && genericHint
-    ? { ...data.hint, id: fallbackGap.id, text: `Falta explicar “${fallbackGap.id}”: qué es, cómo funciona y por qué importa.` }
+    ? {
+      ...data.hint,
+      id: fallbackGap.id,
+      text: `Falta explicar “${fallbackGap.id}”.`,
+      detail: `Explicá qué es “${fallbackGap.id}”, cómo funciona y por qué importa en el contexto de esta card.`,
+    }
     : data.hint?.kind === "gap" && fallbackGap && data.hint.id !== fallbackGap.id
       ? { ...data.hint, id: fallbackGap.id }
       : data.hint;
+  const normalizedHint = normalizeHint(hint);
 
   return {
     points,
-    hint,
+    hint: normalizedHint,
     additionalGaps: [],
     coveragePercent,
     coveredCount: covered,
@@ -49,6 +56,13 @@ function normalizeLegacyLiveReview(data) {
     missingCount: Math.max(0, total - covered - partial),
     totalEssential: total,
     allEssentialCovered: total > 0 && covered === total,
-    nextGapId: hint?.kind === "gap" ? hint.id : null,
+    nextGapId: normalizedHint?.kind === "gap" ? normalizedHint.id : null,
   };
+}
+
+function normalizeHint(hint) {
+  if (!hint) return null;
+  const text = String(hint.text ?? "").trim();
+  const detail = String(hint.detail ?? "").trim() || text;
+  return { ...hint, text, detail };
 }

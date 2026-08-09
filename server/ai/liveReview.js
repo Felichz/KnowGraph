@@ -25,6 +25,7 @@ export const LiveReviewZod = z.object({
     kind: z.enum(["gap", "refinement"]),
     label: z.string().min(1).max(140),
     text: z.string().min(1),
+    detail: z.string().min(1).optional(),
   }),
   additionalGaps: z.array(LiveGapZod).max(8),
 });
@@ -64,12 +65,13 @@ export const LiveReviewJsonSchema = {
     hint: {
       type: "object",
       additionalProperties: false,
-      required: ["id", "kind", "label", "text"],
+      required: ["id", "kind", "label", "text", "detail"],
       properties: {
         id: { type: "string", minLength: 1, maxLength: 80 },
         kind: { type: "string", enum: ["gap", "refinement"] },
         label: { type: "string", minLength: 1, maxLength: 140 },
         text: { type: "string", minLength: 1 },
+        detail: { type: "string", minLength: 1 },
       },
     },
     additionalGaps: {
@@ -103,7 +105,12 @@ Asigná los mismos cuatro subscores de la evaluación completa:
 No generes un score total: el gateway lo calcula de forma determinista y lo transforma al rango visible 0..120.
 Después de scoreSummary, escribí un único hint principal. Si falta algo esencial, elegí el gap más prioritario.
 Si ya está cubierta la superficie, sugerí una sola mejora de profundidad o trade-off.
-El texto de hint.text no tiene límite de longitud: devolvé completo todo lo que escribas.
+hint.text es la instrucción breve que el usuario debe ver primero: una sola frase accionable y concreta.
+hint.detail es la explicación completa de por qué eso es importante, qué parte de la card falta o se puede
+refinar y qué debería agregar el usuario. Escribila en lenguaje claro, sin omitir el razonamiento necesario,
+sin puntos suspensivos y sin decir que "hay más". No dependas de que el usuario conozca el gap de antemano.
+La interfaz mostrará hint.text de forma compacta y podrá expandir hint.detail con "Ver más"; por eso detail
+no debe ser un título ni una repetición de text.
 Después del hint, devolvé additionalGaps con los demás gaps relevantes, sin repetir el hint principal.
 Los gaps secundarios no deben reemplazar ni retrasar el hint principal.
 

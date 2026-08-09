@@ -66,6 +66,16 @@ export function FlashcardView({ graph, onOpenNode }) {
     setModalFlipped(false);
   }, []);
 
+  const moveActiveCard = useCallback((offset) => {
+    setActiveCardId((currentId) => {
+      const currentIndex = cards.findIndex(({ node }) => node.id === currentId);
+      if (currentIndex < 0) return currentId;
+      const nextIndex = Math.max(0, Math.min(cards.length - 1, currentIndex + offset));
+      return cards[nextIndex]?.node.id ?? currentId;
+    });
+    setModalFlipped(false);
+  }, [cards]);
+
   const pickRandom = useCallback(() => {
     if (!cards.length) return;
     const card = cards[Math.floor(Math.random() * cards.length)];
@@ -77,10 +87,12 @@ export function FlashcardView({ graph, onOpenNode }) {
     if (!activeCardId) return undefined;
     const onKeyDown = (event) => {
       if (event.key === "Escape") closeCard();
+      if (event.key === "ArrowLeft") moveActiveCard(-1);
+      if (event.key === "ArrowRight") moveActiveCard(1);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeCardId, closeCard]);
+  }, [activeCardId, closeCard, moveActiveCard]);
 
   if (!cards.length) {
     return (
@@ -113,13 +125,14 @@ export function FlashcardView({ graph, onOpenNode }) {
       </div>
 
       <div className="flashcards__grid">
-        {cards.map(({ node, attempt }) => {
+        {cards.map(({ node, attempt }, cardIndex) => {
           const score = attempt ? getScoreView(attempt.evaluation) : null;
           const status = score?.status;
+          const categoryLabel = graph.categories?.[node.cat]?.label ?? node.cat ?? "Concepto";
           return (
             <article
               id={`flashcard-${node.id}`}
-              className={`flashcard-shell ${spotlightId === node.id ? "is-spotlight" : ""}`}
+              className={`flashcard-shell flashcard-shell--${status ?? "none"} ${score?.isExtra ? "is-exceptional" : ""} ${spotlightId === node.id ? "is-spotlight" : ""}`}
               key={node.id}
             >
               <button
@@ -129,20 +142,24 @@ export function FlashcardView({ graph, onOpenNode }) {
                 aria-label={`Abrir flashcard ampliada: ${node.label ?? node.title}`}
               >
                 <div className="flashcard__face flashcard__face--front">
-                  <span className="flashcard__cat">{node.cat ?? ""}</span>
+                  <div className="flashcard__meta">
+                    <span className="flashcard__cat">{categoryLabel}</span>
+                    <span className="flashcard__index">#{String(node.priority ?? cardIndex + 1).padStart(2, "0")}</span>
+                  </div>
                   <h3 className="flashcard__title">{node.label ?? node.title}</h3>
                   <div className="flashcard__status-row">
                     {attempt
                       ? <span className={`flashcard__badge flashcard__badge--${status}`}>{score.displayScore}/120 · {STATUS_LABEL[status]}</span>
                       : <span className="flashcard__badge flashcard__badge--none">Sin intento</span>}
                   </div>
-                  <p className="flashcard__hint">Tocá para ver tu explicación</p>
+                  <div className={`flashcard__progress ${score?.isExtra ? "is-extra" : ""}`} aria-hidden="true">
+                    <span style={{ width: `${score ? Math.min(100, (score.displayScore / 120) * 100) : 0}%` }} />
+                  </div>
+                  <div className="flashcard__primary-action"><span>Ver mi explicación</span><span aria-hidden="true">↗</span></div>
                 </div>
-
-                <div className="flashcard__peek">Click para ampliar</div>
               </button>
               <button type="button" className="flashcard__open" onClick={() => onOpenNode?.(node)}>
-                Abrir card completa <span aria-hidden="true">↗</span>
+                Estudiar card completa <span aria-hidden="true">→</span>
               </button>
             </article>
           );
@@ -153,15 +170,21 @@ export function FlashcardView({ graph, onOpenNode }) {
         const active = cards.find(({ node }) => node.id === activeCardId);
         if (!active) return null;
         const { node, attempt } = active;
+        const activeIndex = cards.findIndex(({ node: cardNode }) => cardNode.id === node.id);
         const score = attempt ? getScoreView(attempt.evaluation) : null;
         const status = score?.status;
+        const categoryLabel = graph.categories?.[node.cat]?.label ?? node.cat ?? "Concepto";
         return (
           <div className="flashcard-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCard(); }}>
             <section className="flashcard-modal" role="dialog" aria-modal="true" aria-labelledby="flashcard-modal-title">
               <header className="flashcard-modal__header">
                 <div>
-                  <span className="flashcard__cat">{node.cat ?? ""}</span>
+                  <div className="flashcard__meta">
+                    <span className="flashcard__cat">{categoryLabel}</span>
+                    <span className="flashcard__index">CARD {activeIndex + 1} DE {cards.length}</span>
+                  </div>
                   <h2 id="flashcard-modal-title">{node.label ?? node.title}</h2>
+                  {attempt && <span className={`flashcard__badge flashcard__badge--${status}`}>{score.displayScore}/120 · {STATUS_LABEL[status]}</span>}
                 </div>
                 <button type="button" className="modal-close" onClick={closeCard} aria-label="Cerrar flashcard">×</button>
               </header>
@@ -170,8 +193,8 @@ export function FlashcardView({ graph, onOpenNode }) {
                 {!modalFlipped ? (
                   <div className="flashcard-modal__front">
                     <span className="flashcard-modal__eyebrow">REPASO RÁPIDO</span>
-                    <p>Recordá el concepto con tus propias palabras. Luego podés abrir la card completa para estudiar toda la explicación.</p>
-                    {attempt && <span className={`flashcard__badge flashcard__badge--${status}`}>{score.displayScore}/120 · {STATUS_LABEL[status]}</span>}
+                    <h3>¿Cómo lo explicarías en una entrevista?</h3>
+                    <p>Intentá reconstruir el concepto antes de revelar tu respuesta. No hace falta repetir la card literalmente: buscá recuperar el modelo mental y sus trade-offs.</p>
                   </div>
                 ) : (
                   <div className="flashcard-modal__answer">
@@ -195,12 +218,19 @@ export function FlashcardView({ graph, onOpenNode }) {
               </div>
 
               <footer className="flashcard-modal__footer">
-                <button type="button" className="quiz-secondary-button" onClick={() => setModalFlipped((value) => !value)}>
-                  {modalFlipped ? "Ver frente" : "Ver mi explicación"}
-                </button>
-                <button type="button" className="quiz-primary-button" onClick={() => { closeCard(); onOpenNode?.(node); }}>
-                  Abrir card completa ↗
-                </button>
+                <div className="flashcard-modal__nav" aria-label="Navegar flashcards">
+                  <button type="button" onClick={() => moveActiveCard(-1)} disabled={activeIndex <= 0} aria-label="Flashcard anterior">←</button>
+                  <span>{activeIndex + 1}/{cards.length}</span>
+                  <button type="button" onClick={() => moveActiveCard(1)} disabled={activeIndex >= cards.length - 1} aria-label="Flashcard siguiente">→</button>
+                </div>
+                <div className="flashcard-modal__actions">
+                  <button type="button" className="quiz-secondary-button" onClick={() => setModalFlipped((value) => !value)}>
+                    {modalFlipped ? "Ocultar respuesta" : "Ver mi explicación"}
+                  </button>
+                  <button type="button" className="quiz-primary-button" onClick={() => { closeCard(); onOpenNode?.(node); }}>
+                    Estudiar card ↗
+                  </button>
+                </div>
               </footer>
             </section>
           </div>
