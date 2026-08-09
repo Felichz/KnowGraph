@@ -1706,7 +1706,7 @@ export default function App() {
         </div>
         <div className="progress-block">
           <span className="progress-number">{done}/{total}</span>
-          <span className="progress-track"><span style={{ width: `${percentage}%` }} /></span>
+          <span className="progress-track" role="progressbar" aria-label={`Progreso total: ${done} de ${total} nodos`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={percentage}><span style={{ width: `${percentage}%` }} /></span>
           <span className="progress-percent">{percentage}% dominado</span>
         </div>
       </header>
@@ -1923,8 +1923,8 @@ export default function App() {
                 <circle className={`node-circle ${hasExcellence ? "node-circle-excellence" : ""}`} r={hasExcellence ? radius - 3 : radius} fill={isChecked ? category.color : "#12141C"} stroke={isSelected ? "#F5F1E8" : category.color} strokeWidth={isSelected ? 2.8 : isChecked ? 1.5 : guideLevel === 1 ? 2.4 : 1.8} />
                 {hasExcellence && <circle className="excellence-border" r={radius} fill="none" stroke="#F5C451" strokeWidth="1.8" />}
                 {isChecked && !isSelected && <path d="M -6 0 L -1.5 5 L 7 -6" stroke="#0B0D13" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />}
-                {isGuideBadgeAnchor && <text y={-radius - 8} textAnchor="middle" className={`guide-badge guide-badge-${guideLevel}`}>{guideLevel === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${guideLevel}`}</text>}
-                <text y={radius + 17} textAnchor="middle" className={`node-label ${isChecked ? "is-checked" : ""}`}>{mapLabel}</text>
+                {isGuideBadgeAnchor && <text y={-radius - 13} textAnchor="middle" className={`guide-badge guide-badge-${guideLevel}`}>{guideLevel === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${guideLevel}`}</text>}
+                <text y={radius + 19} textAnchor="middle" className={`node-label ${isChecked ? "is-checked" : ""}`}>{mapLabel}</text>
               </g>;
             })}
             {hoveredNode && (() => {
@@ -1963,7 +1963,7 @@ export default function App() {
               <div className={`lesson-header-score ${selectedScore?.isExtra ? "is-extra" : ""}`} aria-label={selectedScore ? `Score canónico ${selectedScore.displayScore} de ${selectedScore.displayMax}` : "Sin evaluación canónica"}>
                 <div className="lesson-header-score__topline">
                   <span className="lesson-header-score__label">SCORE CANÓNICO</span>
-                  {selectedScore ? <><strong>{selectedScore.displayScore}</strong><span className="lesson-header-score__max">/{selectedScore.displayMax}</span></> : <span className="lesson-header-score__empty">SIN CHECKPOINT</span>}
+                  {selectedScore ? <><strong>{selectedScore.displayScore}</strong><span className="lesson-header-score__max">/{selectedScore.displayMax}</span></> : <span className="lesson-header-score__empty">PENDIENTE</span>}
                 </div>
                 <div className="lesson-header-score__track" aria-hidden="true">
                   {selectedScore && <span style={{ width: `${Math.min(100, (selectedScore.displayScore / selectedScore.displayMax) * 100)}%` }} />}

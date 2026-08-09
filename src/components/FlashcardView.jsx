@@ -147,6 +147,7 @@ export function FlashcardView({ graph, onOpenNode }) {
                     <span className="flashcard__index">#{String(node.priority ?? cardIndex + 1).padStart(2, "0")}</span>
                   </div>
                   <h3 className="flashcard__title">{node.label ?? node.title}</h3>
+                  <p className="flashcard__summary">{node.lesson?.summary ?? "Recuperá el concepto, su propósito y el criterio para aplicarlo."}</p>
                   <div className="flashcard__status-row">
                     {attempt
                       ? <span className={`flashcard__badge flashcard__badge--${status}`}>{score.displayScore}/120 · {STATUS_LABEL[status]}</span>
@@ -155,7 +156,7 @@ export function FlashcardView({ graph, onOpenNode }) {
                   <div className={`flashcard__progress ${score?.isExtra ? "is-extra" : ""}`} aria-hidden="true">
                     <span style={{ width: `${score ? Math.min(100, (score.displayScore / 120) * 100) : 0}%` }} />
                   </div>
-                  <div className="flashcard__primary-action"><span>Ver mi explicación</span><span aria-hidden="true">↗</span></div>
+                  <div className="flashcard__primary-action"><span>{attempt ? "Revisar mi explicación" : "Practicar recuerdo"}</span><span aria-hidden="true">↗</span></div>
                 </div>
               </button>
               <button type="button" className="flashcard__open" onClick={() => onOpenNode?.(node)}>
