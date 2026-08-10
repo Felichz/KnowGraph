@@ -344,6 +344,29 @@ function isAllowedOrigin(origin) {
 }
 
 async function readJsonBody(req) {
+  // Vercel's Node runtime may parse the request body before invoking the
+  // handler. In that case the request stream is already consumed, so reading
+  // it with `req.on("data")` would incorrectly produce an empty object.
+  if (req.body !== undefined && req.body !== null) {
+    if (typeof req.body === "object" && !Buffer.isBuffer(req.body)) {
+      return req.body;
+    }
+    if (Buffer.isBuffer(req.body)) {
+      try {
+        return JSON.parse(req.body.toString("utf8"));
+      } catch {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, "JSON inválido");
+      }
+    }
+    if (typeof req.body === "string") {
+      try {
+        return JSON.parse(req.body);
+      } catch {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, "JSON inválido");
+      }
+    }
+  }
+
   return new Promise((resolve, reject) => {
     let chunks = [];
     let size = 0;
