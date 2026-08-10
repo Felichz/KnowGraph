@@ -453,3 +453,59 @@ export async function checkUpstream({ baseUrl, apiKey, timeoutMs = 5000 }) {
     clearTimeout(timer);
   }
 }
+
+/**
+ * Fetch a provider's model catalog without exposing the API key to the
+ * browser. Providers that implement the OpenAI-compatible `/models` route
+ * can power the model picker; providers that do not can still be configured
+ * manually in the UI.
+ */
+export async function listUpstreamModels({ baseUrl, apiKey, timeoutMs = 10000 }) {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), timeoutMs);
+  const t0 = Date.now();
+  try {
+    const res = await fetch(`${baseUrl}/models`, {
+      method: "GET",
+      redirect: "error",
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: ac.signal,
+    });
+    const latencyMs = Date.now() - t0;
+    if (res.status === 401 || res.status === 403) {
+      return { reachable: false, status: res.status, latencyMs, models: [], error: "token_rejected" };
+    }
+    if (!res.ok) {
+      return { reachable: false, status: res.status, latencyMs, models: [], error: `http_${res.status}` };
+    }
+
+    const body = await res.json().catch(() => null);
+    const models = Array.isArray(body?.data)
+      ? body.data
+        .map(normalizeModel)
+        .filter(Boolean)
+        .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }))
+      : [];
+    return { reachable: true, status: res.status, latencyMs, models, error: null };
+  } catch (e) {
+    return {
+      reachable: false,
+      status: null,
+      latencyMs: Date.now() - t0,
+      models: [],
+      error: e?.name === "AbortError" ? "timeout" : (e?.message ?? "network"),
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function normalizeModel(value) {
+  if (!value || typeof value !== "object") return null;
+  const id = typeof value.id === "string" ? value.id.trim() : "";
+  if (!id) return null;
+  const name = typeof value.name === "string" ? value.name.trim() : "";
+  const label = name && name !== id ? name : id;
+  const contextLength = Number.isFinite(value.context_length) ? value.context_length : null;
+  return { id, label, contextLength };
+}

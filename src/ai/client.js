@@ -34,6 +34,16 @@ export async function testAiProvider({ provider, signal } = {}) {
   return handle(res);
 }
 
+export async function fetchAiProviderModels({ provider, signal } = {}) {
+  const res = await fetch(aiUrl("/api/ai/providers/models"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ provider }),
+    signal,
+  });
+  return handle(res);
+}
+
 export async function evaluateParaphrase({ graphId, nodeId, answer, contentHash, node, provider, signal } = {}) {
   const res = await fetch(aiUrl("/api/ai/evaluate"), {
     method: "POST",

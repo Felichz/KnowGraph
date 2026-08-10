@@ -3,7 +3,7 @@ import { config } from "./config.js";
 import { evaluateParaphrase } from "./ai/evaluator.js";
 import { reviewLive } from "./ai/liveReview.js";
 import { answerCoachQuestion, MAX_COACH_CHAT_MESSAGE_CHARS } from "./ai/coachChat.js";
-import { checkUpstream } from "./ai/llmClient.js";
+import { checkUpstream, listUpstreamModels } from "./ai/llmClient.js";
 import { parseRequestProvider } from "./ai/providers.js";
 import { MAX_LEARNER_ANSWER_CHARS } from "./ai/schemas.js";
 import { GatewayError, ErrorCodes, jsonErrorResponse } from "./ai/errors.js";
@@ -72,6 +72,23 @@ export async function gatewayHandler(req, res) {
         status: result.status,
         latencyMs: result.latencyMs,
         modelCount: result.modelCount,
+        error: result.error,
+        label: provider.label,
+      });
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/ai/providers/models") {
+      const body = await readJsonBody(req);
+      const provider = await parseRequestProvider(body?.provider);
+      if (!provider) {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta la configuracion del provider");
+      }
+      const result = await listUpstreamModels({ baseUrl: provider.baseUrl, apiKey: provider.apiKey });
+      return sendJson(res, 200, {
+        reachable: result.reachable,
+        status: result.status,
+        latencyMs: result.latencyMs,
+        models: result.models,
         error: result.error,
         label: provider.label,
       });

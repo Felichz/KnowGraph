@@ -4208,6 +4208,52 @@ body { background: var(--p-bg); }
 .provider-field select:focus { border-color: rgba(100, 231, 220, .66); box-shadow: 0 0 0 3px rgba(100, 231, 220, .09); }
 .provider-field small,
 .provider-storage-note { margin: 0; color: #7f8c9d; font-size: 11px; line-height: 1.5; }
+.provider-model-picker { display: grid; gap: 8px; min-width: 0; }
+.provider-model-picker__input-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; min-width: 0; }
+.provider-model-picker__input-row > input { min-width: 0; }
+.provider-model-load {
+  min-height: 36px;
+  border: 1px solid #344355;
+  border-radius: 7px;
+  padding: 8px 10px;
+  color: #b9d7df;
+  background: #17212c;
+  font: 650 11px Inter, ui-sans-serif, system-ui, sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.provider-model-load:hover:not(:disabled) { border-color: rgba(100, 231, 220, .58); color: #e7fffc; background: #1b2b35; }
+.provider-model-load:focus-visible { outline: 2px solid var(--p-cyan); outline-offset: 2px; }
+.provider-model-load:disabled { opacity: .65; cursor: progress; }
+.provider-model-options {
+  display: grid;
+  max-height: 248px;
+  overflow: auto;
+  border: 1px solid #2c3848;
+  border-radius: 8px;
+  background: #0b1118;
+  scrollbar-color: #3d4a5c transparent;
+  scrollbar-width: thin;
+}
+.provider-model-option {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .055);
+  padding: 9px 10px;
+  color: #dce5ed;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.provider-model-option:last-child { border-bottom: 0; }
+.provider-model-option:hover,
+.provider-model-option:focus-visible { outline: 0; background: rgba(100, 231, 220, .09); }
+.provider-model-option.is-selected { color: #c9fff8; background: rgba(100, 231, 220, .13); }
+.provider-model-option span { overflow: hidden; font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.provider-model-option code { overflow: hidden; color: #8395a8; font: 11px "JetBrains Mono", ui-monospace, monospace; text-overflow: ellipsis; white-space: nowrap; }
+.provider-model-empty { margin: 0; padding: 11px 10px; color: #9aa8b8; font-size: 11px; line-height: 1.45; }
 .provider-field code,
 .provider-check code { color: #b8e7ef; font: 11px "JetBrains Mono", ui-monospace, monospace; }
 .provider-check { display: flex; align-items: flex-start; gap: 8px; padding-top: 1px; }
