@@ -56,6 +56,7 @@ export function usePanZoom({ min = 0.3, max = 2, initial } = {}) {
   return {
     ref,
     view,
+    setView,
     wasDragged: () => movedRef.current > DRAG_THRESHOLD,
     panHandlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp },
   };

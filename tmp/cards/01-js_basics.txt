@@ -27,6 +27,7 @@ function Search() {
     const res = await fetch(`/api/search?q=${query}`)
     console.log(await res.json())
   }
+  return <button onClick={submit}>Buscar "{query}"</button>
 }
 
 

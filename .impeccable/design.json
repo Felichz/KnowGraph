@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-10T00:00:00Z",
+  "title": "Design System: Learning Workspace",
+  "extensions": {
+    "colorMeta": {
+      "workspace-bg": {
+        "role": "neutral",
+        "displayName": "Workspace Night",
+        "canonical": "#090b0f",
+        "tonalRamp": ["#07080b", "#090b0f", "#10141a", "#171c24", "#26303d", "#4d5969", "#9ba6b4", "#f3f5f7"]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Graph Canvas",
+        "canonical": "#0c0f14",
+        "tonalRamp": ["#080a0d", "#0c0f14", "#121720", "#1b222d", "#2b3644", "#566574", "#a5b1bc", "#f4f6f8"]
+      },
+      "operational-cyan": {
+        "role": "primary",
+        "displayName": "Operational Cyan",
+        "canonical": "#70ddd4",
+        "tonalRamp": ["#082b2c", "#0b4140", "#12605d", "#1b837d", "#37ada3", "#70ddd4", "#a8eee8", "#e7fbf8"]
+      },
+      "information-blue": {
+        "role": "secondary",
+        "displayName": "Information Blue",
+        "canonical": "#6eb7ff",
+        "tonalRamp": ["#0b2949", "#123b68", "#1e568d", "#3378b9", "#4f98dd", "#6eb7ff", "#a8d5ff", "#e8f4ff"]
+      },
+      "excellence-gold": {
+        "role": "tertiary",
+        "displayName": "Excellence Gold",
+        "canonical": "#e6b95b",
+        "tonalRamp": ["#302008", "#513811", "#76531b", "#9f7427", "#c9963e", "#e6b95b", "#f4d995", "#fff4d9"]
+      },
+      "success-green": {
+        "role": "tertiary",
+        "displayName": "Coverage Green",
+        "canonical": "#55d98a",
+        "tonalRamp": ["#0b2a1a", "#10442a", "#1b673e", "#2d914f", "#42b96a", "#55d98a", "#9ce9b8", "#e5faec"]
+      },
+      "warning-red": {
+        "role": "tertiary",
+        "displayName": "Correction Coral",
+        "canonical": "#ef7668",
+        "tonalRamp": ["#341411", "#59201c", "#7d2e27", "#a94138", "#cf594c", "#ef7668", "#f8afa7", "#ffebe8"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Concept Display", "purpose": "Titles of lessons and top-level workspace entry points." },
+      "headline": { "displayName": "Working Headline", "purpose": "Section titles, flashcards and feedback modules." },
+      "body": { "displayName": "Reading Text", "purpose": "Concept explanation, code context, coaching and conversation." },
+      "label": { "displayName": "Instrument Label", "purpose": "Scores, priorities, status, shortcuts and navigation metadata." }
+    },
+    "shadows": [
+      { "name": "workspace-panel", "value": "0 24px 64px rgba(0, 0, 0, .24)", "purpose": "Ambient separation for an important workspace boundary." },
+      { "name": "focus-halo", "value": "0 0 0 2px rgba(100, 231, 220, .14), 0 22px 48px rgba(0, 0, 0, .3)", "purpose": "Selected flashcard or focused operational element." },
+      { "name": "excellence-glow", "value": "0 0 12px rgba(230, 185, 91, .28)", "purpose": "Depth-extra score only." }
+    ],
+    "motion": [
+      { "name": "state-settle", "value": "170ms ease", "purpose": "Border, surface and small elevation changes on interactive cards." },
+      { "name": "progress-fill", "value": "350ms ease", "purpose": "Score and progress updates." },
+      { "name": "live-pulse", "value": "1.7s ease-in-out", "purpose": "Only while a live coaching request is running." }
+    ],
+    "breakpoints": [
+      { "name": "compact-desktop", "value": "1100px" },
+      { "name": "tablet", "value": "760px" },
+      { "name": "phone", "value": "600px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Command Button",
+      "kind": "button",
+      "refersTo": "command-button",
+      "description": "Compact workspace action for navigation, audio or secondary controls.",
+      "html": "<button class=\"ds-command-button\">Ruta</button>",
+      "css": ".ds-command-button { min-height: 36px; border: 1px solid rgba(255,255,255,.14); border-radius: 8px; padding: 8px 11px; color: #b2bac5; background: #161b22; font: 700 11px/1.3 JetBrains Mono, ui-monospace, monospace; letter-spacing: .06em; cursor: pointer; transition: border-color 170ms ease, color 170ms ease, background 170ms ease; } .ds-command-button:hover { border-color: #70ddd4; color: #f3f5f7; background: #1b212a; } .ds-command-button:focus-visible { outline: 2px solid #6eb7ff; outline-offset: 2px; } .ds-command-button:active { background: #11151b; }"
+    },
+    {
+      "name": "Topological Map Toolbar",
+      "kind": "nav",
+      "refersTo": "command-button-active",
+      "description": "Explains the dependency direction and groups focus, fit and zoom controls for the canonical map.",
+      "html": "<nav class=\"ds-map-toolbar\" aria-label=\"Controles del mapa topológico\"><strong>Orden topológico</strong><span>Etapa 4 de 17</span><button>Próximo foco</button></nav>",
+      "css": ".ds-map-toolbar { display: flex; min-height: 50px; align-items: center; gap: 16px; border: 1px solid rgba(255,255,255,.14); border-radius: 10px; padding: 7px 8px 7px 14px; color: #b2bac5; background: #11151b; } .ds-map-toolbar strong { color: #f3f5f7; font: 700 12px Inter, ui-sans-serif, system-ui, sans-serif; } .ds-map-toolbar span { margin-left: auto; font: 700 11px JetBrains Mono, ui-monospace, monospace; } .ds-map-toolbar button { min-height: 34px; border: 1px solid transparent; border-radius: 7px; padding: 0 9px; color: #b2bac5; background: #161b22; font: 700 11px JetBrains Mono, ui-monospace, monospace; }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "status-chip",
+      "description": "A concise state or filter marker; color appears only when it carries semantic meaning.",
+      "html": "<span class=\"ds-status-chip\">ACTUALIZANDO</span>",
+      "css": ".ds-status-chip { display: inline-flex; align-items: center; min-height: 26px; border: 1px solid rgba(112,221,212,.4); border-radius: 8px; padding: 5px 9px; color: #70ddd4; background: rgba(112,221,212,.07); font: 800 11px/1 JetBrains Mono, ui-monospace, monospace; letter-spacing: .07em; }"
+    },
+    {
+      "name": "Learning Editor",
+      "kind": "input",
+      "refersTo": "editor",
+      "description": "The user’s paraphrase workspace: roomy, inset and visibly focusable.",
+      "html": "<div class=\"ds-editor\" contenteditable=\"true\" role=\"textbox\">Explicá el concepto con tus palabras…</div>",
+      "css": ".ds-editor { min-height: 130px; border: 1px solid rgba(255,255,255,.14); border-radius: 8px; padding: 12px 14px; color: #f3f5f7; background: #0c0f14; font: 400 14px/1.6 Inter, ui-sans-serif, system-ui, sans-serif; white-space: pre-wrap; } .ds-editor:focus { outline: 2px solid #6eb7ff; outline-offset: 1px; border-color: transparent; }"
+    },
+    {
+      "name": "Flashcard",
+      "kind": "card",
+      "refersTo": "flashcard",
+      "description": "A compact recall prompt with a semantic status accent and clear path to the full lesson.",
+      "html": "<article class=\"ds-flashcard\"><div class=\"ds-flashcard-meta\">ARQUITECTURA WEB <span>#23</span></div><h3>Routing y navegación SPA</h3><p>Relacioná URL, pantalla y estado navegable.</p><span class=\"ds-flashcard-action\">Practicar recuerdo →</span></article>",
+      "css": ".ds-flashcard { min-height: 244px; border: 1px solid rgba(112,221,212,.38); border-radius: 12px; padding: 18px 19px 15px; color: #f3f5f7; background: radial-gradient(circle at 100% 0, rgba(112,221,212,.08), transparent 58%), #11151b; font-family: Inter, ui-sans-serif, system-ui, sans-serif; box-shadow: 0 10px 28px rgba(0,0,0,.15); transition: border-color 170ms ease, box-shadow 170ms ease, transform 170ms ease; } .ds-flashcard:hover { border-color: #70ddd4; box-shadow: 0 18px 42px rgba(0,0,0,.26); transform: translateY(-2px); } .ds-flashcard-meta { display: flex; justify-content: space-between; color: #a8eee8; font: 700 11px/1.3 JetBrains Mono, ui-monospace, monospace; letter-spacing: .08em; } .ds-flashcard h3 { margin: 22px 0 8px; font-size: 19px; letter-spacing: -.025em; } .ds-flashcard p { margin: 0; color: #b2bac5; font-size: 14px; line-height: 1.5; } .ds-flashcard-action { display: block; margin-top: 34px; color: #70ddd4; font: 700 11px JetBrains Mono, ui-monospace, monospace; }"
+    },
+    {
+      "name": "Score Meter",
+      "kind": "custom",
+      "refersTo": "score-extra",
+      "description": "Learning telemetry that distinguishes essential coverage from optional depth.",
+      "html": "<section class=\"ds-score\"><div><span>SCORE CANÓNICO</span><strong>112<small>/120</small></strong></div><div class=\"ds-score-track\"><i></i></div><p>Profundidad extra</p></section>",
+      "css": ".ds-score { width: 250px; border: 1px solid rgba(255,255,255,.075); border-radius: 12px; padding: 13px 14px; color: #f3f5f7; background: #11151b; } .ds-score > div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; } .ds-score span { color: #b2bac5; font: 800 11px JetBrains Mono, ui-monospace, monospace; letter-spacing: .08em; } .ds-score strong { color: #e6b95b; font: 800 20px JetBrains Mono, ui-monospace, monospace; } .ds-score small { color: #727c89; font-size: 11px; } .ds-score-track { position: relative; height: 7px; overflow: hidden; margin-top: 9px; border-radius: 4px; background: linear-gradient(90deg, #202936 0 83.333%, rgba(230,185,91,.13) 83.333% 100%); } .ds-score-track i { display: block; width: 93.33%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #6eb7ff 0 89.3%, #e6b95b 89.3%); box-shadow: 0 0 10px rgba(230,185,91,.28); } .ds-score p { margin: 8px 0 0; color: #e6b95b; font: 700 11px JetBrains Mono, ui-monospace, monospace; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El cockpit de dominio técnico",
+    "overview": "Learning Workspace es una herramienta de concentración: el mapa orienta, la card abre una superficie de trabajo y el coaching calibra una explicación en progreso. La densidad es deliberada, pero no comprimida; capas oscuras, bordes finos y color semántico sostienen sesiones largas.",
+    "keyCharacteristics": [
+      "Dark workspace de baja luminancia, con capas tonales azul-negras y ruido visual mínimo.",
+      "Inter para leer y pensar; JetBrains Mono para coordenadas, scores, estados y controles.",
+      "Cian como señal de operación y foco; el dorado está reservado para excelencia real.",
+      "Bordes finos, radios moderados y profundidad tonal antes que superficies flotantes."
+    ],
+    "rules": [
+      { "name": "The Gold Reserve Rule", "body": "El dorado solo representa una respuesta por encima de 100/120.", "section": "colors" },
+      { "name": "The Signal, Not Decoration Rule", "body": "Cada color de acento expresa una condición operativa concreta.", "section": "colors" },
+      { "name": "The Two Voices Rule", "body": "La tipografía mono es para instrumentación; Inter es para comprensión.", "section": "typography" },
+      { "name": "The Tonal-First Rule", "body": "La jerarquía se resuelve con capa, borde y contraste antes de usar sombra.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do tratar el canvas del grafo como el protagonista de la vista principal.",
+      "Do derivar la posición horizontal del nodo de la profundidad real de sus prerrequisitos.",
+      "Do usar cian para foco operativo y dorado exclusivamente para excelencia por encima de 100/120.",
+      "Do comunicar estados con texto, estructura y color.",
+      "Do preferir profundidad tonal, bordes finos y halos pequeños."
+    ],
+    "donts": [
+      "Don't convertir cada grupo de contenido en una card dentro de otra card.",
+      "Don't usar dorado para acciones comunes, alertas o decoración.",
+      "Don't depender solo del color, la animación o el hover para comunicar una condición importante.",
+      "Don't tratar la interfaz como un dashboard de métricas.",
+      "Don't usar force layouts o variantes visuales que contradigan el orden conceptual."
+    ]
+  }
+}

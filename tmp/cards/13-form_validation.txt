@@ -12,7 +12,7 @@ Es una solución popular para formularios grandes, pero el schema del cliente no
 ## EXPLANATION (lectura)
 En un formulario serio hay dos validaciones con trabajos distintos. La del cliente existe para el feedback: rechazar un email mal formado al instante, marcar el campo, ahorrar un roundtrip. La del servidor existe para la verdad: el cliente es manipulable y nada de lo que valide ahí autoriza nada.
 
-React Hook Form cubre la primera con registro eficiente de inputs — no controla cada tecla, valida cuando corresponde — y un schema como Zod describe las reglas del payload de forma declarativa y ejecutable: email requerido, edad entera, password con longitud mínima.
+React Hook Form cubre la primera con registro eficiente de inputs — no controla cada tecla, valida cuando corresponde — y un schema como Zod describe las reglas del payload de forma declarativa y ejecutable, como en el ejemplo: email con formato válido y edad entera.
 
 El punto donde muchos formularios se rompen es el regreso. Cuando el backend responde con un conflicto de username, ese error no viene del schema local: hay que mapearlo al campo correcto o a un mensaje general. Y un error de red no es un error del usuario — "no pudimos guardar, reintentá" y "escribiste mal este campo" son mensajes distintos que merecen tratamiento distinto.
 

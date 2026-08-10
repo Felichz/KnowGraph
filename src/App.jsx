@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
-import * as d3 from "d3";
 import LESSONS from "./lessons";
 import LEARNING_EXPLANATIONS from "./learningExplanations";
 import CLARIFIED_BULLETS from "./clarifiedBullets";
@@ -11,10 +10,7 @@ import { getInterviewQuestionPrerequisites } from "./reactQuiz";
 import { ParaphraseReview } from "./components/ParaphraseReview.jsx";
 import { FlashcardView } from "./components/FlashcardView.jsx";
 import { ViewModeToggle } from "./components/ViewModeToggle.jsx";
-import GraphLanesView from "./components/graphViews/GraphLanesView.jsx";
-import GraphRadialView from "./components/graphViews/GraphRadialView.jsx";
-import GraphPathView from "./components/graphViews/GraphPathView.jsx";
-import { GraphViewTabs } from "./components/graphViews/GraphViewTabs.jsx";
+import GraphTopologyView from "./components/graphViews/GraphTopologyView.jsx";
 import { ReadingChunks } from "./components/ReadingChunks.jsx";
 import { listAllAttempts } from "./ai/learningStore.js";
 import { hashCardContent } from "./ai/contentHash.js";
@@ -1075,72 +1071,6 @@ function makeAppHistoryState(route, previousNodeIds = [], canReturn = route.view
   };
 }
 
-const WIDTH = 1500;
-const HEIGHT = 980;
-
-// The classic map is a study surface, not an emergent data visualization.
-// Keep its coordinates deterministic and derived from dependency depth so
-// opening a graph never starts a force simulation or moves every node while
-// the browser is already rendering UI.
-function getStaticNodeLayout(graph, canvasWidth) {
-  const nodeIds = new Set(graph.nodes.map((node) => node.id));
-  const prerequisites = new Map(graph.nodes.map((node) => [node.id, new Set()]));
-  graph.edges.forEach(([source, target]) => {
-    if (nodeIds.has(source) && nodeIds.has(target)) prerequisites.get(target).add(source);
-  });
-
-  const depths = new Map();
-  const visiting = new Set();
-  const getDepth = (nodeId) => {
-    if (depths.has(nodeId)) return depths.get(nodeId);
-    // A cycle should not destroy the layout. Treat the repeated branch as a
-    // root-like continuation; the graph audit still remains responsible for
-    // reporting the invalid dependency.
-    if (visiting.has(nodeId)) return 0;
-    visiting.add(nodeId);
-    const depth = Math.max(0, ...[...prerequisites.get(nodeId)].map(getDepth)) + 1;
-    visiting.delete(nodeId);
-    depths.set(nodeId, depth);
-    return depth;
-  };
-
-  graph.nodes.forEach((node) => getDepth(node.id));
-  const layers = new Map();
-  graph.nodes.forEach((node) => {
-    const layer = depths.get(node.id) - 1;
-    if (!layers.has(layer)) layers.set(layer, []);
-    layers.get(layer).push(node);
-  });
-
-  const maxLayer = Math.max(0, ...layers.keys());
-  const maxNodesInLayer = Math.max(1, ...[...layers.values()].map((layer) => layer.length));
-  const horizontalPadding = 150;
-  const verticalPadding = 68;
-  const xGap = maxLayer === 0
-    ? 0
-    : Math.max(154, Math.min(210, (canvasWidth - horizontalPadding * 2) / maxLayer));
-  const yGap = maxNodesInLayer === 1
-    ? 0
-    : Math.max(64, Math.min(104, (HEIGHT - verticalPadding * 2) / (maxNodesInLayer - 1)));
-  const layoutWidth = Math.max(canvasWidth, horizontalPadding * 2 + maxLayer * xGap);
-  const graphSpan = maxLayer * xGap;
-  const startX = Math.max(horizontalPadding, (layoutWidth - graphSpan) / 2);
-
-  return {
-    width: layoutWidth,
-    nodes: [...layers.entries()].flatMap(([layer, layerNodes]) => {
-      const ordered = layerNodes.sort((a, b) => a.cat.localeCompare(b.cat) || a.priority - b.priority);
-      const totalHeight = (ordered.length - 1) * yGap;
-      const startY = Math.max(verticalPadding, (HEIGHT - totalHeight) / 2);
-      return ordered.map((node, index) => ({
-        ...node,
-        x: startX + layer * xGap,
-        y: startY + index * yGap,
-      }));
-    }),
-  };
-}
-
 function getGuidance(nodes, checked, activeCats) {
   const known = new Set(checked);
   const levels = [];
@@ -1209,60 +1139,12 @@ function getSeniorityProgress(bands, checked, nodeIds) {
   });
 }
 
-function getMilestoneBoundary(groupNodes, padding = 54) {
-  if (!groupNodes.length) return null;
-
-  const points = groupNodes.map((node) => [node.x, node.y]);
-  const centroid = points.length > 2 && d3.polygonHull(points)
-    ? d3.polygonCentroid(d3.polygonHull(points))
-    : [points.reduce((sum, point) => sum + point[0], 0) / points.length, points.reduce((sum, point) => sum + point[1], 0) / points.length];
-  let boundary = d3.polygonHull(points);
-
-  if (!boundary || boundary.length < 3) {
-    if (points.length === 1) {
-      const [x, y] = points[0];
-      return { path: `M ${x - padding} ${y} a ${padding} ${padding} 0 1 0 ${padding * 2} 0 a ${padding} ${padding} 0 1 0 ${-padding * 2} 0`, labelX: x, labelY: y - padding - 10 };
-    }
-
-    const [first, second] = points;
-    const dx = second[0] - first[0];
-    const dy = second[1] - first[1];
-    const length = Math.max(Math.hypot(dx, dy), 1);
-    const ux = dx / length;
-    const uy = dy / length;
-    const nx = -uy;
-    const ny = ux;
-    const extension = padding * 0.75;
-    boundary = [
-      [first[0] - ux * extension + nx * padding, first[1] - uy * extension + ny * padding],
-      [second[0] + ux * extension + nx * padding, second[1] + uy * extension + ny * padding],
-      [second[0] + ux * extension - nx * padding, second[1] + uy * extension - ny * padding],
-      [first[0] - ux * extension - nx * padding, first[1] - uy * extension - ny * padding],
-    ];
-  } else {
-    boundary = boundary.map(([x, y]) => {
-      const distance = Math.max(Math.hypot(x - centroid[0], y - centroid[1]), 1);
-      return [x + ((x - centroid[0]) / distance) * padding, y + ((y - centroid[1]) / distance) * padding];
-    });
-  }
-
-  const path = `${boundary.map(([x, y], index) => `${index ? "L" : "M"} ${x} ${y}`).join(" ")} Z`;
-  const topY = Math.min(...boundary.map((point) => point[1]));
-  return { path, labelX: centroid[0], labelY: topY - 10 };
-}
-
 export default function App() {
   const initialRoute = getAppRoute(typeof window !== "undefined" ? window.location.pathname : "/rails");
-  const svgRef = useRef(null);
   const lessonModalRef = useRef(null);
   const modalCloseRef = useRef(null);
   const modalReturnFocusRef = useRef(null);
   const modalWasOpenRef = useRef(false);
-  const simRef = useRef(null);
-  const nodesRef = useRef([]);
-  const layoutWidthRef = useRef(WIDTH);
-  const dragRef = useRef({ id: null, moved: false });
-  const [, forceTick] = useState(0);
   const [graphKey, setGraphKey] = useState(() => initialRoute.graphKey);
   const graph = GRAPH_CONFIGS[graphKey];
   // La completitud ya no se marca manualmente: se deriva de evaluaciones cuya
@@ -1272,7 +1154,6 @@ export default function App() {
   const [activeCats, setActiveCats] = useState(() => new Set(Object.keys(GRAPH_CONFIGS.rails.categories)));
   const [selected, setSelected] = useState(() => getRouteNode(initialRoute));
   const [lessonView, setLessonView] = useState("read"); // "read" | "coach" | "evaluate"
-  const [hoveredNodeId, setHoveredNodeId] = useState(null);
   const [lessonHistory, setLessonHistory] = useState(() => {
     const previousNodeIds = typeof window !== "undefined" && Array.isArray(window.history.state?.previousNodeIds)
       ? window.history.state.previousNodeIds
@@ -1281,12 +1162,12 @@ export default function App() {
   });
   const [showCodeExplanation, setShowCodeExplanation] = useState(false);
   const [activeDeepDive, setActiveDeepDive] = useState(null);
-  const [transform, setTransform] = useState({ k: 1, x: 0, y: 0 });
-  const [canvasWidth, setCanvasWidth] = useState(WIDTH);
   const [ttsSpeed, setTtsSpeed] = useState(1);
   const [ttsState, setTtsState] = useState({ status: "idle", error: "", chunkIndex: 0, chunkCount: 0, activeSegmentId: "", paused: false });
   const [viewMode, setViewMode] = useState("graph"); // "graph" | "flashcards"
-  const [graphView, setGraphView] = useState("classic"); // "classic" | "lanes" | "radial" | "path"
+  const [workspaceNavOpen, setWorkspaceNavOpen] = useState(false);
+  const [progressPanelOpen, setProgressPanelOpen] = useState(false);
+  const [lessonContextOpen, setLessonContextOpen] = useState(false);
   const ttsSpeechRef = useRef(null);
   const ttsSpeedRef = useRef(1);
   const ttsPlaybackRef = useRef({ segments: [], index: 0, generation: 0 });
@@ -1309,9 +1190,9 @@ export default function App() {
     setGraphKey(nextGraphKey);
     setSelected(nextNode);
     setLessonView("read");
-    setHoveredNodeId(null);
     setLessonHistory(previousNodeIds.map((nodeId) => GRAPH_CONFIGS[nextGraphKey].nodes.find((node) => node.id === nodeId)).filter(Boolean));
     setShowCodeExplanation(false);
+    setLessonContextOpen(false);
     setActiveDeepDive(null);
   }, [graphKey, stopSpeech]);
 
@@ -1378,6 +1259,18 @@ export default function App() {
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, [applyAppRoute]);
+
+  useEffect(() => {
+    if ((!workspaceNavOpen && !progressPanelOpen) || selected || typeof window === "undefined") return undefined;
+    const closeWorkspacePanels = (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      if (progressPanelOpen) setProgressPanelOpen(false);
+      else setWorkspaceNavOpen(false);
+    };
+    window.addEventListener("keydown", closeWorkspacePanels);
+    return () => window.removeEventListener("keydown", closeWorkspacePanels);
+  }, [progressPanelOpen, selected, workspaceNavOpen]);
 
   const openDeepDive = useCallback((id, event, triggerKey) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -1559,26 +1452,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!svgRef.current || typeof ResizeObserver === "undefined") return undefined;
-    const svgElement = svgRef.current;
-    const updateCanvasWidth = () => {
-      const { width, height } = svgElement.getBoundingClientRect();
-      if (width > 0 && height > 0) setCanvasWidth(Math.max(WIDTH, Math.round((width / height) * HEIGHT)));
-    };
-    updateCanvasWidth();
-    const observer = new ResizeObserver(updateCanvasWidth);
-    observer.observe(svgElement);
-    return () => observer.disconnect();
-    // El svg clásico se desmonta al cambiar de variante: reenganchar al volver.
-  }, [graphView]);
-
-  useEffect(() => {
     setActiveDeepDive(null);
     setChecked(new Set());
     setLatestAttemptsByNode(new Map());
     setActiveCats(new Set(Object.keys(graph.categories)));
-    setTransform({ k: 1, x: 0, y: 0 });
-
     let cancelled = false;
     listAllAttempts().then((all) => {
       if (cancelled) return;
@@ -1604,70 +1481,6 @@ export default function App() {
     return () => { cancelled = true; };
   }, [graphKey, graph]);
 
-  useEffect(() => {
-    const layout = getStaticNodeLayout(graph, canvasWidth);
-    const nodes = layout.nodes;
-    const links = graph.edges.map(([source, target]) => ({ source, target }));
-    nodesRef.current = nodes;
-    layoutWidthRef.current = layout.width;
-    simRef.current = { links };
-    forceTick((value) => value + 1);
-  }, [canvasWidth, graph]);
-
-  useEffect(() => {
-    if (!svgRef.current) return undefined;
-    const svg = d3.select(svgRef.current);
-    const zoom = d3.zoom().scaleExtent([0.4, 2.2]).on("zoom", (event) => setTransform(event.transform));
-    svg.call(zoom);
-    return () => svg.on(".zoom", null);
-    // Mismo motivo: reenganchar el zoom cuando se vuelve a la vista clásica.
-  }, [graphView]);
-
-  const toSvgCoords = (clientX, clientY) => {
-    const point = svgRef.current.createSVGPoint();
-    point.x = clientX; point.y = clientY;
-    const inverse = svgRef.current.getScreenCTM().inverse();
-    const local = point.matrixTransform(inverse);
-    return { x: (local.x - transform.x) / transform.k, y: (local.y - transform.y) / transform.k };
-  };
-
-  const onNodePointerDown = (node) => (event) => {
-    event.stopPropagation();
-    if (event.button !== undefined && event.button !== 0) return;
-    const nodeElement = event.currentTarget;
-    dragRef.current = { id: node.id, moved: false };
-    const move = (moveEvent) => {
-      if (dragRef.current.id !== node.id) return;
-      const dx = moveEvent.clientX - event.clientX;
-      const dy = moveEvent.clientY - event.clientY;
-      if (Math.abs(dx) + Math.abs(dy) > 3) dragRef.current.moved = true;
-      if (!dragRef.current.moved) return;
-      const point = toSvgCoords(moveEvent.clientX, moveEvent.clientY);
-      node.x = Math.max(100, Math.min(layoutWidthRef.current - 100, point.x));
-      node.y = Math.max(60, Math.min(HEIGHT - 60, point.y));
-      forceTick((value) => value + 1);
-    };
-    const finishPointer = (cancelled) => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointercancel", cancel);
-      const wasMoved = dragRef.current.moved;
-      dragRef.current = { id: null, moved: false };
-      if (!cancelled && !wasMoved) {
-        nodeElement.focus();
-        // Toggle selection instead of always selecting. The node's click is also stopped below,
-        // so the SVG background handler cannot immediately clear this state.
-        if (selected?.id === node.id) closeLesson();
-        else openLesson(node);
-      }
-    };
-    const up = () => finishPointer(false);
-    const cancel = () => finishPointer(true);
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up, { once: true });
-    window.addEventListener("pointercancel", cancel, { once: true });
-  };
-
   const focusCategory = (category) => setActiveCats(new Set([category]));
   const showAllCategories = () => setActiveCats(new Set(Object.keys(graph.categories)));
 
@@ -1682,27 +1495,8 @@ export default function App() {
 
   const switchGraph = (nextGraphKey) => {
     if (nextGraphKey === graphKey) return;
-    simRef.current?.sim?.stop?.();
-    simRef.current = null;
-    nodesRef.current = [];
     navigateAppRoute(getAppRoute(`/${nextGraphKey}`));
   };
-
-  // Refs update outside React's render cycle. During the one render between changing
-  // graphs and creating the new simulation, never paint nodes from the previous graph.
-  const nodes = nodesRef.current.filter((node) => graph.nodeIds.has(node.id) && graph.categories[node.cat]);
-  const graphWidth = Math.max(canvasWidth, layoutWidthRef.current);
-  const hoveredNode = hoveredNodeId ? nodes.find((node) => node.id === hoveredNodeId) : null;
-  const excellenceNodeIds = new Set(
-    [...latestAttemptsByNode.entries()]
-      .filter(([, attempt]) => getScoreView(attempt.evaluation)?.isExtra)
-      .map(([nodeId]) => nodeId),
-  );
-  const links = (simRef.current?.links ?? []).filter((link) => {
-    const sourceId = typeof link.source === "object" ? link.source.id : link.source;
-    const targetId = typeof link.target === "object" ? link.target.id : link.target;
-    return graph.nodeIds.has(sourceId) && graph.nodeIds.has(targetId);
-  });
   const total = graph.nodes.length;
   const done = checked.size;
   const percentage = Math.round((done / total) * 100);
@@ -1713,20 +1507,6 @@ export default function App() {
   const seniorityByNodeId = new Map();
   seniorityProgress.forEach((band) => band.nodeIds.forEach((id) => seniorityByNodeId.set(id, band)));
   const guidance = getGuidance(graph.nodes, checked, activeCats);
-  const seniorityBoundaries = seniorityProgress
-    .map((band) => ({
-      ...band,
-      boundary: getMilestoneBoundary(nodes.filter((node) => band.nodeIds.includes(node.id) && activeCats.has(node.cat)), 90),
-    }))
-    .filter((band) => band.boundary);
-  const milestoneBoundaries = milestoneProgress
-    .filter((milestone) => milestone.done > 0)
-    .map((milestone) => ({
-      ...milestone,
-      boundary: getMilestoneBoundary(nodes.filter((node) => milestone.nodeIds.includes(node.id) && activeCats.has(node.cat))),
-      hasPrimaryGuide: milestone.nodeIds.some((id) => guidance.levelById.get(id) === 1),
-    }))
-    .filter((milestone) => milestone.boundary);
   const primaryNext = guidance.primary;
   const selectedPrerequisites = selected ? selected.prerequisites.map((id) => graph.nodes.find((node) => node.id === id)).filter(Boolean) : [];
   const selectedNavigationPrerequisites = selectedPrerequisites.filter((node) => activeCats.has(node.cat));
@@ -1774,30 +1554,65 @@ export default function App() {
   };
 
   return (
-    <main className="page" data-graph={graphKey}>
-      <header className="header">
-        <div>
-          <div className="eyebrow">ENTREVISTA · RUTA GUIADA</div>
+    <main className={`page desktop-shell ${workspaceNavOpen ? "is-workspace-nav-open" : ""} ${selected ? "has-open-lesson" : ""}`} data-graph={graphKey}>
+      <header className="header desktop-commandbar">
+        <button
+          type="button"
+          className={`workspace-nav-toggle ${workspaceNavOpen ? "is-active" : ""}`}
+          aria-label={workspaceNavOpen ? "Cerrar navegación" : "Abrir navegación"}
+          aria-expanded={workspaceNavOpen}
+          aria-controls="workspace-navigation"
+          onClick={() => setWorkspaceNavOpen((open) => {
+            const next = !open;
+            if (next) setProgressPanelOpen(false);
+            return next;
+          })}
+        >
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+        </button>
+        <div className="desktop-commandbar__identity">
+          <div className="desktop-commandbar__copy">
           <h1>{graph.title}</h1>
           <p className="subtitle">{graph.subtitle}</p>
           {graph.interviewQuestions?.length > 0 && <a className="interview-coverage-badge" href={graph.interviewQuestionSource} target="_blank" rel="noreferrer">
             <span>{graph.interviewQuestions.length}/110</span> preguntas de referencia trazadas al mapa ↗
           </a>}
+          </div>
         </div>
-        <div className="progress-block">
+        <button
+          type="button"
+          className={`progress-block ${progressPanelOpen ? "is-active" : ""}`}
+          aria-label={progressPanelOpen ? "Cerrar panel de progreso" : "Abrir panel de progreso"}
+          aria-expanded={progressPanelOpen}
+          aria-controls="workspace-progress-panel"
+          onClick={() => setProgressPanelOpen((open) => {
+            const next = !open;
+            if (next) setWorkspaceNavOpen(false);
+            return next;
+          })}
+        >
           <span className="progress-number">{done}/{total}</span>
           <span className="progress-track" role="progressbar" aria-label={`Progreso total: ${done} de ${total} nodos`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={percentage}><span style={{ width: `${percentage}%` }} /></span>
           <span className="progress-percent">{percentage}% dominado</span>
-        </div>
+          <svg className="progress-block__icon" viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6" /></svg>
+        </button>
       </header>
 
-      <section className="map-workspace" aria-label="Workspace de aprendizaje">
-      <div className="graph-switcher" aria-label="Elegir grafo">
+      <section className={`map-workspace ${workspaceNavOpen ? "is-nav-open" : "is-nav-closed"} ${progressPanelOpen ? "is-progress-open" : "is-progress-closed"}`} aria-label="Workspace de aprendizaje">
+      <div id="workspace-navigation" className="graph-switcher" aria-label="Elegir grafo">
+        <div className="workspace-nav-heading">
+          <div><span>WORKSPACE</span><strong>Navegación</strong></div>
+          <button type="button" onClick={() => setWorkspaceNavOpen(false)} aria-label="Cerrar navegación"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+        </div>
+        <span className="workspace-nav-label">MAPA DE CONOCIMIENTO</span>
         {Object.values(GRAPH_CONFIGS).map((item) => <button key={item.id} className={`graph-switch ${item.id === graphKey ? "is-active" : ""}`} onClick={() => switchGraph(item.id)}>{item.label}</button>)}
         <ViewModeToggle mode={viewMode} onChange={setViewMode} />
       </div>
 
       <div className="legend">
+        <div className="workspace-nav-section-title"><span>FOCO</span><small>Elegí un grupo para aislarlo</small></div>
         <button className={`category-chip category-all ${activeCats.size === Object.keys(graph.categories).length ? "is-active" : ""}`} onClick={showAllCategories} aria-pressed={activeCats.size === Object.keys(graph.categories).length}>Todos</button>
         {Object.entries(graph.categories).map(([key, category]) => {
           const active = activeCats.has(key);
@@ -1823,6 +1638,17 @@ export default function App() {
           Abrir card <span aria-hidden="true">→</span>
         </button>}
       </div>
+
+      <aside id="workspace-progress-panel" className="workspace-progress-panel" aria-label="Progreso del mapa">
+        <header className="workspace-progress-panel__header">
+          <div>
+            <strong>Progreso del mapa</strong>
+            <span>{done}/{total} nodos dominados</span>
+          </div>
+          <button type="button" onClick={() => setProgressPanelOpen(false)} aria-label="Cerrar panel de progreso">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" /></svg>
+          </button>
+        </header>
 
       {seniorityProgress.length > 0 && <section className="seniority-overview" aria-label="Mapa de seniority">
         <div className="seniority-heading">
@@ -1890,6 +1716,7 @@ export default function App() {
           ))}
         </div>
       </section>
+      </aside>
 
       <section className="learning-guide" aria-label="Ruta sugerida de aprendizaje">
         <div className="guide-heading">
@@ -1920,113 +1747,13 @@ export default function App() {
           />
         ) : (
         <div className="graph-area">
-        <GraphViewTabs mode={graphView} onChange={setGraphView} />
-        {graphView === "classic" ? (
-        <svg ref={svgRef} viewBox={`0 0 ${graphWidth} ${HEIGHT}`} className="graph" onClick={(event) => { if (!event.target.closest(".node-group")) closeLesson(); }}>
-          <defs>
-            <radialGradient id="bgGlow" cx="50%" cy="35%" r="75%"><stop offset="0%" stopColor="#161A24" /><stop offset="100%" stopColor="#0B0D13" /></radialGradient>
-            <marker id="dependency-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#667080" /></marker>
-          </defs>
-          <rect width={graphWidth} height={HEIGHT} fill="url(#bgGlow)" />
-          <g transform={`translate(${transform.x},${transform.y}) scale(${transform.k})`}>
-            <g className="seniority-territories" pointerEvents="none">
-              {seniorityBoundaries.map((band) => (
-                <g className={`seniority-territory ${band.complete ? "is-complete" : band.requirementsMet ? "is-active" : "is-locked"}`} key={band.id} style={{ color: band.color }}>
-                  <path d={band.boundary.path} fill={band.color} stroke={band.color} />
-                  <text x={band.boundary.labelX} y={band.boundary.labelY + 22} textAnchor="middle">{band.stage} · {band.label} · {band.percentage}%</text>
-                </g>
-              ))}
-            </g>
-            <g className="milestone-boundaries" pointerEvents="none">
-              {milestoneBoundaries.map((milestone) => {
-                const isComplete = milestone.percentage === 100;
-                const showBoundary = !isComplete || milestone.hasPrimaryGuide;
-
-                if (!showBoundary) return null;
-
-                return (
-                <g className={`milestone-boundary ${milestone.percentage === 100 ? "is-complete" : "is-progress"} ${milestone.hasPrimaryGuide ? "has-primary-guide" : ""}`} key={milestone.id} style={{ color: milestone.color }}>
-                  <path d={milestone.boundary.path} fill={milestone.color} stroke={milestone.color} />
-                  <text x={milestone.boundary.labelX} y={milestone.boundary.labelY} textAnchor="middle">
-                    {milestone.percentage === 100 ? `✓ ${milestone.label}` : milestone.label}
-                  </text>
-                </g>
-                );
-              })}
-            </g>
-            {links.map((link, index) => {
-              const source = typeof link.source === "object" ? link.source : nodes.find((node) => node.id === link.source);
-              const target = typeof link.target === "object" ? link.target : nodes.find((node) => node.id === link.target);
-              if (!source || !target) return null;
-              const dim = !activeCats.has(source.cat) || !activeCats.has(target.cat);
-              const doneLink = checked.has(source.id) && checked.has(target.id);
-              const sourceMilestone = milestoneByNodeId.get(source.id);
-              const targetMilestone = milestoneByNodeId.get(target.id);
-              const energyLink = sourceMilestone?.id === targetMilestone?.id && sourceMilestone?.percentage === 100;
-              const sourceBand = seniorityByNodeId.get(source.id);
-              const targetBand = seniorityByNodeId.get(target.id);
-              const seniorityEnergyLink = sourceBand?.id === targetBand?.id && sourceBand?.complete && sourceMilestone?.id !== targetMilestone?.id;
-              const guideLevel = guidance.levelById.get(target.id) ?? 0;
-              const guideStroke = guideLevel === 1 ? "#F5F1E8" : guideLevel === 2 ? "#E8A33D" : guideLevel === 3 ? "#5AA9FF" : null;
-              return <g key={index} className={energyLink ? "has-energy-link" : ""}>
-                <line className={`dependency-link ${guideLevel ? `guide-link-${guideLevel}` : ""}`} x1={source.x} y1={source.y} x2={target.x} y2={target.y} stroke={guideStroke ?? (doneLink ? "#CC342D" : "#3A404D")} strokeOpacity={dim ? 0.08 : guideLevel ? 0.82 : doneLink ? 0.55 : 0.38} strokeWidth={guideLevel === 1 ? 2.4 : doneLink ? 1.6 : 1.15} markerEnd="url(#dependency-arrow)" />
-                {energyLink && <line className="milestone-energy-link" x1={source.x} y1={source.y} x2={target.x} y2={target.y} stroke={sourceMilestone.color} markerEnd="url(#dependency-arrow)" />}
-                {seniorityEnergyLink && <line className="seniority-energy-link" x1={source.x} y1={source.y} x2={target.x} y2={target.y} stroke={sourceBand.color} markerEnd="url(#dependency-arrow)" />}
-              </g>;
-            })}
-            {nodes.map((node) => {
-              const category = graph.categories[node.cat];
-              const isSelected = selected?.id === node.id;
-              const isChecked = checked.has(node.id);
-              const milestone = milestoneByNodeId.get(node.id);
-              const completedMilestone = milestone?.percentage === 100;
-              const inProgressMilestone = milestone && milestone.done > 0 && !completedMilestone;
-              const guideLevel = guidance.levelById.get(node.id) ?? 0;
-              const radius = isSelected ? 29 : guideLevel === 1 ? 23 : guideLevel === 2 ? 19 : guideLevel === 3 ? 17 : 15;
-              const nodeOpacity = !activeCats.has(node.cat) ? 0.12 : isChecked ? 0.74 : guideLevel ? 1 : 0.82;
-              const mapLabel = node.label.length > 20 ? `${node.label.slice(0, 18)}…` : node.label;
-              const isGuideBadgeAnchor = guideLevel > 0 && guidance.levels[guideLevel - 1]?.[0]?.id === node.id;
-              const hasExcellence = excellenceNodeIds.has(node.id);
-              const nodeAccessibleLabel = `${node.label}. Prioridad ${node.priority}.${node.prerequisites.length ? ` Depende de ${node.prerequisites.map((id) => graph.nodes.find((item) => item.id === id)?.label).join(", ")}.` : " Punto de partida."}`;
-              return <g className={`node-group guide-node-${guideLevel} ${completedMilestone ? "milestone-node-complete" : inProgressMilestone ? "milestone-node-progress" : ""}`} key={node.id} transform={`translate(${node.x},${node.y})`} opacity={nodeOpacity} role="button" tabIndex={activeCats.has(node.cat) ? 0 : -1} aria-label={nodeAccessibleLabel} aria-pressed={isSelected} onPointerEnter={() => setHoveredNodeId(node.id)} onPointerLeave={() => setHoveredNodeId(null)} onFocus={() => setHoveredNodeId(node.id)} onBlur={() => setHoveredNodeId(null)} onPointerDown={onNodePointerDown(node)} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => {
-                if (event.key !== "Enter" && event.key !== " ") return;
-                event.preventDefault();
-                if (isSelected) closeLesson();
-                else openLesson(node);
-              }}>
-              <title>{`${node.label} · prioridad ${node.priority}${node.prerequisites.length ? ` · depende de ${node.prerequisites.map((id) => graph.nodes.find((item) => item.id === id)?.label).join(", ")}` : " · punto de partida"}`}</title>
-                {isSelected && <circle r={36} fill="none" stroke={category.color} strokeOpacity=".22" strokeWidth="7" className="selected-halo" />}
-                {completedMilestone && <circle r={radius + 6} fill="none" stroke={milestone.color} strokeOpacity=".34" strokeWidth="1.5" className="milestone-node-ring" />}
-                {hasExcellence && <circle r={radius + 11} className="excellence-aura" />}
-                {hasExcellence && <circle r={radius + 6} className="excellence-ring" />}
-                {guideLevel === 1 && <circle r={radius + 10} fill="none" stroke="#F5F1E8" strokeOpacity=".44" strokeWidth="2.5" className="primary-halo" />}
-                <circle className={`node-circle ${hasExcellence ? "node-circle-excellence" : ""}`} r={hasExcellence ? radius - 3 : radius} fill={isChecked ? category.color : "#12141C"} stroke={isSelected ? "#F5F1E8" : category.color} strokeWidth={isSelected ? 2.8 : isChecked ? 1.5 : guideLevel === 1 ? 2.4 : 1.8} />
-                {hasExcellence && <circle className="excellence-border" r={radius} fill="none" stroke="#F5C451" strokeWidth="1.8" />}
-                {isChecked && !isSelected && <path d="M -6 0 L -1.5 5 L 7 -6" stroke="#0B0D13" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />}
-                {isGuideBadgeAnchor && <text y={-radius - 13} textAnchor="middle" className={`guide-badge guide-badge-${guideLevel}`}>{guideLevel === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${guideLevel}`}</text>}
-                <text y={radius + 19} textAnchor="middle" className={`node-label ${isChecked ? "is-checked" : ""}`}>{mapLabel}</text>
-              </g>;
-            })}
-            {hoveredNode && (() => {
-              const radius = selected?.id === hoveredNode.id ? 29 : 15;
-              const tooltipWidth = Math.min(360, Math.max(150, hoveredNode.label.length * 7 + 28));
-              const tooltipX = Math.max(tooltipWidth / 2 + 12, Math.min(graphWidth - tooltipWidth / 2 - 12, hoveredNode.x));
-              const below = hoveredNode.y < HEIGHT - 125;
-              const tooltipY = below ? hoveredNode.y + radius + 38 : hoveredNode.y - radius - 25;
-              return <g className={`node-hover-tooltip ${below ? "is-below" : "is-above"}`} transform={`translate(${tooltipX},${tooltipY})`} pointerEvents="none">
-                <rect x={-tooltipWidth / 2} y="-16" width={tooltipWidth} height="25" rx="6" />
-                <text y="1" textAnchor="middle">{hoveredNode.label}</text>
-              </g>;
-            })()}
-          </g>
-        </svg>
-        ) : graphView === "lanes" ? (
-          <GraphLanesView context={graphViewContext} selected={selected} onToggleNode={toggleLessonNode} onBackgroundClick={closeLesson} />
-        ) : graphView === "radial" ? (
-          <GraphRadialView context={graphViewContext} selected={selected} onToggleNode={toggleLessonNode} onBackgroundClick={closeLesson} />
-        ) : (
-          <GraphPathView context={graphViewContext} selected={selected} onToggleNode={toggleLessonNode} onBackgroundClick={closeLesson} />
-        )}
+          <GraphTopologyView
+            key={graph.id}
+            context={graphViewContext}
+            selected={selected}
+            onToggleNode={toggleLessonNode}
+            onBackgroundClick={closeLesson}
+          />
         </div>
         )}
 
@@ -2034,10 +1761,9 @@ export default function App() {
       </section>
 
       {selected && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeLesson(); }}>
-        <section ref={lessonModalRef} className="lesson-modal" role="dialog" aria-modal="true" aria-labelledby="lesson-title" aria-describedby="lesson-summary" onKeyDown={keepFocusInsideLesson} onScroll={() => { if (activeDeepDive) setActiveDeepDive(null); }} style={{ "--lesson-color": graph.categories[selected.cat].color }}>
+        <section ref={lessonModalRef} className={`lesson-modal ${lessonContextOpen ? "is-context-open" : "is-context-closed"}`} role="dialog" aria-modal="true" aria-labelledby="lesson-title" aria-describedby="lesson-summary" onKeyDown={keepFocusInsideLesson} onScroll={() => { if (activeDeepDive) setActiveDeepDive(null); }} style={{ "--lesson-color": graph.categories[selected.cat].color }}>
           <header className="lesson-header">
             <div className="lesson-header-copy">
-              <div className="lesson-kicker">{graph.categories[selected.cat].label} · PRIORIDAD #{selected.priority}</div>
               <div className="lesson-title-row">
               <h2 id="lesson-title">{selected.label}</h2>
               <div className={`lesson-header-score ${selectedScore?.isExtra ? "is-extra" : ""}`} aria-label={selectedScore ? `Score canónico ${selectedScore.displayScore} de ${selectedScore.displayMax}` : "Sin evaluación canónica"}>
@@ -2052,14 +1778,18 @@ export default function App() {
               </div>
               </div>
               <div className="lesson-status-row">
+                <span className="lesson-title-meta"><span>{graph.categories[selected.cat].label}</span><span>Prioridad #{selected.priority}</span></span>
                 {ttsState.status === "loading" && ttsState.chunkCount > 0 && <span className="tts-source-state tts-progress-state">PARTE {ttsState.chunkIndex}/{ttsState.chunkCount}</span>}
                 {ttsState.status === "playing" && <span className="tts-source-state">PARTE {ttsState.chunkIndex}/{ttsState.chunkCount} · LECTURA DEL NAVEGADOR</span>}
                 {ttsState.status === "paused" && <span className="tts-source-state tts-paused-state">LECTURA EN PAUSA · PARTE {ttsState.chunkIndex}/{ttsState.chunkCount}</span>}
                 {checked.has(selected.id) ? <span className="status-badge completion-state">SUPERFICIE CUBIERTA 100%</span> : selectedCompletion ? <span className="unavailable-state">CHECKPOINT · COBERTURA {selectedCompletion.percent}%</span> : guidance.levelById.has(selected.id) ? <span className={`status-badge guide-state-${guidance.levelById.get(selected.id)}`}>{guidance.levelById.get(selected.id) === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${guidance.levelById.get(selected.id)}`}</span> : missingSelectedPrerequisites.length ? <span className="unavailable-state">PRERREQUISITOS RECOMENDADOS</span> : <span className="unavailable-state">DISPONIBLE</span>}
-                <span className="lesson-close-hint">Esc para cerrar · clic afuera también</span>
               </div>
             </div>
             <div className="lesson-header-actions">
+              <button className={`lesson-context-toggle ${lessonContextOpen ? "is-active" : ""}`} type="button" aria-expanded={lessonContextOpen} aria-controls="lesson-context-navigation" onClick={() => setLessonContextOpen((open) => !open)}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 12h10M4 19h16" /></svg>
+                <span>Ruta</span>
+              </button>
               {speechSegments.length > 0 && <div className="tts-controls" aria-label="Controles de lectura del navegador">
                 <button className="tts-control" type="button" aria-label="Repetir segmento actual" title="Repetir segmento actual" onClick={replaySpeech}>↻</button>
                 <button className="tts-control" type="button" aria-label="Ir al segmento anterior" title="Segmento anterior" onClick={() => moveSpeechSegment(-1)} disabled={ttsState.chunkIndex <= 1}>⏮</button>
@@ -2076,12 +1806,12 @@ export default function App() {
                 <span aria-live="polite">{ttsSpeed}x</span>
                 <button className="tts-speed-button" type="button" aria-label="Aumentar velocidad" title="Aumentar velocidad" onClick={() => changeSpeechSpeed(1)} disabled={ttsSpeed === TTS_SPEEDS[TTS_SPEEDS.length - 1]}>+</button>
               </div>}
-              {lessonHistory.length > 0 && <button className="modal-back" onClick={goBack}>← Volver a {lessonHistory[lessonHistory.length - 1].label}</button>}
-              <button ref={modalCloseRef} className="modal-close" aria-label="Cerrar lección" onClick={closeLesson}>×</button>
+              {lessonHistory.length > 0 && <button className="modal-back" onClick={goBack}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7M8 12h11" /></svg><span>Volver a {lessonHistory[lessonHistory.length - 1].label}</span></button>}
+              <button ref={modalCloseRef} className="modal-close" aria-label="Cerrar lección" onClick={closeLesson}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
             </div>
           </header>
 
-          <nav className="lesson-header-secondary" aria-label="Navegación y estado de la card">
+          {lessonContextOpen && <nav id="lesson-context-navigation" className="lesson-header-secondary" aria-label="Navegación y estado de la card">
             <section className="concept-map">
               <div className="lesson-section-label">LUGAR EN EL MAPA</div>
               <div className="concept-flow">
@@ -2123,7 +1853,7 @@ export default function App() {
                 {selectedLatestAttempt && <span className="completion-score-detail">{selectedCompletion.score}/{selectedCompletion.max} cobertura · score {selectedScore.displayScore}/120</span>}
               </section>
             </div>
-          </nav>
+          </nav>}
 
           <nav className="lesson-view-tabs" role="tablist" aria-label="Vistas de la card">
             <div className="lesson-view-tabs__heading" aria-hidden="true">

@@ -8,6 +8,7 @@ El proyecto nació como un mapa de preparación para entrevistas de Rails y Reac
 
 - [Plan de integración LLM: parafraseo, tutoría y flashcards](docs/LLM_LEARNING_EXPERIENCE_PLAN.md)
 - [Guía de la API headless y handoff de presentación](docs/PRESENTATION_HANDOFF_GUIDE.md)
+- [Aplicación desktop con Electron](docs/DESKTOP_APP.md)
 
 La presentación activa conserva la versión original de `src/App.jsx` y sus componentes detallados. El núcleo headless de `src/logic/` permanece disponible para futuras iteraciones o rediseños, pero no reemplaza la UI actual.
 
@@ -116,6 +117,7 @@ Los controles incluyen play/pausa, anterior, siguiente, replay y velocidad de le
 - `idb` para intentos de autoevaluación y borradores
 - `SpeechSynthesis` para texto a voz
 - Gateway local en Node (`server/`) con Zod para validación runtime
+- Electron como runtime desktop opcional, manteniendo la misma aplicación React
 
 ## Requisitos
 
@@ -228,6 +230,9 @@ npm run preview
 | --- | --- |
 | `npm run dev` | Inicia Vite en modo desarrollo escuchando en todas las interfaces. |
 | `npm run build` | Genera el build de producción. |
+| `npm run desktop:dev` | Abre la aplicación en Electron y administra el gateway local. |
+| `npm run desktop:pack` | Genera una build desktop desempaquetada para verificar. |
+| `npm run desktop:dist` | Genera el instalador de Windows. |
 | `npm run preview` | Sirve localmente el build generado. |
 | `npm run audit:react` | Valida la estructura y calidad mínima del grafo de React. |
 | `npm run check` | Ejecuta la auditoría y luego el build. |

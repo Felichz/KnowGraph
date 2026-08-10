@@ -12,15 +12,19 @@ Las reglas permiten que React asocie cada Hook con el mismo estado en cada rende
 ## EXPLANATION (lectura)
 Los Hooks son funciones que conectan tu componente con capacidades de React: state, effects, contexto, refs. El precio de esa comodidad es una regla dura: llamalos siempre en el mismo orden y en el nivel superior del componente.
 
-La razón es mecánica, no ideológica. React no tiene nombres para asociar cada `useState` con su valor; usa la posición de la llamada en la secuencia. Si metés un Hook dentro de un `if`, cuando la condición cambie las posiciones se corren y React le asigna a cada Hook el state de otro. Por eso la solución nunca es llamarlo a veces: llamalo siempre y poné la condición adentro de la lógica, como hace el ejemplo con el early return dentro del Effect.
+La razón es mecánica, no ideológica. React no tiene nombres para asociar cada `useState` con su valor; usa la posición de la llamada en la secuencia. Si metés un Hook dentro de un `if`, cuando la condición cambie las posiciones se corren y React le asigna a cada Hook el state de otro. Por eso la solución nunca es llamarlo a veces: llamalo siempre y poné la condición adentro de la lógica, como hace el ejemplo, donde el Effect se ejecuta siempre y decide con un early return si hay trabajo que hacer.
 
 La otra consecuencia es feliz: cualquier función que empiece con `use` y llame Hooks hereda el mismo contrato, y cada componente que la usa recibe su propia instancia de estado. Esa es la base sobre la que se construyen los custom Hooks.
 
 
-## CODE (Reglas de Hooks)
+## CODE (La condición va adentro del Hook)
 function Search({ enabled }) {
   const [term, setTerm] = useState("")
-  useEffect(() => { if (!enabled) return }, [enabled, term])
+  useEffect(() => {
+    if (!enabled) return // la condición va adentro, no alrededor del Hook
+    const id = setTimeout(() => search(term), 300)
+    return () => clearTimeout(id)
+  }, [enabled, term])
 }
 
 
