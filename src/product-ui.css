@@ -4071,6 +4071,225 @@ body { background: var(--p-bg); }
   .workspace-progress-panel__header { display: none; }
   .workspace-progress-panel .milestone-grid,
   .workspace-progress-panel .seniority-grid { display: flex; overflow-x: auto; }
-  .workspace-progress-panel .milestone-card { flex: 0 0 min(82vw, 310px); }
-  .workspace-progress-panel .seniority-card { flex: 0 0 min(86vw, 330px); }
+.workspace-progress-panel .milestone-card { flex: 0 0 min(82vw, 310px); }
+.workspace-progress-panel .seniority-card { flex: 0 0 min(86vw, 330px); }
+}
+
+/* ── Provider settings / BYOK ────────────────────────────────────────────
+   This is an operational panel, not another dashboard. It keeps the key
+   configuration adjacent to the workspace and deliberately uses the same
+   inspector geometry as Progress. */
+.desktop-commandbar {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.workspace-provider-toggle {
+  display: inline-flex;
+  min-width: 42px;
+  max-width: 184px;
+  height: 36px;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  border: 1px solid var(--p-line);
+  border-radius: 8px;
+  padding: 0 10px;
+  color: #9ba8b8;
+  background: transparent;
+  font: 650 11px Inter, ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+.workspace-provider-toggle svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.7;
+}
+.workspace-provider-toggle span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workspace-provider-toggle:hover,
+.workspace-provider-toggle.is-active {
+  border-color: rgba(100, 231, 220, .48);
+  color: #bdfbf4;
+  background: rgba(100, 231, 220, .07);
+}
+.workspace-provider-toggle:focus-visible { outline: 2px solid var(--p-cyan); outline-offset: 2px; }
+
+.workspace-provider-panel {
+  grid-area: provider;
+  display: none;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  border-left: 1px solid var(--p-line);
+  background: #0d1218;
+  scrollbar-color: #3d4a5c transparent;
+  scrollbar-width: thin;
+}
+.workspace-provider-panel.is-open { display: flex; flex-direction: column; }
+.workspace-provider-panel__header {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  min-height: 66px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--p-line);
+  padding: 15px 14px 13px 16px;
+  background: #111820;
+}
+.workspace-provider-panel__header h2 {
+  margin: 0;
+  color: var(--p-text);
+  font-size: 14px;
+  font-weight: 720;
+  letter-spacing: -.012em;
+}
+.workspace-provider-panel__header p {
+  margin: 5px 0 0;
+  color: #8795a6;
+  font-size: 11px;
+  line-height: 1.42;
+}
+.workspace-provider-panel__header button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 0;
+  color: #8d9aaa;
+  background: transparent;
+  cursor: pointer;
+}
+.workspace-provider-panel__header button:hover { border-color: var(--p-line); color: #fff; background: #19222d; }
+.workspace-provider-panel__header button:focus-visible { outline: 2px solid var(--p-cyan); outline-offset: 2px; }
+.workspace-provider-panel__header svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.8;
+}
+
+.provider-settings-form {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+.provider-field { display: grid; gap: 6px; }
+.provider-field > span,
+.provider-check > span { color: #bdc8d5; font-size: 11px; font-weight: 650; }
+.provider-field input,
+.provider-field select {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid #2c3848;
+  border-radius: 7px;
+  padding: 8px 10px;
+  color: #e6ebef;
+  background: #101823;
+  font: 500 12px Inter, ui-sans-serif, system-ui, sans-serif;
+  outline: 0;
+}
+.provider-field input::placeholder { color: #637186; }
+.provider-field input:focus,
+.provider-field select:focus { border-color: rgba(100, 231, 220, .66); box-shadow: 0 0 0 3px rgba(100, 231, 220, .09); }
+.provider-field small,
+.provider-storage-note { margin: 0; color: #7f8c9d; font-size: 11px; line-height: 1.5; }
+.provider-field code,
+.provider-check code { color: #b8e7ef; font: 11px "JetBrains Mono", ui-monospace, monospace; }
+.provider-check { display: flex; align-items: flex-start; gap: 8px; padding-top: 1px; }
+.provider-check input { width: 14px; height: 14px; flex: 0 0 auto; margin: 1px 0 0; accent-color: var(--p-cyan); }
+.provider-check > span { color: #aeb9c6; font-weight: 500; line-height: 1.45; }
+.provider-storage-note { border-top: 1px solid rgba(255, 255, 255, .07); padding-top: 13px; }
+.provider-status {
+  margin: 0;
+  border-left: 2px solid #6f7e91;
+  padding: 8px 10px;
+  color: #aeb9c5;
+  background: rgba(255, 255, 255, .025);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.provider-status--success { border-left-color: var(--p-cyan); color: #bdf4ef; }
+.provider-status--error { border-left-color: #f27878; color: #ffc5c5; }
+.provider-status--testing { border-left-color: #e6b85a; color: #f3d18d; }
+.provider-settings-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.provider-settings-actions button,
+.provider-clear-button {
+  min-height: 36px;
+  border: 1px solid var(--p-line-strong);
+  border-radius: 7px;
+  padding: 8px 10px;
+  font: 650 11px Inter, ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+.provider-test-button { color: #c7d2df; background: #151e29; }
+.provider-test-button:hover:not(:disabled) { border-color: #51657c; color: #fff; background: #192430; }
+.provider-test-button:disabled { opacity: .6; cursor: progress; }
+.provider-save-button { border-color: rgba(100, 231, 220, .5) !important; color: #082020; background: var(--p-cyan); }
+.provider-save-button:hover { color: #081d1b; background: #98f7ef; }
+.provider-clear-button { width: 100%; color: #98a6b7; background: transparent; }
+.provider-clear-button:hover { border-color: #546173; color: #d9e0e8; background: #141c26; }
+
+@media (min-width: 761px) {
+  .desktop-shell > .map-workspace.is-nav-closed.is-progress-closed.is-provider-open {
+    grid-template-areas:
+      "map provider"
+      "route provider";
+    grid-template-columns: minmax(0, 1fr) clamp(344px, 27vw, 426px);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .desktop-shell > .map-workspace.is-nav-open.is-progress-closed.is-provider-open {
+    grid-template-areas:
+      "toolbar map provider"
+      "filters map provider"
+      "focus map provider"
+      ". route provider";
+    grid-template-columns: 276px minmax(0, 1fr) clamp(330px, 26vw, 410px);
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+  }
+}
+
+@media (max-width: 1040px) and (min-width: 761px) {
+  .workspace-provider-toggle { max-width: 42px; padding-inline: 10px; }
+  .workspace-provider-toggle span { display: none; }
+}
+
+@media (max-width: 760px) {
+  .desktop-commandbar { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .workspace-provider-toggle { width: 38px; min-width: 38px; padding: 0; justify-content: center; }
+  .workspace-provider-toggle span { display: none; }
+  .desktop-shell > .map-workspace.is-nav-closed.is-provider-open {
+    grid-template-areas:
+      "map"
+      "route"
+      "provider"
+      "progress";
+    grid-template-rows: auto auto auto auto;
+  }
+  .desktop-shell > .map-workspace.is-nav-open.is-provider-open {
+    grid-template-areas:
+      "toolbar"
+      "filters"
+      "focus"
+      "map"
+      "route"
+      "provider"
+      "progress";
+    grid-template-rows: auto auto auto auto auto auto auto;
+  }
+  .workspace-provider-panel { max-height: none; border-top: 1px solid var(--p-line); border-left: 0; }
 }

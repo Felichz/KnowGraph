@@ -1,4 +1,4 @@
-const { contextBridge } = require("electron");
+const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("learningDesktop", Object.freeze({
   isElectron: true,
@@ -7,5 +7,9 @@ contextBridge.exposeInMainWorld("learningDesktop", Object.freeze({
     chrome: process.versions.chrome,
     electron: process.versions.electron,
   }),
+  providerSettings: Object.freeze({
+    load: () => ipcRenderer.invoke("provider-settings:load"),
+    save: (profile) => ipcRenderer.invoke("provider-settings:save", profile),
+    clear: () => ipcRenderer.invoke("provider-settings:clear"),
+  }),
 }));
-

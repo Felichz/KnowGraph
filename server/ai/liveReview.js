@@ -236,9 +236,9 @@ array con exactamente los IDs de steps y tradeoffs recibidos en coverageChecklis
 Devolvé únicamente JSON válido en español rioplatense claro.
 `.trim();
 
-export async function reviewLive({ node, learnerAnswer, contentHash, signal, onChunk, onSection, onProviderFallback }) {
+export async function reviewLive({ node, learnerAnswer, contentHash, provider, signal, onChunk, onSection, onProviderFallback }) {
   const { raw, parsed: { data } } = await structuredCompletionWithFallback({
-    ...providerChain(config.liveModel),
+    ...providerChain(config.liveModel, { provider }),
     messages: [
       { role: "system", content: LIVE_REVIEW_SYSTEM_PROMPT },
       { role: "user", content: buildEvaluationUserPayload({ node, learnerAnswer }) },

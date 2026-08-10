@@ -43,11 +43,11 @@ const FeedbackJsonSchema = {
   properties: { feedback: EvaluationJsonSchema.properties.feedback },
 };
 
-export async function evaluateParaphrase({ node, learnerAnswer, contentHash, signal, onChunk, onSection, onBlock, onProviderFallback }) {
+export async function evaluateParaphrase({ node, learnerAnswer, contentHash, provider, signal, onChunk, onSection, onBlock, onProviderFallback }) {
   const userPayload = buildEvaluationUserPayload({ node, learnerAnswer });
   // El score se calcula en una request pequena y sin thinking: la UI no
   // depende de que el modelo termine de redactar el feedback para mostrarlo.
-  const providers = providerChain(config.evaluationModel, { thinking: "disabled" });
+  const providers = providerChain(config.evaluationModel, { provider, thinking: "disabled" });
 
   const scoring = await structuredCompletionWithFallback({
     ...providers,
@@ -122,9 +122,9 @@ export async function evaluateParaphrase({ node, learnerAnswer, contentHash, sig
   };
 }
 
-async function evaluateParaphraseLegacy({ node, learnerAnswer, contentHash, signal, onChunk, onSection, onBlock, onProviderFallback }) {
+async function evaluateParaphraseLegacy({ node, learnerAnswer, contentHash, provider, signal, onChunk, onSection, onBlock, onProviderFallback }) {
   const userPayload = buildEvaluationUserPayload({ node, learnerAnswer });
-  const providers = providerChain(config.evaluationModel);
+  const providers = providerChain(config.evaluationModel, { provider });
 
   const { raw, parsed: { data: wireData, attempts } } = await structuredCompletionWithFallback({
     ...providers,
@@ -152,7 +152,7 @@ async function evaluateParaphraseLegacy({ node, learnerAnswer, contentHash, sign
     // segundo intento duplicaría el preview. La UI ofrece reintentar de forma
     // explícita cuando el stream falla.
     maxAttempts: onChunk ? 1 : undefined,
-    parse: (response) => parseEvaluation(response, userPayload, signal),
+    parse: (response) => parseEvaluation(response, userPayload, signal, provider),
   });
 
   const data = normalizeEvaluation(wireData);
@@ -181,12 +181,12 @@ async function evaluateParaphraseLegacy({ node, learnerAnswer, contentHash, sign
   };
 }
 
-async function parseEvaluation(raw, userPayload, signal) {
+async function parseEvaluation(raw, userPayload, signal, provider) {
   const parsed = await parseStructuredResponse({
     raw,
     schema: EvaluationWireZod,
     repair: ({ badOutput }) =>
-      repairToJson({ badOutput, system: REPAIR_SYSTEM_PROMPT, userHint: userPayload, signal }),
+      repairToJson({ badOutput, system: REPAIR_SYSTEM_PROMPT, userHint: userPayload, signal, provider }),
   });
   return {
     ...parsed,
@@ -194,10 +194,10 @@ async function parseEvaluation(raw, userPayload, signal) {
   };
 }
 
-async function repairToJson({ badOutput, system, userHint, signal }) {
+async function repairToJson({ badOutput, system, userHint, signal, provider }) {
   try {
     const res = await chatCompletionWithFallback({
-      ...providerChain(config.evaluationModel),
+      ...providerChain(config.evaluationModel, { provider }),
       messages: [
         { role: "system", content: system },
         {

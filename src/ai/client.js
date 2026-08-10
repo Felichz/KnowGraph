@@ -7,20 +7,38 @@ export class AiError extends Error {
   }
 }
 
+// `import.meta.env` only exists in Vite. Keeping this guard makes the client
+// importable by the Node-side logic tests as well.
+const AI_API_BASE_URL = String(import.meta.env?.VITE_AI_API_URL ?? "").replace(/\/+$/, "");
+
+function aiUrl(path) {
+  return `${AI_API_BASE_URL}${path}`;
+}
+
 export function isCancel(err) {
   return err?.name === "AbortError" || err?.code === "aborted" || err?.code === "aborted_from_abortcontroller";
 }
 
 export async function fetchAiStatus({ signal } = {}) {
-  const res = await fetch("/api/ai/status", { signal });
+  const res = await fetch(aiUrl("/api/ai/status"), { signal });
   return handle(res);
 }
 
-export async function evaluateParaphrase({ graphId, nodeId, answer, contentHash, node, signal } = {}) {
-  const res = await fetch("/api/ai/evaluate", {
+export async function testAiProvider({ provider, signal } = {}) {
+  const res = await fetch(aiUrl("/api/ai/providers/test"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node }),
+    body: JSON.stringify({ provider }),
+    signal,
+  });
+  return handle(res);
+}
+
+export async function evaluateParaphrase({ graphId, nodeId, answer, contentHash, node, provider, signal } = {}) {
+  const res = await fetch(aiUrl("/api/ai/evaluate"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node, provider }),
     signal,
   });
   return handle(res);
@@ -36,16 +54,17 @@ export async function evaluateParaphraseStream({
   answer,
   contentHash,
   node,
+  provider,
   signal,
   onProgress,
   onSection,
   onBlock,
   onReset,
 } = {}) {
-  const res = await fetch("/api/ai/evaluate/stream", {
+  const res = await fetch(aiUrl("/api/ai/evaluate/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node }),
+    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node, provider }),
     signal,
   });
 
@@ -112,15 +131,16 @@ export async function liveReviewStream({
   answer,
   contentHash,
   node,
+  provider,
   signal,
   onProgress,
   onSection,
   onReset,
 } = {}) {
-  const res = await fetch("/api/ai/live-review/stream", {
+  const res = await fetch(aiUrl("/api/ai/live-review/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node }),
+    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node, provider }),
     signal,
   });
 
@@ -173,14 +193,15 @@ export async function coachChatStream({
   review,
   history,
   question,
+  provider,
   signal,
   onProgress,
   onDelta,
 } = {}) {
-  const res = await fetch("/api/ai/live-review/chat/stream", {
+  const res = await fetch(aiUrl("/api/ai/live-review/chat/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node, review, history, question }),
+    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node, review, history, question, provider }),
     signal,
   });
 

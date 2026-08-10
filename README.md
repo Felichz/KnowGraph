@@ -9,6 +9,7 @@ El proyecto nació como un mapa de preparación para entrevistas de Rails y Reac
 - [Plan de integración LLM: parafraseo, tutoría y flashcards](docs/LLM_LEARNING_EXPERIENCE_PLAN.md)
 - [Guía de la API headless y handoff de presentación](docs/PRESENTATION_HANDOFF_GUIDE.md)
 - [Aplicación desktop con Electron](docs/DESKTOP_APP.md)
+- [Deploy público en Vercel con gateway BYOK](docs/DEPLOY_VERCEL.md)
 
 La presentación activa conserva la versión original de `src/App.jsx` y sus componentes detallados. El núcleo headless de `src/logic/` permanece disponible para futuras iteraciones o rediseños, pero no reemplaza la UI actual.
 
@@ -192,6 +193,14 @@ La evaluación por parafraseo reemplaza el quiz de opciones múltiples: el usuar
 - El feedback no bloquea marcar un nodo como entendido.
 
 Más detalle en [docs/LLM_LEARNING_EXPERIENCE_PLAN.md](docs/LLM_LEARNING_EXPERIENCE_PLAN.md).
+
+### Providers configurables (BYOK)
+
+La barra superior incluye el botón **IA**. Desde ahí podés configurar MiniMax o cualquier provider compatible con OpenAI, probar la conexión y usarlo para evaluación, coaching y chat.
+
+- En navegador la key queda sólo en la sesión actual; en Electron se guarda cifrada mediante el almacenamiento seguro del sistema.
+- El gateway recibe el perfil solamente junto con la request y no lo persiste ni registra la key.
+- Para desplegar el frontend público en Vercel y el gateway de streaming por separado, seguí [la guía de deploy](docs/DEPLOY_VERCEL.md).
 
 ## Exponerlo con ngrok
 

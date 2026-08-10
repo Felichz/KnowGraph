@@ -77,6 +77,10 @@ export async function chatCompletionWithFallback({
 }) {
   let primaryEmitted = false;
 
+  if (!primary?.apiKey && !fallback?.apiKey) {
+    throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "ConfigurÃ¡ un provider de IA antes de evaluar");
+  }
+
   if (primary?.apiKey) {
     try {
       const raw = await chatCompletion({
@@ -101,6 +105,9 @@ export async function chatCompletionWithFallback({
     }
   }
 
+  if (!fallback?.apiKey) {
+    throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "No hay provider de fallback configurado");
+  }
   const raw = await chatCompletion({
     ...request,
     ...fallback,
@@ -131,6 +138,9 @@ export async function structuredCompletionWithFallback({
   ...request
 }) {
   if (typeof parse !== "function") throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "Falta parser estructurado");
+  if (!primary?.apiKey && !fallback?.apiKey) {
+    throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "ConfigurÃ¡ un provider de IA antes de evaluar");
+  }
   let primaryEmitted = false;
 
   const callProvider = async (provider, fallbackFrom = null) => {
@@ -171,6 +181,9 @@ export async function structuredCompletionWithFallback({
     }
   }
 
+  if (!fallback?.apiKey) {
+    throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "No hay provider de fallback configurado");
+  }
   const raw = await callProvider(fallback, primary?.name ?? null);
   return { raw, parsed: await parse(raw) };
 }
@@ -197,6 +210,7 @@ async function callOnce({ baseUrl, apiKey, body, signal, timeoutMs, onChunk, onS
   try {
     const res = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
+      redirect: "error",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
@@ -388,6 +402,7 @@ export async function checkUpstream({ baseUrl, apiKey, timeoutMs = 5000 }) {
   try {
     const res = await fetch(`${baseUrl}/models`, {
       method: "GET",
+      redirect: "error",
       headers: { Authorization: `Bearer ${apiKey}` },
       signal: ac.signal,
     });

@@ -23,7 +23,7 @@ import { CoachChat } from "./CoachChat.jsx";
 
 const LIVE_DEBOUNCE_MS = 5_000;
 
-export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoach, onEvaluationSaved, onNavigateBack, onNavigateNext, hasPrevious, hasNext }) {
+export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "all", onRequestCoach, onEvaluationSaved, onNavigateBack, onNavigateNext, hasPrevious, hasNext }) {
   const contentHash = hashCardContent(node);
 
   const [draft, setDraftState] = useState("");
@@ -204,6 +204,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
         answer: trimmed,
         contentHash,
         node,
+        provider: providerProfile,
         signal: controller.signal,
         onSection: (field, value) => {
           if (liveRequestRef.current !== requestId) return;
@@ -294,7 +295,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
       setLiveProgress((previous) => ({ ...previous, now: Date.now() }));
       setLiveError(e?.message ?? "No se pudo actualizar la revisión viva.");
     }
-  }, [contentHash, graphId, node, node.id]);
+  }, [contentHash, graphId, node, node.id, providerProfile]);
 
   const cancelLiveReview = useCallback(() => {
     const hasDebounce = Boolean(liveDebounceRef.current || liveDebounceClockRef.current || debounceStartedAt);
@@ -424,6 +425,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
         review: activeChatIteration.review,
         history: previousMessages,
         question,
+        provider: providerProfile,
         signal: controller.signal,
         onProgress: () => {
           if (chatControllerRef.current !== controller) return;
@@ -471,7 +473,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
         error: chatError?.message ?? "No se pudo obtener la respuesta del coach.",
       });
     }
-  }, [activeChatIteration, chatState.status, graphId, node]);
+  }, [activeChatIteration, chatState.status, graphId, node, providerProfile]);
 
   const stopCoachResponse = useCallback(() => {
     const request = chatRequestRef.current;
@@ -586,6 +588,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
         answer,
         contentHash,
         node,
+        provider: providerProfile,
         signal: controller.signal,
         onProgress: (length) => {
           if (activeRequestRef.current !== requestId) return;
@@ -649,7 +652,7 @@ export function ParaphraseReview({ graphId, node, viewMode = "all", onRequestCoa
       if (isCancel(e)) return;
       setError({ code: e?.code ?? "upstream", message: e?.message ?? "Error desconocido" });
     }
-  }, [contentHash, draft, graphId, node, onEvaluationSaved]);
+  }, [contentHash, draft, graphId, node, onEvaluationSaved, providerProfile]);
 
   const cancel = useCallback(() => {
     pending?.controller?.abort();

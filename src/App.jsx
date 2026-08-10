@@ -10,11 +10,13 @@ import { getInterviewQuestionPrerequisites } from "./reactQuiz";
 import { ParaphraseReview } from "./components/ParaphraseReview.jsx";
 import { FlashcardView } from "./components/FlashcardView.jsx";
 import { ViewModeToggle } from "./components/ViewModeToggle.jsx";
+import { ProviderSettingsPanel } from "./components/ProviderSettingsPanel.jsx";
 import GraphTopologyView from "./components/graphViews/GraphTopologyView.jsx";
 import { ReadingChunks } from "./components/ReadingChunks.jsx";
 import { listAllAttempts } from "./ai/learningStore.js";
 import { hashCardContent } from "./ai/contentHash.js";
 import { getCompletionView, getScoreView, isEvaluationSurfaceComplete } from "./ai/types.js";
+import { loadProviderProfile } from "./ai/providerSettings.js";
 
 let mermaidLoader;
 
@@ -1167,6 +1169,8 @@ export default function App() {
   const [viewMode, setViewMode] = useState("graph"); // "graph" | "flashcards"
   const [workspaceNavOpen, setWorkspaceNavOpen] = useState(false);
   const [progressPanelOpen, setProgressPanelOpen] = useState(false);
+  const [providerSettingsOpen, setProviderSettingsOpen] = useState(false);
+  const [providerProfile, setProviderProfile] = useState(null);
   const [lessonContextOpen, setLessonContextOpen] = useState(false);
   const ttsSpeechRef = useRef(null);
   const ttsSpeedRef = useRef(1);
@@ -1261,16 +1265,27 @@ export default function App() {
   }, [applyAppRoute]);
 
   useEffect(() => {
-    if ((!workspaceNavOpen && !progressPanelOpen) || selected || typeof window === "undefined") return undefined;
+    if ((!workspaceNavOpen && !progressPanelOpen && !providerSettingsOpen) || selected || typeof window === "undefined") return undefined;
     const closeWorkspacePanels = (event) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
-      if (progressPanelOpen) setProgressPanelOpen(false);
+      if (providerSettingsOpen) setProviderSettingsOpen(false);
+      else if (progressPanelOpen) setProgressPanelOpen(false);
       else setWorkspaceNavOpen(false);
     };
     window.addEventListener("keydown", closeWorkspacePanels);
     return () => window.removeEventListener("keydown", closeWorkspacePanels);
-  }, [progressPanelOpen, selected, workspaceNavOpen]);
+  }, [progressPanelOpen, providerSettingsOpen, selected, workspaceNavOpen]);
+
+  useEffect(() => {
+    let active = true;
+    loadProviderProfile().then((profile) => {
+      if (active) setProviderProfile(profile);
+    }).catch(() => {
+      if (active) setProviderProfile(null);
+    });
+    return () => { active = false; };
+  }, []);
 
   const openDeepDive = useCallback((id, event, triggerKey) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -1564,7 +1579,10 @@ export default function App() {
           aria-controls="workspace-navigation"
           onClick={() => setWorkspaceNavOpen((open) => {
             const next = !open;
-            if (next) setProgressPanelOpen(false);
+            if (next) {
+              setProgressPanelOpen(false);
+              setProviderSettingsOpen(false);
+            }
             return next;
           })}
         >
@@ -1583,13 +1601,35 @@ export default function App() {
         </div>
         <button
           type="button"
+          className={`workspace-provider-toggle ${providerSettingsOpen ? "is-active" : ""}`}
+          aria-label={providerSettingsOpen ? "Cerrar configuraciÃ³n de IA" : "Configurar provider de IA"}
+          aria-expanded={providerSettingsOpen}
+          aria-controls="workspace-provider-panel"
+          title={providerProfile ? `Provider activo: ${providerProfile.label}` : "Configurar provider de IA"}
+          onClick={() => setProviderSettingsOpen((open) => {
+            const next = !open;
+            if (next) {
+              setWorkspaceNavOpen(false);
+              setProgressPanelOpen(false);
+            }
+            return next;
+          })}
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75v2.1m0 10.3v2.1M2.75 10h2.1m10.3 0h2.1M4.88 4.88l1.49 1.49m7.26 7.26 1.49 1.49m0-10.24-1.49 1.49m-7.26 7.26-1.49 1.49" /><circle cx="10" cy="10" r="3.15" /></svg>
+          <span>{providerProfile ? providerProfile.label : "IA"}</span>
+        </button>
+        <button
+          type="button"
           className={`progress-block ${progressPanelOpen ? "is-active" : ""}`}
           aria-label={progressPanelOpen ? "Cerrar panel de progreso" : "Abrir panel de progreso"}
           aria-expanded={progressPanelOpen}
           aria-controls="workspace-progress-panel"
           onClick={() => setProgressPanelOpen((open) => {
             const next = !open;
-            if (next) setWorkspaceNavOpen(false);
+            if (next) {
+              setWorkspaceNavOpen(false);
+              setProviderSettingsOpen(false);
+            }
             return next;
           })}
         >
@@ -1600,7 +1640,7 @@ export default function App() {
         </button>
       </header>
 
-      <section className={`map-workspace ${workspaceNavOpen ? "is-nav-open" : "is-nav-closed"} ${progressPanelOpen ? "is-progress-open" : "is-progress-closed"}`} aria-label="Workspace de aprendizaje">
+      <section className={`map-workspace ${workspaceNavOpen ? "is-nav-open" : "is-nav-closed"} ${progressPanelOpen ? "is-progress-open" : "is-progress-closed"} ${providerSettingsOpen ? "is-provider-open" : "is-provider-closed"}`} aria-label="Workspace de aprendizaje">
       <div id="workspace-navigation" className="graph-switcher" aria-label="Elegir grafo">
         <div className="workspace-nav-heading">
           <div><span>WORKSPACE</span><strong>Navegación</strong></div>
@@ -1717,6 +1757,13 @@ export default function App() {
         </div>
       </section>
       </aside>
+
+      <ProviderSettingsPanel
+        open={providerSettingsOpen}
+        profile={providerProfile}
+        onClose={() => setProviderSettingsOpen(false)}
+        onSaved={setProviderProfile}
+      />
 
       <section className="learning-guide" aria-label="Ruta sugerida de aprendizaje">
         <div className="guide-heading">
@@ -1960,6 +2007,7 @@ export default function App() {
               <ParaphraseReview
                 graphId={graphKey}
                 node={selected}
+                providerProfile={providerProfile}
                 viewMode={lessonView === "coach" ? "coach" : lessonView === "evaluate" ? "evaluate" : "hidden"}
                 onEvaluationSaved={handleEvaluationSaved}
                 onRequestCoach={() => setLessonView("coach")}

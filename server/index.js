@@ -4,13 +4,19 @@ import { evaluateParaphrase } from "./ai/evaluator.js";
 import { reviewLive } from "./ai/liveReview.js";
 import { answerCoachQuestion, MAX_COACH_CHAT_MESSAGE_CHARS } from "./ai/coachChat.js";
 import { checkUpstream } from "./ai/llmClient.js";
+import { parseRequestProvider } from "./ai/providers.js";
 import { MAX_LEARNER_ANSWER_CHARS } from "./ai/schemas.js";
 import { GatewayError, ErrorCodes, jsonErrorResponse } from "./ai/errors.js";
 
 const server = http.createServer(async (req, res) => {
-  // CORS for the Vite dev server
+  // El gateway acepta orÃ­genes locales en desarrollo y orÃ­genes explÃ­citos
+  // en producciÃ³n. Reflejar cualquier Origin convertirÃ­a un proxy BYOK en un
+  // endpoint reutilizable por terceros.
   const origin = req.headers.origin;
-  if (origin) {
+  if (origin && !isAllowedOrigin(origin)) {
+    return sendJson(res, 403, { code: "origin_not_allowed", message: "Este origen no puede usar el gateway" });
+  }
+  if (origin && isAllowedOrigin(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
   }
@@ -26,11 +32,13 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", `http://${req.headers.host}`);
 
     if (req.method === "GET" && url.pathname === "/api/ai/status") {
-      const gatewayConfigured = true;
-      const upstream = await checkUpstream({ baseUrl: config.freellmapiBaseUrl, apiKey: config.freellmapiApiKey });
+      const defaultProviderConfigured = Boolean(config.minimaxApiKey || (config.freellmapiBaseUrl && config.freellmapiApiKey));
+      const upstream = config.freellmapiBaseUrl && config.freellmapiApiKey
+        ? await checkUpstream({ baseUrl: config.freellmapiBaseUrl, apiKey: config.freellmapiApiKey })
+        : { reachable: false, status: null, latencyMs: null, modelCount: null, error: "not_configured" };
       return sendJson(res, 200, {
-        available: gatewayConfigured && upstream.reachable,
-        gateway: { configured: gatewayConfigured },
+        available: true,
+        gateway: { configured: defaultProviderConfigured, acceptsUserProviders: true },
         primary: {
           provider: "minimax",
           configured: Boolean(config.minimaxApiKey),
@@ -52,6 +60,20 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    if (req.method === "POST" && url.pathname === "/api/ai/providers/test") {
+      const body = await readJsonBody(req);
+      const provider = await parseRequestProvider(body?.provider);
+      const result = await checkUpstream({ baseUrl: provider.baseUrl, apiKey: provider.apiKey });
+      return sendJson(res, 200, {
+        reachable: result.reachable,
+        status: result.status,
+        latencyMs: result.latencyMs,
+        modelCount: result.modelCount,
+        error: result.error,
+        label: provider.label,
+      });
+    }
+
     if (req.method === "POST" && url.pathname === "/api/ai/evaluate") {
       const body = await readJsonBody(req);
       const { graphId, nodeId, answer, contentHash } = body ?? {};
@@ -66,7 +88,8 @@ const server = http.createServer(async (req, res) => {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
       }
 
-      const result = await evaluateParaphrase({ node, learnerAnswer: answer, contentHash, signal: reqAbortedSignal(req) });
+      const provider = await parseRequestProvider(body?.provider);
+      const result = await evaluateParaphrase({ node, learnerAnswer: answer, contentHash, provider, signal: reqAbortedSignal(req) });
 
       return sendJson(res, 200, {
         attempt: {
@@ -117,12 +140,14 @@ const server = http.createServer(async (req, res) => {
       };
 
       const signal = reqAbortedSignal(req);
+      const provider = await parseRequestProvider(body?.provider);
       try {
         writeEvent("progress", { stage: "evaluating", length: 0 });
         const result = await evaluateParaphrase({
           node,
           learnerAnswer: answer,
           contentHash,
+          provider,
           signal,
           // El JSON parcial queda dentro del gateway. El navegador recibe
           // progreso y secciones completas, nunca texto JSON a medio formar.
@@ -195,12 +220,14 @@ const server = http.createServer(async (req, res) => {
       };
 
       const signal = reqAbortedSignal(req);
+      const provider = await parseRequestProvider(body?.provider);
       try {
         writeEvent("progress", { stage: "live_review", length: 0 });
         const result = await reviewLive({
           node,
           learnerAnswer: answer,
           contentHash,
+          provider,
           signal,
           onChunk: (_delta, accumulated) => {
             writeEvent("progress", { stage: "live_review", length: accumulated.length });
@@ -252,6 +279,7 @@ const server = http.createServer(async (req, res) => {
       };
 
       const signal = reqAbortedSignal(req);
+      const provider = await parseRequestProvider(body?.provider);
       try {
         writeEvent("progress", { stage: "coach_chat", length: 0 });
         const result = await answerCoachQuestion({
@@ -260,6 +288,7 @@ const server = http.createServer(async (req, res) => {
           review,
           history,
           question,
+          provider,
           signal,
           onChunk: (delta, accumulated) => {
             writeEvent("delta", { text: delta, length: accumulated.length });
@@ -292,6 +321,20 @@ function sendJson(res, status, body) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.end(JSON.stringify(body));
+}
+
+function isAllowedOrigin(origin) {
+  const normalized = String(origin ?? "").replace(/\/$/, "");
+  if (!normalized) return false;
+  if (config.allowedOrigins.includes(normalized)) return true;
+  try {
+    const url = new URL(normalized);
+    // Electron usa un puerto aleatorio en packaged mode y Vite alterna entre
+    // localhost/127.0.0.1; ambos son locales al usuario, no terceros remotos.
+    return ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+  } catch {
+    return false;
+  }
 }
 
 async function readJsonBody(req) {

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, session, shell } = require("electron");
+const { app, BrowserWindow, Menu, session, shell, safeStorage, ipcMain } = require("electron");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
 const http = require("node:http");
@@ -15,6 +15,53 @@ let rendererDevProcess = null;
 let rendererServer = null;
 let mainWindow = null;
 let shuttingDown = false;
+
+function providerSettingsPath() {
+  return path.join(app.getPath("userData"), "provider-settings.bin");
+}
+
+function normalizeProviderProfile(profile) {
+  if (!profile || typeof profile !== "object") throw new Error("Perfil de provider invÃ¡lido");
+  const normalized = {
+    id: String(profile.id || "provider_default").slice(0, 80),
+    label: String(profile.label || "Provider personal").slice(0, 80),
+    adapter: profile.adapter === "minimax" ? "minimax" : "openai",
+    baseUrl: String(profile.baseUrl || "").replace(/\/+$/, "").slice(0, 500),
+    apiKey: String(profile.apiKey || "").slice(0, 4096),
+    model: String(profile.model || "").slice(0, 200),
+    supportsResponseFormat: Boolean(profile.supportsResponseFormat),
+  };
+  if (!normalized.baseUrl || !normalized.apiKey || !normalized.model) throw new Error("El perfil estÃ¡ incompleto");
+  return normalized;
+}
+
+function registerProviderSettingsIpc() {
+  ipcMain.handle("provider-settings:load", () => {
+    try {
+      if (!safeStorage.isEncryptionAvailable()) return null;
+      const location = providerSettingsPath();
+      if (!fs.existsSync(location)) return null;
+      const encrypted = Buffer.from(fs.readFileSync(location, "utf8"), "base64");
+      return JSON.parse(safeStorage.decryptString(encrypted));
+    } catch {
+      return null;
+    }
+  });
+
+  ipcMain.handle("provider-settings:save", (_event, profile) => {
+    if (!safeStorage.isEncryptionAvailable()) throw new Error("El sistema no ofrece almacenamiento cifrado");
+    const normalized = normalizeProviderProfile(profile);
+    const encrypted = safeStorage.encryptString(JSON.stringify(normalized)).toString("base64");
+    fs.writeFileSync(providerSettingsPath(), encrypted, { encoding: "utf8", mode: 0o600 });
+    return true;
+  });
+
+  ipcMain.handle("provider-settings:clear", () => {
+    const location = providerSettingsPath();
+    if (fs.existsSync(location)) fs.rmSync(location);
+    return true;
+  });
+}
 
 function requestHealthy(url, timeoutMs = 800) {
   return new Promise((resolve) => {
@@ -224,6 +271,7 @@ function stopLocalServices() {
 
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
+  registerProviderSettingsIpc();
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
   try {
     await createWindow();
