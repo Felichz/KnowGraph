@@ -70,9 +70,9 @@ function updateGlobalFocus() {
   if (!interactive) {
     for (const group of readingGroups) {
       const surface = group.surfaceRect;
-      // The invisible hit area follows the lesson content column. It covers
-      // blank space beside a chunk inside that column, but it must not absorb
-      // the study navigation rail or the header/context controls.
+      // The invisible hit area follows the current rendered text block. It
+      // covers only the narrow gutter beside that block, not the study rail,
+      // header/context controls, or the rest of the article.
       const insideSurface = surface
         && latestPointer.clientX >= surface.left
         && latestPointer.clientX <= surface.right
@@ -106,9 +106,8 @@ function registerReadingSurface(surface) {
   if (!surface) return () => {};
   const currentCount = surfaceListeners.get(surface) ?? 0;
   if (currentCount === 0) {
-    // Listen globally instead of attaching to the content element. This keeps
-    // the hit area full-width without an overlay that could steal clicks from
-    // buttons, links, or the editor.
+    // Listen globally instead of attaching an overlay to the text block. This
+    // keeps the hit area click-through for buttons, links, and the editor.
     if (surfaceListeners.size === 0) {
       window.addEventListener("pointermove", onGlobalPointerMove, { passive: true });
     }
@@ -177,10 +176,11 @@ export function ReadingChunks({ text, renderChunk, className = "", chunkClassNam
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return undefined;
-    // The reading focus belongs to the tab's scrollable content, not to the
-    // modal header, study navigation rail, or context controls. The hit-test
-    // uses this surface for both its horizontal and vertical bounds.
-    groupRef.current.surface = root.closest(".lesson-content, .flashcard-modal__body");
+    // The hit-test belongs to this rendered text block, not to the whole
+    // article. Using the article made the invisible area feel much wider than
+    // the text and caused focus to activate while the pointer was in the side
+    // gutters. The root still includes the vertical gaps between its chunks.
+    groupRef.current.surface = root;
     groupRef.current.dimSurface = root.closest(".lesson-modal, .flashcard-modal") ?? groupRef.current.surface;
     groupRef.current.root = root;
 

@@ -1045,9 +1045,9 @@ const GRAPH_CONFIGS = {
 const APP_ROUTE_STATE = "learning-map";
 
 function getAppRoute(pathname) {
-  const rawPath = typeof pathname === "string" ? pathname : "/rails";
+  const rawPath = typeof pathname === "string" ? pathname : "/react";
   const parts = rawPath.split("?")[0].split("#")[0].split("/").filter(Boolean);
-  const graphKey = GRAPH_CONFIGS[parts[0]] ? parts[0] : "rails";
+  const graphKey = GRAPH_CONFIGS[parts[0]] ? parts[0] : "react";
   const graph = GRAPH_CONFIGS[graphKey];
   const nodeId = parts[1] === "card" && graph.nodes.some((node) => node.id === parts[2]) ? parts[2] : null;
   return {
@@ -1142,7 +1142,7 @@ function getSeniorityProgress(bands, checked, nodeIds) {
 }
 
 export default function App() {
-  const initialRoute = getAppRoute(typeof window !== "undefined" ? window.location.pathname : "/rails");
+  const initialRoute = getAppRoute(typeof window !== "undefined" ? window.location.pathname : "/react");
   const lessonModalRef = useRef(null);
   const modalCloseRef = useRef(null);
   const modalReturnFocusRef = useRef(null);
@@ -1153,7 +1153,7 @@ export default function App() {
   // dimensión completeness llegó a 15/15.
   const [checked, setChecked] = useState(() => new Set());
   const [latestAttemptsByNode, setLatestAttemptsByNode] = useState(() => new Map());
-  const [activeCats, setActiveCats] = useState(() => new Set(Object.keys(GRAPH_CONFIGS.rails.categories)));
+  const [activeCats, setActiveCats] = useState(() => new Set(Object.keys(GRAPH_CONFIGS.react.categories)));
   const [selected, setSelected] = useState(() => getRouteNode(initialRoute));
   const [lessonView, setLessonView] = useState("read"); // "read" | "coach" | "evaluate"
   const [lessonHistory, setLessonHistory] = useState(() => {
@@ -1184,7 +1184,7 @@ export default function App() {
   }, []);
 
   const applyAppRoute = useCallback((route, state = {}) => {
-    const nextGraphKey = GRAPH_CONFIGS[route.graphKey] ? route.graphKey : "rails";
+    const nextGraphKey = GRAPH_CONFIGS[route.graphKey] ? route.graphKey : "react";
     const nextRoute = { ...route, graphKey: nextGraphKey };
     const nextNode = getRouteNode(nextRoute);
     const previousNodeIds = Array.isArray(state.previousNodeIds) ? state.previousNodeIds : [];

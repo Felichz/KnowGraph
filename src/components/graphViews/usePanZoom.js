@@ -34,8 +34,11 @@ export function usePanZoom({ min = 0.3, max = 2, initial } = {}) {
   const onPointerDown = (event) => {
     if (event.button !== undefined && event.button !== 0) return;
     movedRef.current = 0;
-    dragRef.current = { startX: event.clientX, startY: event.clientY, viewX: view.x, viewY: view.y };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+    // Keep the original target for a normal click. Capturing immediately
+    // retargets the eventual click to the SVG itself, so a node's click
+    // handler never receives it. Capture only after the pointer has actually
+    // crossed the drag threshold.
+    dragRef.current = { startX: event.clientX, startY: event.clientY, viewX: view.x, viewY: view.y, captured: false };
   };
 
   const onPointerMove = (event) => {
@@ -45,11 +48,16 @@ export function usePanZoom({ min = 0.3, max = 2, initial } = {}) {
     const dy = event.clientY - drag.startY;
     movedRef.current = Math.max(movedRef.current, Math.abs(dx) + Math.abs(dy));
     if (movedRef.current > DRAG_THRESHOLD) {
+      if (!drag.captured) {
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        drag.captured = true;
+      }
       setView((current) => ({ ...current, x: drag.viewX + dx, y: drag.viewY + dy }));
     }
   };
 
-  const onPointerUp = () => {
+  const onPointerUp = (event) => {
+    if (dragRef.current?.captured) event.currentTarget.releasePointerCapture?.(event.pointerId);
     dragRef.current = null;
   };
 

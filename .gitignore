@@ -14,3 +14,7 @@ tts-server*.log
 tts-*.wav
 first-react-card-segment*.wav
 __pycache__/
+
+.vercel
+.env
+.env.local
