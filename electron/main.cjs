@@ -35,6 +35,44 @@ function normalizeProviderProfile(profile) {
   return normalized;
 }
 
+function normalizeProviderDraft(profile, adapter = "openai") {
+  const source = profile && typeof profile === "object" ? profile : {};
+  return {
+    id: String(source.id || "provider_default").slice(0, 80),
+    label: String(source.label || "").slice(0, 80),
+    adapter: source.adapter === "minimax" || adapter === "minimax" ? "minimax" : "openai",
+    baseUrl: String(source.baseUrl || "").replace(/\/+$/, "").slice(0, 500),
+    apiKey: String(source.apiKey || "").slice(0, 4096),
+    model: String(source.model || "").slice(0, 200),
+  };
+}
+
+function normalizeProviderState(value) {
+  const fallback = {
+    version: 2,
+    activeAdapter: "openai",
+    profiles: {
+      openai: normalizeProviderDraft({}, "openai"),
+      minimax: normalizeProviderDraft({ label: "MiniMax", baseUrl: "https://api.minimax.io/v1", model: "MiniMax-M3" }, "minimax"),
+    },
+  };
+  if (!value || typeof value !== "object") return fallback;
+  if (!value.profiles) {
+    const legacy = normalizeProviderDraft(value);
+    fallback.activeAdapter = legacy.adapter;
+    fallback.profiles[legacy.adapter] = legacy;
+    return fallback;
+  }
+  return {
+    version: 2,
+    activeAdapter: value.activeAdapter === "minimax" ? "minimax" : "openai",
+    profiles: {
+      openai: normalizeProviderDraft(value.profiles.openai, "openai"),
+      minimax: normalizeProviderDraft(value.profiles.minimax ?? { label: "MiniMax", baseUrl: "https://api.minimax.io/v1", model: "MiniMax-M3" }, "minimax"),
+    },
+  };
+}
+
 function registerProviderSettingsIpc() {
   ipcMain.handle("provider-settings:load", () => {
     try {
@@ -42,7 +80,7 @@ function registerProviderSettingsIpc() {
       const location = providerSettingsPath();
       if (!fs.existsSync(location)) return null;
       const encrypted = Buffer.from(fs.readFileSync(location, "utf8"), "base64");
-      return JSON.parse(safeStorage.decryptString(encrypted));
+      return normalizeProviderState(JSON.parse(safeStorage.decryptString(encrypted)));
     } catch {
       return null;
     }
@@ -50,7 +88,7 @@ function registerProviderSettingsIpc() {
 
   ipcMain.handle("provider-settings:save", (_event, profile) => {
     if (!safeStorage.isEncryptionAvailable()) throw new Error("El sistema no ofrece almacenamiento cifrado");
-    const normalized = normalizeProviderProfile(profile);
+    const normalized = normalizeProviderState(profile);
     const encrypted = safeStorage.encryptString(JSON.stringify(normalized)).toString("base64");
     fs.writeFileSync(providerSettingsPath(), encrypted, { encoding: "utf8", mode: 0o600 });
     return true;

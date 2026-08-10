@@ -4,8 +4,10 @@ import {
   EMPTY_PROVIDER_PROFILE,
   MINIMAX_PRESET,
   clearProviderProfile,
+  loadProviderDrafts,
   normalizeProviderProfile,
   providerStorageDescription,
+  saveProviderDraft,
   saveProviderProfile,
 } from "../ai/providerSettings.js";
 
@@ -13,44 +15,73 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
   const [draft, setDraft] = useState(() => ({ ...EMPTY_PROVIDER_PROFILE }));
   const [status, setStatus] = useState({ kind: "idle", message: "" });
   const [models, setModels] = useState([]);
-  const [modelQuery, setModelQuery] = useState("");
-  const [modelMenuOpen, setModelMenuOpen] = useState(false);
+  const [modelFilter, setModelFilter] = useState("");
+  const [manualModelOpen, setManualModelOpen] = useState(false);
   const [modelsStatus, setModelsStatus] = useState({ kind: "idle", message: "" });
   const storageDescription = useMemo(() => providerStorageDescription(), []);
   const wasOpenRef = useRef(false);
+  const draftsRef = useRef({});
+  const draftsHydratedRef = useRef(false);
   const modelRequestRef = useRef(null);
 
   useEffect(() => {
-    // Hydrate only when the inspector is opened. Saving changes `profile` in
-    // App; reacting to that same write would erase the success confirmation.
     if (open && !wasOpenRef.current) {
+      let active = true;
+      loadProviderDrafts().then((stored) => {
+        if (!active) return;
+        draftsRef.current = stored.profiles;
+        draftsHydratedRef.current = true;
+        const adapter = profile?.adapter ?? stored.activeAdapter ?? "openai";
+        setDraft(stored.profiles[adapter] ?? profile ?? { ...EMPTY_PROVIDER_PROFILE, adapter });
+      });
       setDraft(profile ? { ...profile } : { ...EMPTY_PROVIDER_PROFILE });
-      setModelQuery(profile?.model ?? "");
+      setModelFilter("");
       setModels([]);
       setModelsStatus({ kind: "idle", message: "" });
-      setModelMenuOpen(false);
+      setManualModelOpen(false);
       setStatus({ kind: "idle", message: "" });
+      wasOpenRef.current = open;
+      return () => { active = false; };
     }
-    if (!open) setModelMenuOpen(false);
+
+    if (!open) {
+      draftsHydratedRef.current = false;
+      setManualModelOpen(false);
+    }
     wasOpenRef.current = open;
+    return undefined;
   }, [open, profile]);
 
   useEffect(() => () => modelRequestRef.current?.abort(), []);
 
-  const update = (field, value) => setDraft((current) => ({ ...current, [field]: value }));
+  // Drafts are persisted independently from the active provider. This keeps
+  // an unfinished OpenRouter form from overwriting the MiniMax form (and vice
+  // versa) when the adapter select changes.
+  useEffect(() => {
+    if (!open || !draftsHydratedRef.current) return undefined;
+    const timer = window.setTimeout(() => {
+      draftsRef.current[draft.adapter] = draft;
+      saveProviderDraft(draft).catch(() => {});
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [draft, open]);
+
+  const update = (field, value) => setDraft((current) => {
+    const next = { ...current, [field]: value };
+    draftsRef.current[next.adapter] = next;
+    return next;
+  });
 
   const changeAdapter = (adapter) => {
-    if (adapter === "minimax") {
-      setDraft((current) => ({ ...current, ...MINIMAX_PRESET, label: current.label || "MiniMax" }));
-      setModelQuery(MINIMAX_PRESET.model);
-      setModels([]);
-      setModelsStatus({ kind: "idle", message: "" });
-      return;
-    }
-    setDraft((current) => ({ ...current, adapter: "openai", model: "" }));
-    setModelQuery("");
+    const next = adapter === "minimax"
+      ? draftsRef.current.minimax ?? { ...EMPTY_PROVIDER_PROFILE, ...MINIMAX_PRESET, label: "MiniMax" }
+      : draftsRef.current.openai ?? { ...EMPTY_PROVIDER_PROFILE, adapter: "openai" };
+    draftsRef.current[adapter] = next;
+    setDraft(next);
+    setModelFilter("");
     setModels([]);
     setModelsStatus({ kind: "idle", message: "" });
+    setManualModelOpen(false);
   };
 
   const getValidatedProfile = () => {
@@ -62,9 +93,18 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
     return next;
   };
 
+  const getConnectionProfile = () => {
+    const next = normalizeProviderProfile(draft, { requireModel: false });
+    if (!next) {
+      setStatus({ kind: "error", message: "Completa endpoint y API key antes de probar la conexión." });
+      return null;
+    }
+    return next;
+  };
+
   const loadModels = async (provider = null, { quiet = false } = {}) => {
-    const next = provider ?? getValidatedProfile();
-    if (!next) return;
+    const next = provider ?? getConnectionProfile();
+    if (!next) return null;
 
     modelRequestRef.current?.abort();
     const controller = new AbortController();
@@ -81,7 +121,6 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
 
       const nextModels = Array.isArray(result.models) ? result.models : [];
       setModels(nextModels);
-      setModelMenuOpen(true);
       setModelsStatus({
         kind: nextModels.length > 0 ? "success" : "empty",
         message: nextModels.length > 0
@@ -93,7 +132,7 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
       }
       return result;
     } catch (error) {
-      if (error?.name === "AbortError") return;
+      if (error?.name === "AbortError") return null;
       const message = error?.message ?? "No se pudo cargar el catálogo.";
       setModelsStatus({ kind: "error", message });
       if (!quiet) setStatus({ kind: "error", message });
@@ -104,61 +143,62 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
   };
 
   const testConnection = async () => {
-    const next = getValidatedProfile();
+    const next = getConnectionProfile();
     if (!next) return;
     setStatus({ kind: "testing", message: "Verificando endpoint, token y catálogo..." });
-    try {
-      const result = await loadModels(next, { quiet: true });
-      if (!result || !result.reachable) {
-        setStatus({ kind: "error", message: result ? testErrorMessage(result) : "No se pudo comprobar el provider." });
-        return;
-      }
-      const catalogHint = result.models?.length
-        ? `${result.models.length} modelos disponibles.`
-        : "El provider no publicó un catálogo; podés escribir el slug manualmente.";
-      setStatus({ kind: "success", message: `Conexión lista en ${result.latencyMs ?? "?"} ms. ${catalogHint}` });
-    } catch (error) {
-      setStatus({ kind: "error", message: error?.message ?? "No se pudo comprobar el provider." });
+    const result = await loadModels(next, { quiet: true });
+    if (!result || !result.reachable) {
+      setStatus({ kind: "error", message: result ? testErrorMessage(result) : "No se pudo comprobar el provider." });
+      return;
     }
+    const catalogHint = result.models?.length
+      ? `${result.models.length} modelos disponibles.`
+      : "El provider no publicó un catálogo; podés escribir el slug manualmente.";
+    setStatus({ kind: "success", message: `Conexión lista en ${result.latencyMs ?? "?"} ms. ${catalogHint}` });
   };
 
   const selectModel = (modelId) => {
     update("model", modelId);
-    setModelQuery(modelId);
-    setModelMenuOpen(false);
+    setModelFilter("");
   };
+
+  const visibleModels = models
+    .filter((model) => `${model.label} ${model.id}`.toLowerCase().includes(modelFilter.trim().toLowerCase()))
+    .slice(0, 200);
 
   const save = async () => {
     const next = getValidatedProfile();
     if (!next) return;
     try {
       const saved = await saveProviderProfile(next);
+      draftsRef.current[next.adapter] = saved;
       onSaved?.(saved);
-      setStatus({ kind: "success", message: "Provider seleccionado para las proximas evaluaciones." });
+      setStatus({ kind: "success", message: "Provider seleccionado para las próximas evaluaciones." });
     } catch (error) {
-      setStatus({ kind: "error", message: error?.message ?? "No se pudo guardar la configuracion." });
+      setStatus({ kind: "error", message: error?.message ?? "No se pudo guardar la configuración." });
     }
   };
 
   const clear = async () => {
     await clearProviderProfile();
+    draftsRef.current = {};
     setDraft({ ...EMPTY_PROVIDER_PROFILE });
-    setModelQuery("");
+    setModelFilter("");
     setModels([]);
     setModelsStatus({ kind: "idle", message: "" });
-    setModelMenuOpen(false);
+    setManualModelOpen(false);
     onSaved?.(null);
-    setStatus({ kind: "idle", message: "Se usara el provider por defecto del gateway." });
+    setStatus({ kind: "idle", message: "Se usará el provider por defecto del gateway." });
   };
 
   return (
-    <aside id="workspace-provider-panel" className={`workspace-provider-panel ${open ? "is-open" : ""}`} aria-label="Configuracion del provider de IA" aria-hidden={!open}>
+    <aside id="workspace-provider-panel" className={`workspace-provider-panel ${open ? "is-open" : ""}`} aria-label="Configuración del provider de IA" aria-hidden={!open}>
       <header className="workspace-provider-panel__header">
         <div>
           <h2>Proveedor de IA</h2>
-          <p>Usa tu propia cuenta compatible con OpenAI.</p>
+          <p>Usá tu propia cuenta compatible con OpenAI.</p>
         </div>
-        <button type="button" onClick={onClose} aria-label="Cerrar configuracion de provider">
+        <button type="button" onClick={onClose} aria-label="Cerrar configuración de provider">
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" /></svg>
         </button>
       </header>
@@ -180,85 +220,44 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
         <label className="provider-field">
           <span>Base URL</span>
           <input value={draft.baseUrl} onChange={(event) => update("baseUrl", event.target.value)} placeholder="https://api.example.com/v1" inputMode="url" autoCapitalize="none" spellCheck="false" />
-          <small>Debe incluir la version; la app agrega <code>/chat/completions</code>.</small>
+          <small>Debe incluir la versión; la app agrega <code>/chat/completions</code>.</small>
         </label>
 
         <label className="provider-field">
           <span>API key</span>
-          <input type="password" value={draft.apiKey} onChange={(event) => update("apiKey", event.target.value)} placeholder="Pega tu clave" autoComplete="new-password" spellCheck="false" />
+          <input type="password" value={draft.apiKey} onChange={(event) => update("apiKey", event.target.value)} placeholder="Pegá tu clave" autoComplete="new-password" spellCheck="false" />
         </label>
 
         <label className="provider-field">
           <span>Modelo</span>
           <div className="provider-model-picker">
             <div className="provider-model-picker__input-row">
-              <input
-                value={modelQuery}
-                onChange={(event) => {
-                  setModelQuery(event.target.value);
-                  update("model", event.target.value);
-                  setModelMenuOpen(true);
-                }}
-                onFocus={() => models.length > 0 && setModelMenuOpen(true)}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") setModelMenuOpen(false);
-                }}
-                placeholder="openrouter/auto"
-                maxLength="200"
-                autoCapitalize="none"
-                spellCheck="false"
-                role="combobox"
-                aria-autocomplete="list"
-                aria-expanded={modelMenuOpen}
-                aria-controls="provider-model-options"
-              />
-              <button
-                type="button"
-                className="provider-model-load"
-                onClick={() => models.length > 0 ? setModelMenuOpen((current) => !current) : loadModels()}
-                disabled={modelsStatus.kind === "loading"}
+              <select
+                value={draft.model}
+                disabled={models.length === 0 || modelsStatus.kind === "loading"}
+                onChange={(event) => selectModel(event.target.value)}
+                aria-label="Modelo del provider"
               >
-                {modelsStatus.kind === "loading" ? "Cargando..." : models.length > 0 ? "Catálogo" : "Buscar modelos"}
+                <option value="">{models.length > 0 ? "Seleccioná un modelo" : "Probá conexión para cargar modelos"}</option>
+                {draft.model && !models.some((model) => model.id === draft.model) && <option value={draft.model}>{draft.model}</option>}
+                {visibleModels.map((model) => <option value={model.id} key={model.id}>{model.label} · {model.id}</option>)}
+              </select>
+              <button type="button" className="provider-test-button provider-model-test" onClick={testConnection} disabled={status.kind === "testing" || modelsStatus.kind === "loading"}>
+                {status.kind === "testing" ? "Probando..." : "Probar conexión"}
               </button>
             </div>
-            {modelMenuOpen && models.length > 0 && (
-              <div id="provider-model-options" className="provider-model-options" role="listbox" aria-label="Modelos disponibles">
-                {models
-                  .filter((model) => `${model.label} ${model.id}`.toLowerCase().includes(modelQuery.trim().toLowerCase()))
-                  .slice(0, 80)
-                  .map((model) => (
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={draft.model === model.id}
-                      className={`provider-model-option ${draft.model === model.id ? "is-selected" : ""}`}
-                      key={model.id}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => selectModel(model.id)}
-                    >
-                      <span>{model.label}</span>
-                      <code>{model.id}</code>
-                    </button>
-                  ))}
-                {models.filter((model) => `${model.label} ${model.id}`.toLowerCase().includes(modelQuery.trim().toLowerCase())).length === 0 && (
-                  <p className="provider-model-empty">No hay modelos que coincidan. Podés escribir el slug manualmente.</p>
-                )}
-              </div>
-            )}
-            <small>
-              {modelsStatus.message || "Cargá el catálogo para buscar por nombre o slug. También podés escribirlo manualmente."}
-            </small>
+            {models.length > 0 && <input className="provider-model-filter" value={modelFilter} onChange={(event) => setModelFilter(event.target.value)} placeholder="Buscar por nombre o slug..." aria-label="Filtrar modelos" />}
+            {models.length === 0 && manualModelOpen && <input value={draft.model} onChange={(event) => update("model", event.target.value)} placeholder="Escribí el slug del modelo" maxLength="200" autoCapitalize="none" spellCheck="false" />}
+            {models.length === 0 && <button type="button" className="provider-manual-model" onClick={() => setManualModelOpen((current) => !current)}>{manualModelOpen ? "Ocultar entrada manual" : "Ingresar slug manualmente"}</button>}
+            <small>{modelsStatus.message || (models.length > 0 ? `${models.length} modelos cargados. Filtrá y elegí uno.` : "El selector se habilita después de probar la conexión.")}</small>
           </div>
         </label>
 
-        <p className="provider-storage-note">{storageDescription} La key se envia solo al gateway al pedir una respuesta; el gateway no la persiste.</p>
+        <p className="provider-storage-note">{storageDescription} La key se envía solo al gateway al pedir una respuesta; el gateway no la persiste.</p>
 
         {status.kind !== "idle" && <p className={`provider-status provider-status--${status.kind}`} role={status.kind === "error" ? "alert" : "status"}>{status.message}</p>}
 
         <div className="provider-settings-actions">
-          <button type="button" className="provider-test-button" onClick={testConnection} disabled={status.kind === "testing"}>
-            {status.kind === "testing" ? "Probando..." : "Probar conexion"}
-          </button>
           <button type="submit" className="provider-save-button">Usar provider</button>
         </div>
 
@@ -269,7 +268,7 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
 }
 
 function testErrorMessage(result) {
-  if (result.error === "token_rejected") return "El endpoint respondio, pero rechazo la API key.";
-  if (result.error === "timeout") return "El endpoint tardo demasiado en responder. Revisa la URL o reintenta.";
-  return "No se pudo verificar el endpoint. Confirma la URL, la key y que exponga /models.";
+  if (result.error === "token_rejected") return "El endpoint respondió, pero rechazó la API key.";
+  if (result.error === "timeout") return "El endpoint tardó demasiado en responder. Revisá la URL o reintentá.";
+  return "No se pudo verificar el endpoint. Confirmá la URL, la key y que exponga /models.";
 }

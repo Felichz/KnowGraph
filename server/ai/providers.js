@@ -3,24 +3,32 @@ import { z } from "zod";
 import { config } from "../config.js";
 import { ErrorCodes, GatewayError } from "./errors.js";
 
-const ProviderProfileZod = z.object({
+const ProviderProfileBaseZod = z.object({
   id: z.string().min(1).max(80).optional(),
   label: z.string().trim().min(1).max(80).default("Provider personal"),
   adapter: z.enum(["openai", "minimax"]).default("openai"),
   baseUrl: z.string().url().transform((value) => value.replace(/\/+$/, "")),
   apiKey: z.string().trim().min(1).max(4096),
-  model: z.string().trim().min(1).max(200),
   supportsResponseFormat: z.boolean().optional().default(false),
 }).strict();
+
+const ProviderProfileZod = ProviderProfileBaseZod.extend({
+  model: z.string().trim().min(1).max(200),
+});
+
+const ProviderDiscoveryProfileZod = ProviderProfileBaseZod.extend({
+  model: z.string().trim().max(200).optional(),
+});
 
 /**
  * A runtime provider is supplied for a single request. The gateway never
  * writes it to disk or logs its API key. OpenAI-compatible is the normal
  * contract; MiniMax is the only special adapter because of its thinking API.
  */
-export async function parseRequestProvider(value) {
+export async function parseRequestProvider(value, { requireModel = true } = {}) {
   if (value == null) return null;
-  const result = ProviderProfileZod.safeParse(value);
+  const schema = requireModel ? ProviderProfileZod : ProviderDiscoveryProfileZod;
+  const result = schema.safeParse(value);
   if (!result.success) {
     throw new GatewayError(ErrorCodes.BAD_REQUEST, "La configuracion del provider no es valida");
   }

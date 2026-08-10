@@ -62,7 +62,7 @@ export async function gatewayHandler(req, res) {
 
     if (req.method === "POST" && url.pathname === "/api/ai/providers/test") {
       const body = await readJsonBody(req);
-      const provider = await parseRequestProvider(body?.provider);
+      const provider = await parseRequestProvider(body?.provider, { requireModel: false });
       if (!provider) {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta la configuracion del provider");
       }
@@ -79,7 +79,7 @@ export async function gatewayHandler(req, res) {
 
     if (req.method === "POST" && url.pathname === "/api/ai/providers/models") {
       const body = await readJsonBody(req);
-      const provider = await parseRequestProvider(body?.provider);
+      const provider = await parseRequestProvider(body?.provider, { requireModel: false });
       if (!provider) {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta la configuracion del provider");
       }
