@@ -36,7 +36,10 @@ export function requestProvider(profile, { thinking = "adaptive" } = {}) {
     baseUrl: profile.baseUrl,
     apiKey: profile.apiKey,
     model: profile.model,
-    supportsResponseFormat: profile.supportsResponseFormat,
+    // Known MiniMax behavior is handled explicitly. Other OpenAI-compatible
+    // providers are tried with structured output first and fall back to the
+    // same request without response_format if they reject that option.
+    responseFormatMode: isMiniMax ? "unsupported" : "auto",
     extraBody: isMiniMax
       ? {
           thinking: { type: thinking === "disabled" ? "disabled" : "adaptive" },
@@ -54,7 +57,7 @@ function minimaxProvider({ thinking = "adaptive" } = {}) {
     baseUrl: config.minimaxBaseUrl,
     apiKey: config.minimaxApiKey,
     model: config.minimaxModel,
-    supportsResponseFormat: false,
+    responseFormatMode: "unsupported",
     extraBody: {
       thinking: { type: thinking === "disabled" ? "disabled" : "adaptive" },
       reasoning_split: true,
@@ -70,7 +73,7 @@ function freellmapiProvider(model) {
     baseUrl: config.freellmapiBaseUrl,
     apiKey: config.freellmapiApiKey,
     model,
-    supportsResponseFormat: true,
+    responseFormatMode: "supported",
   };
 }
 

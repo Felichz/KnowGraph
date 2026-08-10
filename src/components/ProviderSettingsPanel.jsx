@@ -122,11 +122,6 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
           <input value={draft.model} onChange={(event) => update("model", event.target.value)} placeholder="MiniMax-M3" maxLength="200" autoCapitalize="none" spellCheck="false" />
         </label>
 
-        <label className="provider-check">
-          <input type="checkbox" checked={draft.supportsResponseFormat} onChange={(event) => update("supportsResponseFormat", event.target.checked)} />
-          <span>Este provider acepta <code>response_format</code> con JSON Schema.</span>
-        </label>
-
         <p className="provider-storage-note">{storageDescription} La key se envia solo al gateway al pedir una respuesta; el gateway no la persiste.</p>
 
         {status.kind !== "idle" && <p className={`provider-status provider-status--${status.kind}`} role={status.kind === "error" ? "alert" : "status"}>{status.message}</p>}

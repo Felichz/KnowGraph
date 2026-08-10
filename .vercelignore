@@ -15,7 +15,6 @@ attachments
 *.log
 *.wav
 *.png
-server
 docs
 README.md
 DESIGN.md

@@ -7,14 +7,12 @@ export const EMPTY_PROVIDER_PROFILE = Object.freeze({
   baseUrl: "",
   apiKey: "",
   model: "",
-  supportsResponseFormat: false,
 });
 
 export const MINIMAX_PRESET = Object.freeze({
   adapter: "minimax",
   baseUrl: "https://api.minimax.io/v1",
   model: "MiniMax-M3",
-  supportsResponseFormat: false,
 });
 
 export function normalizeProviderProfile(value) {
@@ -26,7 +24,6 @@ export function normalizeProviderProfile(value) {
     baseUrl: String(value.baseUrl ?? "").trim().replace(/\/+$/, ""),
     apiKey: String(value.apiKey ?? "").trim(),
     model: String(value.model ?? "").trim().slice(0, 200),
-    supportsResponseFormat: Boolean(value.supportsResponseFormat),
   };
   return profile.baseUrl && profile.apiKey && profile.model ? profile : null;
 }

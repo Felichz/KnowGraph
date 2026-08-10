@@ -20,10 +20,12 @@
   },
   "dependencies": {
     "dompurify": "^3.4.13",
+    "dotenv": "^16.4.5",
     "idb": "^8.0.0",
     "mermaid": "^11.16.1",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

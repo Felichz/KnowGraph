@@ -8,7 +8,7 @@ import { parseRequestProvider } from "./ai/providers.js";
 import { MAX_LEARNER_ANSWER_CHARS } from "./ai/schemas.js";
 import { GatewayError, ErrorCodes, jsonErrorResponse } from "./ai/errors.js";
 
-const server = http.createServer(async (req, res) => {
+export async function gatewayHandler(req, res) {
   // El gateway acepta orÃ­genes locales en desarrollo y orÃ­genes explÃ­citos
   // en producciÃ³n. Reflejar cualquier Origin convertirÃ­a un proxy BYOK en un
   // endpoint reutilizable por terceros.
@@ -309,13 +309,19 @@ const server = http.createServer(async (req, res) => {
     const { status, body } = jsonErrorResponse(err);
     sendJson(res, status, body);
   }
-});
+}
 
-server.listen(config.port, config.host, () => {
-  console.log(`[gateway] listening on http://${config.host}:${config.port}`);
-  console.log(`[gateway] upstream: ${config.freellmapiBaseUrl}`);
-  console.log(`[gateway] evaluation model: ${config.evaluationModel}`);
-});
+// The same handler is used by the local long-running gateway and by the
+// Vercel Node function. Importing this module must not open a listener inside
+// a serverless invocation.
+if (process.env.VERCEL !== "1") {
+  const server = http.createServer(gatewayHandler);
+  server.listen(config.port, config.host, () => {
+    console.log(`[gateway] listening on http://${config.host}:${config.port}`);
+    console.log(`[gateway] upstream: ${config.freellmapiBaseUrl}`);
+    console.log(`[gateway] evaluation model: ${config.evaluationModel}`);
+  });
+}
 
 function sendJson(res, status, body) {
   res.statusCode = status;

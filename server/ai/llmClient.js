@@ -50,7 +50,7 @@ export async function chatCompletion({
       return await callOnce({ baseUrl, apiKey, body, signal, timeoutMs, onChunk, onSection, onBlock, streamContentMode });
     } catch (err) {
       lastErr = err;
-      if (!(err instanceof GatewayError) || !RETRYABLE.has(err.code) || attempt === maxAttempts) {
+      if (!(err instanceof GatewayError) || !RETRYABLE.has(err.code) || err.details?.responseFormatUnsupported || attempt === maxAttempts) {
         throw err;
       }
       const backoff = BASE_BACKOFF_MS * 2 ** (attempt - 1);
@@ -83,40 +83,48 @@ export async function chatCompletionWithFallback({
 
   if (primary?.apiKey) {
     try {
-      const raw = await chatCompletion({
-        ...request,
-        ...primary,
-        responseFormat: primary.supportsResponseFormat ? responseFormat : undefined,
-        onChunk: onChunk
-          ? (delta, accumulated) => {
-              if (delta) primaryEmitted = true;
-              onChunk(delta, accumulated);
-            }
-          : null,
-        onSection,
-        onBlock,
-      });
+      const raw = await callProvider(primary, false);
       return withProviderMetadata(raw, primary, null);
     } catch (error) {
-      if (error?.code === ErrorCodes.ABORTED || primaryEmitted || !fallback?.apiKey) {
-        throw error;
+      let providerError = error;
+      if (!primaryEmitted && canUseResponseFormat(primary) && isResponseFormatUnsupported(error)) {
+        try {
+          const raw = await callProvider(primary, true);
+          return withProviderMetadata(raw, primary, null);
+        } catch (retryError) {
+          providerError = retryError;
+        }
       }
-      console.warn(`[llm] ${primary.name} failed (${error?.code ?? "unknown"}); using ${fallback.name} fallback`);
+      if (providerError?.code === ErrorCodes.ABORTED || primaryEmitted || !fallback?.apiKey) {
+        throw providerError;
+      }
+      console.warn(`[llm] ${primary.name} failed (${providerError?.code ?? "unknown"}); using ${fallback.name} fallback`);
     }
   }
 
   if (!fallback?.apiKey) {
     throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "No hay provider de fallback configurado");
   }
-  const raw = await chatCompletion({
-    ...request,
-    ...fallback,
-    responseFormat: fallback?.supportsResponseFormat ? responseFormat : undefined,
-    onChunk,
-    onSection,
-    onBlock,
-  });
+  const raw = await callProvider(fallback, false);
   return withProviderMetadata(raw, fallback, primary?.name ?? null);
+
+  async function callProvider(provider, withoutResponseFormat) {
+    const includeResponseFormat = !withoutResponseFormat && canUseResponseFormat(provider);
+    return chatCompletion({
+      ...request,
+      ...provider,
+      responseFormat: includeResponseFormat ? responseFormat : undefined,
+      supportsResponseFormat: includeResponseFormat,
+      onChunk: onChunk
+        ? (delta, accumulated) => {
+            if (provider === primary && delta) primaryEmitted = true;
+            onChunk(delta, accumulated);
+          }
+        : null,
+      onSection,
+      onBlock,
+    });
+  }
 }
 
 /**
@@ -143,11 +151,13 @@ export async function structuredCompletionWithFallback({
   }
   let primaryEmitted = false;
 
-  const callProvider = async (provider, fallbackFrom = null) => {
+  const callProvider = async (provider, fallbackFrom = null, withoutResponseFormat = false) => {
+    const includeResponseFormat = !withoutResponseFormat && canUseResponseFormat(provider);
     const raw = await chatCompletion({
       ...request,
       ...provider,
-      responseFormat: provider.supportsResponseFormat ? responseFormat : undefined,
+      responseFormat: includeResponseFormat ? responseFormat : undefined,
+      supportsResponseFormat: includeResponseFormat,
       onChunk: onChunk
         ? (delta, accumulated) => {
             if (provider === primary && delta) primaryEmitted = true;
@@ -165,18 +175,27 @@ export async function structuredCompletionWithFallback({
       const raw = await callProvider(primary);
       return { raw, parsed: await parse(raw) };
     } catch (error) {
-      const canResetPartialStream = Boolean(onProviderFallback);
-      if (error?.code === ErrorCodes.ABORTED || (primaryEmitted && !canResetPartialStream) || !fallback?.apiKey) {
-        throw error;
+      let providerError = error;
+      if (!primaryEmitted && canUseResponseFormat(primary) && isResponseFormatUnsupported(error)) {
+        try {
+          const raw = await callProvider(primary, null, true);
+          return { raw, parsed: await parse(raw) };
+        } catch (retryError) {
+          providerError = retryError;
+        }
       }
-      try { onProviderFallback?.({ from: primary.name, to: fallback.name, reason: error?.code ?? "provider_error" }); } catch {}
-      const validationIssues = Array.isArray(error?.details?.issues)
-        ? ` ${error.details.issues.slice(0, 5).join(" | ")}`
+      const canResetPartialStream = Boolean(onProviderFallback);
+      if (providerError?.code === ErrorCodes.ABORTED || (primaryEmitted && !canResetPartialStream) || !fallback?.apiKey) {
+        throw providerError;
+      }
+      try { onProviderFallback?.({ from: primary.name, to: fallback.name, reason: providerError?.code ?? "provider_error" }); } catch {}
+      const validationIssues = Array.isArray(providerError?.details?.issues)
+        ? ` ${providerError.details.issues.slice(0, 5).join(" | ")}`
         : "";
       // El diagnóstico expone solo paths/errores de schema, nunca el texto del
       // estudiante ni la respuesta cruda del proveedor.
       console.warn(
-        `[llm] ${primary.name} structured response failed (${error?.code ?? "unknown"})${validationIssues}; using ${fallback.name} fallback`,
+        `[llm] ${primary.name} structured response failed (${providerError?.code ?? "unknown"})${validationIssues}; using ${fallback.name} fallback`,
       );
     }
   }
@@ -388,7 +407,19 @@ async function throwUpstreamError(res, baseUrl) {
   if (res.status >= 500) {
     throw new GatewayError(ErrorCodes.UPSTREAM, `Proveedor 5xx: ${detail.slice(0, 200)}`, { status: res.status });
   }
-  throw new GatewayError(ErrorCodes.UPSTREAM, `HTTP ${res.status}: ${detail.slice(0, 200)}`, { status: res.status });
+  const responseFormatUnsupported = (res.status === 400 || res.status === 422) && /response[_ -]?format|json\s*schema|structured output|unsupported.*(format|schema)|unknown field/i.test(detail);
+  throw new GatewayError(ErrorCodes.UPSTREAM, `HTTP ${res.status}: ${detail.slice(0, 200)}`, { status: res.status, responseFormatUnsupported });
+}
+
+function canUseResponseFormat(provider) {
+  if (provider?.responseFormatMode) return provider.responseFormatMode !== "unsupported";
+  return Boolean(provider?.supportsResponseFormat);
+}
+
+function isResponseFormatUnsupported(error) {
+  if (error?.details?.responseFormatUnsupported) return true;
+  if (error?.code !== ErrorCodes.UPSTREAM) return false;
+  return /response[_ -]?format|json\s*schema|structured output|unsupported.*(format|schema)|unknown field/i.test(error?.message ?? "");
 }
 
 /**
