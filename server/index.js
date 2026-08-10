@@ -63,6 +63,9 @@ export async function gatewayHandler(req, res) {
     if (req.method === "POST" && url.pathname === "/api/ai/providers/test") {
       const body = await readJsonBody(req);
       const provider = await parseRequestProvider(body?.provider);
+      if (!provider) {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta la configuracion del provider");
+      }
       const result = await checkUpstream({ baseUrl: provider.baseUrl, apiKey: provider.apiKey });
       return sendJson(res, 200, {
         reachable: result.reachable,
@@ -306,6 +309,11 @@ export async function gatewayHandler(req, res) {
 
     sendJson(res, 404, { code: "not_found", message: "Ruta no encontrada" });
   } catch (err) {
+    console.error("[gateway] request failed", {
+      code: err?.code ?? ErrorCodes.INTERNAL,
+      message: err?.message ?? String(err),
+      path: req.url,
+    });
     const { status, body } = jsonErrorResponse(err);
     sendJson(res, status, body);
   }
