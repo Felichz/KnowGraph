@@ -2,7 +2,7 @@
 // Ejecutar: node test-parse.mjs
 
 import { parseStructuredResponse } from "../ai/parse.js";
-import { EvaluationZod } from "../ai/schemas.js";
+import { EvaluationZod, EvaluationWireZod, normalizeEvaluationWire } from "../ai/schemas.js";
 import { extractCompletedFields } from "../ai/partialJson.js";
 import { extractStreamingBlocks } from "../ai/streamBlocks.js";
 
@@ -29,6 +29,44 @@ const validEval = {
     conciseVerdict: "y",
   },
 };
+
+const minimaxEval = normalizeEvaluationWire({
+  scoreSummary: { accuracy: 40, causalityAndTradeoffs: 25, application: 20, completeness: 15 },
+  feedback: {
+    rubricNotes: validEval.feedback.rubricNotes,
+    strengths: "Explicacion completa.",
+    gaps: "Aclarar un matiz.",
+    misconceptions: "Corregir la distincion entre fases.",
+    nextAttemptPrompt: "Aclarar el matiz.",
+    conciseVerdict: "Respuesta solida.",
+  },
+});
+EvaluationWireZod.parse({
+  ...minimaxEval,
+  feedback: {
+    ...minimaxEval.feedback,
+    gaps: "Aclarar un matiz.",
+    misconceptions: "Corregir la distincion entre fases.",
+  },
+});
+EvaluationZod.parse(minimaxEval);
+
+const spanishSeverityEval = normalizeEvaluationWire({
+  scoreSummary: validEval.scoreSummary,
+  feedback: {
+    ...validEval.feedback,
+    gaps: [{
+      topic: "Propagación",
+      severity: "baja",
+      explanation: "Falta precisar una parte del flujo.",
+      revisionHint: "Agregá esa precisión.",
+    }],
+  },
+});
+if (spanishSeverityEval.feedback.gaps[0].severity !== "low") {
+  throw new Error("La severidad localizada de MiniMax no se normalizó");
+}
+EvaluationZod.parse(spanishSeverityEval);
 
 const tests = [
   {

@@ -1,0 +1,53 @@
+# CARD 10: custom_hooks — Custom Hooks y composición de lógica
+categoría: state | nivel: Hooks | prereqs: hooks_rules
+
+## SUMMARY
+Un custom Hook encapsula lógica reutilizable de estado, effects o suscripciones sin reutilizar markup.
+
+
+## WHY (por qué importa)
+Evita duplicar coordinación en componentes y permite testear la lógica con una frontera clara.
+
+
+## EXPLANATION (lectura)
+Un custom Hook es una función con nombre `use...` que empaqueta lógica de React — state, effects, suscripciones — para reutilizarla sin duplicar coordinación en los componentes.
+
+La clave conceptual: comparte comportamiento, no datos. Si dos pantallas llaman `useOnlineStatus`, cada una tiene su propio state y su propia suscripción a los eventos online/offline del navegador; lo que reutilizan es la receta, no la instancia. Esto lo diferencia de un store global, y el hecho de usar Hooks adentro lo diferencia de una función helper común.
+
+El diseño de su API importa tanto como su implementación: debería hablar el idioma del dominio (`isOnline`, `retry`, `isIdle`) y no filtrar detalles de implementación como refs o nombres de eventos del navegador. La señal de extracción es simple: cuando la misma coordinación aparece por tercera vez en un componente, probablemente tiene nombre propio y quiere ser un Hook.
+
+
+## CODE (Lógica reutilizable)
+function useOnlineStatus() {
+  const [online, setOnline] = useState(navigator.onLine)
+  useEffect(() => { /* subscribe */ }, [])
+  return online
+}
+
+
+## STEPS (paso a paso)
+1. Un custom Hook comparte comportamiento, no una instancia global de state.
+2. Su API debe exponer datos y acciones del dominio, no detalles accidentales de la UI.
+3. Si dos hooks necesitan sincronizar un mismo recurso global, evaluá un store externo.
+
+
+## PITFALLS / TRADEOFFS
+1. Un custom Hook que mezcla fetching, navegación y decisiones de UI acumula responsabilidades y deja de ser reutilizable.
+2. Olvidar el cleanup de una suscripción dentro del Hook deja listeners duplicados cada vez que la pantalla se monta y desmonta.
+3. Usar un custom Hook para sincronizar un recurso global entre componentes no funciona: cada llamada tiene su instancia; ahí corresponde un store o Context.
+
+
+## TAKEAWAY
+Extraé un custom Hook cuando el comportamiento se repite y tiene una frontera con nombre.
+
+
+## AUDIT
+primer: Un Custom Hook es una función cuyo nombre empieza con `use` y que compone Hooks existentes para reutilizar lógica, no para compartir una instancia de datos.
+example: `useOnlineStatus` puede suscribirse a los eventos online/offline, devolver `{ isOnline }` y limpiar listeners al desmontar. Dos componentes que lo llamen reciben el mismo hecho del navegador, pero cada uno administra su suscripción.
+failureModes:
+1. Un custom Hook que mezcla fetching, navegación y UI termina teniendo demasiadas responsabilidades.
+2. Olvidar cleanup en una suscripción deja listeners duplicados después de montar y desmontar la pantalla.
+
+
+## SOURCES
+- Reusing Logic with Custom Hooks — React: https://react.dev/learn/reusing-logic-with-custom-hooks

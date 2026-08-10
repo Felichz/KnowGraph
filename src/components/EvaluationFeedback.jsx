@@ -1,36 +1,37 @@
 import React from "react";
 import { RubricBars } from "./RubricBars.jsx";
-import { formatEvaluationDuration, getCompletionView, getScoreView, STATUS_LABEL, SEVERITY_LABEL } from "../ai/types.js";
-import { ModelMeta } from "./ModelMeta.jsx";
+import { getCompletionView, getScoreView, STATUS_LABEL, SEVERITY_LABEL } from "../ai/types.js";
 
-export function EvaluationFeedback({ evaluation, attemptNumber, total, attemptContentHash, currentContentHash, model, routedVia, durationMs }) {
+export function EvaluationFeedback({ evaluation, attemptContentHash, currentContentHash, coachHint = null }) {
   if (!evaluation) return null;
   const stale = Boolean(attemptContentHash && currentContentHash && attemptContentHash !== currentContentHash);
   const score = getScoreView(evaluation);
   const completion = getCompletionView(evaluation);
+  const primaryGap = evaluation.gaps?.[0] ?? null;
+  const detailCount = (evaluation.strengths?.length ?? 0)
+    + (evaluation.gaps?.length ?? 0)
+    + (evaluation.misconceptions?.length ?? 0);
 
   return (
     <article className={`feedback ${score.isExtra ? "feedback--extra" : ""}`} aria-live="polite">
-      <header className="feedback__head">
+      <header className="feedback__overview">
         <div className="feedback__score-block">
           <div className="feedback__score-wrap">
             <div className="feedback__score">
               <strong>{score.displayScore}</strong>
               <span>/{score.displayMax}</span>
             </div>
-            <div className="feedback__score-meta">Cobertura conceptual: {score.coveragePercent}/100</div>
+            <div className="feedback__score-meta">Cobertura conceptual: {score.coveragePercent}%</div>
           </div>
           <div className={`feedback__status feedback__status--${score.status}`}>
             {STATUS_LABEL[score.status] ?? score.status}
           </div>
         </div>
-        {typeof attemptNumber === "number" && typeof total === "number" && (
-          <div className="feedback__counter">Intento {attemptNumber} de {total}</div>
-        )}
-        <ModelMeta model={model} routedVia={routedVia} />
-        {formatEvaluationDuration(durationMs) && (
-          <span className="feedback__duration">Evaluación completa: {formatEvaluationDuration(durationMs)}</span>
-        )}
+
+        <div className="feedback__verdict-block">
+          <span>RESULTADO</span>
+          <p>{evaluation.conciseVerdict}</p>
+        </div>
       </header>
 
       <ScoreMeter score={score} />
@@ -38,54 +39,82 @@ export function EvaluationFeedback({ evaluation, attemptNumber, total, attemptCo
       <div className={`feedback__completion ${completion.isComplete ? "is-complete" : ""}`} role="status">
         {completion.isComplete
           ? `✓ Superficie conceptual cubierta · 100% (${completion.score}/${completion.max})`
-          : `Cobertura conceptual: ${completion.percent}% (${completion.score}/${completion.max} puntos) · último score global: ${score.displayScore}/120 · faltan ideas esenciales, no ejemplos ni profundidad extra.`}
+          : `Cobertura esencial: ${completion.percent}% (${completion.score}/${completion.max}) · todavía faltan ideas de la card.`}
       </div>
 
       {stale && (
         <div className="feedback__stale" role="status">
-          Esta evaluación se hizo con una versión anterior de la card. Podés reintentar para evaluarla con el contenido actual.
+          Esta evaluación corresponde a una versión anterior de la card. Reintentá para medir el contenido actual.
         </div>
       )}
 
-      <RubricBars rubric={evaluation.rubric} />
+      <PriorityFeedback gap={primaryGap} prompt={evaluation.nextAttemptPrompt} isMastery={score.isMastery} coachHint={coachHint} />
 
-      <Section title="Lo que estuvo bien">
-        {evaluation.strengths?.length
-          ? <ul>{evaluation.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
-          : <p className="muted">Sin aspectos destacados.</p>}
-      </Section>
+      <RubricBars rubric={evaluation.rubric} compact />
 
-      {evaluation.gaps?.length > 0 && (
-        <Section title="Para mejorar">
-          <ul className="feedback__gaps">
-            {evaluation.gaps.map((g, i) => (
-              <li key={i}>
-                <span className={`sev sev--${g.severity}`}>{SEVERITY_LABEL[g.severity] ?? g.severity}</span>
-                <strong>{g.topic}:</strong> {g.explanation}
-                {g.revisionHint && <em className="hint"> → {g.revisionHint}</em>}
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
+      <details className="feedback__details">
+        <summary>
+          <span>Ver análisis completo</span>
+          <small>{detailCount} observaciones</small>
+        </summary>
+        <div className="feedback__details-body">
+          <Section title="Lo que estuvo bien">
+            {evaluation.strengths?.length
+              ? <ul>{evaluation.strengths.map((strength, index) => <li key={index}>{strength}</li>)}</ul>
+              : <p className="muted">Sin aspectos destacados.</p>}
+          </Section>
 
-      {evaluation.misconceptions?.length > 0 && (
-        <Section title="Correcciones">
-          {evaluation.misconceptions.map((m, i) => (
-            <div className="feedback__miscon" key={i}>
-              {m.quote && <blockquote>{m.quote}</blockquote>}
-              <p>{m.correction}</p>
-            </div>
-          ))}
-        </Section>
-      )}
+          {evaluation.gaps?.length > 0 && (
+            <Section title="Puntos para mejorar">
+              <ul className="feedback__gaps">
+                {evaluation.gaps.map((gap, index) => (
+                  <li key={index}>
+                    <span className={`sev sev--${gap.severity}`}>{SEVERITY_LABEL[gap.severity] ?? gap.severity}</span>
+                    <strong>{gap.topic}:</strong> {gap.explanation}
+                    {gap.revisionHint && <em className="hint">→ {gap.revisionHint}</em>}
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
 
-      <Section title="Próximo intento">
-        <p className="feedback__prompt">{evaluation.nextAttemptPrompt}</p>
-      </Section>
+          {evaluation.misconceptions?.length > 0 && (
+            <Section title="Correcciones">
+              {evaluation.misconceptions.map((misconception, index) => (
+                <div className="feedback__miscon" key={index}>
+                  {misconception.quote && <blockquote>{misconception.quote}</blockquote>}
+                  <p>{misconception.correction}</p>
+                </div>
+              ))}
+            </Section>
+          )}
 
-      <p className="feedback__verdict">{evaluation.conciseVerdict}</p>
+          <Section title="Consigna para otro intento">
+            <p className="feedback__prompt">{evaluation.nextAttemptPrompt}</p>
+          </Section>
+        </div>
+      </details>
     </article>
+  );
+}
+
+function PriorityFeedback({ gap, prompt, isMastery, coachHint }) {
+  const hasCoachGuidance = Boolean(coachHint?.text?.trim());
+  const label = isMastery && coachHint?.kind !== "gap" ? "PROFUNDIZACIÓN OPCIONAL" : "PRÓXIMO FOCO";
+  const title = hasCoachGuidance
+    ? coachHint.text
+    : gap?.topic ?? (isMastery ? "La base ya está cubierta" : "Siguiente iteración");
+  const body = hasCoachGuidance
+    ? coachHint.detail || coachHint.text
+    : gap?.explanation ?? prompt;
+
+  return (
+    <section className={`feedback__priority ${isMastery ? "is-optional" : ""} ${hasCoachGuidance ? "has-coach-guidance" : ""}`}>
+      <span>{label}</span>
+      <h4>{title}</h4>
+      <p>{body}</p>
+      {gap?.revisionHint && <strong>{gap.revisionHint}</strong>}
+    </section>
   );
 }
 
@@ -106,12 +135,32 @@ function ScoreMeter({ score }) {
       </div>
       <p className="feedback__score-explanation">
         {score.isExtra
-          ? `Ya cubriste la base. Los ${score.extraPoints} puntos dorados son profundización opcional.`
+          ? `La base ya está cubierta. Los ${score.extraPoints} puntos dorados son profundidad opcional.`
           : score.isMastery
-            ? "Base suficiente alcanzada. Podés avanzar o seguir profundizando si este concepto lo merece."
-            : "El score todavía mide cobertura de piezas esenciales de la card."}
+            ? "Base suficiente alcanzada. Podés avanzar o profundizar si este concepto lo merece."
+            : "El score mide cuántas piezas esenciales de la card ya cubriste."}
       </p>
     </div>
+  );
+}
+
+function RubricNotes({ rubric }) {
+  const notes = [
+    ["Precisión", rubric?.accuracy?.note],
+    ["Por qué y trade-offs", rubric?.causalityAndTradeoffs?.note],
+    ["Aplicación", rubric?.application?.note],
+    ["Cobertura", rubric?.completeness?.note],
+  ].filter(([, note]) => note);
+
+  if (!notes.length) return null;
+  return (
+    <Section title="Fundamento del score">
+      <dl className="feedback__rubric-notes">
+        {notes.map(([label, note]) => (
+          <div key={label}><dt>{label}</dt><dd>{note}</dd></div>
+        ))}
+      </dl>
+    </Section>
   );
 }
 

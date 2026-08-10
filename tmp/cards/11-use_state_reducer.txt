@@ -1,0 +1,52 @@
+# CARD 11: use_state_reducer — useState vs useReducer
+categoría: state | nivel: Estado | prereqs: hooks_rules
+
+## SUMMARY
+useState sirve para estado local simple; useReducer expresa transiciones relacionadas mediante eventos.
+
+
+## WHY (por qué importa)
+Elegirlo bien evita setters dispersos o reducers innecesarios.
+
+
+## EXPLANATION (lectura)
+Los dos Hooks oficiales de estado local responden a dos formas distintas de cambio. `useState` describe un valor: ideal cuando las transiciones son chicas e independientes, como un texto o un flag. `useReducer` describe transiciones: el componente despacha eventos (`save_started`, `save_failed`) y una función pura, el reducer, decide el próximo state para cada uno.
+
+El reducer gana cuando varias actualizaciones comparten reglas, o cuando el estado es en realidad una máquina de estados. Un editor que pasa de `idle` a `saving` a `saved` o `error` se lee mejor como eventos que como cuatro setters repartidos por el código, y las transiciones inválidas quedan visibles en un solo lugar.
+
+El costo es la ceremonia: action types, dispatch, switch. Por eso la regla no es "reducer es más profesional", sino "reducer cuando hay lógica de transición que concentrar". Y una frontera que no se negocia: el reducer es puro. La llamada HTTP vive en el handler que despacha la acción, nunca dentro de la función que calcula el estado.
+
+
+## CODE (Estado por eventos)
+function reducer(state, action) {
+  if (action.type === "added") return { ...state, items: [...state.items, action.item] }
+  return state
+}
+
+
+## STEPS (paso a paso)
+1. useState es claro para transiciones pequeñas.
+2. useReducer concentra reglas en una función pura.
+3. El reducer no llama APIs ni muta state.
+
+
+## PITFALLS / TRADEOFFS
+1. Meter un fetch o un Date.now() dentro del reducer lo vuelve impuro: deja de ser predecible, repetible y testeable.
+2. Usar un reducer para un booleano aislado agrega ceremonia sin ninguna decisión real que concentrar.
+3. Despachar acciones genéricas tipo set_field recrea useState con más pasos: las acciones deberían nombrar eventos del dominio.
+
+
+## TAKEAWAY
+useState describe valores; useReducer describe transiciones.
+
+
+## AUDIT
+primer: `useState` es el Hook oficial para valores locales simples. `useReducer` es otro Hook oficial: recibe acciones y una función pura que calcula el siguiente state cuando hay varias transiciones relacionadas.
+example: Un editor puede tener `idle`, `saving`, `saved` y `error`. Con un reducer, `dispatch({ type: 'save_started' })` y `dispatch({ type: 'save_failed', message })` hacen explícito el flujo, mientras la llamada HTTP permanece fuera del reducer.
+failureModes:
+1. Un reducer que llama una API deja de ser puro y hace difícil repetirlo o probarlo.
+2. Usar un reducer para un boolean aislado agrega ceremonia sin una frontera de decisión real.
+
+
+## SOURCES
+- Extracting State Logic into a Reducer — React: https://react.dev/learn/extracting-state-logic-into-a-reducer

@@ -1,0 +1,52 @@
+# CARD 2: react_mental_model — Modelo mental: UI como función del estado
+categoría: fundamentals | nivel: Fundamento | prereqs: js_basics
+
+## SUMMARY
+React calcula una descripción de UI a partir de props, state y contexto; luego compara y aplica cambios durante el commit.
+
+
+## WHY (por qué importa)
+Este modelo explica renders, effects, memoización y por qué no se manipula el DOM manualmente para cada cambio.
+
+
+## EXPLANATION (lectura)
+React te propone un trato: vos describís cómo debería verse la interfaz para un estado dado, y React se encarga de llevar el DOM hasta ese punto. Ese cálculo de la descripción se llama render; el momento en que React aplica al DOM solo lo que cambió se llama commit.
+
+Mirá el contador del ejemplo: el click no cambia el número en pantalla, agenda un state nuevo. React vuelve a ejecutar tu componente con ese valor, compara la descripción nueva con la anterior y toca únicamente el texto del botón. Nada más se reconstruye.
+
+De este modelo se desprenden dos reglas que explican casi todos los bugs de React. Primera: el render puede repetirse, así que debe ser puro — si mutás algo o hacés un fetch durante render, ese trabajo puede duplicarse. Segunda: todo lo que sincroniza con el mundo externo (suscripciones, timers, red) va después del commit, en un Effect. Cuando una pantalla hace algo raro, la pregunta correcta casi siempre es la misma: ¿esto pasó en render, en commit o en un effect?
+
+
+## CODE (Estado → render → commit)
+function Counter() {
+  const [count, setCount] = useState(0)
+  return <button onClick={() => setCount(count + 1)}>{count}</button>
+}
+
+
+## STEPS (paso a paso)
+1. Renderizar calcula una descripción y no implica que todo el DOM cambie.
+2. El render debe ser puro porque React puede repetirlo.
+3. Los effects sincronizan sistemas externos después del commit.
+
+
+## PITFALLS / TRADEOFFS
+1. No hagas fetch ni mutaciones globales durante render.
+2. setState agenda otro render; no es una asignación inmediata común.
+
+
+## TAKEAWAY
+Render = calcular UI; commit = aplicarla; effect = sincronizar lo externo.
+
+
+## AUDIT
+primer: React es una librería que calcula una descripción de la interfaz a partir de props, state y contexto. Un render es ese cálculo; el commit es el momento en que React aplica al DOM solo los cambios necesarios.
+example: En un contador, el click agenda un nuevo state, React vuelve a ejecutar el componente y compara el resultado. Si solo cambió el número, no tiene que reconstruir toda la página. Si el componente hace una mutación durante render, React podría repetirla y producir efectos duplicados.
+failureModes:
+1. Un render impuro puede duplicar una request o una suscripción.
+2. Si se copia el mismo dato en dos states, una actualización puede dejar una parte de la pantalla desactualizada.
+
+
+## SOURCES
+- Thinking in React: https://react.dev/learn/thinking-in-react
+- Render and Commit — React: https://react.dev/learn/render-and-commit

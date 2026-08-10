@@ -12,6 +12,20 @@ export const MASTERY_RAW_SCORE = 80;
 // límite y el payload al LLM usa la misma constante para no truncar en silencio.
 export const MAX_LEARNER_ANSWER_CHARS = 12000;
 
+export function buildCoverageChecklist(node) {
+  const lesson = node?.lesson ?? {};
+  return {
+    steps: (Array.isArray(lesson.steps) ? lesson.steps : []).map((text, index) => ({
+      id: `step_${index + 1}`,
+      text: String(text),
+    })),
+    tradeoffs: (Array.isArray(lesson.pitfalls) ? lesson.pitfalls : []).map((text, index) => ({
+      id: `tradeoff_${index + 1}`,
+      text: String(text),
+    })),
+  };
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Zod schemas (validación runtime en el gateway)
 // ────────────────────────────────────────────────────────────────────────────
@@ -54,6 +68,17 @@ const GapZod = z.object({
   revisionHint: z.string().min(1).max(200),
 });
 
+// Los modelos redactan en español, pero el dominio usa severidades canónicas
+// para que la UI no tenga que conocer variantes como "alta" o "baja".
+// Esta forma es deliberadamente más amplia que GapZod: es la frontera de
+// proveedor, antes de la normalización y la validación estricta del dominio.
+const GapWireZod = z.object({
+  topic: z.string().min(1),
+  severity: z.string().min(1),
+  explanation: z.string().min(1),
+  revisionHint: z.string().min(1),
+}).passthrough();
+
 const MisconceptionZod = z.object({
   quote: z.string().max(200).optional(),
   correction: z.string().min(1).max(400),
@@ -75,6 +100,119 @@ export const EvaluationZod = z.object({
     conciseVerdict: z.string().min(1).max(280),
   }),
 });
+
+// Frontera tolerante para proveedores que simplifican arrays de un solo
+// elemento o el envelope de scoreSummary. La salida se normaliza y luego se
+// valida de nuevo contra EvaluationZod antes de llegar a la UI.
+export const EvaluationWireZod = z.object({
+  scoreSummary: z.record(z.unknown()),
+  feedback: z.object({
+    rubricNotes: z.object({
+      accuracy: z.string().min(1),
+      causalityAndTradeoffs: z.string().min(1),
+      application: z.string().min(1),
+      completeness: z.string().min(1),
+    }),
+    strengths: z.union([z.array(z.string().min(1)).max(6), z.string().min(1)]),
+    gaps: z.union([z.array(z.union([GapWireZod, z.string().min(1)])).max(6), z.string().min(1)]),
+    misconceptions: z.union([z.array(z.union([MisconceptionZod, z.string().min(1)])).max(6), z.string().min(1)]),
+    nextAttemptPrompt: z.string().min(1),
+    conciseVerdict: z.string().min(1),
+  }).passthrough(),
+}).passthrough();
+
+export function normalizeEvaluationWire(wire) {
+  const normalized = { ...wire };
+  if (wire.scoreSummary) normalized.scoreSummary = { rubric: normalizeRubric(wire.scoreSummary) };
+  if (wire.feedback) normalized.feedback = normalizeFeedback(wire.feedback);
+  return normalized;
+}
+
+export function normalizeEvaluationSection(field, value) {
+  if (field === "scoreSummary") return normalizeEvaluationWire({ scoreSummary: value }).scoreSummary;
+  if (field === "feedback") return normalizeEvaluationWire({ feedback: value }).feedback;
+  return value;
+}
+
+function normalizeRubric(value) {
+  const source = value?.rubric && typeof value.rubric === "object" && !Array.isArray(value.rubric)
+    ? value.rubric
+    : value ?? {};
+  return Object.fromEntries(
+    Object.entries(RUBRIC_MAX).map(([key, max]) => {
+      const raw = source[key];
+      const score = raw && typeof raw === "object" && !Array.isArray(raw) ? raw.score : raw;
+      return [key, { score: Number(score), max }];
+    }),
+  );
+}
+
+function normalizeFeedback(feedback) {
+  return {
+    ...feedback,
+    rubricNotes: Object.fromEntries(
+      Object.entries(feedback.rubricNotes ?? {}).map(([key, value]) => [key, String(value).slice(0, 500)]),
+    ),
+    strengths: normalizeStringList(feedback.strengths).map((item) => item.slice(0, 300)).slice(0, 6),
+    gaps: normalizeGaps(feedback.gaps),
+    misconceptions: normalizeMisconceptions(feedback.misconceptions),
+    nextAttemptPrompt: String(feedback.nextAttemptPrompt ?? "").slice(0, 300),
+    conciseVerdict: String(feedback.conciseVerdict ?? "").slice(0, 280),
+  };
+}
+
+function normalizeStringList(value) {
+  if (typeof value === "string") return [value];
+  return Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+}
+
+function normalizeGaps(value) {
+  const items = typeof value === "string" ? [value] : Array.isArray(value) ? value : [];
+  return items.map((item) => {
+    if (typeof item !== "string") {
+      if (!item || typeof item !== "object") return item;
+      return {
+        ...item,
+        topic: String(item.topic ?? "").slice(0, 120),
+        severity: normalizeSeverity(item.severity),
+        explanation: String(item.explanation ?? "").slice(0, 400),
+        revisionHint: String(item.revisionHint ?? "").slice(0, 200),
+      };
+    }
+    const text = item.trim();
+    return {
+      topic: text.slice(0, 120),
+      severity: "medium",
+      explanation: text.slice(0, 400),
+      revisionHint: text.slice(0, 200),
+    };
+  });
+}
+
+function normalizeSeverity(value) {
+  const normalized = String(value ?? "")
+    .trim()
+    .toLocaleLowerCase("es")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "");
+
+  if (["high", "alta", "alto"].includes(normalized)) return "high";
+  if (["low", "baja", "bajo"].includes(normalized)) return "low";
+  return "medium";
+}
+
+function normalizeMisconceptions(value) {
+  const items = typeof value === "string" ? [value] : Array.isArray(value) ? value : [];
+  return items.map((item) => {
+    if (typeof item === "string") return { correction: item.slice(0, 400) };
+    if (!item || typeof item !== "object") return item;
+    return {
+      ...item,
+      quote: item.quote === undefined ? undefined : String(item.quote).slice(0, 200),
+      correction: String(item.correction ?? "").slice(0, 400),
+    };
+  });
+}
 
 // Frontera de dominio: la IA usa scoreSummary/feedback para poder hacer
 // streaming por fases, pero la UI y el storage siguen usando una forma simple.
@@ -254,6 +392,7 @@ export const STATUS_LABEL = Object.freeze({
 
 export function buildEvaluationUserPayload({ node, learnerAnswer }) {
   const lesson = node.lesson ?? {};
+  const coverageChecklist = buildCoverageChecklist(node);
   return JSON.stringify({
     card: {
       id: node.id,
@@ -275,6 +414,7 @@ export function buildEvaluationUserPayload({ node, learnerAnswer }) {
       diagram: lesson.diagram ?? null,
       diagramTitle: lesson.diagramTitle ?? "",
       mermaid: lesson.mermaid ?? "",
+      coverageChecklist,
     },
     learnerAnswer: String(learnerAnswer ?? "").slice(0, MAX_LEARNER_ANSWER_CHARS),
   });

@@ -23,6 +23,7 @@ import {
 } from "./reactInterviewQuestions.js";
 import { getSupplementalReactSources, REACT_REVIEW_NOTES } from "./reactSources.js";
 import { REACT_MILESTONES, REACT_SENIORITY_BANDS } from "./reactMilestones.js";
+import { REACT_FOUNDATIONS_PROSE } from "./reactFoundationsProse.js";
 
 const makeLesson = (level, summary, why, code, codeLabel, steps, pitfalls, takeaway, extras = {}) => ({
   level,
@@ -253,9 +254,6 @@ topicDetails.case_design_system_select = ["Caso integrador", "Diseñar un Select
 Object.assign(topicDetails, INTERVIEW_EXPANSION_DETAILS);
 
 const lessonAuditOverrides = {
-  effects: {
-    explanation: "Partí de esta pregunta: “¿qué sistema externo debe quedar sincronizado con este render?”. Si la respuesta es una conexión, timer, listener o API imperativa, el Effect configura esa relación después del commit y su cleanup deshace la versión anterior. Si la operación ocurre porque el usuario hizo click, pertenece al handler; si el valor puede calcularse con props y state, pertenece al render.",
-  },
   optimistic_ui: {
     explanation: "Hay dos niveles comunes. TanStack Query permite modificar temporalmente la cache compartida y restaurar un snapshot si falla la mutación. useOptimistic permite derivar una vista temporal durante una Action. En ambos casos la UI está haciendo una predicción: debe mostrar qué sigue pendiente y reconciliarse con la respuesta canónica del servidor.",
     code: "const [optimisticTodos, addOptimisticTodo] = useOptimistic(\n  todos,\n  (current, todo) => [...current, { ...todo, pending: true }]\n)\n\nstartTransition(async () => {\n  addOptimisticTodo(draft)\n  await createTodo(draft)\n})",
@@ -290,6 +288,7 @@ const nodes = data.map(([id, label, cat]) => {
   const layeredLesson = {
     ...baseLesson,
     ...(lessonAuditOverrides[id] ?? {}),
+    ...(REACT_FOUNDATIONS_PROSE[id] ?? {}),
     audit: REACT_AUDIT_NOTES[id] ?? REACT_ADVANCED_AUDIT_NOTES[id] ?? baseLesson.audit ?? null,
     ...correction,
     ...(REACT_ARCHITECTURE_REVIEW[id] ?? {}),

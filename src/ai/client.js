@@ -40,6 +40,7 @@ export async function evaluateParaphraseStream({
   onProgress,
   onSection,
   onBlock,
+  onReset,
 } = {}) {
   const res = await fetch("/api/ai/evaluate/stream", {
     method: "POST",
@@ -85,6 +86,8 @@ export async function evaluateParaphraseStream({
           if (typeof payload.field === "string") onSection(payload.field, payload.value);
         } else if (event.name === "block" && typeof onBlock === "function") {
           if (typeof payload.id === "string") onBlock(payload);
+        } else if (event.name === "reset") {
+          onReset?.(payload);
         } else if (event.name === "done") {
           finalPayload = payload;
         } else if (event.name === "error") {
@@ -112,6 +115,7 @@ export async function liveReviewStream({
   signal,
   onProgress,
   onSection,
+  onReset,
 } = {}) {
   const res = await fetch("/api/ai/live-review/stream", {
     method: "POST",
@@ -147,6 +151,7 @@ export async function liveReviewStream({
         }
         if (event.name === "progress") onProgress?.(payload.length ?? 0, payload.stage ?? "live_review");
         else if (event.name === "section") onSection?.(payload.field, payload.value);
+        else if (event.name === "reset") onReset?.(payload);
         else if (event.name === "done") finalPayload = payload;
         else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
       }
@@ -156,6 +161,67 @@ export async function liveReviewStream({
   }
 
   if (!finalPayload?.review) throw new AiError("upstream", "La revisión viva terminó sin un resultado válido", null);
+  return finalPayload;
+}
+
+export async function coachChatStream({
+  graphId,
+  nodeId,
+  answer,
+  contentHash,
+  node,
+  review,
+  history,
+  question,
+  signal,
+  onProgress,
+  onDelta,
+} = {}) {
+  const res = await fetch("/api/ai/live-review/chat/stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node, review, history, question }),
+    signal,
+  });
+
+  if (!res.ok || !res.body) {
+    let body = {};
+    try { body = await res.json(); } catch {}
+    throw new AiError(body.code ?? "upstream", body.message ?? `HTTP ${res.status}`, body.details);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let finalPayload = null;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let separator;
+      while ((separator = findSseSeparator(buffer)) !== null) {
+        const raw = buffer.slice(0, separator.start);
+        buffer = buffer.slice(separator.start + separator.length);
+        const event = parseSseEvent(raw);
+        if (!event.data) continue;
+        let payload;
+        try { payload = JSON.parse(event.data); } catch {
+          throw new AiError("upstream", "El gateway envió un evento de chat inválido", null);
+        }
+        if (event.name === "progress") onProgress?.(payload.length ?? 0, payload.stage ?? "coach_chat");
+        else if (event.name === "delta") onDelta?.(payload.text ?? "", payload.length ?? 0);
+        else if (event.name === "done") finalPayload = payload;
+        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
+      }
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+
+  if (!finalPayload?.message?.content) {
+    throw new AiError("upstream", "El chat terminó sin una respuesta válida", null);
+  }
   return finalPayload;
 }
 

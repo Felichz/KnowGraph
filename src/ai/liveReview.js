@@ -2,7 +2,7 @@ import { displayScoreFromRaw } from "./types.js";
 
 const RUBRIC_KEYS = ["accuracy", "causalityAndTradeoffs", "application", "completeness"];
 
-export function buildLiveReviewState(scoreSummary = null, hint = null, additionalGaps = []) {
+export function buildLiveReviewState(scoreSummary = null, hint = null, additionalGaps = [], coverage = []) {
   const rubric = scoreSummary?.rubric ?? null;
   const hasScores = rubric && RUBRIC_KEYS.every((key) => Number.isFinite(Number(rubric[key]?.score)));
   const rawScore = hasScores
@@ -19,6 +19,7 @@ export function buildLiveReviewState(scoreSummary = null, hint = null, additiona
     displayScore,
     displayMax: 120,
     isExtra: displayScore !== null && displayScore > 100,
+    coverage: Array.isArray(coverage) ? coverage : [],
     hint: normalizedHint,
     additionalGaps: Array.isArray(additionalGaps) ? additionalGaps : [],
     coveragePercent: displayScore === null ? 0 : Math.min(100, displayScore),
@@ -29,7 +30,12 @@ export function buildLiveReviewState(scoreSummary = null, hint = null, additiona
 
 export function normalizeLiveReviewState(review) {
   if (!review) return null;
-  return { ...review, hint: normalizeHint(review.hint) };
+  const coverage = Array.isArray(review.coverage)
+    ? review.coverage
+    : Array.isArray(review.points)
+      ? review.points.map(({ id, status }) => ({ id, status }))
+      : [];
+  return { ...review, coverage, hint: normalizeHint(review.hint) };
 }
 
 function normalizeHint(hint) {

@@ -1,0 +1,54 @@
+# CARD 5: react_values_elements — React nodes, elements, components y Fragments
+categoría: fundamentals | nivel: Fundamento | prereqs: jsx_rendering, components_props
+
+## SUMMARY
+Un React node es cualquier valor renderizable; un React element es la descripción inmutable de una pieza de UI; un component es la función o clase que React ejecuta para obtener nodes. JSX crea elements y un Fragment agrupa hijos sin agregar un nodo DOM.
+
+
+## WHY (por qué importa)
+Separar estos términos evita explicar React como si JSX fuera HTML o como si llamar una función componente fuera equivalente a dejar que React la renderice.
+
+
+## EXPLANATION (lectura)
+JSX describe un árbol de React; no es HTML pegado al DOM. El element conserva type, props y key, y React usa esa descripción para decidir qué componente ejecutar y qué host nodes confirmar. El Fragment en una fila puede devolver dos celdas sin envolverlas en un div inválido dentro del table. Si varias filas usan Fragment, React.Fragment con key conserva su identidad.
+
+
+## CODE (Del JSX al árbol de React)
+function Greeting({ name }) {
+  return <>Hola <strong>{name}</strong></>
+}
+
+const element = <Greeting name="Felix" />
+// element describe qué renderizar; React decide cuándo ejecutar Greeting.
+
+
+## STEPS (paso a paso)
+1. JSX se transforma mediante el JSX runtime en llamadas que producen React elements; no se inserta como string HTML.
+2. Un element contiene type, props y key. Es una descripción, no un nodo DOM ni una instancia mutable.
+3. Un node puede ser un element, texto, número, null, un array de nodes y otros valores admitidos por React.
+4. Un Fragment permite varios hijos sin introducir un wrapper DOM; la sintaxis larga admite key cuando se usa en listas.
+5. createElement es la forma explícita que JSX reemplaza; cloneElement existe, pero suele crear acoplamiento frágil y la documentación propone composición, Context o render props como alternativas.
+
+
+## PITFALLS / TRADEOFFS
+1. No llames Component(props) directamente para renderizarlo: <Component /> deja que React controle identidad, Hooks y reconciliación.
+2. Virtual DOM es una metáfora útil, pero una entrevista fuerte habla de elements, árbol, render, reconciliation y commit sin prometer que siempre supera cualquier actualización manual.
+3. Un Fragment elimina un wrapper innecesario; no elimina la necesidad de key cuando cada grupo pertenece a una lista.
+
+
+## TAKEAWAY
+Component produce nodes; JSX produce elements; React reconcilia esas descripciones y hace commit al host.
+
+
+## AUDIT
+primer: JSX describe un árbol de React; no es HTML pegado al DOM. El element conserva type, props y key, y React usa esa descripción para decidir qué componente ejecutar y qué host nodes confirmar.
+example: El Fragment en una fila puede devolver dos celdas sin envolverlas en un div inválido dentro del table. Si varias filas usan Fragment, React.Fragment con key conserva su identidad.
+failureModes:
+1. Confundir element con DOM node lleva a intentar mutarlo o medirlo antes del commit.
+2. Invocar un componente como función puede romper las reglas de Hooks y ocultar su identidad a React.
+
+
+## SOURCES
+- createElement — React: https://react.dev/reference/react/createElement
+- Fragment — React: https://react.dev/reference/react/Fragment
+- React calls Components and Hooks — React: https://react.dev/reference/rules/react-calls-components-and-hooks

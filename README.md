@@ -137,7 +137,7 @@ Y desde `server/` para el gateway de IA:
 cd server
 npm install
 cp .env.example .env
-# Editá server/.env y completá FREELLMAPI_API_KEY
+# Editá server/.env y completá FREELLMAPI_API_KEY y MINIMAX_API_KEY
 ```
 
 ## Desarrollo local
@@ -151,7 +151,7 @@ cd server
 npm start
 ```
 
-Por defecto escucha en `http://127.0.0.1:4317` y solo expone `/api/ai/status` y `/api/ai/evaluate`. No abrir públicamente; Vite ya proxia esas rutas en el dev server.
+Por defecto escucha en `http://127.0.0.1:4317` y expone las rutas `/api/ai/*`. El gateway intenta primero `MiniMax-M3` directamente y usa FreeLLMAPI como fallback si MiniMax falla. No abrir públicamente; Vite ya proxia esas rutas en el dev server.
 
 **Terminal 2 — Vite**:
 
@@ -183,7 +183,7 @@ Si otro dispositivo no puede conectarse, hay que revisar que el firewall permita
 
 La evaluación por parafraseo reemplaza el quiz de opciones múltiples: el usuario escribe con sus propias palabras lo que entendió y un LLM devuelve un puntaje, una rúbrica, fortalezas, vacíos, errores conceptuales y una consigna concreta para reintentar.
 
-- El gateway local (`server/`) habla con [FreeLLMAPI](https://github.com/tashfeenahmed/freellmapi) y nunca expone el token al navegador.
+- El gateway local (`server/`) intenta primero [MiniMax M3](https://platform.minimax.io/docs/api-reference/text-chat-openai) y usa [FreeLLMAPI](https://github.com/tashfeenahmed/freellmapi) como fallback; ninguna key se expone al navegador.
 - Cada intento se guarda en IndexedDB (`learning-graph-ai`) con 12 intentos máximos por nodo (FIFO).
 - El borrador se persiste automáticamente con debounce y se borra al evaluar con éxito.
 - La vista de flashcards (`[ Grafo | Flashcards ]`) muestra la cara posterior de cada card con el último parafraseo evaluado y su score.

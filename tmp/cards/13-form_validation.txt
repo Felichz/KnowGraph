@@ -1,0 +1,51 @@
+# CARD 13: form_validation — Formularios con React Hook Form y schemas
+categoría: state | nivel: Estado | prereqs: forms_controlled
+
+## SUMMARY
+React Hook Form y schemas como Zod separan registro eficiente de inputs y validación declarativa de datos.
+
+
+## WHY (por qué importa)
+Es una solución popular para formularios grandes, pero el schema del cliente no reemplaza la validación del backend.
+
+
+## EXPLANATION (lectura)
+En un formulario serio hay dos validaciones con trabajos distintos. La del cliente existe para el feedback: rechazar un email mal formado al instante, marcar el campo, ahorrar un roundtrip. La del servidor existe para la verdad: el cliente es manipulable y nada de lo que valide ahí autoriza nada.
+
+React Hook Form cubre la primera con registro eficiente de inputs — no controla cada tecla, valida cuando corresponde — y un schema como Zod describe las reglas del payload de forma declarativa y ejecutable: email requerido, edad entera, password con longitud mínima.
+
+El punto donde muchos formularios se rompen es el regreso. Cuando el backend responde con un conflicto de username, ese error no viene del schema local: hay que mapearlo al campo correcto o a un mensaje general. Y un error de red no es un error del usuario — "no pudimos guardar, reintentá" y "escribiste mal este campo" son mensajes distintos que merecen tratamiento distinto.
+
+
+## CODE (Form library + schema)
+const schema = z.object({ email: z.string().email(), age: z.number().int() })
+const { register, handleSubmit, formState } = useForm({ resolver: zodResolver(schema) })
+
+
+## STEPS (paso a paso)
+1. El schema valida forma y mensajes en el cliente.
+2. El backend vuelve a validar porque el cliente es manipulable.
+3. Mapeá errores del backend a campos y errores generales.
+4. Elegí controlled/uncontrolled según costo de renders y necesidades de UI.
+
+
+## PITFALLS / TRADEOFFS
+1. Tratar la validación del cliente como seguridad: cualquiera puede saltear el formulario y pegarle directo a la API.
+2. Mostrar un error de red como si fuera un error de validación confunde al usuario sobre qué tiene que corregir.
+3. Duplicar reglas de negocio complejas en el schema del cliente crea dos fuentes que divergen: el cliente valida forma, el servidor valida verdad.
+
+
+## TAKEAWAY
+Una librería reduce plumbing; la regla de negocio sigue siendo del servidor.
+
+
+## AUDIT
+primer: React Hook Form es una librería para registrar inputs y coordinar validación. Un schema es una descripción ejecutable de las reglas del payload, por ejemplo email requerido y password con longitud mínima.
+example: El schema puede rechazar un email mal formado antes de llamar a Rails. Después del submit, Rails puede devolver un conflicto de username; ese error no pertenece al schema local y debe mapearse al campo o al mensaje general.
+failureModes:
+1. La validación del frontend mejora feedback pero nunca autoriza ni garantiza integridad en el backend.
+2. Un error de red no debe mostrarse como si el usuario hubiera escrito mal el formulario.
+
+
+## SOURCES
+- Web forms — MDN: https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms

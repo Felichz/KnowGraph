@@ -111,7 +111,7 @@ function buildLiveSections(sections, blocks) {
   const get = (id) => blocks[id]?.value;
   const has = (id) => Object.prototype.hasOwnProperty.call(blocks, id);
 
-  const rubric = { ...(sections.rubric ?? {}) };
+  const rubric = { ...(sections.scoreSummary?.rubric ?? sections.rubric ?? {}) };
   for (const key of RUBRIC.map(([name]) => name)) {
     const scoreId = `scoreSummary.rubric.${key}.score`;
     const maxId = `scoreSummary.rubric.${key}.max`;

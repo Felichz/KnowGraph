@@ -1,0 +1,51 @@
+# CARD 7: state_updates — Estado, snapshots y batching
+categoría: state | nivel: Estado | prereqs: components_props
+
+## SUMMARY
+State es un snapshot del render actual; actualizarlo agenda otro render y React puede agrupar actualizaciones.
+
+
+## WHY (por qué importa)
+Explica por qué dos setters que usan el mismo valor viejo no necesariamente se acumulan.
+
+
+## EXPLANATION (lectura)
+El state de React no es una variable que cambia: es un snapshot del render, una foto fija de los valores con los que se calculó esa pasada. Cuando escribís `setCount(count + 1)` no estás modificando `count`; estás agendando un render nuevo con otro valor. Dentro del handler actual, `count` sigue siendo el de la foto.
+
+Esto explica el bug favorito de las entrevistas: dos `setCount(count + 1)` seguidos no suman dos, porque ambos leen el mismo snapshot. La forma funcional `setCount(c => c + 1)` sí acumula, porque cada updater recibe el valor más reciente de la cola de actualizaciones.
+
+El batching completa el cuadro: React agrupa las actualizaciones de un mismo evento en un solo render, así que tres setters seguidos no son tres renders. La conclusión práctica tiene tres patas: si el próximo valor depende del anterior, usá updater; si trabajás con objetos o arrays, creá referencias nuevas; y nunca leas el state esperando que el setter recién llamado ya hizo efecto.
+
+
+## CODE (Actualización funcional)
+setCount(value => value + 1)
+setCount(value => value + 1)
+
+
+## STEPS (paso a paso)
+1. Cuando el siguiente valor depende del anterior, usá la forma funcional.
+2. En objetos y arrays creá nuevas referencias.
+3. Leer state después del setter dentro del mismo handler devuelve el snapshot anterior.
+
+
+## PITFALLS / TRADEOFFS
+1. Leer el state inmediatamente después del setter para validar o loguear usa el valor anterior: la foto todavía no se renovó.
+2. Mutar un objeto y volver a guardar la misma referencia puede dejar la UI sin cambios: React compara referencias para decidir.
+3. Asumir que cada setter dispara un render inmediato lleva a código defensivo innecesario: React agrupa las actualizaciones del mismo evento.
+
+
+## TAKEAWAY
+State no es una variable mutable común: alimenta el próximo render.
+
+
+## AUDIT
+primer: El state de React es un snapshot: dentro de un render y de su handler se observa el valor de ese render. El setter agenda otro render; no muta la variable local inmediatamente.
+example: Si un botón incrementa dos veces usando `setCount(count + 1)`, ambas expresiones pueden usar el mismo snapshot. `setCount(current => current + 1)` encadena correctamente las dos transiciones porque cada updater recibe el valor más reciente de la cola.
+failureModes:
+1. Leer state inmediatamente después del setter puede hacer que una validación use el valor anterior.
+2. Mutar un objeto existente y volver a guardar la misma referencia puede impedir que la UI detecte el cambio.
+
+
+## SOURCES
+- State as a Snapshot — React: https://react.dev/learn/state-as-a-snapshot
+- Queueing a Series of State Updates — React: https://react.dev/learn/queueing-a-series-of-state-updates

@@ -1,0 +1,55 @@
+# CARD 3: components_props — Componentes, props y composición
+categoría: fundamentals | nivel: Fundamento | prereqs: react_mental_model
+
+## SUMMARY
+Los componentes son funciones que reciben props y componen UI mediante contratos pequeños.
+
+
+## WHY (por qué importa)
+La composición escala mejor que herencias y componentes universales.
+
+
+## EXPLANATION (lectura)
+Un componente es una función que recibe entradas (props) y devuelve una descripción de UI. Las props son de solo lectura: el hijo las usa, pero no las cambia, porque cada dato tiene un dueño y ese dueño es quien decide cómo evoluciona.
+
+La composición es lo que permite que esto escale. En vez de un componente gigante con veinte flags, armás piezas chicas con contratos chicos y las combinás. `children` es el caso más útil: una `Card` no necesita saber qué lleva adentro, solo dónde ponerlo, y por eso puede envolver hoy una tabla y mañana un formulario sin cambiar una línea.
+
+Cuando el hijo necesita que algo cambie, no modifica la prop: avisa. Una `OrdersTable` recibe `rows` y `onSelectOrder`; muestra y emite intención, y la pantalla padre decide si ese click abre un modal, cambia la URL o pide más datos. Por eso la misma tabla sirve en una página completa y en un panel lateral: su contrato no presume contexto, y esa es la propiedad que hace a un componente reutilizable de verdad.
+
+
+## CODE (Composición y children)
+function Card({ title, children }) {
+  return <section><h2>{title}</h2>{children}</section>
+}
+
+<Card title="Orders"><OrdersTable /></Card>
+
+
+## STEPS (paso a paso)
+1. Definí qué datos necesita el componente y exponelos como props de solo lectura.
+2. Ubicá el state en el dueño de la decisión; el hijo pide cambios mediante callbacks.
+3. Usá children cuando el contenedor no deba conocer el contenido que envuelve.
+4. Mantené el contrato chico: pocas props, nombres del dominio, sin flags que se contradicen entre sí.
+
+
+## PITFALLS / TRADEOFFS
+1. Una prop con demasiadas opciones, o un objeto options genérico, obliga a leer la implementación para usar bien el componente.
+2. Copiar una prop a state local para poder editarla crea dos fuentes de verdad: cuando la prop cambia, el hijo sigue mostrando el valor viejo.
+3. Pasar props a través de cinco niveles que no las usan (prop drilling) suele indicar que falta composición o un Context, no que faltan props.
+
+
+## TAKEAWAY
+Componé piezas con contratos pequeños y ownership claro.
+
+
+## AUDIT
+primer: Un componente es una función que recibe props, devuelve UI y puede componer otros componentes. Props son entradas de solo lectura; el state pertenece a quien debe decidir cómo cambia el dato.
+example: Una OrdersTable puede recibir rows y onSelectOrder. La tabla muestra y emite la intención; la pantalla padre decide si abre un modal, cambia la URL o pide más datos. Así la misma tabla sirve para una página y para un panel lateral.
+failureModes:
+1. Una prop con demasiadas opciones crea un componente difícil de entender.
+2. Si el hijo mantiene una copia editable de una prop sin sincronización explícita, puede mostrar un valor viejo.
+
+
+## SOURCES
+- Passing Props to a Component — React: https://react.dev/learn/passing-props-to-a-component
+- Thinking in React: https://react.dev/learn/thinking-in-react

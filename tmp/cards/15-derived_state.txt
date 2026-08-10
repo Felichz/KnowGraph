@@ -1,0 +1,49 @@
+# CARD 15: derived_state — Estado derivado y normalización
+categoría: state | nivel: Estado | prereqs: state_updates
+
+## SUMMARY
+Si un valor puede calcularse a partir de props o state existente, normalmente no debe guardarse como state adicional.
+
+
+## WHY (por qué importa)
+Evita duplicados desincronizados como filteredItems junto a items y query.
+
+
+## EXPLANATION (lectura)
+Antes de crear un state nuevo, hacete una pregunta: ¿puedo calcular este valor a partir de lo que ya tengo? Si la respuesta es sí, no es state: es un valor derivado y pertenece al render.
+
+El caso típico es la lista filtrada. Si ya guardás `products` y `query`, entonces `visibleProducts = products.filter(...)` se calcula en cada render y jamás puede quedar desactualizado, porque no existe como dato independiente. Guardarlo como state crea una segunda fuente de verdad que hay que sincronizar a mano cada vez que cambia products y cada vez que cambia query — y el día que olvidés una de las dos rutas, la pantalla miente.
+
+La única razón legítima para memorizar un derivado es el costo: si el cálculo es caro y una medición lo demuestra, `useMemo` lo cachea sin duplicar la fuente de verdad. Normalizar los datos del servidor es el mismo principio visto del otro lado: cada entidad vive una sola vez y todo lo demás son referencias a ella.
+
+
+## CODE (Calcular en render)
+const filtered = items.filter(item => item.name.includes(query))
+
+
+## STEPS (paso a paso)
+1. Guardá la mínima fuente de verdad.
+2. Calculá valores derivados durante render si el costo es razonable.
+3. Usá useMemo solo si el cálculo es costoso y medido.
+
+
+## PITFALLS / TRADEOFFS
+1. Actualizar filteredProducts a mano en dos lugares distintos garantiza que algún día una ruta quede sin actualizar.
+2. Sincronizar props a state con un Effect para derivar valores es la versión escondida del mismo bug: calculá en render.
+3. useMemo no arregla una fuente de verdad duplicada; solo cachea un cálculo. Si el derivado vive en state, el problema ya está instalado.
+
+
+## TAKEAWAY
+Guardá fuentes de verdad; derivá el resto.
+
+
+## AUDIT
+primer: Estado derivado es un valor que se puede calcular a partir de props o state existentes, como `filteredItems`. No conviene guardarlo por separado porque introduce otra fuente de verdad.
+example: Si el state contiene todos los productos y el texto de búsqueda, `visibleProducts = products.filter(...)` se calcula durante render. Solo se usa `useMemo` si una medición demuestra que ese cálculo es costoso.
+failureModes:
+1. Actualizar manualmente `filteredProducts` cuando cambia products y cuando cambia query puede olvidar una de las dos rutas.
+2. Normalizar datos no significa duplicarlos sin criterio: la referencia canónica debe estar clara.
+
+
+## SOURCES
+- Choosing the State Structure — React: https://react.dev/learn/choosing-the-state-structure

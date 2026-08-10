@@ -1,0 +1,56 @@
+# CARD 6: events_propagation — Eventos, propagación y acciones del usuario
+categoría: fundamentals | nivel: Fundamento | prereqs: components_props, jsx_rendering
+
+## SUMMARY
+Un evento empieza en un elemento del navegador y React ejecuta los handlers declarados en el árbol de componentes; normalmente el evento burbujea desde el objetivo hacia sus ancestros.
+
+
+## WHY (por qué importa)
+Es la base para formularios, delegación, modales y componentes compuestos, y evita confundir una acción del usuario con un Effect.
+
+
+## EXPLANATION (lectura)
+Un evento del navegador nace en un nodo concreto y viaja: primero baja en fase de captura y después sube burbujeando hasta la raíz. React te deja declarar handlers en cualquier componente de ese camino con props como `onClick`, y respeta el viaje.
+
+De ahí salen dos herramientas que tenés que distinguir sin pensar. `preventDefault` frena la acción nativa del navegador: que el form recargue la página, que el link navegue. `stopPropagation` frena el viaje del evento hacia los ancestros. El caso clásico: una fila que abre el detalle al click y adentro tiene un botón Delete — sin `stopPropagation`, borrar también abre el detalle.
+
+Y hay una regla de frontera que ordena todo el modelo: el handler es el lugar de las acciones del usuario. Confirmar, poner el estado pending, llamar la API y manejar el error viven ahí, no en un Effect que observa un booleano, porque el Effect no sabe qué click originó la operación ni con qué contexto.
+
+
+## CODE (Evento → handler → actualización)
+function SearchForm() {
+  function submit(event) {
+    event.preventDefault()
+    runSearch(new FormData(event.currentTarget))
+  }
+  return <form onSubmit={submit}><button>Buscar</button></form>
+}
+
+
+## STEPS (paso a paso)
+1. React recibe una función en onClick u onSubmit; no debés ejecutarla durante render.
+2. event.target es el nodo donde nació el evento y event.currentTarget es el nodo cuyo handler está corriendo.
+3. preventDefault evita la acción predeterminada, como recargar al enviar un form; stopPropagation evita que el evento siga hacia ancestros.
+4. El handler expresa una acción puntual. useEffect se reserva para sincronización causada por haber renderizado.
+
+
+## PITFALLS / TRADEOFFS
+1. Pasar onClick={save()} ejecuta save durante render; pasá onClick={save}.
+2. Usar stopPropagation en todas partes oculta el flujo. Reservalo para una frontera de interacción deliberada.
+3. No muevas al Effect una operación que pertenece al click o submit: perderías el contexto exacto de la acción.
+
+
+## TAKEAWAY
+Evento = algo que ocurrió; handler = respuesta puntual; Effect = sincronización posterior al render.
+
+
+## AUDIT
+primer: Los eventos del navegador tienen una fase de captura y otra de burbujeo. React expone handlers como `onClick`; `stopPropagation` detiene el viaje del evento, mientras `preventDefault` evita la acción nativa como navegar un link.
+example: Una fila abre el detalle al hacer click, pero su botón Delete debe detener la propagación para no abrir también el detalle. El handler todavía debe pedir confirmación, manejar pending y tratar un error de la API.
+failureModes:
+1. Confundir preventDefault con stopPropagation deja el evento viajando o bloquea una acción equivocada.
+2. Un botón dentro de un link puede producir navegación accidental y una mutación al mismo tiempo.
+
+
+## SOURCES
+- Responding to Events — React: https://react.dev/learn/responding-to-events

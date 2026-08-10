@@ -1,0 +1,61 @@
+# CARD 1: js_basics — JavaScript moderno para leer React
+categoría: fundamentals | nivel: Base | prereqs: ninguno
+
+## SUMMARY
+JavaScript moderno aporta closures, módulos, Promises e inmutabilidad; muchos bugs de React son bugs de referencias o asincronía.
+
+
+## WHY (por qué importa)
+Necesitás leer la sintaxis que aparece en hooks, handlers y data fetching.
+
+
+## EXPLANATION (lectura)
+Antes de React hay cuatro ideas de JavaScript que aparecen en cada componente: closures, módulos, Promises e inmutabilidad. Una closure es una función que recuerda las variables del lugar donde nació. Cada handler que escribís dentro de un componente es una closure que captura las props y el state de ese render, y por eso un setTimeout puede terminar leyendo un valor viejo: la función recuerda el render en que fue creada, no el último.
+
+Los módulos te dicen de dónde sale cada símbolo: cuando leés `import { useState } from "react"` estás viendo el contrato, no magia. Una Promise representa trabajo que todavía no terminó; `await` pausa esa función, no el navegador, y un rechazo sin `catch` se convierte en un error que nadie manejó.
+
+Por último, la inmutabilidad. React detecta cambios comparando referencias, así que `setItems([...items, item])` le entrega una referencia nueva que sí puede reconocer, mientras `items.push(item)` muta la que ya tenía y puede dejar la pantalla desactualizada. Dominar estas cuatro piezas convierte la lectura de cualquier componente en un ejercicio mecánico: sabés qué captura cada función, de dónde viene cada símbolo, qué sigue pendiente y qué referencia cambió.
+
+
+## CODE (Módulo, closure y Promise en un handler)
+import { useState } from "react"
+
+function Search() {
+  const [query, setQuery] = useState("")
+  const submit = async () => {
+    // closure: recuerda el `query` del render donde nació
+    const res = await fetch(`/api/search?q=${query}`)
+    console.log(await res.json())
+  }
+}
+
+
+## STEPS (paso a paso)
+1. Leé cada handler como una closure: identificá qué valores del render actual capturó.
+2. Seguí cada símbolo hasta su import para entender qué contrato expone ese módulo.
+3. Tratá cada fetch como una Promise: dónde se espera el resultado y dónde se atrapa el rechazo.
+4. Ante cada actualización, preguntate si creaste una referencia nueva o mutaste la existente.
+
+
+## PITFALLS / TRADEOFFS
+1. Mutar un array u objeto existente puede ocultar el cambio: React compara referencias y la vieja sigue en su lugar.
+2. Una referencia nueva no garantiza datos nuevos: `[...items]` copia la estructura, no valida el contenido.
+3. Un fetch sin catch deja el rechazo como unhandled rejection: la pantalla queda colgada y el error solo vive en la consola.
+
+
+## TAKEAWAY
+Para leer React: dominá closures, módulos, Promises y copias inmutables.
+
+
+## AUDIT
+primer: Para leer React necesitás cuatro piezas de JavaScript: closures, módulos, Promises y referencias inmutables. Una closure conserva variables; una Promise representa trabajo futuro; una copia nueva permite detectar cambios por referencia.
+example: Un handler creado dentro del render forma una closure sobre props y state. Un `fetch` devuelve una Promise y `await` pausa esa función, no el navegador. `setItems([...items, item])` crea un array nuevo; `items.push(item)` muta la referencia existente.
+failureModes:
+1. Una closure puede leer un snapshot viejo si se usa después en un timer o callback.
+2. Un `catch` ausente convierte un rechazo de Promise en un error no manejado.
+3. Mutar un objeto compartido puede hacer que React y otros consumidores no detecten el cambio.
+
+
+## SOURCES
+- Closures — MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Closures
+- Using promises — MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises

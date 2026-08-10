@@ -1,0 +1,50 @@
+# CARD 12: forms_controlled — Forms controlados y no controlados
+categoría: state | nivel: Estado | prereqs: use_state_reducer
+
+## SUMMARY
+Un input controlado recibe value desde React y notifica cambios; uno no controlado conserva el valor en el DOM y se lee con ref.
+
+
+## WHY (por qué importa)
+La elección afecta validación, rendimiento e integración con librerías.
+
+
+## EXPLANATION (lectura)
+Todo input en React elige un dueño para su valor. En un input controlado el dueño es React: `value` viene del state y cada tecla pasa por `onChange`, así que la pantalla siempre muestra lo que tu estado dice y podés validar mientras el usuario escribe. En uno no controlado el dueño es el DOM: el input guarda su propio valor y vos lo leés con una ref o con FormData al enviar.
+
+El trade-off es real. Controlado te da feedback inmediato — mostrar el error del email debajo del campo mientras se tipea — al precio de un render por tecla. No controlado evita esos renders y es la base de librerías como React Hook Form, que registra inputs y valida en el momento correcto.
+
+La regla práctica: si la validación o el formato en vivo importan, controlado; si el formulario es enorme y el costo de renders se nota, registrá sin controlar. Lo que no cambia con ninguna de las dos: el submit tiene que modelar validación, pending, éxito y error como estados explícitos.
+
+
+## CODE (Formulario controlado)
+<input value={email} onChange={event => setEmail(event.target.value)} />
+
+
+## STEPS (paso a paso)
+1. El state es la fuente de verdad del valor controlado.
+2. Submit debe modelar validación, submitting, éxito y error.
+3. Un formulario grande puede usar inputs no controlados para reducir renders, sin perder un contrato de validación.
+
+
+## PITFALLS / TRADEOFFS
+1. Un input que arranca con value undefined y después recibe un string pasa de no controlado a controlado a mitad de vida: React lo advierte y el bug es confuso.
+2. Un render por tecla en un formulario de cincuenta campos se siente: medí el costo antes de controlar todo por defecto.
+3. Deshabilitar el botón de submit no reemplaza la validación del backend ni evita submits duplicados desde otro cliente.
+
+
+## TAKEAWAY
+Controlado = React conoce el valor; no controlado = el DOM lo conserva.
+
+
+## AUDIT
+primer: Un input controlado recibe su `value` desde React y notifica cambios con `onChange`; un input no controlado conserva el valor en el DOM y se lee con una ref o al enviar el form.
+example: Para un email, un form controlado puede mostrar el error debajo del campo mientras el usuario escribe. Para un formulario enorme, React Hook Form puede registrar inputs no controlados y validar en submit sin provocar un render por cada tecla.
+failureModes:
+1. Un input que pasa de undefined a value se vuelve controlado a mitad de vida y genera warnings.
+2. Deshabilitar el botón no reemplaza la validación del backend ni evita un submit duplicado desde otro cliente.
+
+
+## SOURCES
+- Sharing State Between Components — React: https://react.dev/learn/sharing-state-between-components
+- Web forms — MDN: https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms

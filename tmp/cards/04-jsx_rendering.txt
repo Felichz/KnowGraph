@@ -1,0 +1,51 @@
+# CARD 4: jsx_rendering — JSX y render declarativo
+categoría: fundamentals | nivel: Fundamento | prereqs: components_props
+
+## SUMMARY
+JSX describe elementos y expresiones JavaScript; no es HTML que se inserta línea por línea.
+
+
+## WHY (por qué importa)
+Evita errores con listas, expresiones, semántica y contenido no confiable.
+
+
+## EXPLANATION (lectura)
+JSX parece HTML, pero es JavaScript: cada etiqueta que escribís se transforma en una llamada que produce la descripción de ese pedazo de interfaz. Las llaves `{}` meten cualquier expresión dentro de esa descripción — un valor, un ternario, un `map` que construye una lista.
+
+Que sea declarativo cambia tu trabajo: no decís "buscá este nodo y cambiale el texto"; describís cómo se ve la UI para el estado actual y React resuelve la diferencia con lo que ya está en pantalla.
+
+Dos protecciones vienen de fábrica y conviene conocerlas. React escapa el texto que renderizás, así que un comentario que contiene `<script>` se muestra como texto y no se ejecuta; `dangerouslySetInnerHTML` existe para cuando realmente necesitás HTML crudo, y exige sanitizarlo antes. Y en las listas, `key` le da identidad estable a cada fila para que React sepa cuál es cuál cuando el orden cambia.
+
+
+## CODE (JSX como descripción)
+const active = true
+return <article>{active && <Badge>Active</Badge>}</article>
+
+
+## STEPS (paso a paso)
+1. Leé el JSX como expresiones: todo lo que está entre llaves se evalúa en cada render.
+2. Construí listas con map y una key estable que venga de los datos, no del índice del array.
+3. Confiá en el escape por defecto; si usás dangerouslySetInnerHTML, sanitizá el HTML primero.
+4. Describí el resultado final para cada estado en lugar de instrucciones para mutar el DOM.
+
+
+## PITFALLS / TRADEOFFS
+1. Una key basada en el índice parece funcionar hasta que la lista se reordena: el state interno queda pegado a la posición y salta a otra fila.
+2. `{count && <Badge />}` con un count numérico renderiza un 0 en pantalla cuando vale cero: usá un booleano explícito.
+3. Inyectar HTML de un usuario sin sanitizar es XSS directo: el escape por defecto solo protege lo que renderizás como texto.
+
+
+## TAKEAWAY
+JSX describe la UI y React decide cómo actualizarla.
+
+
+## AUDIT
+primer: JSX es sintaxis de JavaScript que describe elementos; no es un template HTML que el navegador ejecuta directamente. Las expresiones entre llaves se evalúan durante el render.
+example: En `items.map(item => <Row key={item.id} />)`, map construye la descripción de cada fila y key le da identidad. React escapa un texto como `<script>` si se muestra como contenido, pero `dangerouslySetInnerHTML` salta esa protección y requiere sanitización.
+failureModes:
+1. Una key basada en el índice puede mover el state interno a otra fila cuando se reordena la lista.
+2. Un HTML proveniente del usuario puede convertirse en XSS si se inyecta sin sanitizar.
+
+
+## SOURCES
+- Writing Markup with JSX — React: https://react.dev/learn/writing-markup-with-jsx

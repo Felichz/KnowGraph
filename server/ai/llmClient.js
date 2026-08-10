@@ -14,6 +14,9 @@ export async function chatCompletion({
   messages,
   tools,
   responseFormat,
+  supportsResponseFormat = true,
+  extraBody = null,
+  streamContentMode = "delta",
   temperature = 0.2,
   signal,
   timeoutMs = LLM_REQUEST_TIMEOUT_MS,
@@ -30,12 +33,13 @@ export async function chatCompletion({
   }
 
   const body = {
+    ...(extraBody ?? {}),
     model,
     messages,
     temperature,
   };
   if (Array.isArray(tools) && tools.length > 0) body.tools = tools;
-  if (responseFormat) body.response_format = responseFormat;
+  if (responseFormat && supportsResponseFormat) body.response_format = responseFormat;
   if (onChunk) body.stream = true;
 
   let lastErr = null;
@@ -43,7 +47,7 @@ export async function chatCompletion({
     if (signal?.aborted) throw new GatewayError(ErrorCodes.ABORTED, "Cancelado");
 
     try {
-      return await callOnce({ baseUrl, apiKey, body, signal, timeoutMs, onChunk, onSection, onBlock });
+      return await callOnce({ baseUrl, apiKey, body, signal, timeoutMs, onChunk, onSection, onBlock, streamContentMode });
     } catch (err) {
       lastErr = err;
       if (!(err instanceof GatewayError) || !RETRYABLE.has(err.code) || attempt === maxAttempts) {
@@ -56,7 +60,131 @@ export async function chatCompletion({
   throw lastErr;
 }
 
-async function callOnce({ baseUrl, apiKey, body, signal, timeoutMs, onChunk, onSection, onBlock }) {
+/**
+ * Run the preferred provider first and fall back only when it fails before
+ * emitting content. Falling back after partial streaming would concatenate
+ * two different model responses in the same UI, so a partially emitted
+ * stream is surfaced as an error and can be retried explicitly.
+ */
+export async function chatCompletionWithFallback({
+  primary,
+  fallback,
+  responseFormat,
+  onChunk,
+  onSection,
+  onBlock,
+  ...request
+}) {
+  let primaryEmitted = false;
+
+  if (primary?.apiKey) {
+    try {
+      const raw = await chatCompletion({
+        ...request,
+        ...primary,
+        responseFormat: primary.supportsResponseFormat ? responseFormat : undefined,
+        onChunk: onChunk
+          ? (delta, accumulated) => {
+              if (delta) primaryEmitted = true;
+              onChunk(delta, accumulated);
+            }
+          : null,
+        onSection,
+        onBlock,
+      });
+      return withProviderMetadata(raw, primary, null);
+    } catch (error) {
+      if (error?.code === ErrorCodes.ABORTED || primaryEmitted || !fallback?.apiKey) {
+        throw error;
+      }
+      console.warn(`[llm] ${primary.name} failed (${error?.code ?? "unknown"}); using ${fallback.name} fallback`);
+    }
+  }
+
+  const raw = await chatCompletion({
+    ...request,
+    ...fallback,
+    responseFormat: fallback?.supportsResponseFormat ? responseFormat : undefined,
+    onChunk,
+    onSection,
+    onBlock,
+  });
+  return withProviderMetadata(raw, fallback, primary?.name ?? null);
+}
+
+/**
+ * Same provider policy for structured responses. Validation belongs inside
+ * the provider boundary: a 200 response with the wrong JSON shape is still a
+ * provider failure for the caller. When streaming already showed partial
+ * data, the caller must provide onProviderFallback so it can reset its
+ * preview before the fallback stream begins.
+ */
+export async function structuredCompletionWithFallback({
+  primary,
+  fallback,
+  responseFormat,
+  parse,
+  onChunk,
+  onSection,
+  onBlock,
+  onProviderFallback,
+  ...request
+}) {
+  if (typeof parse !== "function") throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "Falta parser estructurado");
+  let primaryEmitted = false;
+
+  const callProvider = async (provider, fallbackFrom = null) => {
+    const raw = await chatCompletion({
+      ...request,
+      ...provider,
+      responseFormat: provider.supportsResponseFormat ? responseFormat : undefined,
+      onChunk: onChunk
+        ? (delta, accumulated) => {
+            if (provider === primary && delta) primaryEmitted = true;
+            onChunk(delta, accumulated);
+          }
+        : null,
+      onSection,
+      onBlock,
+    });
+    return withProviderMetadata(raw, provider, fallbackFrom);
+  };
+
+  if (primary?.apiKey) {
+    try {
+      const raw = await callProvider(primary);
+      return { raw, parsed: await parse(raw) };
+    } catch (error) {
+      const canResetPartialStream = Boolean(onProviderFallback);
+      if (error?.code === ErrorCodes.ABORTED || (primaryEmitted && !canResetPartialStream) || !fallback?.apiKey) {
+        throw error;
+      }
+      try { onProviderFallback?.({ from: primary.name, to: fallback.name, reason: error?.code ?? "provider_error" }); } catch {}
+      const validationIssues = Array.isArray(error?.details?.issues)
+        ? ` ${error.details.issues.slice(0, 5).join(" | ")}`
+        : "";
+      // El diagnóstico expone solo paths/errores de schema, nunca el texto del
+      // estudiante ni la respuesta cruda del proveedor.
+      console.warn(
+        `[llm] ${primary.name} structured response failed (${error?.code ?? "unknown"})${validationIssues}; using ${fallback.name} fallback`,
+      );
+    }
+  }
+
+  const raw = await callProvider(fallback, primary?.name ?? null);
+  return { raw, parsed: await parse(raw) };
+}
+
+function withProviderMetadata(raw, provider, fallbackFrom) {
+  return {
+    ...raw,
+    provider: provider.name,
+    requestedModel: provider.model,
+    fallbackFrom,
+  };
+}
+
+async function callOnce({ baseUrl, apiKey, body, signal, timeoutMs, onChunk, onSection, onBlock, streamContentMode }) {
   const ac = new AbortController();
   let externalAbortHandler;
   if (signal) {
@@ -83,7 +211,7 @@ async function callOnce({ baseUrl, apiKey, body, signal, timeoutMs, onChunk, onS
 
     // Streaming: consumir SSE y reensamblar el JSON final
     if (onChunk) {
-      return await consumeStream(res, ac, onChunk, onSection, onBlock);
+      return await consumeStream(res, ac, onChunk, onSection, onBlock, streamContentMode);
     }
 
     return await res.json();
@@ -104,7 +232,7 @@ async function callOnce({ baseUrl, apiKey, body, signal, timeoutMs, onChunk, onS
  * Consume un stream SSE de OpenAI-compatible, llama onChunk por cada delta
  * de contenido, y al final reensambla el JSON completo.
  */
-async function consumeStream(res, ac, onChunk, onSection, onBlock) {
+async function consumeStream(res, ac, onChunk, onSection, onBlock, streamContentMode = "delta") {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -136,16 +264,23 @@ async function consumeStream(res, ac, onChunk, onSection, onBlock) {
           let parsed;
           try { parsed = JSON.parse(payload); } catch { continue; }
 
-          const delta = parsed?.choices?.[0]?.delta?.content;
-          if (typeof delta === "string" && delta.length > 0) {
-            content += delta;
-            try { onChunk(delta, content); } catch {}
-            if (onSection) {
+          const incomingContent = parsed?.choices?.[0]?.delta?.content;
+          if (typeof incomingContent === "string" && incomingContent.length > 0) {
+            const delta = streamContentMode === "cumulative"
+              ? (incomingContent.startsWith(content) ? incomingContent.slice(content.length) : incomingContent)
+              : incomingContent;
+            content = streamContentMode === "cumulative"
+              ? incomingContent
+              : content + incomingContent;
+            if (delta) {
+              try { onChunk(delta, content); } catch {}
+            }
+            if (delta && onSection) {
               for (const field of extractCompletedFields(content, emittedFields)) {
                 try { onSection(field.key, field.value, content); } catch {}
               }
             }
-            if (onBlock) {
+            if (delta && onBlock) {
               for (const block of extractStreamingBlocks(content)) {
                 const previous = emittedBlocks.get(block.id);
                 if (!previous) {

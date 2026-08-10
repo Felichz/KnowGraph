@@ -1,0 +1,52 @@
+# CARD 14: lifting_state — Lifting state y fuente de verdad
+categoría: state | nivel: Estado | prereqs: use_state_reducer
+
+## SUMMARY
+Lifting state mueve el estado al ancestro común cuando varios componentes necesitan la misma fuente de verdad.
+
+
+## WHY (por qué importa)
+Evita copias divergentes de un filtro, selección o draft compartido.
+
+
+## EXPLANATION (lectura)
+Cuando dos componentes necesitan el mismo dato, el state tiene que vivir en el ancestro común más cercano: eso es lifting state. Ese ancestro se convierte en la única fuente de verdad y reparte el dato hacia abajo como props, junto con callbacks para pedir cambios.
+
+El ejemplo canónico: un SearchInput y una ResultsList que filtra. Si cada uno guarda su propia copia del término, tarde o temprano divergen. Si la página guarda `query`, pasa `value` y `onChange` al input y entrega el mismo `query` a la lista, no existe manera de que muestren filtros distintos.
+
+El límite del patrón es la distancia. Subir el state un nivel ordena; subirlo hasta App porque "todo se comparte" llena de props a componentes que no las usan y amplía los renders. Cuando la distancia crece, las alternativas son Context, la URL o un store — pero la regla de una sola fuente de verdad no se mueve nunca.
+
+
+## CODE (Una fuente de verdad)
+function Orders() {
+  const [status, setStatus] = useState("all")
+  return <><StatusSelect value={status} onChange={setStatus} /><OrdersTable status={status} /></>
+}
+
+
+## STEPS (paso a paso)
+1. El padre pasa value y callbacks.
+2. El hijo no duplica la misma fuente de verdad.
+3. Si la distancia crece, evaluá Context, URL o un store.
+
+
+## PITFALLS / TRADEOFFS
+1. Subir todo el state al tope del árbol por las dudas provoca prop drilling y renders que abarcan media pantalla.
+2. Copiar el mismo filtro en input, lista y URL sin decidir cuál manda crea conflictos sobre qué valor gana al sincronizar.
+3. Levantar state efímero de UI, como hover o foco, contamina al padre con cambios que no le importan: no todo merece compartirse.
+
+
+## TAKEAWAY
+Una fuente de verdad reduce estados imposibles.
+
+
+## AUDIT
+primer: Lifting state significa mover un state al ancestro común más cercano cuando dos componentes necesitan coordinarse. Ese ancestro se convierte en la fuente de verdad.
+example: Si SearchInput cambia el término y ResultsList filtra resultados, OrdersPage guarda `query` y pasa `value` y `onChange` al input, mientras entrega el mismo query a la lista. Así no existen dos filtros que puedan divergir.
+failureModes:
+1. Subir todo el state hasta App puede provocar props innecesarias y renders amplios.
+2. Copiar el mismo filtro en input, lista y URL crea conflictos sobre cuál valor gana.
+
+
+## SOURCES
+- Sharing State Between Components — React: https://react.dev/learn/sharing-state-between-components

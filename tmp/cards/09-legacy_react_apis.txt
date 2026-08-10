@@ -1,0 +1,55 @@
+# CARD 9: legacy_react_apis — React legacy: clases, lifecycles y migración
+categoría: fundamentals | nivel: Mantenimiento | prereqs: react_values_elements, hooks_rules
+
+## SUMMARY
+El React moderno usa function components y Hooks, pero una entrevista puede pedir reconocer clases, lifecycle methods, PureComponent, PropTypes, forwardRef y APIs de testing antiguas. La meta es traducir su intención y conocer qué cambió en React 19.
+
+
+## WHY (por qué importa)
+Muchos productos siguen migrando código. Saber leer el pasado evita respuestas dogmáticas y permite elegir una migración segura.
+
+
+## EXPLANATION (lectura)
+Las clases no desaparecieron del ecosistema, pero las nuevas APIs de React se diseñan alrededor de funciones. El valor de entrevista es poder mantener y migrar sin inventar equivalencias falsas. Una suscripción repartida entre mount, update y unmount se convierte en un Effect cuya setup y cleanup dependen del roomId. Un Error Boundary puede permanecer como clase y envolver una feature funcional.
+
+
+## CODE (El caso vigente de una clase: Error Boundary)
+class Boundary extends React.Component {
+  state = { error: null }
+  static getDerivedStateFromError(error) { return { error } }
+  componentDidCatch(error, info) { report(error, info) }
+  render() { return this.state.error ? <Fallback /> : this.props.children }
+}
+
+
+## STEPS (paso a paso)
+1. constructor inicializa state; render calcula UI; componentDidMount conecta; componentDidUpdate resincroniza; componentWillUnmount limpia. Un Effect modela una sincronización completa en vez de repartirla por tres métodos.
+2. PureComponent aplica una comparación superficial de props y state. React.memo cumple un rol parecido para function components, pero ninguno vuelve puro al código ni corrige mutaciones.
+3. React 19 ignora propTypes en function components y recomienda TypeScript u otra solución; la validación de red sigue siendo runtime y separada.
+4. En React 19 ref puede recibirse como prop en function components. forwardRef sigue siendo necesario para entender y mantener código de React 18 y librerías compatibles.
+5. Los Error Boundaries todavía se implementan con una clase directamente, aunque frameworks y librerías ofrecen wrappers o boundaries de ruta.
+
+
+## PITFALLS / TRADEOFFS
+1. No traduzcas componentDidMount mecánicamente a useEffect(..., []): primero identificá qué sistema sincroniza y qué dependencias reales tiene.
+2. PureComponent y memo usan igualdad superficial; mutar un objeto puede hacer que parezca sin cambios.
+3. PropTypes no reemplazaba validación de input externo: era una comprobación de props en desarrollo.
+
+
+## TAKEAWAY
+Reconocé la intención legacy y migrala al modelo moderno; no memorices equivalencias lifecycle por lifecycle.
+
+
+## AUDIT
+primer: Las clases no desaparecieron del ecosistema, pero las nuevas APIs de React se diseñan alrededor de funciones. El valor de entrevista es poder mantener y migrar sin inventar equivalencias falsas.
+example: Una suscripción repartida entre mount, update y unmount se convierte en un Effect cuya setup y cleanup dependen del roomId. Un Error Boundary puede permanecer como clase y envolver una feature funcional.
+failureModes:
+1. Copiar lifecycle methods a varios Effects puede duplicar requests o separar setup de cleanup.
+2. Asumir que forwardRef ya no existe rompe compatibilidad con React 18 aunque React 19 permita ref como prop.
+
+
+## SOURCES
+- Component — React: https://react.dev/reference/react/Component
+- PureComponent — React: https://react.dev/reference/react/PureComponent
+- React 19 Upgrade Guide: https://react.dev/blog/2024/04/25/react-19-upgrade-guide
+- forwardRef — React: https://react.dev/reference/react/forwardRef

@@ -15,6 +15,7 @@ import GraphLanesView from "./components/graphViews/GraphLanesView.jsx";
 import GraphRadialView from "./components/graphViews/GraphRadialView.jsx";
 import GraphPathView from "./components/graphViews/GraphPathView.jsx";
 import { GraphViewTabs } from "./components/graphViews/GraphViewTabs.jsx";
+import { ReadingChunks } from "./components/ReadingChunks.jsx";
 import { listAllAttempts } from "./ai/learningStore.js";
 import { hashCardContent } from "./ai/contentHash.js";
 import { getCompletionView, getScoreView, isEvaluationSurfaceComplete } from "./ai/types.js";
@@ -1043,6 +1044,37 @@ const GRAPH_CONFIGS = {
   react: REACT_GRAPH,
 };
 
+const APP_ROUTE_STATE = "learning-map";
+
+function getAppRoute(pathname) {
+  const rawPath = typeof pathname === "string" ? pathname : "/rails";
+  const parts = rawPath.split("?")[0].split("#")[0].split("/").filter(Boolean);
+  const graphKey = GRAPH_CONFIGS[parts[0]] ? parts[0] : "rails";
+  const graph = GRAPH_CONFIGS[graphKey];
+  const nodeId = parts[1] === "card" && graph.nodes.some((node) => node.id === parts[2]) ? parts[2] : null;
+  return {
+    graphKey,
+    nodeId,
+    view: nodeId ? "card" : "graph",
+    path: nodeId ? `/${graphKey}/card/${nodeId}` : `/${graphKey}`,
+  };
+}
+
+function getRouteNode(route) {
+  return route.nodeId ? GRAPH_CONFIGS[route.graphKey]?.nodes.find((node) => node.id === route.nodeId) ?? null : null;
+}
+
+function makeAppHistoryState(route, previousNodeIds = [], canReturn = route.view === "card") {
+  return {
+    app: APP_ROUTE_STATE,
+    view: route.view,
+    graphKey: route.graphKey,
+    nodeId: route.nodeId,
+    previousNodeIds,
+    canReturn: route.view === "card" && canReturn,
+  };
+}
+
 const WIDTH = 1500;
 const HEIGHT = 980;
 
@@ -1220,6 +1252,7 @@ function getMilestoneBoundary(groupNodes, padding = 54) {
 }
 
 export default function App() {
+  const initialRoute = getAppRoute(typeof window !== "undefined" ? window.location.pathname : "/rails");
   const svgRef = useRef(null);
   const lessonModalRef = useRef(null);
   const modalCloseRef = useRef(null);
@@ -1230,17 +1263,22 @@ export default function App() {
   const layoutWidthRef = useRef(WIDTH);
   const dragRef = useRef({ id: null, moved: false });
   const [, forceTick] = useState(0);
-  const [graphKey, setGraphKey] = useState("rails");
+  const [graphKey, setGraphKey] = useState(() => initialRoute.graphKey);
   const graph = GRAPH_CONFIGS[graphKey];
   // La completitud ya no se marca manualmente: se deriva de evaluaciones cuya
   // dimensión completeness llegó a 15/15.
   const [checked, setChecked] = useState(() => new Set());
   const [latestAttemptsByNode, setLatestAttemptsByNode] = useState(() => new Map());
   const [activeCats, setActiveCats] = useState(() => new Set(Object.keys(GRAPH_CONFIGS.rails.categories)));
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(() => getRouteNode(initialRoute));
   const [lessonView, setLessonView] = useState("read"); // "read" | "coach" | "evaluate"
   const [hoveredNodeId, setHoveredNodeId] = useState(null);
-  const [lessonHistory, setLessonHistory] = useState([]);
+  const [lessonHistory, setLessonHistory] = useState(() => {
+    const previousNodeIds = typeof window !== "undefined" && Array.isArray(window.history.state?.previousNodeIds)
+      ? window.history.state.previousNodeIds
+      : [];
+    return previousNodeIds.map((nodeId) => GRAPH_CONFIGS[initialRoute.graphKey].nodes.find((node) => node.id === nodeId)).filter(Boolean);
+  });
   const [showCodeExplanation, setShowCodeExplanation] = useState(false);
   const [activeDeepDive, setActiveDeepDive] = useState(null);
   const [transform, setTransform] = useState({ k: 1, x: 0, y: 0 });
@@ -1260,39 +1298,86 @@ export default function App() {
     setTtsState({ status: "idle", error: "", chunkIndex: 0, chunkCount: 0, activeSegmentId: "", paused: false });
   }, []);
 
-  const closeLesson = useCallback(() => {
+  const applyAppRoute = useCallback((route, state = {}) => {
+    const nextGraphKey = GRAPH_CONFIGS[route.graphKey] ? route.graphKey : "rails";
+    const nextRoute = { ...route, graphKey: nextGraphKey };
+    const nextNode = getRouteNode(nextRoute);
+    const previousNodeIds = Array.isArray(state.previousNodeIds) ? state.previousNodeIds : [];
+
     stopSpeech();
-    setSelected(null);
+    if (nextGraphKey !== graphKey) setActiveCats(new Set(Object.keys(GRAPH_CONFIGS[nextGraphKey].categories)));
+    setGraphKey(nextGraphKey);
+    setSelected(nextNode);
     setLessonView("read");
     setHoveredNodeId(null);
-    setLessonHistory([]);
+    setLessonHistory(previousNodeIds.map((nodeId) => GRAPH_CONFIGS[nextGraphKey].nodes.find((node) => node.id === nodeId)).filter(Boolean));
     setShowCodeExplanation(false);
     setActiveDeepDive(null);
-  }, [stopSpeech]);
+  }, [graphKey, stopSpeech]);
+
+  const navigateAppRoute = useCallback((route, { replace = false, previousNodeIds = [], canReturn = route.view === "card" } = {}) => {
+    const state = makeAppHistoryState(route, previousNodeIds, canReturn);
+    if (typeof window !== "undefined") {
+      const method = replace ? "replaceState" : "pushState";
+      window.history[method](state, "", route.path);
+    }
+    applyAppRoute(route, state);
+  }, [applyAppRoute]);
+
+  const closeLesson = useCallback(() => {
+    const currentState = typeof window !== "undefined" ? window.history.state : null;
+    const canGoBack = Boolean(selected && currentState?.app === APP_ROUTE_STATE && currentState.view === "card" && currentState.canReturn);
+    if (canGoBack) {
+      stopSpeech();
+      window.history.back();
+      return;
+    }
+    navigateAppRoute(getAppRoute(`/${graphKey}`), { replace: true, canReturn: false });
+  }, [graphKey, navigateAppRoute, selected, stopSpeech]);
 
   const openLesson = useCallback((node, rememberCurrent = false) => {
+    if (!node) return;
+    if (selected?.id === node.id) {
+      closeLesson();
+      return;
+    }
     if (!selected && typeof document !== "undefined" && typeof document.activeElement?.focus === "function") {
       modalReturnFocusRef.current = document.activeElement;
     }
-    if (selected?.id !== node.id) {
-      stopSpeech();
-      setLessonView("read");
-      setShowCodeExplanation(false);
-      setActiveDeepDive(null);
-    }
-    setLessonHistory((previous) => rememberCurrent && selected && selected.id !== node.id ? [...previous, selected] : rememberCurrent ? previous : []);
-    setSelected(node);
-  }, [selected, stopSpeech]);
+    const previousNodeIds = rememberCurrent && selected
+      ? [...lessonHistory.map((item) => item.id), selected.id]
+      : [];
+    navigateAppRoute({ graphKey, nodeId: node.id, view: "card", path: `/${graphKey}/card/${node.id}` }, { previousNodeIds, canReturn: true });
+  }, [closeLesson, graphKey, lessonHistory, navigateAppRoute, selected]);
 
   const goBack = useCallback(() => {
-    if (!lessonHistory.length) return;
-    stopSpeech();
-    setLessonView("read");
-    setShowCodeExplanation(false);
-    setActiveDeepDive(null);
-    setSelected(lessonHistory[lessonHistory.length - 1]);
-    setLessonHistory(lessonHistory.slice(0, -1));
-  }, [lessonHistory, stopSpeech]);
+    const currentState = typeof window !== "undefined" ? window.history.state : null;
+    if (currentState?.app === APP_ROUTE_STATE && currentState.view === "card" && currentState.canReturn) {
+      stopSpeech();
+      window.history.back();
+      return;
+    }
+    closeLesson();
+  }, [closeLesson, stopSpeech]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const route = getAppRoute(window.location.pathname);
+    const currentState = window.history.state;
+    const isCurrentRouteState = currentState?.app === APP_ROUTE_STATE
+      && currentState.graphKey === route.graphKey
+      && currentState.nodeId === route.nodeId
+      && currentState.view === route.view;
+    if (!isCurrentRouteState || window.location.pathname !== route.path) {
+      window.history.replaceState(makeAppHistoryState(route, [], false), "", route.path);
+    }
+    const onPopState = () => {
+      const nextRoute = getAppRoute(window.location.pathname);
+      applyAppRoute(nextRoute, window.history.state ?? {});
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [applyAppRoute]);
 
   const openDeepDive = useCallback((id, event, triggerKey) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -1488,8 +1573,6 @@ export default function App() {
   }, [graphView]);
 
   useEffect(() => {
-    setSelected(null);
-    setLessonHistory([]);
     setActiveDeepDive(null);
     setChecked(new Set());
     setLatestAttemptsByNode(new Map());
@@ -1602,10 +1685,7 @@ export default function App() {
     simRef.current?.sim?.stop?.();
     simRef.current = null;
     nodesRef.current = [];
-    setSelected(null);
-    setLessonHistory([]);
-    setActiveDeepDive(null);
-    setGraphKey(nextGraphKey);
+    navigateAppRoute(getAppRoute(`/${nextGraphKey}`));
   };
 
   // Refs update outside React's render cycle. During the one render between changing
@@ -1954,7 +2034,7 @@ export default function App() {
       </section>
 
       {selected && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeLesson(); }}>
-        <section ref={lessonModalRef} className="lesson-modal" role="dialog" aria-modal="true" aria-labelledby="lesson-title" aria-describedby="lesson-summary" onKeyDown={keepFocusInsideLesson} style={{ "--lesson-color": graph.categories[selected.cat].color }}>
+        <section ref={lessonModalRef} className="lesson-modal" role="dialog" aria-modal="true" aria-labelledby="lesson-title" aria-describedby="lesson-summary" onKeyDown={keepFocusInsideLesson} onScroll={() => { if (activeDeepDive) setActiveDeepDive(null); }} style={{ "--lesson-color": graph.categories[selected.cat].color }}>
           <header className="lesson-header">
             <div className="lesson-header-copy">
               <div className="lesson-kicker">{graph.categories[selected.cat].label} · PRIORIDAD #{selected.priority}</div>
@@ -2001,6 +2081,50 @@ export default function App() {
             </div>
           </header>
 
+          <nav className="lesson-header-secondary" aria-label="Navegación y estado de la card">
+            <section className="concept-map">
+              <div className="lesson-section-label">LUGAR EN EL MAPA</div>
+              <div className="concept-flow">
+                <div className="flow-column">
+                  <span className="flow-label">ANTES</span>
+                  {selectedNavigationPrerequisites.length ? selectedNavigationPrerequisites.map((node) => <button key={node.id} className="flow-node" onClick={() => openLesson(node, true)}>{node.label}</button>) : <span className="flow-root">{activeCats.size === 1 ? "Inicio de este foco" : "Punto de partida"}</span>}
+                </div>
+                <div className="flow-arrow">→</div>
+                <div className="flow-column current-flow">
+                  <span className="flow-label">AHORA</span>
+                  <span className="flow-node current-flow-node">{selected.label}</span>
+                </div>
+                <div className="flow-arrow">→</div>
+                <div className="flow-column">
+                  <span className="flow-label">DESPUÉS</span>
+                  {selectedAfterNodes.length ? selectedAfterNodes.map((node) => <button key={node.id} className="flow-node" onClick={() => openLesson(node, true)}>{node.label}</button>) : <span className="flow-root">Último eslabón</span>}
+                </div>
+              </div>
+            </section>
+
+            <div className="lesson-header-secondary__status">
+              {nextFocusNode && <section className="next-card-nav">
+                <span className="lesson-section-label">SIGUIENTE CARD EN ESTE FOCO</span>
+                <button className="next-card-button" onClick={() => openLesson(nextFocusNode, true)}>
+                  <span>Continuar con</span>
+                  <strong>{nextFocusNode.label} <span aria-hidden="true">→</span></strong>
+                </button>
+              </section>}
+
+              <section className={`lesson-check-card ${checked.has(selected.id) ? "is-complete" : ""}`}>
+                <span className="lesson-section-label">COMPLETITUD</span>
+                <p className="completion-explanation">
+                  {checked.has(selected.id)
+                    ? "Superficie conceptual cubierta al 100%. Ya podés avanzar; la profundización extra es opcional."
+                    : selectedCompletion
+                      ? `Cobertura conceptual: ${selectedCompletion.percent}% (${selectedCompletion.score}/${selectedCompletion.max} puntos). Score global: ${selectedScore.displayScore}/120. La profundización extra no reemplaza las ideas esenciales que faltan.`
+                      : "Todavía no hay una evaluación para este nodo. Escribí tu explicación y pedí una revisión para medir la cobertura de la card."}
+                </p>
+                {selectedLatestAttempt && <span className="completion-score-detail">{selectedCompletion.score}/{selectedCompletion.max} cobertura · score {selectedScore.displayScore}/120</span>}
+              </section>
+            </div>
+          </nav>
+
           <nav className="lesson-view-tabs" role="tablist" aria-label="Vistas de la card">
             <div className="lesson-view-tabs__heading" aria-hidden="true">
               <span>RUTA DE ESTUDIO</span>
@@ -2016,24 +2140,24 @@ export default function App() {
             </button>
             <button type="button" role="tab" className={lessonView === "evaluate" ? "is-active" : ""} aria-selected={lessonView === "evaluate"} onClick={() => { setActiveDeepDive(null); setLessonView("evaluate"); }}>
               <span className="lesson-view-tabs__index">03</span>
-              <span className="lesson-view-tabs__copy"><strong>Evaluar{selectedLatestAttempt ? " · checkpoint" : ""}</strong><small>Confirmar dominio</small></span>
+              <span className="lesson-view-tabs__copy"><strong>Evaluar</strong><small>Confirmar dominio</small></span>
             </button>
           </nav>
 
           <div className={`lesson-layout lesson-layout--${lessonView}`}>
-            <article className={`lesson-content lesson-content--${lessonView}`} aria-label={lessonView === "read" ? "Contenido de lectura" : lessonView === "coach" ? "Coaching de la explicación" : "Evaluación e historial"} onScroll={() => { if (activeDeepDive) setActiveDeepDive(null); }}>
+            <article className={`lesson-content lesson-content--${lessonView}`} aria-label={lessonView === "read" ? "Contenido de lectura" : lessonView === "coach" ? "Coaching de la explicación" : "Evaluación e historial"}>
               {lessonView === "read" && <>
               {ttsState.error && <div className="tts-error" role="alert">{ttsState.error}</div>}
               <section className="lesson-intro">
                 <div className="lesson-section-heading"><span className="lesson-section-label">EN UNA FRASE</span>{speechSegmentIds.has("summary") && <SectionAudioButton segmentId="summary" active={ttsState.activeSegmentId === "summary"} onClick={playSectionSpeech} />}</div>
-                <p id="lesson-summary" className={`lesson-summary ${ttsState.activeSegmentId === "summary" ? "tts-reading-text" : ""}`}>{selected.lesson.summary}</p>
+                <ReadingChunks id="lesson-summary" text={selected.lesson.summary} className="lesson-summary-chunks" chunkClassName={`lesson-summary ${ttsState.activeSegmentId === "summary" ? "tts-reading-text" : ""}`} />
                 <div className="lesson-why-heading"><strong>Por qué importa:</strong>{speechSegmentIds.has("why") && <SectionAudioButton segmentId="why" active={ttsState.activeSegmentId === "why"} onClick={playSectionSpeech} />}</div>
-                <p className={`lesson-why ${ttsState.activeSegmentId === "why" ? "tts-reading-text" : ""}`}>{selected.lesson.why}</p>
+                <ReadingChunks text={selected.lesson.why} className="lesson-why-chunks" chunkClassName={`lesson-why ${ttsState.activeSegmentId === "why" ? "tts-reading-text" : ""}`} />
               </section>
 
               <section className={`lesson-explanation ${ttsState.activeSegmentId === "explanation" ? "tts-reading-section" : ""}`}>
                 <div className="lesson-section-heading"><span className="lesson-section-label">EXPLICACIÓN CLARA</span>{speechSegmentIds.has("explanation") && <SectionAudioButton segmentId="explanation" active={ttsState.activeSegmentId === "explanation"} onClick={playSectionSpeech} />}</div>
-                <p>{richText(selected.lesson.explanation)}</p>
+                <ReadingChunks text={selected.lesson.explanation} renderChunk={(chunk) => richText(chunk, 2)} />
               </section>
 
               {selected.lesson.audit && <section className={`lesson-audit ${ttsState.activeSegmentId === "audit" ? "tts-reading-section" : ""}`}>

@@ -1,0 +1,56 @@
+# CARD 20: effect_dependencies — Dependencias, cleanup y stale closures
+categoría: effects | nivel: Efectos | prereqs: effects
+
+## SUMMARY
+Dependencias y cleanup determinan qué closure observa el effect y cuándo se cancela el trabajo anterior.
+
+
+## WHY (por qué importa)
+Es la base para evitar stale closures, listeners duplicados y respuestas viejas.
+
+
+## EXPLANATION (lectura)
+Cada render crea versiones nuevas de tus funciones: closures que capturan los valores de ese render. Un Effect ve el mundo a través de la closure del render en que se creó, y el array de dependencias le dice a React cuándo esa closure quedó vieja y hay que resincronizar.
+
+El bug característico es la stale closure: un interval dentro de un Effect con `[]` imprime el `count` del primer render para siempre, porque su closure nunca se renovó. Las salidas honestas son tres: declarar la dependencia que realmente usás, usar la forma funcional del setter cuando solo necesitás el valor anterior, o mover el valor a una ref cuando no debería disparar resincronización. Lo que no es salida es mentirle al array: omitir una dependencia porque molesta solo posterga el bug hasta que cambie el usuario o la ruta.
+
+El cleanup completa el contrato. AbortController cancela la request que ya no importa, el listener se desuscribe, la respuesta que llega tarde se descarta. Sin eso, el trabajo viejo compite con el nuevo y gana el que llega último.
+
+
+## CODE (Cancelación con AbortController)
+useEffect(() => {
+  const controller = new AbortController()
+  api.getUser(userId, { signal: controller.signal })
+    .then(setUser)
+    .catch((error) => { if (error.name !== "AbortError") report(error) })
+  return () => controller.abort()
+}, [userId])
+
+
+## STEPS (paso a paso)
+1. Cada render crea una closure con sus valores.
+2. Omitir dependencias puede dejar el effect leyendo un valor viejo.
+3. AbortController puede cancelar una request.
+
+
+## PITFALLS / TRADEOFFS
+1. Omitir una dependencia compila y hasta funciona en el happy path: el valor viejo aparece recién cuando cambia algo que no tocaste.
+2. Pasar una función u objeto recreado en cada render como dependencia resincroniza en cada render: estabilizalo o sacalo del array.
+3. Un fetch sin cancelación puede resolver en desorden: la respuesta vieja pisa a la nueva si no descartás el resultado tardío.
+
+
+## TAKEAWAY
+Cada effect necesita dependencias completas y una estrategia de cleanup.
+
+
+## AUDIT
+primer: Las dependencias de un Effect indican qué valores capturados deben hacer que React repita la sincronización. Una stale closure es una función que conserva un valor viejo porque no se volvió a crear cuando ese valor cambió.
+example: Un interval que imprime `count` dentro de un Effect con `[]` seguirá viendo el count inicial. Se puede incluir count como dependencia, usar un updater o guardar la última referencia cuando el caso lo justifica.
+failureModes:
+1. Omitir una dependencia puede esconder un bug hasta que cambie el usuario o la ruta.
+2. Agregar una función nueva como dependencia sin estabilizarla puede reconectar el sistema en cada render.
+
+
+## SOURCES
+- Lifecycle of Reactive Effects — React: https://react.dev/learn/lifecycle-of-reactive-effects
+- Removing Effect Dependencies — React: https://react.dev/learn/removing-effect-dependencies

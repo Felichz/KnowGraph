@@ -4,8 +4,9 @@ import { openDB } from "idb";
 const keyRange = typeof IDBKeyRange !== "undefined" ? IDBKeyRange : undefined;
 
 const DB_NAME = "learning-graph-ai";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const MAX_ATTEMPTS_PER_NODE = 12;
+const MAX_COACH_ITERATIONS_PER_NODE = 24;
 
 let dbPromise;
 
@@ -22,6 +23,10 @@ function getDb() {
         }
         if (!db.objectStoreNames.contains("liveReviews")) {
           db.createObjectStore("liveReviews", { keyPath: "key" });
+        }
+        if (!db.objectStoreNames.contains("coachIterations")) {
+          const store = db.createObjectStore("coachIterations", { keyPath: "id" });
+          store.createIndex("byNode", ["graphId", "nodeId", "createdAt"]);
         }
       },
     });
@@ -110,6 +115,36 @@ export async function saveLiveReview({ graphId, nodeId, answerHash, contentHash,
     review,
     updatedAt: new Date().toISOString(),
   });
+}
+
+export async function saveCoachIteration(iteration) {
+  const db = await getDb();
+  const tx = db.transaction("coachIterations", "readwrite");
+  await tx.store.put(iteration);
+  await trimAttempts(tx, iteration.graphId, iteration.nodeId, MAX_COACH_ITERATIONS_PER_NODE);
+  await tx.done;
+}
+
+export async function listCoachIterations(graphId, nodeId) {
+  const db = await getDb();
+  const tx = db.transaction("coachIterations", "readonly");
+  const all = await tx.store.index("byNode").getAll(nodeRange(graphId, nodeId));
+  await tx.done;
+  return all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+export async function updateCoachIterationMessages(iterationId, messages) {
+  const db = await getDb();
+  const tx = db.transaction("coachIterations", "readwrite");
+  const iteration = await tx.store.get(iterationId);
+  if (iteration) {
+    await tx.store.put({
+      ...iteration,
+      messages: Array.isArray(messages) ? messages : [],
+      chatUpdatedAt: new Date().toISOString(),
+    });
+  }
+  await tx.done;
 }
 
 export async function listAllAttempts() {

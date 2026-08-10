@@ -1,5 +1,6 @@
 import React from "react";
 import { ModelMeta } from "./ModelMeta.jsx";
+import { AttemptProgressChart } from "./AttemptProgressChart.jsx";
 import { formatEvaluationDuration } from "../ai/types.js";
 
 export function AttemptHistory({ attempts, viewIndex, onSelect, onBackToDraft }) {
@@ -9,45 +10,47 @@ export function AttemptHistory({ attempts, viewIndex, onSelect, onBackToDraft })
   const currentNumber = viewIndex + 1;
   const canPrev = viewIndex > 0;
   const canNext = viewIndex < total - 1;
+  const duration = formatEvaluationDuration(current.durationMs);
 
   return (
-    <div className="attempt-history" role="group" aria-label="Historial de intentos">
-      <button
-        type="button"
-        className="attempt-history__nav"
-        onClick={() => canPrev && onSelect(viewIndex - 1)}
-        disabled={!canPrev}
-        aria-label="Intento anterior"
-      >
-        ← Anterior
-      </button>
-      <span className="attempt-history__counter" aria-live="polite">
-        Intento {currentNumber} de {total}
-        <span className="attempt-history__date">
+    <section className="attempt-history" aria-label="Historial de intentos">
+      <div className="attempt-history__primary-row">
+        <div className="attempt-history__navigation" role="group" aria-label="Navegar intentos">
+          <button
+            type="button"
+            className="attempt-history__nav"
+            onClick={() => canPrev && onSelect(viewIndex - 1)}
+            disabled={!canPrev}
+            aria-label="Intento anterior"
+          >
+            ←
+          </button>
+          <strong aria-live="polite">Intento {currentNumber} de {total}</strong>
+          <button
+            type="button"
+            className="attempt-history__nav"
+            onClick={() => canNext && onSelect(viewIndex + 1)}
+            disabled={!canNext}
+            aria-label="Siguiente intento"
+          >
+            →
+          </button>
+        </div>
+
+        <button type="button" className="attempt-history__back" onClick={onBackToDraft}>
+          Volver al borrador
+        </button>
+      </div>
+
+      <AttemptProgressChart attempts={attempts} viewIndex={viewIndex} onSelect={onSelect} />
+
+      <div className="attempt-history__meta">
+        <time dateTime={current.createdAt}>
           {new Date(current.createdAt).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" })}
-        </span>
-        {formatEvaluationDuration(current.durationMs) && (
-          <span className="attempt-history__duration">Evaluación: {formatEvaluationDuration(current.durationMs)}</span>
-        )}
+        </time>
+        {duration && <span>{duration}</span>}
         <ModelMeta model={current.model} routedVia={current.routedVia} />
-      </span>
-      <button
-        type="button"
-        className="attempt-history__nav"
-        onClick={() => canNext && onSelect(viewIndex + 1)}
-        disabled={!canNext}
-        aria-label="Siguiente intento"
-      >
-        Siguiente →
-      </button>
-      <button
-        type="button"
-        className="attempt-history__back"
-        onClick={onBackToDraft}
-        aria-label="Volver al borrador actual"
-      >
-        Volver al borrador
-      </button>
-    </div>
+      </div>
+    </section>
   );
 }

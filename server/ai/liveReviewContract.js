@@ -17,6 +17,7 @@ export function normalizeLiveReview(data) {
     displayScore,
     displayMax: 120,
     isExtra: displayScore > 100,
+    coverage: normalizeCoverage(data.coverage),
     hint,
     additionalGaps: data.additionalGaps ?? [],
     // Compatibilidad con la UI/cache anterior durante la migraciÃ³n.
@@ -48,6 +49,7 @@ function normalizeLegacyLiveReview(data) {
 
   return {
     points,
+    coverage: points.map(({ id, status }) => ({ id, status })),
     hint: normalizedHint,
     additionalGaps: [],
     coveragePercent,
@@ -65,4 +67,14 @@ function normalizeHint(hint) {
   const text = String(hint.text ?? "").trim();
   const detail = String(hint.detail ?? "").trim() || text;
   return { ...hint, text, detail };
+}
+
+function normalizeCoverage(coverage) {
+  if (!Array.isArray(coverage)) return [];
+  return coverage
+    .filter((item) => item && typeof item.id === "string")
+    .map((item) => ({
+      id: item.id,
+      status: ["covered", "partial", "missing"].includes(item.status) ? item.status : "missing",
+    }));
 }

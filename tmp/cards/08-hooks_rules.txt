@@ -1,0 +1,53 @@
+# CARD 8: hooks_rules — Hooks y reglas de uso
+categoría: state | nivel: Hooks | prereqs: state_updates
+
+## SUMMARY
+Los Hooks permiten estado y capacidades de React en funciones, pero su orden de llamadas debe ser estable.
+
+
+## WHY (por qué importa)
+Las reglas permiten que React asocie cada Hook con el mismo estado en cada render.
+
+
+## EXPLANATION (lectura)
+Los Hooks son funciones que conectan tu componente con capacidades de React: state, effects, contexto, refs. El precio de esa comodidad es una regla dura: llamalos siempre en el mismo orden y en el nivel superior del componente.
+
+La razón es mecánica, no ideológica. React no tiene nombres para asociar cada `useState` con su valor; usa la posición de la llamada en la secuencia. Si metés un Hook dentro de un `if`, cuando la condición cambie las posiciones se corren y React le asigna a cada Hook el state de otro. Por eso la solución nunca es llamarlo a veces: llamalo siempre y poné la condición adentro de la lógica, como hace el ejemplo con el early return dentro del Effect.
+
+La otra consecuencia es feliz: cualquier función que empiece con `use` y llame Hooks hereda el mismo contrato, y cada componente que la usa recibe su propia instancia de estado. Esa es la base sobre la que se construyen los custom Hooks.
+
+
+## CODE (Reglas de Hooks)
+function Search({ enabled }) {
+  const [term, setTerm] = useState("")
+  useEffect(() => { if (!enabled) return }, [enabled, term])
+}
+
+
+## STEPS (paso a paso)
+1. Llamá Hooks en el nivel superior o dentro de custom Hooks.
+2. No los llames dentro de if, loops o funciones anidadas.
+3. Un custom Hook comparte lógica, pero cada llamada tiene su propio estado.
+
+
+## PITFALLS / TRADEOFFS
+1. Un Hook dentro de un if, un loop o después de un early return rompe la correspondencia posicional, y el error aparece lejos de la línea culpable.
+2. Extraer lógica con Hooks a una función común sin prefijo use esconde el contrato: el linter no la revisa y tus colegas no la reconocen.
+3. Creer que dos componentes que usan el mismo custom Hook comparten state: cada llamada crea su propia instancia independiente.
+
+
+## TAKEAWAY
+El orden estable de Hooks es un contrato con React.
+
+
+## AUDIT
+primer: Un Hook es una API de React que permite usar state, efectos u otras capacidades desde un componente funcional. Las reglas de Hooks exigen llamarlos siempre en el mismo orden, en el nivel superior.
+example: `useState` no debe estar dentro de `if (enabled)`: cuando enabled cambia, React ya no podría saber qué state corresponde a cada llamada. La alternativa es llamar el Hook siempre y decidir dentro de su callback qué comportamiento ejecutar.
+failureModes:
+1. Un Hook dentro de un loop o condición rompe la correspondencia entre llamadas y puede producir errores difíciles de rastrear.
+2. Un custom Hook no comparte automáticamente state entre consumidores: cada llamada crea su propia instancia.
+
+
+## SOURCES
+- Rules of Hooks — React: https://react.dev/reference/rules/rules-of-hooks
+- use — React: https://react.dev/reference/react/use

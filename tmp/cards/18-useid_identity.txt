@@ -1,0 +1,52 @@
+# CARD 18: useid_identity — useId, identidad y relaciones accesibles
+categoría: state | nivel: Hooks | prereqs: hooks_rules, jsx_rendering
+
+## SUMMARY
+useId genera un identificador estable para relacionar elementos de accesibilidad dentro de una instancia y coordina IDs entre server rendering e hidratación. No representa identidad de datos y no debe usarse como key de una lista.
+
+
+## WHY (por qué importa)
+Confundir identidad DOM, identidad del dominio e identidad de React causa labels rotos, hydration mismatches y state asociado a la fila incorrecta.
+
+
+## EXPLANATION (lectura)
+Hay tres identidades distintas: DOM/a11y, reconciliación y dominio. useId solo resuelve la primera. Dos PasswordField en la misma página reciben IDs distintos y cada input apunta a su propia ayuda. Una lista de usuarios sigue usando user.id como key.
+
+
+## CODE (Una relación accesible sin colisiones)
+function PasswordField() {
+  const hintId = useId()
+  return <>
+    <label>Password <input aria-describedby={hintId} /></label>
+    <p id={hintId}>Al menos 12 caracteres.</p>
+  </>
+}
+
+
+## STEPS (paso a paso)
+1. Llamá useId en el nivel superior y agregá sufijos si un componente necesita varias relaciones.
+2. Usalo para htmlFor, aria-describedby o aria-controls cuando el consumidor no entregó un id explícito.
+3. Durante SSR, el árbol inicial del servidor y del cliente debe coincidir para que React genere la misma secuencia.
+4. Para keys usá un id proveniente de los datos; para un recurso de negocio usá su identificador canónico.
+
+
+## PITFALLS / TRADEOFFS
+1. useId no es un generador de UUID para requests, registros o claves de idempotencia.
+2. Generar Math.random durante render rompe estabilidad y puede causar hydration mismatch.
+3. Un id único no garantiza que la relación ARIA sea correcta: los roles y estados también deben corresponder.
+
+
+## TAKEAWAY
+useId relaciona markup; keys relacionan elementos entre renders; los IDs de dominio identifican entidades.
+
+
+## AUDIT
+primer: Hay tres identidades distintas: DOM/a11y, reconciliación y dominio. useId solo resuelve la primera.
+example: Dos PasswordField en la misma página reciben IDs distintos y cada input apunta a su propia ayuda. Una lista de usuarios sigue usando user.id como key.
+failureModes:
+1. Usar useId dentro de map no solo viola Hooks: tampoco expresa la identidad persistente del registro.
+2. Cambiar el árbol entre servidor y primer render cliente puede desalinear IDs e hidratación.
+
+
+## SOURCES
+- useId — React: https://react.dev/reference/react/useId

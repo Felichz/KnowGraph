@@ -7,6 +7,9 @@ dotenv.config();
 const Schema = z.object({
   FREELLMAPI_BASE_URL: z.string().url(),
   FREELLMAPI_API_KEY: z.string().min(1),
+  MINIMAX_BASE_URL: z.string().url().default("https://api.minimax.io/v1"),
+  MINIMAX_API_KEY: z.string().optional(),
+  MINIMAX_MODEL: z.string().min(1).default("MiniMax-M3"),
   LLM_EVALUATION_MODEL: z.string().min(1).default("auto:reliable"),
   LLM_TUTOR_MODEL: z.string().min(1).default("auto:reliable"),
   LLM_LIVE_MODEL: z.string().min(1).default("auto:fastest"),
@@ -25,6 +28,9 @@ if (!parsed.success) {
 export const config = Object.freeze({
   freellmapiBaseUrl: parsed.data.FREELLMAPI_BASE_URL.replace(/\/+$/, ""),
   freellmapiApiKey: parsed.data.FREELLMAPI_API_KEY,
+  minimaxBaseUrl: parsed.data.MINIMAX_BASE_URL.replace(/\/+$/, ""),
+  minimaxApiKey: parsed.data.MINIMAX_API_KEY ?? "",
+  minimaxModel: parsed.data.MINIMAX_MODEL,
   evaluationModel: parsed.data.LLM_EVALUATION_MODEL,
   tutorModel: parsed.data.LLM_TUTOR_MODEL,
   liveModel: parsed.data.LLM_LIVE_MODEL,

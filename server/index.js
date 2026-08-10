@@ -2,6 +2,7 @@ import http from "node:http";
 import { config } from "./config.js";
 import { evaluateParaphrase } from "./ai/evaluator.js";
 import { reviewLive } from "./ai/liveReview.js";
+import { answerCoachQuestion, MAX_COACH_CHAT_MESSAGE_CHARS } from "./ai/coachChat.js";
 import { checkUpstream } from "./ai/llmClient.js";
 import { MAX_LEARNER_ANSWER_CHARS } from "./ai/schemas.js";
 import { GatewayError, ErrorCodes, jsonErrorResponse } from "./ai/errors.js";
@@ -30,6 +31,12 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, {
         available: gatewayConfigured && upstream.reachable,
         gateway: { configured: gatewayConfigured },
+        primary: {
+          provider: "minimax",
+          configured: Boolean(config.minimaxApiKey),
+          model: config.minimaxModel,
+          url: config.minimaxBaseUrl,
+        },
         evaluationModel: config.evaluationModel,
         tutorModel: config.tutorModel,
         liveModel: config.liveModel,
@@ -69,6 +76,10 @@ const server = http.createServer(async (req, res) => {
           nodeId,
           model: result.model,
           routedVia: result.routedVia,
+          provider: result.provider,
+          fallbackFrom: result.fallbackFrom,
+          scoringProvider: result.scoringProvider ?? result.provider,
+          scoringModel: result.scoringModel ?? result.model,
           contentHash: result.contentHash,
           evaluatorVersion: result.evaluatorVersion,
           evaluation: result.evaluation,
@@ -124,6 +135,9 @@ const server = http.createServer(async (req, res) => {
           onBlock: (block) => {
             writeEvent("block", block);
           },
+          onProviderFallback: (provider) => {
+            writeEvent("reset", provider);
+          },
         });
 
         writeEvent("done", {
@@ -134,6 +148,10 @@ const server = http.createServer(async (req, res) => {
             nodeId,
             model: result.model,
             routedVia: result.routedVia,
+            provider: result.provider,
+            fallbackFrom: result.fallbackFrom,
+            scoringProvider: result.scoringProvider ?? result.provider,
+            scoringModel: result.scoringModel ?? result.model,
             contentHash: result.contentHash,
             evaluatorVersion: result.evaluatorVersion,
             evaluation: result.evaluation,
@@ -189,6 +207,62 @@ const server = http.createServer(async (req, res) => {
           },
           onSection: (field, value) => {
             writeEvent("section", { field, value });
+          },
+          onProviderFallback: (provider) => {
+            writeEvent("reset", provider);
+          },
+        });
+        writeEvent("done", result);
+        res.end();
+      } catch (e) {
+        const { status, body: errorBody } = jsonErrorResponse(e);
+        writeEvent("error", { ...errorBody, httpStatus: status });
+        res.end();
+      }
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/ai/live-review/chat/stream") {
+      const body = await readJsonBody(req);
+      const { graphId, nodeId, answer, contentHash, node, review, history, question } = body ?? {};
+      if (!graphId || !nodeId || typeof answer !== "string" || !contentHash || !node || typeof node !== "object") {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, "Faltan campos del contexto de coaching");
+      }
+      if (answer.length > MAX_LEARNER_ANSWER_CHARS) {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, `answer demasiado largo (max ${MAX_LEARNER_ANSWER_CHARS})`);
+      }
+      if (typeof question !== "string" || !question.trim()) {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, "La pregunta está vacía");
+      }
+      if (question.length > MAX_COACH_CHAT_MESSAGE_CHARS) {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, `question demasiado largo (max ${MAX_COACH_CHAT_MESSAGE_CHARS})`);
+      }
+
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders?.();
+
+      const writeEvent = (type, data) => {
+        if (res.writableEnded) return;
+        res.write(`event: ${type}\n`);
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      };
+
+      const signal = reqAbortedSignal(req);
+      try {
+        writeEvent("progress", { stage: "coach_chat", length: 0 });
+        const result = await answerCoachQuestion({
+          node,
+          learnerAnswer: answer,
+          review,
+          history,
+          question,
+          signal,
+          onChunk: (delta, accumulated) => {
+            writeEvent("delta", { text: delta, length: accumulated.length });
           },
         });
         writeEvent("done", result);

@@ -1,0 +1,51 @@
+# CARD 17: refs_dom — useRef, DOM y valores mutables
+categoría: state | nivel: Hooks | prereqs: hooks_rules
+
+## SUMMARY
+useRef conserva un valor mutable entre renders sin provocar render y puede apuntar a un nodo DOM.
+
+
+## WHY (por qué importa)
+Sirve para focus, timers, valores previos e integraciones imperativas.
+
+
+## EXPLANATION (lectura)
+`useRef` te da una caja mutable que sobrevive entre renders sin provocar renders nuevos cuando la cambiás. Tiene dos usos que conviene separar mentalmente.
+
+El primero es escapar hacia el DOM: `dialogRef.current?.focus()` después de abrir un diálogo, medir un nodo, integrar una librería imperativa. El segundo es guardar valores que pertenecen a la lógica pero no a la pantalla: el id de un timer, el último request disparado, el valor anterior de una prop.
+
+La regla que une ambos usos: si cambiar el valor debería actualizar lo que se ve, es state; si no, puede ser ref. Y hay dos detalles de timing que no perdonan. `ref.current` se asigna después del commit, así que leerlo durante render es leer el pasado. Y mutarlo no avisa a nadie: una ref jamás dispara la UI por sí sola, por eso un timer guardado ahí sigue necesitando su clearTimeout en el cleanup.
+
+
+## CODE (Referencia al DOM)
+const inputRef = useRef(null)
+<input ref={inputRef} />
+inputRef.current.focus()
+
+
+## STEPS (paso a paso)
+1. ref.current se asigna después del commit.
+2. Cambiar ref.current no actualiza UI.
+3. Para datos visibles usá state; para un recurso mutable usá ref.
+
+
+## PITFALLS / TRADEOFFS
+1. Leer ref.current durante render para decidir qué mostrar rompe el modelo: la caja puede cambiar sin que React repinte.
+2. Guardar un timer en una ref no lo limpia: sin clearTimeout en el cleanup, el callback sigue vivo después del desmontaje.
+3. Usar refs para evitar state en valores visibles produce pantallas que no reflejan los datos: la mutación silenciosa es el bug, no la solución.
+
+
+## TAKEAWAY
+State actualiza UI; ref conserva una referencia sin pedir UI nueva.
+
+
+## AUDIT
+primer: `useRef` es un Hook oficial que conserva un valor mutable entre renders sin provocar un render al cambiarlo. También permite obtener una referencia a un nodo del DOM.
+example: Después de abrir un diálogo, `dialogRef.current?.focus()` devuelve el foco al primer control. Para guardar un timer o el último request también sirve; para un valor que debe verse en pantalla, se necesita state.
+failureModes:
+1. Leer `ref.current` durante render para decidir la UI suele romper el modelo declarativo.
+2. Una ref no reemplaza cleanup: un timer guardado allí sigue necesitando `clearTimeout` o `clearInterval`.
+
+
+## SOURCES
+- Referencing Values with Refs — React: https://react.dev/learn/referencing-values-with-refs

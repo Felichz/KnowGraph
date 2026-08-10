@@ -3,6 +3,7 @@
 
 const COMPLETABLE_FIELDS = new Set([
   "scoreSummary",
+  "coverage",
   "feedback",
   "rubric",
   "strengths",

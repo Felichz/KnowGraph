@@ -4,6 +4,7 @@ import { getScoreView, STATUS_LABEL } from "../ai/types.js";
 import { ModelMeta } from "./ModelMeta.jsx";
 import { formatEvaluationDuration } from "../ai/types.js";
 import { selectRepresentativeAttempt } from "../ai/attemptSelection.js";
+import { ReadingChunks } from "./ReadingChunks.jsx";
 
 const FILTERS = [
   { id: "all", label: "Todas" },
@@ -202,7 +203,7 @@ export function FlashcardView({ graph, onOpenNode }) {
                     <span className="flashcard-modal__eyebrow">TU EXPLICACIÓN EVALUADA</span>
                     {attempt ? (
                       <>
-                        <p className="flashcard-modal__long-answer">{attempt.answer}</p>
+                        <ReadingChunks text={attempt.answer} className="flashcard-modal__long-answer" />
                         <ModelMeta model={attempt.model} routedVia={attempt.routedVia} />
                         {formatEvaluationDuration(attempt.durationMs) && (
                           <p className="flashcard-modal__duration">Evaluación completa: {formatEvaluationDuration(attempt.durationMs)}</p>

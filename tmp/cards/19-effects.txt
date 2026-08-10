@@ -1,0 +1,53 @@
+# CARD 19: effects — useEffect: sincronización externa
+categoría: effects | nivel: Efectos | prereqs: hooks_rules
+
+## SUMMARY
+useEffect sincroniza React con sistemas externos después del commit: red, timers, suscripciones o APIs del browser.
+
+
+## WHY (por qué importa)
+Muchos bugs vienen de usar effects para cálculos o eventos que no son sincronización externa.
+
+
+## EXPLANATION (lectura)
+Un Effect tiene un único trabajo: sincronizar tu componente con un sistema externo — la red, un WebSocket, un timer, un listener del navegador, una API imperativa. La pregunta que ordena todo es: ¿qué sistema externo debe quedar sincronizado con este render?
+
+Si la respuesta es una conexión de chat, el Effect la abre después del commit y el cleanup la cierra antes de abrir la siguiente. Si la respuesta es "ninguno", no necesitás un Effect. Esa segunda mitad es la que más vale: la mayoría de los Effects del código real no deberían existir. Si el valor puede calcularse con props y state, calculalo en render; si la operación ocurre porque el usuario hizo click, pertenece al handler del click, no a un Effect que observa un booleano.
+
+El ciclo completo siempre tiene tres partes: qué sincroniza, de qué depende y cómo se limpia. Un Effect que no puede responder las tres todavía no está terminado.
+
+
+## CODE (Sincronización externa)
+useEffect(() => {
+  const connection = createConnection(roomId)
+  connection.connect()
+  return () => connection.disconnect()
+}, [roomId])
+
+
+## STEPS (paso a paso)
+1. El effect corre después del commit.
+2. Cleanup deshace la sincronización anterior.
+3. Las dependencias describen valores externos usados por el effect.
+
+
+## PITFALLS / TRADEOFFS
+1. Un Effect que actualiza el mismo state que usa como dependencia entra en loop: render, effect, setState, render.
+2. No limpiar la suscripción anterior deja dos conexiones vivas: al cambiar de sala, llegan mensajes de las dos.
+3. Usar un Effect para transformar datos al recibir props agrega un render extra con un estado intermedio visible: ese cálculo va en render.
+
+
+## TAKEAWAY
+Un effect debe responder qué sincroniza, de qué depende y cómo se limpia.
+
+
+## AUDIT
+primer: `useEffect` es un Hook oficial para sincronizar React con un sistema externo después del commit: red, timer, listener, WebSocket o API imperativa. No es el lugar general para calcular datos derivados.
+example: Un componente de chat abre un WebSocket cuando cambia `roomId`, escucha mensajes y devuelve un cleanup que cierra la conexión anterior. Si el usuario hace click en guardar, la request normalmente pertenece al handler del click, no a un Effect que observa un booleano.
+failureModes:
+1. Un Effect que actualiza state que él mismo usa como dependencia puede entrar en loop.
+2. Si no se limpia la conexión anterior, cambiar de room deja mensajes de varias salas mezclados.
+
+
+## SOURCES
+- Synchronizing with Effects — React: https://react.dev/learn/synchronizing-with-effects

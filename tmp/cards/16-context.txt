@@ -1,0 +1,50 @@
+# CARD 16: context — Context: alcance y trade-offs
+categoría: state | nivel: Estado | prereqs: lifting_state
+
+## SUMMARY
+Context entrega un valor a muchos descendientes sin pasar props por cada nivel, pero no es automáticamente un store eficiente.
+
+
+## WHY (por qué importa)
+Sirve para tema, idioma o usuario actual; puede ocultar dependencias y propagar renders.
+
+
+## EXPLANATION (lectura)
+Context resuelve un problema de alcance: entregar un valor a un subárbol entero sin pasarlo como prop por cada nivel intermedio. El Provider declara el valor y cualquier descendiente lo lee con `useContext`; los componentes del medio ni se enteran.
+
+Sus casos legítimos son dependencias amplias y estables: tema, idioma, usuario actual, feature flags. Su trampa es creer que es un store global de estado. No lo es: cuando el `value` del Provider cambia, todos los consumidores se vuelven a renderizar, así que un carrito que cambia diez veces por segundo en un Context único arrastra renders a medio árbol. Las defensas son dividir contexts por responsabilidad y frecuencia de cambio, o mover el estado caliente a un store externo.
+
+Y una aclaración que no perdona entrevistas: Context distribuye datos, no autoriza. Ocultar un botón según un contexto no impide que alguien llame la API directamente; la autorización siempre se verifica en el servidor.
+
+
+## CODE (Alcance de una dependencia)
+const ThemeContext = createContext("light")
+const theme = useContext(ThemeContext)
+
+
+## STEPS (paso a paso)
+1. El Provider define el valor para un subárbol.
+2. El consumidor se actualiza cuando cambia el value.
+3. Separá contexts por responsabilidad y frecuencia de cambio.
+
+
+## PITFALLS / TRADEOFFS
+1. Meter todo el estado de la app en un único Context convierte cada cambio chico en un render masivo y en acoplamiento invisible.
+2. Un objeto literal como value se recrea en cada render del Provider y despierta consumidores aunque nada cambió: memorizalo o separalo.
+3. Usar Context para evitar pasar dos props un solo nivel esconde dependencias sin ganar nada: el prop drilling corto es más honesto.
+
+
+## TAKEAWAY
+Context resuelve alcance; no reemplaza cache de servidor ni cualquier store.
+
+
+## AUDIT
+primer: Context permite que un valor atraviese un subárbol sin pasar props por cada nivel. Es útil para dependencias amplias como tema, locale o sesión; no es automáticamente un store global.
+example: Un ThemeProvider puede exponer el tema a Button y Modal. Cambiar el value del Provider puede volver a renderizar consumidores; para un carrito con muchas actualizaciones conviene evaluar un store o dividir contextos.
+failureModes:
+1. Meter todo el state de la aplicación en un único Context amplía el blast radius de cada cambio.
+2. Context no reemplaza autorización: ocultar un botón no impide que alguien llame directamente a la API.
+
+
+## SOURCES
+- Choosing the State Structure — React: https://react.dev/learn/choosing-the-state-structure

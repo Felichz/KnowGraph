@@ -8,11 +8,11 @@ const DIMENSIONS = [
   { key: "completeness", label: "Cobertura" },
 ];
 
-export function RubricBars({ rubric }) {
+export function RubricBars({ rubric, compact = false }) {
   if (!rubric) return null;
 
   return (
-    <section className="rubric-breakdown" aria-label="Desglose del score">
+    <section className={`rubric-breakdown ${compact ? "is-compact" : ""}`} aria-label="Desglose del score">
       <div className="rubric-breakdown__heading">
         <h4>Desglose del score</h4>
         <span>100 = base suficiente · 120 = excelencia</span>
@@ -28,10 +28,10 @@ export function RubricBars({ rubric }) {
           const extraWidth = `${Math.max(0, visibleScore - 100) / 120 * 100}%`;
           const isExtra = visibleScore > 100;
 
-          return (
-            <li className={`rubric__row ${isExtra ? "is-extra" : ""}`} key={key}>
+          const row = (
+            <>
               <span className="rubric__label">{label}</span>
-              <div
+              <span
                 className="rubric__track"
                 role="progressbar"
                 aria-label={`${label}: ${visibleScore} de 120`}
@@ -42,12 +42,25 @@ export function RubricBars({ rubric }) {
                 <span className="rubric__fill" style={{ width: baseWidth }} />
                 {isExtra && <span className="rubric__extra" style={{ width: extraWidth }} />}
                 <span className="rubric__threshold" aria-hidden="true" />
-              </div>
+              </span>
               <span className="rubric__value">
                 <strong>{visibleScore}/120</strong>
                 <small>{dim.score}/{dim.max} base</small>
               </span>
-              {dim.note ? <p className="rubric__note">{dim.note}</p> : null}
+            </>
+          );
+
+          return (
+            <li className={`rubric__row ${isExtra ? "is-extra" : ""}`} key={key}>
+              <details className="rubric__details">
+                <summary className="rubric__summary">{row}</summary>
+                {dim.note && (
+                  <div className="rubric__detail">
+                    <span>Qué significa este resultado</span>
+                    <p>{dim.note}</p>
+                  </div>
+                )}
+              </details>
             </li>
           );
         })}
