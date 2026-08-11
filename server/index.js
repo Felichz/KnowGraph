@@ -3,8 +3,9 @@ import { config } from "./config.js";
 import { evaluateParaphrase } from "./ai/evaluator.js";
 import { reviewLive } from "./ai/liveReview.js";
 import { answerCoachQuestion, MAX_COACH_CHAT_MESSAGE_CHARS } from "./ai/coachChat.js";
-import { checkUpstream, listUpstreamModels } from "./ai/llmClient.js";
-import { parseRequestProvider } from "./ai/providers.js";
+import { checkUpstream, listUpstreamModels, probeProvider } from "./ai/llmClient.js";
+import { getProviderCatalogModels, mergeModelLists } from "./ai/modelCatalog.js";
+import { parseRequestProvider, requestProvider } from "./ai/providers.js";
 import { MAX_LEARNER_ANSWER_CHARS } from "./ai/schemas.js";
 import { GatewayError, ErrorCodes, jsonErrorResponse } from "./ai/errors.js";
 
@@ -13,10 +14,10 @@ export async function gatewayHandler(req, res) {
   // en producciÃ³n. Reflejar cualquier Origin convertirÃ­a un proxy BYOK en un
   // endpoint reutilizable por terceros.
   const origin = req.headers.origin;
-  if (origin && !isAllowedOrigin(origin)) {
+  if (origin && !isAllowedOrigin(origin, req)) {
     return sendJson(res, 403, { code: "origin_not_allowed", message: "Este origen no puede usar el gateway" });
   }
-  if (origin && isAllowedOrigin(origin)) {
+  if (origin && isAllowedOrigin(origin, req)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
   }
@@ -62,18 +63,19 @@ export async function gatewayHandler(req, res) {
 
     if (req.method === "POST" && url.pathname === "/api/ai/providers/test") {
       const body = await readJsonBody(req);
-      const provider = await parseRequestProvider(body?.provider, { requireModel: false });
+      const provider = await parseRequestProvider(body?.provider);
       if (!provider) {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta la configuracion del provider");
       }
-      const result = await checkUpstream({ baseUrl: provider.baseUrl, apiKey: provider.apiKey });
+      const result = await probeProvider(requestProvider(provider, { thinking: "disabled" }));
       return sendJson(res, 200, {
         reachable: result.reachable,
         status: result.status,
         latencyMs: result.latencyMs,
-        modelCount: result.modelCount,
         error: result.error,
         label: provider.label,
+        model: provider.model,
+        verification: "inference",
       });
     }
 
@@ -83,14 +85,32 @@ export async function gatewayHandler(req, res) {
       if (!provider) {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta la configuracion del provider");
       }
-      const result = await listUpstreamModels({ baseUrl: provider.baseUrl, apiKey: provider.apiKey });
+      const [upstream, catalog] = await Promise.all([
+        listUpstreamModels({ baseUrl: provider.baseUrl, apiKey: provider.apiKey }),
+        getProviderCatalogModels(provider),
+      ]);
+      const models = mergeModelLists(upstream.models, catalog.models);
       return sendJson(res, 200, {
-        reachable: result.reachable,
-        status: result.status,
-        latencyMs: result.latencyMs,
-        models: result.models,
-        error: result.error,
+        // This describes discovery only. A false value here must never be
+        // interpreted as a failed provider connection: inference is tested
+        // independently at /providers/test.
+        reachable: upstream.reachable,
+        status: upstream.status,
+        latencyMs: upstream.latencyMs,
+        models,
+        error: upstream.error,
         label: provider.label,
+        discovery: {
+          upstream: {
+            available: upstream.reachable,
+            error: upstream.error,
+            latencyMs: upstream.latencyMs,
+          },
+          catalog: {
+            source: catalog.source,
+            warning: catalog.warning,
+          },
+        },
       });
     }
 
@@ -354,12 +374,18 @@ function sendJson(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-function isAllowedOrigin(origin) {
+function isAllowedOrigin(origin, req) {
   const normalized = String(origin ?? "").replace(/\/$/, "");
   if (!normalized) return false;
   if (config.allowedOrigins.includes(normalized)) return true;
   try {
     const url = new URL(normalized);
+    // Vercel serves the SPA and the gateway from the same deployment. That
+    // origin is safe by construction and should work without requiring users
+    // to duplicate their production URL in an environment variable. Explicit
+    // allowlist entries are still required for a separately hosted frontend.
+    const requestHost = String(req?.headers?.host ?? "").toLowerCase();
+    if (requestHost && url.host.toLowerCase() === requestHost) return true;
     // Electron usa un puerto aleatorio en packaged mode y Vite alterna entre
     // localhost/127.0.0.1; ambos son locales al usuario, no terceros remotos.
     return ["localhost", "127.0.0.1", "::1"].includes(url.hostname);

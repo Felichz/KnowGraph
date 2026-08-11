@@ -2,6 +2,7 @@ import { lookup } from "node:dns/promises";
 import { z } from "zod";
 import { config } from "../config.js";
 import { ErrorCodes, GatewayError } from "./errors.js";
+import { PROVIDER_ADAPTERS, normalizeProviderAdapter, providerRuntimeOptions, resolveProviderProfile } from "./providerRegistry.js";
 
 const ProviderProfileBaseZod = z.object({
   // The browser may keep an empty draft id. It is metadata, not a required
@@ -12,10 +13,16 @@ const ProviderProfileBaseZod = z.object({
     z.string().trim().min(1).max(80).optional(),
   ),
   label: z.string().trim().min(1).max(80).default("Provider personal"),
-  adapter: z.enum(["openai", "minimax"]).default("openai"),
+  adapter: z.preprocess(
+    normalizeProviderAdapter,
+    z.enum(PROVIDER_ADAPTERS),
+  ).default("openai"),
   baseUrl: z.string().url().transform((value) => value.replace(/\/+$/, "")),
   apiKey: z.string().trim().min(1).max(4096),
-  supportsResponseFormat: z.boolean().optional().default(false),
+  // Kept only to accept profiles saved by the initial BYOK screen. Runtime
+  // behavior now comes from the controlled provider registry instead of a
+  // checkbox the user has to understand.
+  supportsResponseFormat: z.boolean().optional(),
 }).strict();
 
 const ProviderProfileZod = ProviderProfileBaseZod.extend({
@@ -39,45 +46,23 @@ export async function parseRequestProvider(value, { requireModel = true } = {}) 
     throw new GatewayError(ErrorCodes.BAD_REQUEST, "La configuracion del provider no es valida");
   }
   if (!config.allowPrivateProviderUrls) await assertPublicProviderUrl(result.data.baseUrl);
-  return result.data;
+  return resolveProviderProfile(result.data);
 }
 
 export function requestProvider(profile, { thinking = "adaptive" } = {}) {
   if (!profile) return null;
-  const isMiniMax = profile.adapter === "minimax";
-  return {
-    name: profile.label,
-    baseUrl: profile.baseUrl,
-    apiKey: profile.apiKey,
-    model: profile.model,
-    // Known MiniMax behavior is handled explicitly. Other OpenAI-compatible
-    // providers are tried with structured output first and fall back to the
-    // same request without response_format if they reject that option.
-    responseFormatMode: isMiniMax ? "unsupported" : "auto",
-    extraBody: isMiniMax
-      ? {
-          thinking: { type: thinking === "disabled" ? "disabled" : "adaptive" },
-          reasoning_split: true,
-        }
-      : null,
-    streamContentMode: "delta",
-  };
+  return providerRuntimeOptions(profile, { thinking });
 }
 
 function minimaxProvider({ thinking = "adaptive" } = {}) {
   if (!config.minimaxApiKey) return null;
-  return {
-    name: "minimax",
+  return providerRuntimeOptions({
+    label: "minimax",
+    adapter: "minimax",
     baseUrl: config.minimaxBaseUrl,
     apiKey: config.minimaxApiKey,
     model: config.minimaxModel,
-    responseFormatMode: "unsupported",
-    extraBody: {
-      thinking: { type: thinking === "disabled" ? "disabled" : "adaptive" },
-      reasoning_split: true,
-    },
-    streamContentMode: "delta",
-  };
+  }, { thinking });
 }
 
 function freellmapiProvider(model) {

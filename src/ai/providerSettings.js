@@ -1,5 +1,34 @@
-const SESSION_KEY = "learning-workspace:provider-profiles:v2";
-const LEGACY_SESSION_KEY = "learning-workspace:provider-profile:v1";
+const SESSION_KEY = "learning-workspace:provider-profiles:v3";
+const LEGACY_SESSION_KEYS = [
+  "learning-workspace:provider-profiles:v2",
+  "learning-workspace:provider-profile:v1",
+];
+
+export const PROVIDER_ADAPTERS = Object.freeze(["openai", "openrouter", "minimax"]);
+
+export const PROVIDER_PRESETS = Object.freeze({
+  openai: Object.freeze({
+    adapter: "openai",
+    label: "OpenAI compatible",
+    baseUrl: "",
+    model: "",
+    description: "OpenAI, gateways compatibles, Ollama, LM Studio y endpoints propios.",
+  }),
+  openrouter: Object.freeze({
+    adapter: "openrouter",
+    label: "OpenRouter",
+    baseUrl: "https://openrouter.ai/api/v1",
+    model: "",
+    description: "Un catálogo multi-provider detrás de un endpoint compatible.",
+  }),
+  minimax: Object.freeze({
+    adapter: "minimax",
+    label: "MiniMax",
+    baseUrl: "https://api.minimax.io/v1",
+    model: "MiniMax-M3",
+    description: "Adapter nativo para el formato de reasoning de MiniMax.",
+  }),
+});
 
 export const EMPTY_PROVIDER_PROFILE = Object.freeze({
   id: "",
@@ -10,21 +39,31 @@ export const EMPTY_PROVIDER_PROFILE = Object.freeze({
   model: "",
 });
 
-export const MINIMAX_PRESET = Object.freeze({
-  adapter: "minimax",
-  baseUrl: "https://api.minimax.io/v1",
-  model: "MiniMax-M3",
-});
+// Compatibility export for callers created before the preset registry.
+export const MINIMAX_PRESET = PROVIDER_PRESETS.minimax;
+
+export function normalizeProviderAdapter(value) {
+  const adapter = String(value ?? "").trim().toLowerCase();
+  if (adapter === "openai-compatible") return "openai";
+  return PROVIDER_ADAPTERS.includes(adapter) ? adapter : "openai";
+}
+
+export function createProviderDraft(adapter = "openai") {
+  const preset = PROVIDER_PRESETS[normalizeProviderAdapter(adapter)];
+  return normalizeProviderDraft({ ...EMPTY_PROVIDER_PROFILE, ...preset });
+}
 
 export function normalizeProviderDraft(value) {
   const source = value && typeof value === "object" ? value : EMPTY_PROVIDER_PROFILE;
+  const adapter = normalizeProviderAdapter(source.adapter);
+  const preset = PROVIDER_PRESETS[adapter];
   return {
     id: String(source.id ?? "").trim().slice(0, 80) || "provider_default",
-    label: String(source.label ?? "").trim().slice(0, 80),
-    adapter: source.adapter === "minimax" ? "minimax" : "openai",
-    baseUrl: String(source.baseUrl ?? "").trim().replace(/\/+$/, "").slice(0, 500),
+    label: String(source.label ?? preset.label).trim().slice(0, 80),
+    adapter,
+    baseUrl: String(source.baseUrl ?? preset.baseUrl).trim().replace(/\/+$/, "").slice(0, 500),
     apiKey: String(source.apiKey ?? "").trim().slice(0, 4096),
-    model: String(source.model ?? "").trim().slice(0, 200),
+    model: String(source.model ?? preset.model).trim().slice(0, 200),
   };
 }
 
@@ -34,8 +73,7 @@ export function normalizeProviderProfile(value, { requireModel = true } = {}) {
 }
 
 export async function loadProviderDrafts() {
-  const stored = await readStoredState();
-  return stored;
+  return readStoredState();
 }
 
 export async function loadProviderProfile() {
@@ -67,14 +105,14 @@ export async function clearProviderProfile() {
     await desktop.clear();
   } else {
     window.sessionStorage.removeItem(SESSION_KEY);
-    window.sessionStorage.removeItem(LEGACY_SESSION_KEY);
+    LEGACY_SESSION_KEYS.forEach((key) => window.sessionStorage.removeItem(key));
   }
 }
 
 export function providerStorageDescription() {
   return window.learningDesktop?.providerSettings
     ? "La clave se guarda cifrada en este dispositivo."
-    : "La clave se conserva solo mientras esta pestana permanezca abierta.";
+    : "La clave se conserva solo mientras esta pestaña permanezca abierta.";
 }
 
 async function readStoredState() {
@@ -90,8 +128,11 @@ async function readStoredState() {
   try {
     const current = window.sessionStorage.getItem(SESSION_KEY);
     if (current) return normalizeProviderState(JSON.parse(current));
-    const legacy = window.sessionStorage.getItem(LEGACY_SESSION_KEY);
-    return normalizeProviderState(legacy ? JSON.parse(legacy) : null);
+    for (const key of LEGACY_SESSION_KEYS) {
+      const legacy = window.sessionStorage.getItem(key);
+      if (legacy) return normalizeProviderState(JSON.parse(legacy));
+    }
+    return createProviderState();
   } catch {
     return createProviderState();
   }
@@ -105,17 +146,14 @@ async function writeStoredState(value) {
     return;
   }
   window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(stored));
-  window.sessionStorage.removeItem(LEGACY_SESSION_KEY);
+  LEGACY_SESSION_KEYS.forEach((key) => window.sessionStorage.removeItem(key));
 }
 
 function createProviderState() {
   return {
-    version: 2,
+    version: 3,
     activeAdapter: "openai",
-    profiles: {
-      openai: normalizeProviderDraft(EMPTY_PROVIDER_PROFILE),
-      minimax: normalizeProviderDraft({ ...EMPTY_PROVIDER_PROFILE, ...MINIMAX_PRESET, label: "MiniMax" }),
-    },
+    profiles: Object.fromEntries(PROVIDER_ADAPTERS.map((adapter) => [adapter, createProviderDraft(adapter)])),
   };
 }
 
@@ -123,7 +161,8 @@ function normalizeProviderState(value) {
   const fallback = createProviderState();
   if (!value || typeof value !== "object") return fallback;
 
-  // Migrate the previous single-profile format without losing it.
+  // Migrate v1's single profile and v2's openai/minimax draft map without
+  // dropping credentials. OpenRouter starts as a fresh, isolated draft.
   if (!value.profiles) {
     const legacy = normalizeProviderDraft(value);
     fallback.profiles[legacy.adapter] = legacy;
@@ -131,13 +170,13 @@ function normalizeProviderState(value) {
     return fallback;
   }
 
-  const activeAdapter = value.activeAdapter === "minimax" ? "minimax" : "openai";
+  const activeAdapter = normalizeProviderAdapter(value.activeAdapter);
   return {
-    version: 2,
+    version: 3,
     activeAdapter,
-    profiles: {
-      openai: normalizeProviderDraft(value.profiles.openai ?? { ...EMPTY_PROVIDER_PROFILE, adapter: "openai" }),
-      minimax: normalizeProviderDraft(value.profiles.minimax ?? { ...EMPTY_PROVIDER_PROFILE, ...MINIMAX_PRESET, label: "MiniMax" }),
-    },
+    profiles: Object.fromEntries(PROVIDER_ADAPTERS.map((adapter) => [
+      adapter,
+      normalizeProviderDraft(value.profiles[adapter] ?? createProviderDraft(adapter)),
+    ])),
   };
 }

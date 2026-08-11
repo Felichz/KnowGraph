@@ -2544,12 +2544,13 @@ body { background: var(--p-bg); }
   display: grid;
   width: min(760px, calc(100vw - 48px));
   max-width: calc(100vw - 48px);
-  gap: 14px;
+  gap: 17px;
   border: 1px solid color-mix(in srgb, var(--lesson-color) 34%, var(--p-line-strong));
   border-radius: 10px;
-  padding: 16px 18px;
+  padding: 19px 21px;
   background: #0d151d;
   box-shadow: 0 18px 45px rgba(0, 0, 0, .44);
+  z-index: 4;
 }
 .coach-hint__details:not([open]) > .coach-hint__tooltip,
 .coach-hint__details[open]:not([data-layout-ready="true"]) > .coach-hint__tooltip {
@@ -2558,8 +2559,8 @@ body { background: var(--p-bg); }
   pointer-events: none;
 }
 .coach-hint__tooltip-header { display: grid; gap: 5px; }
-.coach-hint__tooltip-header strong { color: var(--p-text); font-size: 13px; line-height: 1.35; }
-.coach-hint__markdown { display: grid; gap: 10px; min-width: 0; color: var(--p-text-2); font-size: 13px; line-height: 1.65; }
+.coach-hint__tooltip-header strong { color: var(--p-text); font-size: 15px; line-height: 1.4; }
+.coach-hint__markdown { display: grid; gap: 13px; min-width: 0; color: var(--p-text-2); font-size: 15px; line-height: 1.72; }
 .coach-hint__markdown p { margin: 0; overflow-wrap: anywhere; }
 .coach-hint__markdown h1,
 .coach-hint__markdown h2,
@@ -2572,7 +2573,7 @@ body { background: var(--p-bg); }
 .coach-hint__markdown h3 { font-size: 15px; }
 .coach-hint__markdown h4,
 .coach-hint__markdown h5,
-.coach-hint__markdown h6 { font-size: 13px; }
+.coach-hint__markdown h6 { font-size: 14px; }
 .coach-hint__markdown ul,
 .coach-hint__markdown ol { display: grid; gap: 7px; margin: 0; padding-left: 22px; }
 .coach-hint__markdown li { padding-left: 3px; }
@@ -2580,18 +2581,43 @@ body { background: var(--p-bg); }
 .coach-hint__markdown blockquote { margin: 0; border-left: 1px solid color-mix(in srgb, var(--lesson-color) 55%, transparent); padding: 2px 0 2px 12px; color: var(--p-text-3); }
 .coach-hint__markdown hr { width: 100%; margin: 3px 0; border: 0; border-top: 1px solid var(--p-line); }
 .coach-hint__markdown .coach-chat__table-wrap { max-width: 100%; overflow-x: auto; }
-.coach-hint__markdown table { width: 100%; min-width: 440px; border-collapse: collapse; font-size: 12px; line-height: 1.45; }
+.coach-hint__markdown table { width: 100%; min-width: 440px; border-collapse: collapse; font-size: 13px; line-height: 1.5; }
 .coach-hint__markdown th,
 .coach-hint__markdown td { border-bottom: 1px solid rgba(126, 151, 174, .17); padding: 8px 10px; text-align: left; vertical-align: top; }
 .coach-hint__markdown th { color: var(--p-text); background: rgba(100, 231, 220, .08); font-weight: 720; }
 .coach-hint__markdown td { color: var(--p-text-2); }
 .coach-hint__markdown tr:last-child td { border-bottom: 0; }
 .coach-hint__markdown pre { max-width: 100%; overflow-x: auto; margin: 2px 0; border: 1px solid var(--p-line); border-radius: 7px; padding: 10px; background: #070b10; }
-.coach-hint__markdown pre code { color: #c8fff9; font: 12px/1.55 "JetBrains Mono", ui-monospace, monospace; }
-.coach-hint__chunk { display: inline; border-radius: 4px; padding: .08em .16em; background: rgba(100, 231, 220, .055); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.coach-hint__markdown pre code { color: #c8fff9; font: 13px/1.6 "JetBrains Mono", ui-monospace, monospace; }
+.coach-hint__chunk { position: relative; z-index: 1; display: inline; border-radius: 4px; padding: .08em .16em; background: rgba(100, 231, 220, .055); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .coach-hint__chunk--b { background: rgba(100, 231, 220, .095); }
-.coach-hint__chunk:hover { background: rgba(100, 231, 220, .16); }
-.coach-hint__chunk code { border: 1px solid var(--p-line); border-radius: 4px; padding: 1px 4px; color: #c8fff9; background: #080d12; font: 11px "JetBrains Mono", ui-monospace, monospace; }
+.coach-hint__chunk:hover { z-index: 2; color: #fff; background: rgba(100, 231, 220, .16); box-shadow: 0 8px 22px rgba(0, 0, 0, .24); }
+.coach-hint__chunk:hover * { color: #fff !important; }
+.coach-hint__chunk:hover code { color: #c8fff9 !important; }
+.coach-hint__chunk code { border: 1px solid var(--p-line); border-radius: 4px; padding: 1px 4px; color: #c8fff9; background: #080d12; font: 12px "JetBrains Mono", ui-monospace, monospace; }
+
+/* Coach-hint chunks are rendered as inline markdown spans rather than the
+   ReadingChunks component. Give them the same global spotlight behavior so
+   the rest of the card recedes while one explanation is being read. */
+.lesson-modal:has(.coach-hint__chunk:hover) > *:not(:has(.coach-hint__chunk:hover)),
+.lesson-modal:has(.coach-hint__chunk:hover) .lesson-layout > *:not(.lesson-view-tabs):not(:has(.coach-hint__chunk:hover)),
+.lesson-modal:has(.coach-hint__chunk:hover) .lesson-content > *:not(:has(.coach-hint__chunk:hover)),
+.lesson-modal:has(.coach-hint__chunk:hover) .mastery-workspace > *:not(:has(.coach-hint__chunk:hover)),
+.lesson-modal:has(.coach-hint__chunk:hover) .live-review > *:not(:has(.coach-hint__chunk:hover)),
+.lesson-modal:has(.coach-hint__chunk:hover) .live-review__footer-content > *:not(:has(.coach-hint__chunk:hover)) {
+  opacity: .48;
+  filter: brightness(.68);
+  transition: none;
+}
+.lesson-modal:has(.coach-hint__chunk:hover) .lesson-view-tabs,
+.lesson-modal:has(.coach-hint__chunk:hover) .coach-hint__chunk:not(:hover) {
+  opacity: .62;
+  filter: brightness(.8);
+}
+.lesson-modal:has(.coach-hint__chunk:hover) .lesson-view-tabs {
+  opacity: 1 !important;
+  filter: none !important;
+}
 .live-review__footer-meta {
   display: flex;
   max-width: 220px;
@@ -3842,21 +3868,33 @@ body { background: var(--p-bg); }
 }
 
 .topology-node__guide rect {
-  fill: #121a23;
+  fill: #101a23;
   stroke: #5aa9ff;
-  stroke-width: 1;
+  stroke-width: 1.15;
   vector-effect: non-scaling-stroke;
 }
 .topology-node__guide text {
   fill: #a9d2ff;
-  font: 750 10.5px "JetBrains Mono", ui-monospace, monospace;
-  letter-spacing: .045em;
+  font: 750 10px "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: .025em;
   pointer-events: none;
 }
-.topology-node__guide--1 rect { fill: #e9eef5; stroke: #e9eef5; }
-.topology-node__guide--1 text { fill: #0b1118; }
-.topology-node__guide--2 rect { stroke: #2dd4bf; }
-.topology-node__guide--2 text { fill: #79e4d4; }
+.topology-node__guide-connector {
+  stroke: #5b7182;
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  vector-effect: non-scaling-stroke;
+}
+.topology-node__guide-dot { fill: currentColor; }
+.topology-node__guide--1 { color: #64e7dc; filter: drop-shadow(0 2px 5px rgba(100, 231, 220, .16)); }
+.topology-node__guide--1 rect { fill: #102a2e; stroke: #64e7dc; }
+.topology-node__guide--1 text { fill: #b9fff7; }
+.topology-node__guide--2 { color: #79e4d4; }
+.topology-node__guide--2 rect { fill: #102322; stroke: #2dd4bf; }
+.topology-node__guide--2 text { fill: #9beee1; }
+.topology-node__guide--3 { color: #8fc4ff; }
+.topology-node__guide--3 rect { fill: #111e2d; stroke: #5aa9ff; }
+.topology-node__guide--3 text { fill: #b7d9ff; }
 
 @media (max-width: 760px) {
   .map-workspace .graph-area::after { content: none; }
@@ -4212,9 +4250,35 @@ body { background: var(--p-bg); }
 .provider-model-picker { display: grid; gap: 8px; min-width: 0; }
 .provider-model-picker__input-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; min-width: 0; }
 .provider-model-picker__input-row > select { min-width: 0; }
-.provider-model-test { min-width: 126px; white-space: nowrap; }
+.provider-model-picker__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; min-width: 0; }
+.provider-test-button {
+  display: inline-flex;
+  min-width: 126px;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--p-line-strong);
+  border-radius: var(--p-r1);
+  padding: 8px 12px;
+  color: var(--p-text-2);
+  background: var(--p-surface-2);
+  font: 650 11px Inter, ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.provider-test-button:hover:not(:disabled) {
+  border-color: #60748b;
+  color: var(--p-text);
+  background: var(--p-surface-3);
+}
+.provider-test-button:focus-visible {
+  outline: 2px solid var(--p-cyan);
+  outline-offset: 2px;
+}
+.provider-test-button:disabled { opacity: .6; cursor: progress; }
 .provider-model-filter { min-height: 34px !important; }
-.provider-manual-model { justify-self: start; border: 0; padding: 0; color: #8fcbd0; background: transparent; font: 600 11px Inter, ui-sans-serif, system-ui, sans-serif; cursor: pointer; }
+.provider-manual-model { justify-self: start; border: 0; min-height: 26px; padding: 0; color: #8fcbd0; background: transparent; font: 600 11px Inter, ui-sans-serif, system-ui, sans-serif; cursor: pointer; }
 .provider-manual-model:hover { color: #d2fffa; text-decoration: underline; }
 .provider-manual-model:focus-visible { outline: 2px solid var(--p-cyan); outline-offset: 3px; }
 .provider-field code,
@@ -4224,17 +4288,33 @@ body { background: var(--p-bg); }
 .provider-check > span { color: #aeb9c6; font-weight: 500; line-height: 1.45; }
 .provider-storage-note { border-top: 1px solid rgba(255, 255, 255, .07); padding-top: 13px; }
 .provider-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin: 0;
-  border-left: 2px solid #6f7e91;
+  border: 1px solid var(--p-line);
+  border-radius: var(--p-r1);
   padding: 8px 10px;
   color: #aeb9c5;
   background: rgba(255, 255, 255, .025);
   font-size: 11px;
   line-height: 1.45;
 }
-.provider-status--success { border-left-color: var(--p-cyan); color: #bdf4ef; }
-.provider-status--error { border-left-color: #f27878; color: #ffc5c5; }
-.provider-status--testing { border-left-color: #e6b85a; color: #f3d18d; }
+.provider-status::before {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #7f8c9d;
+  content: "";
+}
+.provider-status--success { border-color: rgba(100, 231, 220, .28); color: #bdf4ef; background: rgba(100, 231, 220, .055); }
+.provider-status--success::before { background: var(--p-cyan); }
+.provider-status--error { border-color: rgba(239, 118, 104, .34); color: #ffc5c5; background: rgba(239, 118, 104, .055); }
+.provider-status--error::before { background: var(--p-red); }
+.provider-status--testing { border-color: rgba(243, 189, 82, .32); color: #f3d18d; background: rgba(243, 189, 82, .055); }
+.provider-status--testing::before { background: var(--p-gold); }
 .provider-settings-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .provider-settings-actions button,
 .provider-clear-button {
@@ -4245,9 +4325,6 @@ body { background: var(--p-bg); }
   font: 650 11px Inter, ui-sans-serif, system-ui, sans-serif;
   cursor: pointer;
 }
-.provider-test-button { color: #c7d2df; background: #151e29; }
-.provider-test-button:hover:not(:disabled) { border-color: #51657c; color: #fff; background: #192430; }
-.provider-test-button:disabled { opacity: .6; cursor: progress; }
 .provider-save-button { border-color: rgba(100, 231, 220, .5) !important; color: #082020; background: var(--p-cyan); }
 .provider-save-button:hover { color: #081d1b; background: #98f7ef; }
 .provider-clear-button { width: 100%; color: #98a6b7; background: transparent; }
@@ -4270,6 +4347,11 @@ body { background: var(--p-bg); }
     grid-template-columns: 276px minmax(0, 1fr) clamp(330px, 26vw, 410px);
     grid-template-rows: auto minmax(0, 1fr) auto auto;
   }
+}
+
+@media (max-width: 420px) {
+  .provider-model-picker__input-row { grid-template-columns: 1fr; }
+  .provider-test-button { width: 100%; }
 }
 
 @media (max-width: 1040px) and (min-width: 761px) {
@@ -4300,5 +4382,16 @@ body { background: var(--p-bg); }
       "progress";
     grid-template-rows: auto auto auto auto auto auto auto;
   }
-  .workspace-provider-panel { max-height: none; border-top: 1px solid var(--p-line); border-left: 0; }
+  /* A configuration task should open where the user acted. Keeping this
+     inspector in the document grid put it after the map, often many viewports
+     below the trigger on a phone. Use the whole narrow viewport instead. */
+  .workspace-provider-panel.is-open {
+    position: fixed;
+    z-index: 80;
+    inset: 0;
+    max-height: 100dvh;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 0;
+  }
 }

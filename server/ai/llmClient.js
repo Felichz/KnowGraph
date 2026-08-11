@@ -455,6 +455,73 @@ export async function checkUpstream({ baseUrl, apiKey, timeoutMs = 5000 }) {
 }
 
 /**
+ * Verify an actual inference route rather than treating GET /models as a
+ * universal health check. Several valid OpenAI-compatible gateways, notably
+ * MiniMax, do not expose that discovery endpoint.
+ *
+ * The request is intentionally tiny and never includes study content. It is
+ * still billable by the configured provider, so the UI only invokes it after
+ * the user explicitly clicks "Probar modelo".
+ */
+export async function probeProvider({
+  baseUrl,
+  apiKey,
+  model,
+  extraBody = null,
+  timeoutMs = 15_000,
+}) {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), timeoutMs);
+  const startedAt = Date.now();
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      redirect: "error",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        ...(extraBody ?? {}),
+        model,
+        messages: [{ role: "user", content: "Respondé solamente OK." }],
+        temperature: 0,
+        max_tokens: 8,
+      }),
+      signal: ac.signal,
+    });
+    const latencyMs = Date.now() - startedAt;
+    if (response.ok) {
+      // Drain a small response to release the connection but never return
+      // provider content to the browser or put it in logs.
+      await response.arrayBuffer().catch(() => {});
+      return { reachable: true, status: response.status, latencyMs, error: null };
+    }
+
+    const detail = (await response.text().catch(() => "")).slice(0, 400);
+    if (response.status === 401 || response.status === 403) {
+      return { reachable: false, status: response.status, latencyMs, error: "token_rejected" };
+    }
+    if (response.status === 404) {
+      return { reachable: false, status: response.status, latencyMs, error: "chat_route_not_found" };
+    }
+    if (response.status === 429) {
+      return { reachable: false, status: response.status, latencyMs, error: "rate_limited" };
+    }
+    return { reachable: false, status: response.status, latencyMs, error: "inference_rejected", detail };
+  } catch (error) {
+    return {
+      reachable: false,
+      status: null,
+      latencyMs: Date.now() - startedAt,
+      error: error?.name === "AbortError" ? "timeout" : "network",
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * Fetch a provider's model catalog without exposing the API key to the
  * browser. Providers that implement the OpenAI-compatible `/models` route
  * can power the model picker; providers that do not can still be configured

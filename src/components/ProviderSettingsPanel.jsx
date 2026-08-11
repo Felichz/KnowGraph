@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { fetchAiProviderModels } from "../ai/client.js";
+import { fetchAiProviderModels, testAiProvider } from "../ai/client.js";
 import {
   EMPTY_PROVIDER_PROFILE,
-  MINIMAX_PRESET,
+  PROVIDER_PRESETS,
   clearProviderProfile,
+  createProviderDraft,
   loadProviderDrafts,
   normalizeProviderProfile,
   providerStorageDescription,
@@ -32,7 +33,7 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
         draftsRef.current = stored.profiles;
         draftsHydratedRef.current = true;
         const adapter = profile?.adapter ?? stored.activeAdapter ?? "openai";
-        setDraft(stored.profiles[adapter] ?? profile ?? { ...EMPTY_PROVIDER_PROFILE, adapter });
+        setDraft(stored.profiles[adapter] ?? profile ?? createProviderDraft(adapter));
       });
       setDraft(profile ? { ...profile } : { ...EMPTY_PROVIDER_PROFILE });
       setModelFilter("");
@@ -54,9 +55,8 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
 
   useEffect(() => () => modelRequestRef.current?.abort(), []);
 
-  // Drafts are persisted independently from the active provider. This keeps
-  // an unfinished OpenRouter form from overwriting the MiniMax form (and vice
-  // versa) when the adapter select changes.
+  // Drafts remain separate by preset. Switching to OpenRouter to inspect a
+  // model must never overwrite an unfinished MiniMax configuration.
   useEffect(() => {
     if (!open || !draftsHydratedRef.current) return undefined;
     const timer = window.setTimeout(() => {
@@ -73,15 +73,14 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
   });
 
   const changeAdapter = (adapter) => {
-    const next = adapter === "minimax"
-      ? draftsRef.current.minimax ?? { ...EMPTY_PROVIDER_PROFILE, ...MINIMAX_PRESET, label: "MiniMax" }
-      : draftsRef.current.openai ?? { ...EMPTY_PROVIDER_PROFILE, adapter: "openai" };
+    const next = draftsRef.current[adapter] ?? createProviderDraft(adapter);
     draftsRef.current[adapter] = next;
     setDraft(next);
     setModelFilter("");
     setModels([]);
     setModelsStatus({ kind: "idle", message: "" });
     setManualModelOpen(false);
+    setStatus({ kind: "idle", message: "" });
   };
 
   const getValidatedProfile = () => {
@@ -93,42 +92,35 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
     return next;
   };
 
-  const getConnectionProfile = () => {
+  const getDiscoveryProfile = () => {
     const next = normalizeProviderProfile(draft, { requireModel: false });
     if (!next) {
-      setStatus({ kind: "error", message: "Completa endpoint y API key antes de probar la conexión." });
+      setStatus({ kind: "error", message: "Completa endpoint y API key antes de cargar el catálogo." });
       return null;
     }
     return next;
   };
 
   const loadModels = async (provider = null, { quiet = false } = {}) => {
-    const next = provider ?? getConnectionProfile();
+    const next = provider ?? getDiscoveryProfile();
     if (!next) return null;
 
     modelRequestRef.current?.abort();
     const controller = new AbortController();
     modelRequestRef.current = controller;
-    setModelsStatus({ kind: "loading", message: "Cargando catálogo..." });
+    setModelsStatus({ kind: "loading", message: "Cargando catálogo…" });
     try {
       const result = await fetchAiProviderModels({ provider: next, signal: controller.signal });
-      if (!result.reachable) {
-        const message = testErrorMessage(result);
-        setModelsStatus({ kind: "error", message });
-        if (!quiet) setStatus({ kind: "error", message });
-        return result;
-      }
-
       const nextModels = Array.isArray(result.models) ? result.models : [];
       setModels(nextModels);
       setModelsStatus({
         kind: nextModels.length > 0 ? "success" : "empty",
         message: nextModels.length > 0
-          ? `${nextModels.length} modelos disponibles.`
-          : "El provider respondió, pero no publicó modelos.",
+          ? `${nextModels.length} modelos disponibles (${catalogSourceLabel(result)}).`
+          : result.discovery?.catalog?.warning ?? "No encontramos un catálogo. Podés escribir el slug manualmente.",
       });
       if (!quiet && nextModels.length === 0) {
-        setStatus({ kind: "error", message: "El endpoint funciona, pero no publicó un catálogo de modelos." });
+        setStatus({ kind: "idle", message: "El slug manual sigue siendo válido aunque el provider no publique /models." });
       }
       return result;
     } catch (error) {
@@ -143,18 +135,19 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
   };
 
   const testConnection = async () => {
-    const next = getConnectionProfile();
+    const next = getValidatedProfile();
     if (!next) return;
-    setStatus({ kind: "testing", message: "Verificando endpoint, token y catálogo..." });
-    const result = await loadModels(next, { quiet: true });
-    if (!result || !result.reachable) {
-      setStatus({ kind: "error", message: result ? testErrorMessage(result) : "No se pudo comprobar el provider." });
-      return;
+    setStatus({ kind: "testing", message: "Enviando una inferencia mínima al modelo…" });
+    try {
+      const result = await testAiProvider({ provider: next });
+      if (!result.reachable) {
+        setStatus({ kind: "error", message: testErrorMessage(result) });
+        return;
+      }
+      setStatus({ kind: "success", message: `El modelo respondió en ${result.latencyMs ?? "?"} ms. El catálogo se carga por separado.` });
+    } catch (error) {
+      setStatus({ kind: "error", message: error?.message ?? "No se pudo comprobar el modelo." });
     }
-    const catalogHint = result.models?.length
-      ? `${result.models.length} modelos disponibles.`
-      : "El provider no publicó un catálogo; podés escribir el slug manualmente.";
-    setStatus({ kind: "success", message: `Conexión lista en ${result.latencyMs ?? "?"} ms. ${catalogHint}` });
   };
 
   const selectModel = (modelId) => {
@@ -164,7 +157,8 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
 
   const visibleModels = models
     .filter((model) => `${model.label} ${model.id}`.toLowerCase().includes(modelFilter.trim().toLowerCase()))
-    .slice(0, 200);
+    .slice(0, 250);
+  const preset = PROVIDER_PRESETS[draft.adapter] ?? PROVIDER_PRESETS.openai;
 
   const save = async () => {
     const next = getValidatedProfile();
@@ -196,7 +190,7 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
       <header className="workspace-provider-panel__header">
         <div>
           <h2>Proveedor de IA</h2>
-          <p>Usá tu propia cuenta compatible con OpenAI.</p>
+          <p>Conectá tu propia cuenta o endpoint compatible.</p>
         </div>
         <button type="button" onClick={onClose} aria-label="Cerrar configuración de provider">
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" /></svg>
@@ -205,11 +199,13 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
 
       <form className="provider-settings-form" onSubmit={(event) => { event.preventDefault(); save(); }}>
         <label className="provider-field">
-          <span>Compatibilidad</span>
+          <span>Provider</span>
           <select value={draft.adapter} onChange={(event) => changeAdapter(event.target.value)}>
             <option value="openai">OpenAI compatible</option>
+            <option value="openrouter">OpenRouter</option>
             <option value="minimax">MiniMax</option>
           </select>
+          <small>{preset.description}</small>
         </label>
 
         <label className="provider-field">
@@ -238,18 +234,21 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
                 onChange={(event) => selectModel(event.target.value)}
                 aria-label="Modelo del provider"
               >
-                <option value="">{models.length > 0 ? "Seleccioná un modelo" : "Probá conexión para cargar modelos"}</option>
+                <option value="">{models.length > 0 ? "Seleccioná un modelo" : "Cargá catálogo o ingresá un slug"}</option>
                 {draft.model && !models.some((model) => model.id === draft.model) && <option value={draft.model}>{draft.model}</option>}
                 {visibleModels.map((model) => <option value={model.id} key={model.id}>{model.label} · {model.id}</option>)}
               </select>
-              <button type="button" className="provider-test-button provider-model-test" onClick={testConnection} disabled={status.kind === "testing" || modelsStatus.kind === "loading"}>
-                {status.kind === "testing" ? "Probando..." : "Probar conexión"}
+              <button type="button" className="provider-test-button provider-model-test" onClick={testConnection} disabled={status.kind === "testing" || !draft.model}>
+                {status.kind === "testing" ? "Probando…" : "Probar modelo"}
               </button>
             </div>
-            {models.length > 0 && <input className="provider-model-filter" value={modelFilter} onChange={(event) => setModelFilter(event.target.value)} placeholder="Buscar por nombre o slug..." aria-label="Filtrar modelos" />}
+            {models.length > 0 && <input className="provider-model-filter" value={modelFilter} onChange={(event) => setModelFilter(event.target.value)} placeholder="Buscar por nombre o slug…" aria-label="Filtrar modelos" />}
             {models.length === 0 && manualModelOpen && <input value={draft.model} onChange={(event) => update("model", event.target.value)} placeholder="Escribí el slug del modelo" maxLength="200" autoCapitalize="none" spellCheck="false" />}
-            {models.length === 0 && <button type="button" className="provider-manual-model" onClick={() => setManualModelOpen((current) => !current)}>{manualModelOpen ? "Ocultar entrada manual" : "Ingresar slug manualmente"}</button>}
-            <small>{modelsStatus.message || (models.length > 0 ? `${models.length} modelos cargados. Filtrá y elegí uno.` : "El selector se habilita después de probar la conexión.")}</small>
+            <div className="provider-model-picker__actions">
+              <button type="button" className="provider-manual-model" onClick={() => loadModels()} disabled={modelsStatus.kind === "loading"}>Actualizar catálogo</button>
+              {models.length === 0 && <button type="button" className="provider-manual-model" onClick={() => setManualModelOpen((current) => !current)}>{manualModelOpen ? "Ocultar entrada manual" : "Ingresar slug manualmente"}</button>}
+            </div>
+            <small>{modelsStatus.message || "El catálogo es opcional: una conexión se verifica enviando una inferencia mínima al modelo elegido."}</small>
           </div>
         </label>
 
@@ -267,8 +266,19 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
   );
 }
 
+function catalogSourceLabel(result) {
+  const upstream = result.discovery?.upstream?.available;
+  const source = result.discovery?.catalog?.source;
+  if (upstream && source === "models.dev") return "endpoint + catálogo";
+  if (upstream) return "endpoint";
+  if (source === "models.dev") return "catálogo";
+  return "preset";
+}
+
 function testErrorMessage(result) {
   if (result.error === "token_rejected") return "El endpoint respondió, pero rechazó la API key.";
-  if (result.error === "timeout") return "El endpoint tardó demasiado en responder. Revisá la URL o reintentá.";
-  return "No se pudo verificar el endpoint. Confirmá la URL, la key y que exponga /models.";
+  if (result.error === "chat_route_not_found") return "El endpoint no expone /chat/completions. Elegí un provider compatible o un adapter nativo.";
+  if (result.error === "rate_limited") return "El provider limitó la prueba. Esperá un momento y reintentá.";
+  if (result.error === "timeout") return "El modelo tardó demasiado en responder. Revisá la URL o reintentá.";
+  return "El modelo rechazó la prueba. Confirmá el slug, la URL y la API key.";
 }

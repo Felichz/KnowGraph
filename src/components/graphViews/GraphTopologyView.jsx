@@ -250,6 +250,8 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
               const baseWidth = (Math.min(score, 100) / 120) * (layout.config.nodeWidth - 24);
               const extraWidth = (Math.max(0, score - 100) / 120) * (layout.config.nodeWidth - 24);
               const scoreLabel = visual.score ? `${score}/120` : "Sin evaluar";
+              const guideLabel = visual.guideLevel === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${visual.guideLevel}`;
+              const guideWidth = visual.guideLevel === 1 ? 126 : 78;
               return (
                 <g
                   key={node.id}
@@ -285,11 +287,14 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
                   {extraWidth > 0 && <rect className="topology-node__progress-extra" x={12 + ((100 / 120) * (layout.config.nodeWidth - 24))} y={layout.config.nodeHeight - 8} width={extraWidth} height="3" rx="1.5" />}
                   <line className="topology-node__mastery-mark" x1={12 + ((100 / 120) * (layout.config.nodeWidth - 24))} x2={12 + ((100 / 120) * (layout.config.nodeWidth - 24))} y1={layout.config.nodeHeight - 11} y2={layout.config.nodeHeight - 3} />
                   {visual.guideLevel > 0 && (
-                    <g className={`topology-node__guide topology-node__guide--${visual.guideLevel}`}>
-                      <rect x="8" y="-12" width={visual.guideLevel === 1 ? 88 : 60} height="20" rx="5" />
-                      <text x={visual.guideLevel === 1 ? 52 : 38} y="2" textAnchor="middle">
-                        {visual.guideLevel === 1 ? "MEJOR SIGUIENTE" : `NIVEL ${visual.guideLevel}`}
-                      </text>
+                    <g
+                      className={`topology-node__guide topology-node__guide--${visual.guideLevel}`}
+                      transform={`translate(${(layout.config.nodeWidth - guideWidth) / 2}, -30)`}
+                    >
+                      <line className="topology-node__guide-connector" x1={guideWidth / 2} y1="18" x2={guideWidth / 2} y2="30" />
+                      <rect x="0" y="0" width={guideWidth} height="18" rx="9" />
+                      <circle className="topology-node__guide-dot" cx="10" cy="9" r="2.5" />
+                      <text x="17" y="12">{guideLabel}</text>
                     </g>
                   )}
                 </g>

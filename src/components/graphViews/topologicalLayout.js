@@ -2,7 +2,9 @@ const DEFAULTS = {
   nodeWidth: 236,
   nodeHeight: 86,
   columnGap: 116,
-  rowGap: 24,
+  // Leaves a deliberate breathing zone for the route badge above guided
+  // nodes instead of letting it collide with the previous row.
+  rowGap: 38,
   paddingX: 104,
   paddingTop: 126,
   paddingBottom: 92,

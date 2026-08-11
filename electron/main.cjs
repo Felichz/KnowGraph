@@ -20,16 +20,30 @@ function providerSettingsPath() {
   return path.join(app.getPath("userData"), "provider-settings.bin");
 }
 
+const PROVIDER_ADAPTERS = ["openai", "openrouter", "minimax"];
+const PROVIDER_PRESETS = {
+  openai: { label: "OpenAI compatible", baseUrl: "", model: "" },
+  openrouter: { label: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1", model: "" },
+  minimax: { label: "MiniMax", baseUrl: "https://api.minimax.io/v1", model: "MiniMax-M3" },
+};
+
+function normalizeProviderAdapter(value) {
+  const adapter = String(value || "").trim().toLowerCase();
+  if (adapter === "openai-compatible") return "openai";
+  return PROVIDER_ADAPTERS.includes(adapter) ? adapter : "openai";
+}
+
 function normalizeProviderProfile(profile) {
+  const adapter = normalizeProviderAdapter(profile?.adapter);
+  const preset = PROVIDER_PRESETS[adapter];
   if (!profile || typeof profile !== "object") throw new Error("Perfil de provider invÃ¡lido");
   const normalized = {
     id: String(profile.id || "provider_default").slice(0, 80),
-    label: String(profile.label || "Provider personal").slice(0, 80),
-    adapter: profile.adapter === "minimax" ? "minimax" : "openai",
-    baseUrl: String(profile.baseUrl || "").replace(/\/+$/, "").slice(0, 500),
+    label: String(profile.label || preset.label).slice(0, 80),
+    adapter,
+    baseUrl: String(profile.baseUrl || preset.baseUrl).replace(/\/+$/, "").slice(0, 500),
     apiKey: String(profile.apiKey || "").slice(0, 4096),
-    model: String(profile.model || "").slice(0, 200),
-    supportsResponseFormat: Boolean(profile.supportsResponseFormat),
+    model: String(profile.model || preset.model).slice(0, 200),
   };
   if (!normalized.baseUrl || !normalized.apiKey || !normalized.model) throw new Error("El perfil estÃ¡ incompleto");
   return normalized;
@@ -37,24 +51,23 @@ function normalizeProviderProfile(profile) {
 
 function normalizeProviderDraft(profile, adapter = "openai") {
   const source = profile && typeof profile === "object" ? profile : {};
+  const normalizedAdapter = normalizeProviderAdapter(source.adapter || adapter);
+  const preset = PROVIDER_PRESETS[normalizedAdapter];
   return {
     id: String(source.id || "provider_default").slice(0, 80),
-    label: String(source.label || "").slice(0, 80),
-    adapter: source.adapter === "minimax" || adapter === "minimax" ? "minimax" : "openai",
-    baseUrl: String(source.baseUrl || "").replace(/\/+$/, "").slice(0, 500),
+    label: String(source.label || preset.label).slice(0, 80),
+    adapter: normalizedAdapter,
+    baseUrl: String(source.baseUrl || preset.baseUrl).replace(/\/+$/, "").slice(0, 500),
     apiKey: String(source.apiKey || "").slice(0, 4096),
-    model: String(source.model || "").slice(0, 200),
+    model: String(source.model || preset.model).slice(0, 200),
   };
 }
 
 function normalizeProviderState(value) {
   const fallback = {
-    version: 2,
+    version: 3,
     activeAdapter: "openai",
-    profiles: {
-      openai: normalizeProviderDraft({}, "openai"),
-      minimax: normalizeProviderDraft({ label: "MiniMax", baseUrl: "https://api.minimax.io/v1", model: "MiniMax-M3" }, "minimax"),
-    },
+    profiles: Object.fromEntries(PROVIDER_ADAPTERS.map((adapter) => [adapter, normalizeProviderDraft({}, adapter)])),
   };
   if (!value || typeof value !== "object") return fallback;
   if (!value.profiles) {
@@ -64,12 +77,9 @@ function normalizeProviderState(value) {
     return fallback;
   }
   return {
-    version: 2,
-    activeAdapter: value.activeAdapter === "minimax" ? "minimax" : "openai",
-    profiles: {
-      openai: normalizeProviderDraft(value.profiles.openai, "openai"),
-      minimax: normalizeProviderDraft(value.profiles.minimax ?? { label: "MiniMax", baseUrl: "https://api.minimax.io/v1", model: "MiniMax-M3" }, "minimax"),
-    },
+    version: 3,
+    activeAdapter: normalizeProviderAdapter(value.activeAdapter),
+    profiles: Object.fromEntries(PROVIDER_ADAPTERS.map((adapter) => [adapter, normalizeProviderDraft(value.profiles[adapter], adapter)])),
   };
 }
 
