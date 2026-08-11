@@ -4,7 +4,13 @@ import { config } from "../config.js";
 import { ErrorCodes, GatewayError } from "./errors.js";
 
 const ProviderProfileBaseZod = z.object({
-  id: z.string().min(1).max(80).optional(),
+  // The browser may keep an empty draft id. It is metadata, not a required
+  // part of the provider contract, so normalize that value to "undefined"
+  // instead of rejecting an otherwise valid provider request.
+  id: z.preprocess(
+    (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+    z.string().trim().min(1).max(80).optional(),
+  ),
   label: z.string().trim().min(1).max(80).default("Provider personal"),
   adapter: z.enum(["openai", "minimax"]).default("openai"),
   baseUrl: z.string().url().transform((value) => value.replace(/\/+$/, "")),

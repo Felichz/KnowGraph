@@ -19,7 +19,7 @@ export const MINIMAX_PRESET = Object.freeze({
 export function normalizeProviderDraft(value) {
   const source = value && typeof value === "object" ? value : EMPTY_PROVIDER_PROFILE;
   return {
-    id: String(source.id ?? "provider_default").trim().slice(0, 80),
+    id: String(source.id ?? "").trim().slice(0, 80) || "provider_default",
     label: String(source.label ?? "").trim().slice(0, 80),
     adapter: source.adapter === "minimax" ? "minimax" : "openai",
     baseUrl: String(source.baseUrl ?? "").trim().replace(/\/+$/, "").slice(0, 500),
