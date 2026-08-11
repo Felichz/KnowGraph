@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "test": "node tests/test-parse.mjs",
+    "test": "node tests/test-parse.mjs && node tests/test-providers.mjs",
     "smoke": "node tests/smoke.mjs"
   },
   "dependencies": {
