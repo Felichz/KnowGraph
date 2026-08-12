@@ -16,7 +16,7 @@ const ProviderProfileBaseZod = z.object({
   adapter: z.preprocess(
     normalizeProviderAdapter,
     z.enum(PROVIDER_ADAPTERS),
-  ).default("openai"),
+  ).default("custom"),
   baseUrl: z.string().url().transform((value) => value.replace(/\/+$/, "")),
   apiKey: z.string().trim().min(1).max(4096),
   // Kept only to accept profiles saved by the initial BYOK screen. Runtime

@@ -1,69 +1,56 @@
-const SESSION_KEY = "learning-workspace:provider-profiles:v3";
+import {
+  PROVIDER_ADAPTERS,
+  PROVIDER_LIBRARY,
+  PROVIDER_PRESETS,
+  getProviderPreset,
+  normalizeProviderAdapter,
+} from "../../shared/providerCatalog.js";
+
+const SESSION_KEY = "learning-workspace:provider-connections:v4";
 const LEGACY_SESSION_KEYS = [
+  "learning-workspace:provider-profiles:v3",
   "learning-workspace:provider-profiles:v2",
   "learning-workspace:provider-profile:v1",
 ];
 
-export const PROVIDER_ADAPTERS = Object.freeze(["openai", "openrouter", "minimax"]);
-
-export const PROVIDER_PRESETS = Object.freeze({
-  openai: Object.freeze({
-    adapter: "openai",
-    label: "OpenAI compatible",
-    baseUrl: "",
-    model: "",
-    description: "OpenAI, gateways compatibles, Ollama, LM Studio y endpoints propios.",
-  }),
-  openrouter: Object.freeze({
-    adapter: "openrouter",
-    label: "OpenRouter",
-    baseUrl: "https://openrouter.ai/api/v1",
-    model: "",
-    description: "Un catálogo multi-provider detrás de un endpoint compatible.",
-  }),
-  minimax: Object.freeze({
-    adapter: "minimax",
-    label: "MiniMax",
-    baseUrl: "https://api.minimax.io/v1",
-    model: "MiniMax-M3",
-    description: "Adapter nativo para el formato de reasoning de MiniMax.",
-  }),
-});
+export { PROVIDER_ADAPTERS, PROVIDER_LIBRARY, PROVIDER_PRESETS, getProviderPreset, normalizeProviderAdapter };
 
 export const EMPTY_PROVIDER_PROFILE = Object.freeze({
   id: "",
   label: "",
-  adapter: "openai",
+  adapter: "custom",
   baseUrl: "",
   apiKey: "",
   model: "",
 });
 
-// Compatibility export for callers created before the preset registry.
+// Compatibility export for the first BYOK screen and external callers.
 export const MINIMAX_PRESET = PROVIDER_PRESETS.minimax;
 
-export function normalizeProviderAdapter(value) {
-  const adapter = String(value ?? "").trim().toLowerCase();
-  if (adapter === "openai-compatible") return "openai";
-  return PROVIDER_ADAPTERS.includes(adapter) ? adapter : "openai";
+export function createProviderDraft(adapter = "custom") {
+  const preset = getProviderPreset(adapter);
+  return normalizeProviderDraft({
+    ...EMPTY_PROVIDER_PROFILE,
+    id: createProviderId(preset.id),
+    label: preset.label,
+    adapter: preset.id,
+    baseUrl: preset.defaultBaseUrl,
+    model: preset.knownModels[0]?.id ?? "",
+  });
 }
 
-export function createProviderDraft(adapter = "openai") {
-  const preset = PROVIDER_PRESETS[normalizeProviderAdapter(adapter)];
-  return normalizeProviderDraft({ ...EMPTY_PROVIDER_PROFILE, ...preset });
-}
-
-export function normalizeProviderDraft(value) {
+export function normalizeProviderDraft(value, { idFallback } = {}) {
   const source = value && typeof value === "object" ? value : EMPTY_PROVIDER_PROFILE;
   const adapter = normalizeProviderAdapter(source.adapter);
-  const preset = PROVIDER_PRESETS[adapter];
+  const preset = getProviderPreset(adapter);
+  const id = String(source.id ?? "").trim().slice(0, 80) || idFallback || createProviderId(adapter);
   return {
-    id: String(source.id ?? "").trim().slice(0, 80) || "provider_default",
-    label: String(source.label ?? preset.label).trim().slice(0, 80),
+    id,
+    label: String(source.label ?? preset.label).trim().slice(0, 80) || preset.label,
     adapter,
-    baseUrl: String(source.baseUrl ?? preset.baseUrl).trim().replace(/\/+$/, "").slice(0, 500),
+    baseUrl: String(source.baseUrl ?? preset.defaultBaseUrl).trim().replace(/\/+$/, "").slice(0, 500),
     apiKey: String(source.apiKey ?? "").trim().slice(0, 4096),
-    model: String(source.model ?? preset.model).trim().slice(0, 200),
+    model: String(source.model ?? preset.knownModels[0]?.id ?? "").trim().slice(0, 200),
   };
 }
 
@@ -72,31 +59,53 @@ export function normalizeProviderProfile(value, { requireModel = true } = {}) {
   return profile.baseUrl && profile.apiKey && (!requireModel || profile.model) ? profile : null;
 }
 
-export async function loadProviderDrafts() {
+export async function loadProviderSettings() {
   return readStoredState();
 }
 
 export async function loadProviderProfile() {
   const stored = await readStoredState();
-  return normalizeProviderProfile(stored.profiles[stored.activeAdapter]);
+  const active = stored.profiles.find((profile) => profile.id === stored.activeProfileId);
+  return normalizeProviderProfile(active);
+}
+
+// Kept while consumers migrate from the old name. It now returns the complete
+// connection state, not a fixed map keyed by adapter.
+export async function loadProviderDrafts() {
+  return readStoredState();
 }
 
 export async function saveProviderDraft(value) {
-  const stored = await readStoredState();
-  const draft = normalizeProviderDraft(value);
-  stored.profiles[draft.adapter] = draft;
-  await writeStoredState(stored);
-  return draft;
+  return upsertProvider(value, { activate: false, requireModel: false });
 }
 
-export async function saveProviderProfile(value) {
-  const profile = normalizeProviderProfile(value);
-  if (!profile) throw new Error("Completa endpoint, API key y modelo.");
+export async function saveProviderProfile(value, { activate = true } = {}) {
+  return upsertProvider(value, { activate, requireModel: true });
+}
+
+export async function setActiveProviderProfile(profileId) {
   const stored = await readStoredState();
-  stored.profiles[profile.adapter] = profile;
-  stored.activeAdapter = profile.adapter;
+  const id = String(profileId ?? "").trim();
+  if (!id) {
+    stored.activeProfileId = null;
+    await writeStoredState(stored);
+    return null;
+  }
+  const profile = stored.profiles.find((candidate) => candidate.id === id);
+  const ready = normalizeProviderProfile(profile);
+  if (!ready) throw new Error("La conexión debe tener endpoint, API key y modelo antes de usarse.");
+  stored.activeProfileId = ready.id;
   await writeStoredState(stored);
-  return profile;
+  return ready;
+}
+
+export async function removeProviderProfile(profileId) {
+  const stored = await readStoredState();
+  const id = String(profileId ?? "").trim();
+  stored.profiles = stored.profiles.filter((profile) => profile.id !== id);
+  if (stored.activeProfileId === id) stored.activeProfileId = null;
+  await writeStoredState(stored);
+  return stored;
 }
 
 export async function clearProviderProfile() {
@@ -113,6 +122,22 @@ export function providerStorageDescription() {
   return window.learningDesktop?.providerSettings
     ? "La clave se guarda cifrada en este dispositivo."
     : "La clave se conserva solo mientras esta pestaña permanezca abierta.";
+}
+
+async function upsertProvider(value, { activate, requireModel }) {
+  const normalized = normalizeProviderProfile(value, { requireModel });
+  if (!normalized) {
+    throw new Error(requireModel
+      ? "Completá endpoint, API key y modelo."
+      : "Completá endpoint y API key.");
+  }
+  const stored = await readStoredState();
+  const index = stored.profiles.findIndex((profile) => profile.id === normalized.id);
+  if (index >= 0) stored.profiles[index] = normalized;
+  else stored.profiles.push(normalized);
+  if (activate) stored.activeProfileId = normalized.id;
+  await writeStoredState(stored);
+  return normalized;
 }
 
 async function readStoredState() {
@@ -150,33 +175,57 @@ async function writeStoredState(value) {
 }
 
 function createProviderState() {
-  return {
-    version: 3,
-    activeAdapter: "openai",
-    profiles: Object.fromEntries(PROVIDER_ADAPTERS.map((adapter) => [adapter, createProviderDraft(adapter)])),
-  };
+  return { version: 4, activeProfileId: null, profiles: [] };
 }
 
 function normalizeProviderState(value) {
-  const fallback = createProviderState();
-  if (!value || typeof value !== "object") return fallback;
-
-  // Migrate v1's single profile and v2's openai/minimax draft map without
-  // dropping credentials. OpenRouter starts as a fresh, isolated draft.
-  if (!value.profiles) {
-    const legacy = normalizeProviderDraft(value);
-    fallback.profiles[legacy.adapter] = legacy;
-    fallback.activeAdapter = legacy.adapter;
-    return fallback;
+  if (!value || typeof value !== "object") return createProviderState();
+  if (Array.isArray(value.profiles)) {
+    const profiles = normalizeProfileList(value.profiles);
+    const requestedActiveId = String(value.activeProfileId ?? "").trim();
+    return {
+      version: 4,
+      activeProfileId: profiles.some((profile) => profile.id === requestedActiveId) ? requestedActiveId : null,
+      profiles,
+    };
   }
 
-  const activeAdapter = normalizeProviderAdapter(value.activeAdapter);
+  const legacyProfiles = value.profiles && typeof value.profiles === "object"
+    ? Object.entries(value.profiles).map(([adapter, profile]) => ({ ...profile, adapter: legacyAdapter(adapter, profile) }))
+    : [value];
+  const profiles = normalizeProfileList(legacyProfiles, { legacy: true });
+  const activeAdapter = legacyAdapter(value.activeAdapter, value.profiles?.[value.activeAdapter]);
   return {
-    version: 3,
-    activeAdapter,
-    profiles: Object.fromEntries(PROVIDER_ADAPTERS.map((adapter) => [
-      adapter,
-      normalizeProviderDraft(value.profiles[adapter] ?? createProviderDraft(adapter)),
-    ])),
+    version: 4,
+    activeProfileId: profiles.find((profile) => profile.adapter === activeAdapter)?.id ?? null,
+    profiles,
   };
+}
+
+function normalizeProfileList(values, { legacy = false } = {}) {
+  const usedIds = new Set();
+  return values.map((value, index) => {
+    const adapter = legacyAdapter(value?.adapter, value);
+    const requestedId = String(value?.id ?? "").trim();
+    const safeId = requestedId && requestedId !== "provider_default" && !usedIds.has(requestedId)
+      ? requestedId
+      : `provider_${adapter}_${index + 1}`;
+    usedIds.add(safeId);
+    return normalizeProviderDraft({ ...value, adapter, id: safeId }, { idFallback: safeId });
+  });
+}
+
+function legacyAdapter(value, profile) {
+  const adapter = String(value ?? "").trim().toLowerCase();
+  // Version 3 used `openai` as its generic custom endpoint. Preserve that
+  // meaning during migration; new OpenAI profiles are explicit.
+  if (adapter === "openai" && profile?.label === "OpenAI compatible") return "custom";
+  if (adapter === "openai-compatible") return "custom";
+  return normalizeProviderAdapter(adapter);
+}
+
+function createProviderId(adapter) {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid) return `provider_${adapter}_${uuid}`.slice(0, 80);
+  return `provider_${adapter}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
 }

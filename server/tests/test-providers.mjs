@@ -35,6 +35,28 @@ if (openRouter.adapter !== "openrouter" || openRouter.catalogProvider !== "openr
   throw new Error("OpenRouter debe resolver su preset y catálogo");
 }
 
+const groq = await parseRequestProvider({
+  ...base,
+  adapter: "groq",
+  label: "Groq",
+  baseUrl: "https://api.groq.com/openai/v1",
+  model: "llama-3.3-70b-versatile",
+});
+if (groq.adapter !== "groq" || groq.catalogProvider !== "groq") {
+  throw new Error("Los presets curados deben resolver el catálogo y transporte compartido");
+}
+
+const custom = await parseRequestProvider({
+  ...base,
+  adapter: "openai-compatible",
+  label: "Gateway privado",
+  baseUrl: "https://gateway.example/v1",
+  model: "custom-model",
+});
+if (custom.adapter !== "custom" || custom.catalogProvider !== null) {
+  throw new Error("El alias OpenAI compatible debe migrar al endpoint personalizado");
+}
+
 const minimaxRuntime = requestProvider(withoutId, { thinking: "disabled" });
 if (minimaxRuntime.responseFormatMode !== "unsupported" || minimaxRuntime.extraBody?.thinking?.type !== "disabled") {
   throw new Error("MiniMax debe conservar su configuración de reasoning y schema");

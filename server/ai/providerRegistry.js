@@ -1,76 +1,18 @@
 /**
  * Provider registry
  *
- * This is deliberately data, not a plugin loader. A profile chooses a known
- * transport and its request behavior; it can never cause the gateway to load
- * an arbitrary npm package or execute user-supplied code.
+ * The public catalog is shared with the settings UI. A profile chooses a
+ * controlled transport and request behavior; it cannot load code, headers or
+ * arbitrary transforms into the gateway.
  */
-export const PROVIDER_ADAPTERS = Object.freeze(["openai", "openrouter", "minimax"]);
+import {
+  PROVIDER_ADAPTERS,
+  PROVIDER_PRESETS,
+  getProviderPreset,
+  normalizeProviderAdapter,
+} from "../../shared/providerCatalog.js";
 
-export const PROVIDER_PRESETS = Object.freeze({
-  openai: Object.freeze({
-    id: "openai",
-    label: "OpenAI compatible",
-    catalogProvider: null,
-    transport: "chat-completions",
-    defaultBaseUrl: "",
-    discovery: "upstream",
-    capabilities: Object.freeze({
-      streaming: "auto",
-      structuredOutput: "auto",
-      tools: "auto",
-      reasoning: "auto",
-    }),
-    knownModels: Object.freeze([]),
-  }),
-  openrouter: Object.freeze({
-    id: "openrouter",
-    label: "OpenRouter",
-    catalogProvider: "openrouter",
-    transport: "chat-completions",
-    defaultBaseUrl: "https://openrouter.ai/api/v1",
-    discovery: "catalog-and-upstream",
-    capabilities: Object.freeze({
-      streaming: "auto",
-      structuredOutput: "auto",
-      tools: "auto",
-      reasoning: "auto",
-    }),
-    knownModels: Object.freeze([]),
-  }),
-  minimax: Object.freeze({
-    id: "minimax",
-    label: "MiniMax",
-    // The current app uses MiniMax's Chat Completions-compatible endpoint.
-    // models.dev publishes metadata for the provider even though MiniMax does
-    // not reliably expose the generic /models route used by this app.
-    catalogProvider: "minimax",
-    transport: "chat-completions",
-    defaultBaseUrl: "https://api.minimax.io/v1",
-    discovery: "catalog-and-manual",
-    capabilities: Object.freeze({
-      streaming: "supported",
-      structuredOutput: "fallback-parser",
-      tools: "auto",
-      reasoning: "supported",
-    }),
-    knownModels: Object.freeze([
-      Object.freeze({ id: "MiniMax-M3", label: "MiniMax M3", source: "preset" }),
-    ]),
-  }),
-});
-
-export function normalizeProviderAdapter(value) {
-  const normalized = String(value ?? "").trim().toLowerCase();
-  // Preserve profiles created by the first BYOK implementation while using a
-  // more descriptive name in architecture documentation.
-  if (normalized === "openai-compatible") return "openai";
-  return PROVIDER_ADAPTERS.includes(normalized) ? normalized : "openai";
-}
-
-export function getProviderPreset(adapter) {
-  return PROVIDER_PRESETS[normalizeProviderAdapter(adapter)];
-}
+export { PROVIDER_ADAPTERS, PROVIDER_PRESETS, getProviderPreset, normalizeProviderAdapter };
 
 export function resolveProviderProfile(profile) {
   const adapter = normalizeProviderAdapter(profile?.adapter);

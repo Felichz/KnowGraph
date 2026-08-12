@@ -20,17 +20,21 @@ function providerSettingsPath() {
   return path.join(app.getPath("userData"), "provider-settings.bin");
 }
 
-const PROVIDER_ADAPTERS = ["openai", "openrouter", "minimax"];
+const PROVIDER_ADAPTERS = ["openai", "openrouter", "minimax", "groq", "mistral", "cerebras", "custom"];
 const PROVIDER_PRESETS = {
-  openai: { label: "OpenAI compatible", baseUrl: "", model: "" },
+  openai: { label: "OpenAI", baseUrl: "https://api.openai.com/v1", model: "" },
   openrouter: { label: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1", model: "" },
   minimax: { label: "MiniMax", baseUrl: "https://api.minimax.io/v1", model: "MiniMax-M3" },
+  groq: { label: "Groq", baseUrl: "https://api.groq.com/openai/v1", model: "" },
+  mistral: { label: "Mistral AI", baseUrl: "https://api.mistral.ai/v1", model: "" },
+  cerebras: { label: "Cerebras", baseUrl: "https://api.cerebras.ai/v1", model: "" },
+  custom: { label: "Endpoint compatible", baseUrl: "", model: "" },
 };
 
 function normalizeProviderAdapter(value) {
   const adapter = String(value || "").trim().toLowerCase();
-  if (adapter === "openai-compatible") return "openai";
-  return PROVIDER_ADAPTERS.includes(adapter) ? adapter : "openai";
+  if (adapter === "openai-compatible") return "custom";
+  return PROVIDER_ADAPTERS.includes(adapter) ? adapter : "custom";
 }
 
 function normalizeProviderProfile(profile) {
@@ -49,12 +53,12 @@ function normalizeProviderProfile(profile) {
   return normalized;
 }
 
-function normalizeProviderDraft(profile, adapter = "openai") {
+function normalizeProviderDraft(profile, adapter = "custom", idFallback) {
   const source = profile && typeof profile === "object" ? profile : {};
   const normalizedAdapter = normalizeProviderAdapter(source.adapter || adapter);
   const preset = PROVIDER_PRESETS[normalizedAdapter];
   return {
-    id: String(source.id || "provider_default").slice(0, 80),
+    id: String(source.id || idFallback || `provider_${normalizedAdapter}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`).slice(0, 80),
     label: String(source.label || preset.label).slice(0, 80),
     adapter: normalizedAdapter,
     baseUrl: String(source.baseUrl || preset.baseUrl).replace(/\/+$/, "").slice(0, 500),
@@ -64,23 +68,47 @@ function normalizeProviderDraft(profile, adapter = "openai") {
 }
 
 function normalizeProviderState(value) {
-  const fallback = {
-    version: 3,
-    activeAdapter: "openai",
-    profiles: Object.fromEntries(PROVIDER_ADAPTERS.map((adapter) => [adapter, normalizeProviderDraft({}, adapter)])),
-  };
+  const fallback = { version: 4, activeProfileId: null, profiles: [] };
   if (!value || typeof value !== "object") return fallback;
-  if (!value.profiles) {
-    const legacy = normalizeProviderDraft(value);
-    fallback.activeAdapter = legacy.adapter;
-    fallback.profiles[legacy.adapter] = legacy;
-    return fallback;
+  if (Array.isArray(value.profiles)) {
+    const profiles = normalizeProfileList(value.profiles);
+    const activeProfileId = String(value.activeProfileId || "");
+    return {
+      version: 4,
+      activeProfileId: profiles.some((profile) => profile.id === activeProfileId) ? activeProfileId : null,
+      profiles,
+    };
   }
+  const entries = value.profiles && typeof value.profiles === "object"
+    ? Object.entries(value.profiles).map(([adapter, profile]) => ({ ...profile, adapter: legacyAdapter(adapter, profile) }))
+    : [value];
+  const profiles = normalizeProfileList(entries);
+  const activeAdapter = legacyAdapter(value.activeAdapter, value.profiles?.[value.activeAdapter]);
   return {
-    version: 3,
-    activeAdapter: normalizeProviderAdapter(value.activeAdapter),
-    profiles: Object.fromEntries(PROVIDER_ADAPTERS.map((adapter) => [adapter, normalizeProviderDraft(value.profiles[adapter], adapter)])),
+    version: 4,
+    activeProfileId: profiles.find((profile) => profile.adapter === activeAdapter)?.id || null,
+    profiles,
   };
+}
+
+function normalizeProfileList(values) {
+  const usedIds = new Set();
+  return values.map((value, index) => {
+    const adapter = legacyAdapter(value?.adapter, value);
+    const requestedId = String(value?.id || "");
+    const id = requestedId && requestedId !== "provider_default" && !usedIds.has(requestedId)
+      ? requestedId
+      : `provider_${adapter}_${index + 1}`;
+    usedIds.add(id);
+    return normalizeProviderDraft({ ...value, adapter, id }, adapter, id);
+  });
+}
+
+function legacyAdapter(value, profile) {
+  const adapter = String(value || "").trim().toLowerCase();
+  if (adapter === "openai" && profile?.label === "OpenAI compatible") return "custom";
+  if (adapter === "openai-compatible") return "custom";
+  return normalizeProviderAdapter(adapter);
 }
 
 function registerProviderSettingsIpc() {
