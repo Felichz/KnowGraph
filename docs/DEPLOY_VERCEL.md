@@ -56,7 +56,7 @@ uses `*`: el gateway acepta una API key por request.
 
 ## 3. Configurar un provider desde la aplicacion
 
-Abri el boton **IA** de la barra superior. La pantalla acepta cualquier endpoint OpenAI-compatible que implemente `POST /chat/completions` y streaming SSE. Para MiniMax elegi el preset, pega tu API key y selecciona el modelo.
+Abrí el botón **IA** de la barra superior. El directorio permite buscar providers conocidos y muestra cuáles son conectables desde este gateway. Las filas **Compatible** usan `POST /chat/completions` y streaming SSE; las filas **Requiere adaptador** se muestran para descubrimiento, pero no aceptan una conexión hasta que el gateway implemente su protocolo nativo. Para MiniMax elegí el preset, pegá tu API key y seleccioná el modelo.
 
 - En navegador, el perfil queda en `sessionStorage`: se borra al cerrar la pestana.
 - En Electron, el perfil se cifra con el almacenamiento seguro del sistema operativo.

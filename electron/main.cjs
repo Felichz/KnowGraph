@@ -20,31 +20,50 @@ function providerSettingsPath() {
   return path.join(app.getPath("userData"), "provider-settings.bin");
 }
 
-const PROVIDER_ADAPTERS = ["openai", "openrouter", "minimax", "groq", "mistral", "cerebras", "custom"];
+const PROVIDER_ADAPTERS = ["openai", "openrouter", "minimax", "groq", "mistral", "cerebras", "togetherai", "fireworks-ai", "deepseek", "xai", "nvidia", "huggingface", "perplexity", "deepinfra", "chutes", "baseten", "moonshotai", "zai", "stepfun", "alibaba", "ollama", "lmstudio", "custom"];
 const PROVIDER_PRESETS = {
   openai: { label: "OpenAI", baseUrl: "https://api.openai.com/v1", model: "" },
   openrouter: { label: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1", model: "" },
-  minimax: { label: "MiniMax", baseUrl: "https://api.minimax.io/v1", model: "MiniMax-M3" },
+  minimax: { label: "MiniMax · Chat Completions", baseUrl: "https://api.minimax.io/v1", model: "MiniMax-M3" },
   groq: { label: "Groq", baseUrl: "https://api.groq.com/openai/v1", model: "" },
   mistral: { label: "Mistral AI", baseUrl: "https://api.mistral.ai/v1", model: "" },
   cerebras: { label: "Cerebras", baseUrl: "https://api.cerebras.ai/v1", model: "" },
+  togetherai: { label: "Together AI", baseUrl: "https://api.together.xyz/v1", model: "" },
+  "fireworks-ai": { label: "Fireworks AI", baseUrl: "https://api.fireworks.ai/inference/v1", model: "" },
+  deepseek: { label: "DeepSeek", baseUrl: "https://api.deepseek.com/v1", model: "" },
+  xai: { label: "xAI", baseUrl: "https://api.x.ai/v1", model: "" },
+  nvidia: { label: "NVIDIA NIM", baseUrl: "https://integrate.api.nvidia.com/v1", model: "" },
+  huggingface: { label: "Hugging Face", baseUrl: "https://router.huggingface.co/v1", model: "" },
+  perplexity: { label: "Perplexity", baseUrl: "https://api.perplexity.ai", model: "" },
+  deepinfra: { label: "Deep Infra", baseUrl: "https://api.deepinfra.com/v1/openai", model: "" },
+  chutes: { label: "Chutes", baseUrl: "https://llm.chutes.ai/v1", model: "" },
+  baseten: { label: "Baseten", baseUrl: "https://inference.baseten.co/v1", model: "" },
+  moonshotai: { label: "Moonshot AI / Kimi", baseUrl: "https://api.moonshot.ai/v1", model: "" },
+  zai: { label: "Z.AI", baseUrl: "https://api.z.ai/api/paas/v4", model: "" },
+  stepfun: { label: "StepFun", baseUrl: "https://api.stepfun.com/v1", model: "" },
+  alibaba: { label: "Alibaba Cloud / Qwen", baseUrl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", model: "" },
+  ollama: { label: "Ollama", baseUrl: "http://127.0.0.1:11434/v1", model: "" },
+  lmstudio: { label: "LM Studio", baseUrl: "http://127.0.0.1:1234/v1", model: "" },
   custom: { label: "Endpoint compatible", baseUrl: "", model: "" },
 };
 
 function normalizeProviderAdapter(value) {
   const adapter = String(value || "").trim().toLowerCase();
   if (adapter === "openai-compatible") return "custom";
-  return PROVIDER_ADAPTERS.includes(adapter) ? adapter : "custom";
+  return /^[a-z0-9][a-z0-9._-]{0,79}$/.test(adapter) ? adapter : "custom";
 }
 
 function normalizeProviderProfile(profile) {
   const adapter = normalizeProviderAdapter(profile?.adapter);
-  const preset = PROVIDER_PRESETS[adapter];
+  const preset = PROVIDER_PRESETS[adapter] || PROVIDER_PRESETS.custom;
   if (!profile || typeof profile !== "object") throw new Error("Perfil de provider invÃ¡lido");
   const normalized = {
     id: String(profile.id || "provider_default").slice(0, 80),
     label: String(profile.label || preset.label).slice(0, 80),
     adapter,
+    catalogProvider: /^[a-z0-9][a-z0-9._-]{0,79}$/.test(String(profile.catalogProvider || "").toLowerCase())
+      ? String(profile.catalogProvider).toLowerCase()
+      : (adapter === "custom" ? null : adapter),
     baseUrl: String(profile.baseUrl || preset.baseUrl).replace(/\/+$/, "").slice(0, 500),
     apiKey: String(profile.apiKey || "").slice(0, 4096),
     model: String(profile.model || preset.model).slice(0, 200),
@@ -56,11 +75,14 @@ function normalizeProviderProfile(profile) {
 function normalizeProviderDraft(profile, adapter = "custom", idFallback) {
   const source = profile && typeof profile === "object" ? profile : {};
   const normalizedAdapter = normalizeProviderAdapter(source.adapter || adapter);
-  const preset = PROVIDER_PRESETS[normalizedAdapter];
+  const preset = PROVIDER_PRESETS[normalizedAdapter] || PROVIDER_PRESETS.custom;
   return {
     id: String(source.id || idFallback || `provider_${normalizedAdapter}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`).slice(0, 80),
     label: String(source.label || preset.label).slice(0, 80),
     adapter: normalizedAdapter,
+    catalogProvider: /^[a-z0-9][a-z0-9._-]{0,79}$/.test(String(source.catalogProvider || "").toLowerCase())
+      ? String(source.catalogProvider).toLowerCase()
+      : (normalizedAdapter === "custom" ? null : normalizedAdapter),
     baseUrl: String(source.baseUrl || preset.baseUrl).replace(/\/+$/, "").slice(0, 500),
     apiKey: String(source.apiKey || "").slice(0, 4096),
     model: String(source.model || preset.model).slice(0, 200),

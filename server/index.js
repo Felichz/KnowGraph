@@ -4,7 +4,7 @@ import { evaluateParaphrase } from "./ai/evaluator.js";
 import { reviewLive } from "./ai/liveReview.js";
 import { answerCoachQuestion, MAX_COACH_CHAT_MESSAGE_CHARS } from "./ai/coachChat.js";
 import { checkUpstream, listUpstreamModels, probeProvider } from "./ai/llmClient.js";
-import { getProviderCatalogModels, mergeModelLists } from "./ai/modelCatalog.js";
+import { getProviderCatalogModels, getProviderDirectory, mergeModelLists } from "./ai/modelCatalog.js";
 import { parseRequestProvider, requestProvider } from "./ai/providers.js";
 import { MAX_LEARNER_ANSWER_CHARS } from "./ai/schemas.js";
 import { GatewayError, ErrorCodes, jsonErrorResponse } from "./ai/errors.js";
@@ -59,6 +59,11 @@ export async function gatewayHandler(req, res) {
           checkedAt: new Date().toISOString(),
         },
       });
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/ai/providers/catalog") {
+      const directory = await getProviderDirectory({ force: url.searchParams.get("refresh") === "1" });
+      return sendJson(res, 200, directory);
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/providers/test") {

@@ -34,6 +34,11 @@ export async function testAiProvider({ provider, signal } = {}) {
   return handle(res);
 }
 
+export async function fetchAiProviderCatalog({ signal, refresh = false } = {}) {
+  const res = await fetch(aiUrl(`/api/ai/providers/catalog${refresh ? "?refresh=1" : ""}`), { signal });
+  return handle(res);
+}
+
 export async function fetchAiProviderModels({ provider, signal } = {}) {
   const res = await fetch(aiUrl("/api/ai/providers/models"), {
     method: "POST",

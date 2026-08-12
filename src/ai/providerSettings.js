@@ -3,6 +3,7 @@ import {
   PROVIDER_LIBRARY,
   PROVIDER_PRESETS,
   getProviderPreset,
+  isProviderId,
   normalizeProviderAdapter,
 } from "../../shared/providerCatalog.js";
 
@@ -13,12 +14,13 @@ const LEGACY_SESSION_KEYS = [
   "learning-workspace:provider-profile:v1",
 ];
 
-export { PROVIDER_ADAPTERS, PROVIDER_LIBRARY, PROVIDER_PRESETS, getProviderPreset, normalizeProviderAdapter };
+export { PROVIDER_ADAPTERS, PROVIDER_LIBRARY, PROVIDER_PRESETS, getProviderPreset, isProviderId, normalizeProviderAdapter };
 
 export const EMPTY_PROVIDER_PROFILE = Object.freeze({
   id: "",
   label: "",
   adapter: "custom",
+  catalogProvider: null,
   baseUrl: "",
   apiKey: "",
   model: "",
@@ -27,14 +29,22 @@ export const EMPTY_PROVIDER_PROFILE = Object.freeze({
 // Compatibility export for the first BYOK screen and external callers.
 export const MINIMAX_PRESET = PROVIDER_PRESETS.minimax;
 
-export function createProviderDraft(adapter = "custom") {
+export function createProviderDraft(provider = "custom") {
+  const descriptor = provider && typeof provider === "object" ? provider : { id: provider };
+  const adapter = normalizeProviderAdapter(descriptor.id ?? descriptor.adapter);
   const preset = getProviderPreset(adapter);
+  const label = String(descriptor.label ?? preset.label);
+  const baseUrl = String(descriptor.defaultBaseUrl ?? descriptor.baseUrl ?? preset.defaultBaseUrl);
+  const catalogProvider = isProviderId(descriptor.catalogProvider)
+    ? descriptor.catalogProvider
+    : (adapter === "custom" ? null : (preset.catalogProvider ?? adapter));
   return normalizeProviderDraft({
     ...EMPTY_PROVIDER_PROFILE,
-    id: createProviderId(preset.id),
-    label: preset.label,
-    adapter: preset.id,
-    baseUrl: preset.defaultBaseUrl,
+    id: createProviderId(adapter),
+    label,
+    adapter,
+    catalogProvider,
+    baseUrl,
     model: preset.knownModels[0]?.id ?? "",
   });
 }
@@ -44,10 +54,14 @@ export function normalizeProviderDraft(value, { idFallback } = {}) {
   const adapter = normalizeProviderAdapter(source.adapter);
   const preset = getProviderPreset(adapter);
   const id = String(source.id ?? "").trim().slice(0, 80) || idFallback || createProviderId(adapter);
+  const requestedCatalogProvider = String(source.catalogProvider ?? "").trim().toLowerCase();
   return {
     id,
     label: String(source.label ?? preset.label).trim().slice(0, 80) || preset.label,
     adapter,
+    catalogProvider: isProviderId(requestedCatalogProvider)
+      ? requestedCatalogProvider
+      : (adapter === "custom" ? null : (preset.catalogProvider ?? adapter)),
     baseUrl: String(source.baseUrl ?? preset.defaultBaseUrl).trim().replace(/\/+$/, "").slice(0, 500),
     apiKey: String(source.apiKey ?? "").trim().slice(0, 4096),
     model: String(source.model ?? preset.knownModels[0]?.id ?? "").trim().slice(0, 200),

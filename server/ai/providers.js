@@ -2,7 +2,7 @@ import { lookup } from "node:dns/promises";
 import { z } from "zod";
 import { config } from "../config.js";
 import { ErrorCodes, GatewayError } from "./errors.js";
-import { PROVIDER_ADAPTERS, normalizeProviderAdapter, providerRuntimeOptions, resolveProviderProfile } from "./providerRegistry.js";
+import { isProviderId, normalizeProviderAdapter, providerRuntimeOptions, resolveProviderProfile } from "./providerRegistry.js";
 
 const ProviderProfileBaseZod = z.object({
   // The browser may keep an empty draft id. It is metadata, not a required
@@ -15,8 +15,14 @@ const ProviderProfileBaseZod = z.object({
   label: z.string().trim().min(1).max(80).default("Provider personal"),
   adapter: z.preprocess(
     normalizeProviderAdapter,
-    z.enum(PROVIDER_ADAPTERS),
+    z.string().refine(isProviderId),
   ).default("custom"),
+  // Directory metadata only. A provider is still required to have an actual
+  // endpoint and is executed through the controlled generic transport.
+  catalogProvider: z.preprocess(
+    (value) => value == null || (typeof value === "string" && value.trim() === "") ? undefined : value,
+    z.string().trim().max(80).refine(isProviderId).optional(),
+  ),
   baseUrl: z.string().url().transform((value) => value.replace(/\/+$/, "")),
   apiKey: z.string().trim().min(1).max(4096),
   // Kept only to accept profiles saved by the initial BYOK screen. Runtime
