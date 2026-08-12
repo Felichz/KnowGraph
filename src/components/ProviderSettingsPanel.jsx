@@ -35,10 +35,13 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
   const modelRequestRef = useRef(null);
   const directoryRequestRef = useRef(null);
   const wasOpenRef = useRef(false);
+  const isDesktopRuntime = typeof window !== "undefined" && Boolean(window.learningDesktop?.isElectron);
   const storageDescription = useMemo(() => providerStorageDescription(), []);
   const providerById = useMemo(() => new Map(directory.providers.map((provider) => [provider.id, provider])), [directory]);
-  const visibleProviders = useMemo(() => filterProviders(directory.providers, providerQuery), [directory.providers, providerQuery]);
+  const visibleProviders = useMemo(() => filterProviders(directory.providers, providerQuery)
+    .filter((provider) => isDesktopRuntime || provider.availability !== "local"), [directory.providers, providerQuery, isDesktopRuntime]);
   const providerGroups = useMemo(() => groupProviders(visibleProviders), [visibleProviders]);
+  const localProviderCount = useMemo(() => directory.providers.filter((provider) => provider.availability === "local").length, [directory.providers]);
   const selectedProvider = providerById.get(draft.adapter) ?? providerFromDraft(draft);
 
   const refresh = async () => {
@@ -287,6 +290,12 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
           </div>
           <p className="provider-directory__summary">{directoryStatus === "loading" ? "Actualizando el directorio de providers…" : `${visibleProviders.length} providers · ${directory.source === "models.dev" ? "catálogo Models.dev" : "biblioteca integrada"}`}</p>
           {directory.warning && <p className="provider-directory__warning">{directory.warning}</p>}
+          {!isDesktopRuntime && localProviderCount > 0 && (
+            <div className="provider-desktop-only-note" role="note">
+              <DesktopIcon />
+              <span><strong>Modelos locales</strong><small>Disponible solo en la app de escritorio.</small></span>
+            </div>
+          )}
           <button type="button" className="provider-directory__custom" onClick={() => startCreate(providerById.get("custom") ?? FALLBACK_DIRECTORY.find((provider) => provider.id === "custom"))}>
             <span className="provider-catalog-item__glyph" aria-hidden="true"><CodeIcon /></span>
             <span><strong>Endpoint compatible</strong><small>Conectá un gateway propio, vLLM o cualquier <code>/chat/completions</code>.</small></span>
@@ -412,3 +421,4 @@ function TrashIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><path 
 function SearchIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="4.5" /><path d="m12 12 4 4" /></svg>; }
 function LockIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4.5" y="8.5" width="11" height="8" rx="1.5" /><path d="M7 8.5V6.7a3 3 0 0 1 6 0v1.8" /></svg>; }
 function CodeIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.2 5-4 5 4 5M12.8 5l4 5-4 5M11.3 3.8 8.7 16.2" /></svg>; }
+function DesktopIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3.5" width="14" height="10" rx="1.5" /><path d="M7.5 16.5h5M10 13.5v3" /></svg>; }
