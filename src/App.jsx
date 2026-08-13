@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useId, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import LESSONS from "./lessons";
 import LEARNING_EXPLANATIONS from "./learningExplanations";
 import CLARIFIED_BULLETS from "./clarifiedBullets";
@@ -102,19 +103,50 @@ function RichText({ text, nodeId, enabled, onDeepDive, activeDeepDiveKey, limit 
   return parts;
 }
 
+const DEEP_DIVE_EDGE = 24;
+const DEEP_DIVE_GAP = 12;
+const DEEP_DIVE_PREFERRED_HEIGHT = 520;
+const DEEP_DIVE_MIN_USABLE_HEIGHT = 240;
+
+function getDeepDivePlacement(rect) {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const popoverHalfWidth = Math.min(260, Math.max(150, (viewportWidth - (DEEP_DIVE_EDGE * 2)) / 2));
+  const belowSpace = viewportHeight - rect.bottom - DEEP_DIVE_GAP - DEEP_DIVE_EDGE;
+  const aboveSpace = rect.top - DEEP_DIVE_GAP - DEEP_DIVE_EDGE;
+  const above = belowSpace < DEEP_DIVE_MIN_USABLE_HEIGHT && aboveSpace > belowSpace;
+  const availableHeight = above ? aboveSpace : belowSpace;
+
+  return {
+    above,
+    left: Math.min(
+      viewportWidth - popoverHalfWidth - DEEP_DIVE_EDGE,
+      Math.max(popoverHalfWidth + DEEP_DIVE_EDGE, rect.left + (rect.width / 2)),
+    ),
+    top: above ? rect.top - DEEP_DIVE_GAP : rect.bottom + DEEP_DIVE_GAP,
+    maxHeight: Math.max(0, Math.min(DEEP_DIVE_PREFERRED_HEIGHT, availableHeight)),
+  };
+}
+
 function DeepDivePopover({ active, onClose }) {
   if (!active) return null;
   const dive = REACT_DEEP_DIVES[active.id];
   if (!dive) return null;
 
-  return (
+  const popover = (
     <aside
       id="deep-dive-popover"
       className={`deep-dive-popover ${active.above ? "is-above" : ""}`}
       role="dialog"
       aria-modal="false"
       aria-label={dive.title}
-      style={{ left: active.left, top: active.top }}
+      data-no-reading-focus
+      style={{
+        "--lesson-color": active.color,
+        left: active.left,
+        top: active.top,
+        maxHeight: `${active.maxHeight}px`,
+      }}
     >
       <div className="deep-dive-popover-head">
         <div>
@@ -131,6 +163,8 @@ function DeepDivePopover({ active, onClose }) {
       </div>}
     </aside>
   );
+
+  return typeof document === "undefined" ? popover : createPortal(popover, document.body);
 }
 
 const TTS_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
@@ -1176,6 +1210,14 @@ export default function App() {
   const ttsSpeedRef = useRef(1);
   const ttsPlaybackRef = useRef({ segments: [], index: 0, generation: 0 });
 
+  useLayoutEffect(() => {
+    if (!selected || !lessonModalRef.current) return;
+    // Each tab is a different stage of the same route. Reusing the previous
+    // tab's scroll position hides the title and makes the content look broken.
+    lessonModalRef.current.scrollTop = 0;
+    lessonModalRef.current.scrollLeft = 0;
+  }, [selected?.id, lessonView]);
+
   const stopSpeech = useCallback(() => {
     if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
     ttsSpeechRef.current = null;
@@ -1289,18 +1331,13 @@ export default function App() {
 
   const openDeepDive = useCallback((id, event, triggerKey) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const halfWidth = Math.min(190, Math.max(145, (viewportWidth - 32) / 2));
-    const left = Math.min(viewportWidth - halfWidth - 16, Math.max(halfWidth + 16, rect.left + rect.width / 2));
-    const above = viewportHeight - rect.bottom < 380 && rect.top > 390;
+    const placement = getDeepDivePlacement(rect);
     setActiveDeepDive({
       id,
       triggerKey,
       trigger: event.currentTarget,
-      left,
-      top: above ? rect.top - 10 : rect.bottom + 10,
-      above,
+      color: window.getComputedStyle(event.currentTarget).getPropertyValue("--lesson-color").trim() || "#64e7dc",
+      ...placement,
     });
   }, []);
 

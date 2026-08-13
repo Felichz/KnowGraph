@@ -374,17 +374,17 @@ button.flow-node:hover { border-color: var(--lesson-color); color: #f5f1e8; }
 .deep-dive-term > span { display: inline-grid; width: 13px; height: 13px; margin-left: 3px; place-items: center; border: 1px solid color-mix(in srgb, var(--lesson-color) 50%, #5d6573); border-radius: 50%; color: var(--lesson-color); font: 800 11px/1 "JetBrains Mono", ui-monospace, monospace; vertical-align: .12em; }
 .deep-dive-term:hover, .deep-dive-term:focus-visible { border-bottom-style: solid; color: #fff; background: color-mix(in srgb, var(--lesson-color) 14%, transparent); outline: none; }
 .deep-dive-term:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, var(--lesson-color) 34%, transparent); }
-.deep-dive-popover { position: fixed; z-index: 1200; width: min(380px, calc(100vw - 32px)); max-height: min(520px, calc(100vh - 32px)); overflow-y: auto; border: 1px solid color-mix(in srgb, var(--lesson-color) 48%, #394354); border-radius: 13px; padding: 16px; color: #cdd2dc; background: radial-gradient(circle at 0 0, color-mix(in srgb, var(--lesson-color) 12%, transparent), transparent 42%), #111620; box-shadow: 0 22px 70px rgba(0, 0, 0, .66), 0 0 0 1px rgba(255,255,255,.025); transform: translateX(-50%); scrollbar-color: #4a5568 transparent; scrollbar-width: thin; }
+.deep-dive-popover { position: fixed; z-index: 2147483000; box-sizing: border-box; width: min(520px, calc(100dvw - 48px)); overflow-y: auto; overscroll-behavior: contain; border: 1px solid color-mix(in srgb, var(--lesson-color) 48%, #394354); border-radius: 13px; padding: 20px 22px; color: #cdd2dc; background: radial-gradient(circle at 0 0, color-mix(in srgb, var(--lesson-color) 12%, transparent), transparent 42%), #111620; box-shadow: 0 22px 70px rgba(0, 0, 0, .66), 0 0 0 1px rgba(255,255,255,.025); transform: translateX(-50%); scrollbar-color: #4a5568 transparent; scrollbar-width: thin; }
 .deep-dive-popover.is-above { transform: translate(-50%, -100%); }
 .deep-dive-popover::before { position: absolute; top: 0; right: 0; left: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--lesson-color), transparent); content: ""; opacity: .85; }
-.deep-dive-popover-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.deep-dive-popover-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .deep-dive-popover-head span { color: var(--lesson-color); font: 800 11px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .12em; }
-.deep-dive-popover-head h3 { margin: 5px 0 0; color: #f5f1e8; font-size: 16px; line-height: 1.3; }
-.deep-dive-popover-head button { display: grid; flex: 0 0 auto; width: 27px; height: 27px; place-items: center; border: 1px solid #3b4555; border-radius: 7px; color: #9fa6b3; background: #171c27; font-size: 19px; line-height: 1; }
-.deep-dive-popover > p { margin: 13px 0; color: #cdd2dc; font-size: 12.5px; line-height: 1.65; }
-.deep-dive-example, .deep-dive-nuance { display: flex; flex-direction: column; gap: 4px; border-left: 2px solid var(--lesson-color); padding: 8px 10px; background: color-mix(in srgb, var(--lesson-color) 6%, #141923); font-size: 11.5px; line-height: 1.55; }
+.deep-dive-popover-head h3 { margin: 5px 0 0; color: #f5f1e8; font-size: 19px; line-height: 1.28; }
+.deep-dive-popover-head button { display: grid; flex: 0 0 auto; width: 34px; height: 34px; place-items: center; border: 1px solid #3b4555; border-radius: 9px; color: #9fa6b3; background: #171c27; font-size: 22px; line-height: 1; }
+.deep-dive-popover > p { margin: 16px 0; color: #cdd2dc; font-size: 14px; line-height: 1.65; }
+.deep-dive-example, .deep-dive-nuance { display: flex; flex-direction: column; gap: 5px; border-left: 1px solid var(--lesson-color); padding: 11px 13px; background: color-mix(in srgb, var(--lesson-color) 6%, #141923); font-size: 13px; line-height: 1.58; }
 .deep-dive-nuance { margin-top: 8px; border-left-color: #f59e0b; }
-.deep-dive-example strong, .deep-dive-nuance strong { color: #f5f1e8; font-size: 11px; }
+.deep-dive-example strong, .deep-dive-nuance strong { color: #f5f1e8; font-size: 12px; }
 .deep-dive-sources { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #2b3340; }
 .deep-dive-sources a { border: 1px solid #354050; border-radius: 6px; padding: 5px 7px; color: #9ecfff; background: #141a24; font: 11px "JetBrains Mono", ui-monospace, monospace; text-decoration: none; }
 .deep-dive-sources a:hover { border-color: var(--lesson-color); color: #fff; }

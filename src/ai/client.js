@@ -19,6 +19,19 @@ export function isCancel(err) {
   return err?.name === "AbortError" || err?.code === "aborted" || err?.code === "aborted_from_abortcontroller";
 }
 
+export function userFacingAiError(error, fallback = "No se pudo completar la solicitud.") {
+  const message = String(error?.message ?? "").trim();
+  if (!message) return fallback;
+
+  // A raw transport error is useful in DevTools but does not tell the
+  // learner what to do. Keep deliberate provider/gateway messages intact.
+  if (/^(HTTP 5\d\d|Failed to fetch|NetworkError|Load failed|fetch failed)$/i.test(message)) {
+    return "No se pudo conectar con el servicio de IA. Verificá que el gateway esté iniciado y que el provider esté disponible; después reintentá.";
+  }
+
+  return message;
+}
+
 export async function fetchAiStatus({ signal } = {}) {
   const res = await fetch(aiUrl("/api/ai/status"), { signal });
   return handle(res);

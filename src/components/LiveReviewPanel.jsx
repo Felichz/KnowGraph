@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { userFacingAiError } from "../ai/client.js";
 import { LiveRequestFeedback } from "./LiveRequestFeedback.jsx";
 import { CoachCoverage } from "./CoachCoverage.jsx";
 import { CoachHintTooltip } from "./CoachHintTooltip.jsx";
@@ -14,7 +15,7 @@ export function LiveReviewPanel({ status = "idle", review, error, progress, hint
     : status === "running"
       ? "Revisando tu explicación..."
       : status === "error"
-        ? "Se reintentará al seguir escribiendo."
+        ? "No se pudo actualizar el coaching."
         : hasReview
           ? "El score y el hint se actualizan mientras practicás."
           : "Escribí para activar el coaching automático.";
@@ -32,7 +33,7 @@ export function LiveReviewPanel({ status = "idle", review, error, progress, hint
           <strong>{statusText}</strong>
         </div>
         <span className={`live-review__connection live-review__connection--${status}`}>
-          {status === "waiting" ? "PAUSA" : status === "running" ? "ACTUALIZANDO" : status === "error" ? "REINTENTANDO" : "AUTOMÁTICO"}
+          {status === "waiting" ? "PAUSA" : status === "running" ? "ACTUALIZANDO" : status === "error" ? "ERROR" : "AUTOMÁTICO"}
         </span>
       </div>
 
@@ -50,12 +51,12 @@ export function LiveReviewPanel({ status = "idle", review, error, progress, hint
               {review.isExtra ? "Profundidad extra" : displayScore >= 100 ? "Superficie cubierta" : "Cobertura en progreso"}
             </span>
           </div>
-        ) : (
+        ) : status !== "error" ? (
           <div className={`live-review__idle-state ${status === "running" ? "is-running" : ""}`}>
             <span className="live-review__idle-dot" aria-hidden="true" />
             <span>{statusText}</span>
           </div>
-        )}
+        ) : null}
 
         {hint && <CoachHintTooltip hint={hint} isStale={status === "waiting" || status === "running"} onTooltipSpaceChange={setHintSpace} />}
 
@@ -66,7 +67,7 @@ export function LiveReviewPanel({ status = "idle", review, error, progress, hint
 
       {status === "running" && <LiveRequestFeedback progress={progress} compact />}
       {review?.allEssentialCovered && <span className="live-review__complete">✓ Superficie esencial cubierta</span>}
-      {error && <span className="live-review__error" role="status">{error}</span>}
+      {error && <span className="live-review__error" role="status">{userFacingAiError(error, "No se pudo actualizar la revisión viva.")}</span>}
     </footer>
   );
 }

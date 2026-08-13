@@ -14,6 +14,14 @@ const FILTERS = [
   { id: "extra", label: "Con extra dorado" },
 ];
 
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <path d="m5 5 10 10M15 5 5 15" />
+    </svg>
+  );
+}
+
 export function FlashcardView({ graph, onOpenNode }) {
   const [attempts, setAttempts] = useState([]);
   const [filter, setFilter] = useState("all");
@@ -188,7 +196,7 @@ export function FlashcardView({ graph, onOpenNode }) {
                   <h2 id="flashcard-modal-title">{node.label ?? node.title}</h2>
                   {attempt && <span className={`flashcard__badge flashcard__badge--${status}`}>{score.displayScore}/120 · {STATUS_LABEL[status]}</span>}
                 </div>
-                <button type="button" className="modal-close" onClick={closeCard} aria-label="Cerrar flashcard">×</button>
+                <button type="button" className="modal-close" onClick={closeCard} aria-label="Cerrar flashcard"><CloseIcon /></button>
               </header>
 
               <div className={`flashcard-modal__body ${modalFlipped ? "is-flipped" : ""}`}>

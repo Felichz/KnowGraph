@@ -79,7 +79,7 @@ export function CoachHintTooltip({ hint, onTooltipSpaceChange, isStale = false }
           </span>
           <span className="coach-hint__chevron" aria-hidden="true">⌃</span>
         </summary>
-        <div ref={tooltipRef} className="coach-hint__tooltip" role="group" aria-label="Explicación detallada del próximo foco">
+        <div ref={tooltipRef} className="coach-hint__tooltip" data-no-reading-focus="true" role="group" aria-label="Explicación detallada del próximo foco">
           <header className="coach-hint__tooltip-header">
             <span className="lesson-section-label">EXPLICACIÓN DEL FOCO</span>
             <strong>{hint.text}</strong>

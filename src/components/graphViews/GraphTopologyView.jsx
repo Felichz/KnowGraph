@@ -33,11 +33,27 @@ function edgePath(source, target, nodeWidth, nodeHeight) {
   return `M ${x1} ${y1} C ${x1 + distance} ${y1}, ${x2 - distance} ${y2}, ${x2} ${y2}`;
 }
 
-function viewForPosition(position, nodeHeight, viewport, scale = 0.94) {
+function viewForPosition(position, config, viewport) {
+  const leadingInset = Math.min(72, Math.max(32, Math.round(viewport.width * 0.055)));
+  const availableWidth = Math.max(config.nodeWidth, viewport.width - leadingInset * 2);
+  const columnStep = config.nodeWidth + config.columnGap;
+  const minimumUsefulScale = viewport.width <= 760 ? 0.84 : 0.88;
+
+  // Choose a whole number of visible stages so the next one never appears as
+  // an ambiguous clipped sliver at the right edge of the map.
+  let visibleColumns = 1;
+  while (availableWidth / (config.nodeWidth + visibleColumns * columnStep) >= minimumUsefulScale) {
+    visibleColumns += 1;
+  }
+  const scale = Math.min(
+    1.04,
+    availableWidth / (config.nodeWidth + (visibleColumns - 1) * columnStep),
+  );
+
   return {
     k: scale,
-    x: Math.min(118, viewport.width * 0.18) - position.x * scale,
-    y: viewport.height / 2 - (position.y + nodeHeight / 2) * scale,
+    x: leadingInset - position.x * scale,
+    y: viewport.height / 2 - (position.y + config.nodeHeight / 2) * scale,
   };
 }
 
@@ -70,7 +86,7 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
     ?? graph.nodes[0];
   const primaryPosition = layout.positions.get(primaryNode?.id);
   const initialView = primaryPosition
-    ? viewForPosition(primaryPosition, layout.config.nodeHeight, viewport)
+    ? viewForPosition(primaryPosition, layout.config, viewport)
     : { x: 40, y: 30, k: 0.85 };
   const { ref, view, setView, wasDragged, panHandlers } = usePanZoom({ min: 0.18, max: 1.7, initial: initialView });
   const focus = useMemo(() => collectTopologyFocus(hoveredNodeId, layout), [hoveredNodeId, layout]);
@@ -99,8 +115,8 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
   }, [ref]);
 
   useEffect(() => {
-    if (primaryPosition) setView(viewForPosition(primaryPosition, layout.config.nodeHeight, viewport));
-  }, [graph.id, layout.config.nodeHeight, primaryPosition, setView, viewport.height, viewport.width]);
+    if (primaryPosition) setView(viewForPosition(primaryPosition, layout.config, viewport));
+  }, [graph.id, layout.config, primaryPosition, setView, viewport.height, viewport.width]);
 
   const selectNode = (node) => {
     if (wasDragged()) return;
@@ -122,7 +138,7 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
   };
 
   const focusPrimary = () => {
-    if (primaryPosition) setView(viewForPosition(primaryPosition, layout.config.nodeHeight, viewport));
+    if (primaryPosition) setView(viewForPosition(primaryPosition, layout.config, viewport));
   };
 
   const zoom = (factor) => {

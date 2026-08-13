@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { coachChatStream, evaluateParaphraseStream, isCancel, liveReviewStream } from "../ai/client.js";
+import { coachChatStream, evaluateParaphraseStream, isCancel, liveReviewStream, userFacingAiError } from "../ai/client.js";
 import {
   getDraft,
   getLiveReview,
@@ -293,7 +293,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       liveControllerRef.current = null;
       setLiveStatus("error");
       setLiveProgress((previous) => ({ ...previous, now: Date.now() }));
-      setLiveError(e?.message ?? "No se pudo actualizar la revisión viva.");
+      setLiveError(userFacingAiError(e, "No se pudo conectar con el servicio de IA. Verificá que el gateway esté iniciado y que el provider esté disponible; después reintentá."));
     }
   }, [contentHash, graphId, node, node.id, providerProfile]);
 
@@ -470,7 +470,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
         status: "error",
         streamingText: streamed,
         progress: null,
-        error: chatError?.message ?? "No se pudo obtener la respuesta del coach.",
+        error: userFacingAiError(chatError, "No se pudo obtener la respuesta del coach."),
       });
     }
   }, [activeChatIteration, chatState.status, graphId, node, providerProfile]);
@@ -650,7 +650,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       activeRequestRef.current = null;
       setPending(null);
       if (isCancel(e)) return;
-      setError({ code: e?.code ?? "upstream", message: e?.message ?? "Error desconocido" });
+      setError({ code: e?.code ?? "upstream", message: userFacingAiError(e, "Error desconocido") });
     }
   }, [contentHash, draft, graphId, node, onEvaluationSaved, providerProfile]);
 

@@ -108,7 +108,7 @@ export function CoachCoverage({ node, coverage = [], onTooltipSpaceChange }) {
           <span className="coach-coverage__chevron" aria-hidden="true">⌃</span>
         </summary>
 
-        <div ref={tooltipRef} className="coach-coverage__tooltip" role="group" aria-label="Detalle de cobertura de la card">
+        <div ref={tooltipRef} className="coach-coverage__tooltip" data-no-reading-focus="true" role="group" aria-label="Detalle de cobertura de la card">
           <header className="coach-coverage__tooltip-header">
             <div>
               <span className="lesson-section-label">MAPA DE COBERTURA</span>
