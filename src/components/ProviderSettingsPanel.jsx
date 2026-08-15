@@ -566,16 +566,37 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
             <div className="provider-field">
               <span id="provider-model-label">Modelo</span>
               <div className="provider-model-picker__input-row">
-                <select value={draft.model} disabled={models.length === 0 || modelsStatus.kind === "loading"} onChange={(event) => update("model", event.target.value)} aria-label="Modelo de la conexión">
-                  <option value="">{models.length ? "Seleccioná un modelo" : "Cargá el catálogo o ingresá el slug"}</option>
-                  {draft.model && !models.some((model) => model.id === draft.model) && <option value={draft.model}>{draft.model}</option>}
-                  {visibleModels.map((model) => <option value={model.id} key={model.id}>{model.label} · {model.id}</option>)}
-                </select>
+                {models.length > 0 && !manualModelOpen ? (
+                  <select
+                    value={draft.model}
+                    onChange={(event) => update("model", event.target.value)}
+                    aria-label="Seleccionar modelo"
+                  >
+                    <option value="">Seleccioná un modelo</option>
+                    {draft.model && !models.some((model) => model.id === draft.model) && <option value={draft.model}>{draft.model}</option>}
+                    {visibleModels.map((model) => <option value={model.id} key={model.id}>{model.label} · {model.id}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    value={draft.model}
+                    onChange={(event) => update("model", event.target.value)}
+                    placeholder="Ej: gpt-4o, llama-3.3-70b, deepseek-chat…"
+                    maxLength="200"
+                    autoCapitalize="none"
+                    spellCheck="false"
+                  />
+                )}
                 <button type="button" className="provider-test-button" onClick={testConnection} disabled={status.kind === "testing" || !draft.model}>{status.kind === "testing" ? "Probando…" : "Probar modelo"}</button>
               </div>
-              {models.length > 0 && <input className="provider-model-filter" value={modelFilter} onChange={(event) => setModelFilter(event.target.value)} placeholder="Buscar modelo o slug…" aria-label="Buscar modelo" />}
-              {(!models.length || manualModelOpen) && <input value={draft.model} onChange={(event) => update("model", event.target.value)} placeholder="Slug del modelo" maxLength="200" autoCapitalize="none" spellCheck="false" />}
-              <div className="provider-model-picker__actions"><button type="button" className="provider-manual-model" onClick={loadModels} disabled={modelsStatus.kind === "loading"}>{modelsStatus.kind === "loading" ? "Cargando catálogo…" : "Cargar modelos"}</button><button type="button" className="provider-manual-model" onClick={() => setManualModelOpen((current) => !current)}>{manualModelOpen ? "Ocultar slug manual" : "Ingresar slug manualmente"}</button></div>
+              {models.length > 0 && !manualModelOpen && <input className="provider-model-filter" value={modelFilter} onChange={(event) => setModelFilter(event.target.value)} placeholder="Filtrar modelos de la lista…" aria-label="Buscar modelo" />}
+              <div className="provider-model-picker__actions">
+                <button type="button" className="provider-manual-model" onClick={loadModels} disabled={modelsStatus.kind === "loading"}>{modelsStatus.kind === "loading" ? "Cargando…" : "Cargar catálogo"}</button>
+                {models.length > 0 && (
+                  <button type="button" className="provider-manual-model" onClick={() => setManualModelOpen((current) => !current)}>
+                    {manualModelOpen ? "Elegir de lista" : "Ingresar slug manualmente"}
+                  </button>
+                )}
+              </div>
               <small>{modelsStatus.message || "El catálogo ayuda a elegir; probar modelo confirma URL, credencial y slug reales."}</small>
             </div>
           </section>
