@@ -17,10 +17,10 @@ import { ReadingChunks } from "./components/ReadingChunks.jsx";
 import { listAllAttempts } from "./ai/learningStore.js";
 import { hashCardContent } from "./ai/contentHash.js";
 import { getCompletionView, getScoreView, isEvaluationSurfaceComplete } from "./ai/types.js";
+import { CommandPalette } from "./components/CommandPalette.jsx";
 import { loadProviderProfile } from "./ai/providerSettings.js";
 
 let mermaidLoader;
-
 function loadMermaid() {
   if (!mermaidLoader) {
     mermaidLoader = import("mermaid").then(({ default: mermaid }) => {
@@ -1116,9 +1116,6 @@ function getGuidance(nodes, checked, activeCats) {
       .filter((node) => !known.has(node.id) && activeCats.has(node.cat))
       .filter((node) => node.prerequisites.every((id) => {
         const prerequisite = nodes.find((candidate) => candidate.id === id);
-        // When the user focuses a topic, prerequisites from hidden topics are
-        // treated as context already available. Dependencies inside the focus
-        // remain explicit, so the topic still unfolds in the right order.
         return !prerequisite || !activeCats.has(prerequisite.cat) || known.has(id);
       }))
       .sort((a, b) => a.priority - b.priority);
@@ -1183,8 +1180,6 @@ export default function App() {
   const modalWasOpenRef = useRef(false);
   const [graphKey, setGraphKey] = useState(() => initialRoute.graphKey);
   const graph = GRAPH_CONFIGS[graphKey];
-  // La completitud ya no se marca manualmente: se deriva de evaluaciones cuya
-  // dimensión completeness llegó a 15/15.
   const [checked, setChecked] = useState(() => new Set());
   const [latestAttemptsByNode, setLatestAttemptsByNode] = useState(() => new Map());
   const [activeCats, setActiveCats] = useState(() => new Set(Object.keys(GRAPH_CONFIGS.react.categories)));
@@ -1206,9 +1201,22 @@ export default function App() {
   const [providerSettingsOpen, setProviderSettingsOpen] = useState(false);
   const [providerProfile, setProviderProfile] = useState(null);
   const [lessonContextOpen, setLessonContextOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [zenMode, setZenMode] = useState(false);
   const ttsSpeechRef = useRef(null);
   const ttsSpeedRef = useRef(1);
   const ttsPlaybackRef = useRef({ segments: [], index: 0, generation: 0 });
+
+  useEffect(() => {
+    const handleGlobalKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKey);
+    return () => window.removeEventListener("keydown", handleGlobalKey);
+  }, []);
 
   useLayoutEffect(() => {
     if (!selected || !lessonModalRef.current) return;
@@ -1638,6 +1646,20 @@ export default function App() {
         </div>
         <button
           type="button"
+          className="desktop-commandbar__search-trigger"
+          onClick={() => setCommandPaletteOpen(true)}
+          aria-label="Buscar concepto o acción (Ctrl+K)"
+          title="Buscar concepto o acción (Ctrl+K)"
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <circle cx="8.5" cy="8.5" r="5.5" />
+            <path d="M16 16l-3.5-3.5" />
+          </svg>
+          <span>Buscar concepto...</span>
+          <kbd>Ctrl K</kbd>
+        </button>
+        <button
+          type="button"
           className={`workspace-provider-toggle ${providerSettingsOpen ? "is-active" : ""}`}
           aria-label={providerSettingsOpen ? "Cerrar configuraciÃ³n de IA" : "Configurar provider de IA"}
           aria-expanded={providerSettingsOpen}
@@ -1845,7 +1867,7 @@ export default function App() {
       </section>
 
       {selected && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeLesson(); }}>
-        <section ref={lessonModalRef} className={`lesson-modal ${lessonContextOpen ? "is-context-open" : "is-context-closed"}`} role="dialog" aria-modal="true" aria-labelledby="lesson-title" aria-describedby="lesson-summary" onKeyDown={keepFocusInsideLesson} onScroll={() => { if (activeDeepDive) setActiveDeepDive(null); }} style={{ "--lesson-color": graph.categories[selected.cat].color }}>
+        <section ref={lessonModalRef} className={`lesson-modal ${lessonContextOpen ? "is-context-open" : "is-context-closed"} ${zenMode ? "is-zen" : ""}`} role="dialog" aria-modal="true" aria-labelledby="lesson-title" aria-describedby="lesson-summary" onKeyDown={keepFocusInsideLesson} onScroll={() => { if (activeDeepDive) setActiveDeepDive(null); }} style={{ "--lesson-color": graph.categories[selected.cat].color }}>
           <header className="lesson-header">
             <div className="lesson-header-copy">
               <div className="lesson-title-row">
@@ -1890,6 +1912,17 @@ export default function App() {
                 <span aria-live="polite">{ttsSpeed}x</span>
                 <button className="tts-speed-button" type="button" aria-label="Aumentar velocidad" title="Aumentar velocidad" onClick={() => changeSpeechSpeed(1)} disabled={ttsSpeed === TTS_SPEEDS[TTS_SPEEDS.length - 1]}>+</button>
               </div>}
+              <button
+                className={`lesson-zen-toggle ${zenMode ? "is-active" : ""}`}
+                type="button"
+                aria-label={zenMode ? "Salir de modo Zen" : "Modo Zen (pantalla completa)"}
+                title={zenMode ? "Salir de modo Zen (Esc)" : "Modo concentración Zen"}
+                onClick={() => setZenMode((z) => !z)}
+              >
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 7V3h4M17 7V3h-4M3 13v4h4M17 13v4h-4"/>
+                </svg>
+              </button>
               {lessonHistory.length > 0 && <button className="modal-back" onClick={goBack}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7M8 12h11" /></svg><span>Volver a {lessonHistory[lessonHistory.length - 1].label}</span></button>}
               <button ref={modalCloseRef} className="modal-close" aria-label="Cerrar lección" onClick={closeLesson}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
             </div>
@@ -1958,8 +1991,38 @@ export default function App() {
             </button>
           </nav>
 
-          <div className={`lesson-layout lesson-layout--${lessonView}`}>
-            <article className={`lesson-content lesson-content--${lessonView}`} aria-label={lessonView === "read" ? "Contenido de lectura" : lessonView === "coach" ? "Coaching de la explicación" : "Evaluación e historial"}>
+          <div className={`lesson-layout lesson-layout--${lessonView} ${zenMode ? "is-zen" : ""}`}>
+            {lessonView === "coach" && !zenMode && (
+              <aside className="lesson-studio-guide" aria-label="Guía de referencia rápida">
+                <div className="lesson-studio-guide__section">
+                  <span className="lesson-section-label">EN UNA FRASE</span>
+                  <p className="lesson-studio-guide__summary">{selected.lesson.summary}</p>
+                </div>
+                {selected.lesson.why && (
+                  <div className="lesson-studio-guide__section">
+                    <span className="lesson-section-label">POR QUÉ IMPORTA</span>
+                    <p className="lesson-studio-guide__why">{selected.lesson.why}</p>
+                  </div>
+                )}
+                {selected.lesson.prompt && (
+                  <div className="lesson-studio-guide__section lesson-studio-guide__prompt">
+                    <span className="lesson-section-label">CONSIGNA ESPERADA</span>
+                    <p>{selected.lesson.prompt}</p>
+                  </div>
+                )}
+                {selected.lesson.steps?.length > 0 && (
+                  <div className="lesson-studio-guide__section">
+                    <span className="lesson-section-label">PUNTOS CLAVE PARA CUBRIR</span>
+                    <ul className="lesson-studio-guide__checklist">
+                      {selected.lesson.steps.map((step, sIdx) => (
+                        <li key={sIdx}>{step}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </aside>
+            )}
+            <article className={`lesson-content lesson-content--${lessonView} ${lessonView === "coach" && !zenMode ? "is-split" : ""}`} aria-label={lessonView === "read" ? "Contenido de lectura" : lessonView === "coach" ? "Coaching de la explicación" : "Evaluación e historial"}>
               {lessonView === "read" && <>
               {ttsState.error && <div className="tts-error" role="alert">{ttsState.error}</div>}
               <section className="lesson-intro">
@@ -2121,6 +2184,18 @@ export default function App() {
           <DeepDivePopover active={activeDeepDive} onClose={closeDeepDive} />
         </section>
       </div>}
+      <CommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        graph={graph}
+        onSelectNode={(node) => openLesson(node, false)}
+        onSwitchGraph={switchGraph}
+        onOpenFlashcards={() => setViewMode("flashcards")}
+        onOpenProviderSettings={() => setProviderSettingsOpen(true)}
+        onOpenProgress={() => setProgressPanelOpen(true)}
+        graphConfigs={GRAPH_CONFIGS}
+        activeGraphKey={graphKey}
+      />
     </main>
   );
 }
