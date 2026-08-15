@@ -1,4 +1,4 @@
-import {
+﻿import {
   PROVIDER_ADAPTERS,
   PROVIDER_LIBRARY,
   PROVIDER_PRESETS,
@@ -107,7 +107,7 @@ export async function setActiveProviderProfile(profileId) {
   }
   const profile = stored.profiles.find((candidate) => candidate.id === id);
   const ready = normalizeProviderProfile(profile);
-  if (!ready) throw new Error("La conexión debe tener endpoint, API key y modelo antes de usarse.");
+  if (!ready) throw new Error("La conexiÃ³n debe tener endpoint, API key y modelo antes de usarse.");
   stored.activeProfileId = ready.id;
   await writeStoredState(stored);
   return ready;
@@ -127,23 +127,23 @@ export async function clearProviderProfile() {
   if (desktop?.clear) {
     await desktop.clear();
   } else {
-    window.sessionStorage.removeItem(SESSION_KEY);
-    LEGACY_SESSION_KEYS.forEach((key) => window.sessionStorage.removeItem(key));
+    window.localStorage.removeItem(SESSION_KEY);
+    LEGACY_SESSION_KEYS.forEach((key) => window.localStorage.removeItem(key));
   }
 }
 
 export function providerStorageDescription() {
   return window.learningDesktop?.providerSettings
     ? "La clave se guarda cifrada en este dispositivo."
-    : "La clave se conserva solo mientras esta pestaña permanezca abierta.";
+    : "La clave se conserva solo mientras esta pestaÃ±a permanezca abierta.";
 }
 
 async function upsertProvider(value, { activate, requireModel }) {
   const normalized = normalizeProviderProfile(value, { requireModel });
   if (!normalized) {
     throw new Error(requireModel
-      ? "Completá endpoint, API key y modelo."
-      : "Completá endpoint y API key.");
+      ? "CompletÃ¡ endpoint, API key y modelo."
+      : "CompletÃ¡ endpoint y API key.");
   }
   const stored = await readStoredState();
   const index = stored.profiles.findIndex((profile) => profile.id === normalized.id);
@@ -165,10 +165,10 @@ async function readStoredState() {
   }
 
   try {
-    const current = window.sessionStorage.getItem(SESSION_KEY);
+    const current = window.localStorage.getItem(SESSION_KEY);
     if (current) return normalizeProviderState(JSON.parse(current));
     for (const key of LEGACY_SESSION_KEYS) {
-      const legacy = window.sessionStorage.getItem(key);
+      const legacy = window.localStorage.getItem(key);
       if (legacy) return normalizeProviderState(JSON.parse(legacy));
     }
     return createProviderState();
@@ -184,8 +184,8 @@ async function writeStoredState(value) {
     await desktop.save(stored);
     return;
   }
-  window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(stored));
-  LEGACY_SESSION_KEYS.forEach((key) => window.sessionStorage.removeItem(key));
+  window.localStorage.setItem(SESSION_KEY, JSON.stringify(stored));
+  LEGACY_SESSION_KEYS.forEach((key) => window.localStorage.removeItem(key));
 }
 
 function createProviderState() {
@@ -243,3 +243,4 @@ function createProviderId(adapter) {
   if (uuid) return `provider_${adapter}_${uuid}`.slice(0, 80);
   return `provider_${adapter}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
 }
+

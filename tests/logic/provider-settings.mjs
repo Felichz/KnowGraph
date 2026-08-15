@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 
 const storage = new Map();
 globalThis.window = {
+  localStorage: {
+    getItem: (key) => storage.get(key) ?? null,
+    setItem: (key, value) => storage.set(key, String(value)),
+    removeItem: (key) => storage.delete(key),
+  },
   sessionStorage: {
     getItem: (key) => storage.get(key) ?? null,
     setItem: (key, value) => storage.set(key, String(value)),

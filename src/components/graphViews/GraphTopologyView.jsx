@@ -138,8 +138,16 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
   };
 
   const focusPrimary = () => {
-    if (primaryPosition) setView(viewForPosition(primaryPosition, layout.config, viewport));
+    if (primaryPosition) setView(viewForPrimary(primaryPosition, layout.config, viewport));
   };
+  function viewForPrimary(position, config, viewport) {
+    const scale = Math.min(1.3, viewport.width / 580);
+    return {
+      k: scale,
+      x: viewport.width / 2 - (position.x + config.nodeWidth / 2) * scale,
+      y: viewport.height / 2 - (position.y + config.nodeHeight / 2) * scale,
+    };
+  }
 
   const zoom = (factor) => {
     setView((current) => {
@@ -173,7 +181,7 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
           Etapa {focusedStage + 1} de {layout.maxRank + 1}
         </div>
         <div className="topology-graph-controls" aria-label="Controles del mapa">
-          <button type="button" onClick={focusPrimary} disabled={!primaryPosition} title="Centrar el próximo foco">
+          <button type="button" className="focus-button" onClick={focusPrimary} disabled={!primaryPosition} title="Centrar el pr\u00F3ximo foco">
             <Icon name="focus" />
             <span>Próximo foco</span>
           </button>
@@ -271,7 +279,7 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
               return (
                 <g
                   key={node.id}
-                  className={`topology-node guide-node-${visual.guideLevel} ${isSelected ? "is-selected" : ""} ${isHovered ? "is-hovered" : ""} ${visual.isChecked ? "is-complete" : ""} ${visual.extra > 0 ? "has-excellence" : ""} ${dimmed ? "is-dimmed" : ""}`}
+                  className={`topology-node guide-node-${visual.guideLevel} ${isSelected ? "is-selected" : ""} ${isHovered ? "is-hovered" : ""} ${visual.isChecked ? "is-complete" : ""} ${!visual.isChecked && visual.guideLevel !== 1 ? "is-incomplete" : ""} ${visual.extra > 0 ? "has-excellence" : ""} ${dimmed ? "is-dimmed" : ""}`}
                   transform={`translate(${x},${y})`}
                   style={{ "--node-color": visual.color }}
                   role="button"

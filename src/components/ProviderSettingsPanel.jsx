@@ -31,6 +31,7 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
   const [models, setModels] = useState([]);
   const [modelFilter, setModelFilter] = useState("");
   const [manualModelOpen, setManualModelOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [modelsStatus, setModelsStatus] = useState({ kind: "idle", message: "" });
   const modelRequestRef = useRef(null);
   const directoryRequestRef = useRef(null);
@@ -38,9 +39,46 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
   const isDesktopRuntime = typeof window !== "undefined" && Boolean(window.learningDesktop?.isElectron);
   const storageDescription = useMemo(() => providerStorageDescription(), []);
   const providerById = useMemo(() => new Map(directory.providers.map((provider) => [provider.id, provider])), [directory]);
-  const visibleProviders = useMemo(() => filterProviders(directory.providers, providerQuery)
-    .filter((provider) => isDesktopRuntime || provider.availability !== "local"), [directory.providers, providerQuery, isDesktopRuntime]);
-  const providerGroups = useMemo(() => groupProviders(visibleProviders), [visibleProviders]);
+  
+  const allBaseProviders = useMemo(() => directory.providers
+    .filter((provider) => isDesktopRuntime || provider.availability !== "local"),
+    [directory.providers, isDesktopRuntime]
+  );
+
+  const visibleProviders = useMemo(() => filterProviders(allBaseProviders, providerQuery),
+    [allBaseProviders, providerQuery]
+  );
+
+  const categories = useMemo(() => {
+    const groups = new Map();
+    for (const provider of allBaseProviders) {
+      if (provider.id === "custom") continue;
+      const groupName = provider.group || "Otros";
+      groups.set(groupName, true);
+    }
+    return [...groups.keys()];
+  }, [allBaseProviders]);
+
+  const categoryCounts = useMemo(() => {
+    const counts = new Map();
+    for (const provider of visibleProviders) {
+      if (provider.id === "custom") continue;
+      const groupName = provider.group || "Otros";
+      counts.set(groupName, (counts.get(groupName) || 0) + 1);
+    }
+    return counts;
+  }, [visibleProviders]);
+
+  const displayedProviders = useMemo(() => {
+    if (selectedCategory === "all") return visibleProviders;
+    return visibleProviders.filter((provider) => (provider.group || "Otros") === selectedCategory);
+  }, [visibleProviders, selectedCategory]);
+
+  const displayedGroups = useMemo(() => {
+    const available = displayedProviders.filter((provider) => provider.id !== "custom");
+    return groupProviders(available);
+  }, [displayedProviders]);
+
   const localProviderCount = useMemo(() => directory.providers.filter((provider) => provider.availability === "local").length, [directory.providers]);
   const selectedProvider = providerById.get(draft.adapter) ?? providerFromDraft(draft);
 
@@ -76,9 +114,18 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
 
   useEffect(() => {
     if (open && !wasOpenRef.current) {
-      refresh().catch(() => {});
+      refresh().then((next) => {
+        if (!next.profiles || next.profiles.length === 0) {
+          setView("catalog");
+        } else {
+          setView("connections");
+        }
+      }).catch(() => {
+        setView("catalog");
+      });
       loadDirectory().catch(() => {});
-      setView("connections");
+      setSelectedCategory("all");
+      setProviderQuery("");
       setStatus({ kind: "idle", message: "" });
       resetModelState();
     }
@@ -232,7 +279,35 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
           <p>{view === "connections" ? "Elegí la cuenta y el modelo que usa el coaching." : view === "catalog" ? "Directo si el protocolo es compatible; transparente si necesita otro adaptador." : "La prueba usa una inferencia mínima; nunca envía contenido de estudio."}</p>
         </div>
         <div className="workspace-provider-panel__header-actions">
-          {view !== "connections" && <button type="button" onClick={() => { setView("connections"); setStatus({ kind: "idle", message: "" }); }} aria-label="Volver a conexiones"><BackIcon /></button>}
+          {view === "catalog" && settings.profiles.length > 0 && (
+            <button
+              type="button"
+              className="provider-header-nav-btn"
+              onClick={() => { setView("connections"); setStatus({ kind: "idle", message: "" }); }}
+              title="Ver conexiones guardadas"
+            >
+              Guardadas ({settings.profiles.length})
+            </button>
+          )}
+          {view === "connections" && (
+            <button
+              type="button"
+              className="provider-header-add-btn"
+              onClick={() => { setView("catalog"); setStatus({ kind: "idle", message: "" }); }}
+              title="Explorar catálogo de proveedores"
+            >
+              <PlusIcon /> Agregar
+            </button>
+          )}
+          {view === "editor" && (
+            <button
+              type="button"
+              onClick={() => { setView(settings.profiles.length > 0 ? "connections" : "catalog"); setStatus({ kind: "idle", message: "" }); }}
+              aria-label="Volver"
+            >
+              <BackIcon />
+            </button>
+          )}
           <button type="button" onClick={onClose} aria-label="Cerrar conexiones de IA"><CloseIcon /></button>
         </div>
       </header>
@@ -248,14 +323,32 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
             {activeConnection && <button type="button" className="provider-link-button" onClick={useGatewayDefault}>Usar gateway</button>}
           </section>
 
-          <button type="button" className="provider-add-button" onClick={() => { setView("catalog"); setStatus({ kind: "idle", message: "" }); }}>
-            <PlusIcon /> Agregar conexión
-          </button>
-
           <section className="provider-connection-list" aria-label="Conexiones guardadas">
-            <div className="provider-section-heading"><h3>Guardadas</h3><span>{settings.profiles.length}</span></div>
+            <div className="provider-section-heading">
+              <div className="provider-section-heading__left">
+                <h3>Guardadas</h3>
+                <span className="provider-section-heading__count">{settings.profiles.length}</span>
+              </div>
+              <button
+                type="button"
+                className="provider-inline-add-btn"
+                onClick={() => { setView("catalog"); setStatus({ kind: "idle", message: "" }); }}
+              >
+                <PlusIcon /> Nueva conexión
+              </button>
+            </div>
             {settings.profiles.length === 0 ? (
-              <div className="provider-empty-state"><strong>Todavía no hay conexiones.</strong><p>Conectá una cuenta o endpoint. Después elegís cuál queda activo para estudiar.</p></div>
+              <div className="provider-empty-state">
+                <strong>Todavía no hay conexiones configuradas.</strong>
+                <p>Conectá una cuenta o endpoint del catálogo para comenzar a estudiar con IA.</p>
+                <button
+                  type="button"
+                  className="provider-empty-action-btn"
+                  onClick={() => { setView("catalog"); setStatus({ kind: "idle", message: "" }); }}
+                >
+                  <PlusIcon /> Explorar catálogo de proveedores
+                </button>
+              </div>
             ) : settings.profiles.map((connection) => {
               const isActive = connection.id === settings.activeProfileId;
               const isReady = Boolean(normalizeProviderProfile(connection));
@@ -285,41 +378,173 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
       {view === "catalog" && (
         <div className="provider-catalog provider-directory">
           <div className="provider-directory__tools">
-            <label className="provider-directory__search"><SearchIcon /><input value={providerQuery} onChange={(event) => setProviderQuery(event.target.value)} placeholder="Buscar provider o protocolo…" autoFocus /></label>
-            <button type="button" className="provider-directory__refresh" onClick={() => loadDirectory({ force: true })} disabled={directoryStatus === "loading"}>{directoryStatus === "loading" ? "Actualizando…" : "Actualizar"}</button>
+            <div className="provider-directory__search-box">
+              <SearchIcon className="provider-directory__search-icon" />
+              <input
+                value={providerQuery}
+                onChange={(event) => setProviderQuery(event.target.value)}
+                placeholder="Buscar provider, modelo o protocolo…"
+                className="provider-directory__search-input"
+                autoFocus
+              />
+              {providerQuery ? (
+                <button
+                  type="button"
+                  className="provider-directory__search-clear"
+                  onClick={() => setProviderQuery("")}
+                  aria-label="Limpiar búsqueda"
+                >
+                  <CloseIcon />
+                </button>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="provider-directory__refresh"
+              onClick={() => loadDirectory({ force: true })}
+              disabled={directoryStatus === "loading"}
+            >
+              {directoryStatus === "loading" ? "Actualizando…" : "Actualizar"}
+            </button>
           </div>
-          <p className="provider-directory__summary">{directoryStatus === "loading" ? "Actualizando el directorio de providers…" : `${visibleProviders.length} providers · ${directory.source === "models.dev" ? "catálogo Models.dev" : "biblioteca integrada"}`}</p>
+
+          <div className="provider-directory__meta-row">
+            <p className="provider-directory__summary">
+              {directoryStatus === "loading"
+                ? "Actualizando el directorio de providers…"
+                : `${visibleProviders.filter((p) => p.id !== "custom").length} providers · ${
+                    directory.source === "models.dev" ? "catálogo Models.dev" : "biblioteca integrada"
+                  }`}
+            </p>
+            {selectedCategory !== "all" && (
+              <button
+                type="button"
+                className="provider-link-button provider-directory__reset-filter"
+                onClick={() => setSelectedCategory("all")}
+              >
+                Ver todos
+              </button>
+            )}
+          </div>
+
           {directory.warning && <p className="provider-directory__warning">{directory.warning}</p>}
+
           {!isDesktopRuntime && localProviderCount > 0 && (
             <div className="provider-desktop-only-note" role="note">
               <DesktopIcon />
               <span><strong>Modelos locales</strong><small>Disponible solo en la app de escritorio.</small></span>
             </div>
           )}
-          <button type="button" className="provider-directory__custom" onClick={() => startCreate(providerById.get("custom") ?? FALLBACK_DIRECTORY.find((provider) => provider.id === "custom"))}>
-            <span className="provider-catalog-item__glyph" aria-hidden="true"><CodeIcon /></span>
-            <span><strong>Endpoint compatible</strong><small>Conectá un gateway propio, vLLM o cualquier <code>/chat/completions</code>.</small></span>
-            <ChevronIcon />
-          </button>
-          {providerGroups.map(([group, providers]) => (
-            <section key={group} aria-labelledby={`provider-group-${slugify(group)}`}>
-              <div className="provider-section-heading"><h3 id={`provider-group-${slugify(group)}`}>{group}</h3><span>{providers.length}</span></div>
-              <div className="provider-catalog-list">
-                {providers.filter((provider) => provider.id !== "custom").map((provider) => (
-                  <button type="button" className={`provider-catalog-item ${provider.connectable ? "" : "is-unavailable"}`} key={provider.id} onClick={() => startCreate(provider)} disabled={!provider.connectable} title={provider.connectable ? `Conectar ${provider.label}` : provider.description}>
-                    <span className="provider-catalog-item__glyph" aria-hidden="true">{provider.label.slice(0, 1)}</span>
-                    <span>
-                      <strong>{provider.label}</strong>
-                      <small>{provider.description}</small>
-                      <span className={`provider-compatibility provider-compatibility--${provider.availability}`}>{availabilityLabel(provider)}</span>
-                    </span>
-                    {provider.connectable ? <ChevronIcon /> : <LockIcon />}
-                  </button>
-                ))}
-              </div>
-            </section>
-          ))}
-          {visibleProviders.length === 0 && <div className="provider-empty-state"><strong>No encontramos ese provider.</strong><p>Probá con su nombre, modelo o usá un endpoint compatible.</p></div>}
+
+          {/* Category Navigation Bar (Pills) */}
+          <nav className="provider-category-nav" aria-label="Categorías de proveedores">
+            <button
+              type="button"
+              className={`provider-category-pill ${selectedCategory === "all" ? "is-active" : ""}`}
+              onClick={() => setSelectedCategory("all")}
+              aria-pressed={selectedCategory === "all"}
+            >
+              <span>Todos</span>
+              <span className="provider-category-pill__count">
+                {visibleProviders.filter((p) => p.id !== "custom").length}
+              </span>
+            </button>
+            {categories.map((category) => {
+              const isSelected = selectedCategory === category;
+              const count = categoryCounts.get(category) || 0;
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  className={`provider-category-pill ${isSelected ? "is-active" : ""} ${count === 0 ? "is-empty" : ""}`}
+                  onClick={() => setSelectedCategory(isSelected ? "all" : category)}
+                  aria-pressed={isSelected}
+                  disabled={count === 0 && providerQuery.length > 0}
+                >
+                  <span>{category}</span>
+                  <span className="provider-category-pill__count">{count}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Quick-connect Custom / Generic Endpoint */}
+          {selectedCategory === "all" && !providerQuery && (
+            <button
+              type="button"
+              className="provider-directory__custom"
+              onClick={() =>
+                startCreate(providerById.get("custom") ?? FALLBACK_DIRECTORY.find((provider) => provider.id === "custom"))
+              }
+            >
+              <span className="provider-catalog-item__glyph" aria-hidden="true"><CodeIcon /></span>
+              <span>
+                <strong>Endpoint compatible</strong>
+                <small>Conectá un gateway propio, vLLM o cualquier <code>/chat/completions</code>.</small>
+              </span>
+              <ChevronIcon />
+            </button>
+          )}
+
+          {/* Grouped / Filtered Providers List */}
+          <div className="provider-directory__groups">
+            {displayedGroups.map(([group, providers]) => {
+              const groupId = `provider-group-${slugify(group)}`;
+              return (
+                <section key={group} className="provider-directory__section" aria-labelledby={groupId}>
+                  <div className="provider-section-heading">
+                    <h3 id={groupId}>{group}</h3>
+                    <span className="provider-section-heading__count">{providers.length}</span>
+                  </div>
+                  <div className="provider-catalog-list" role="list">
+                    {providers.map((provider) => (
+                      <button
+                        type="button"
+                        className={`provider-catalog-item ${provider.connectable ? "" : "is-unavailable"}`}
+                        key={provider.id}
+                        onClick={() => startCreate(provider)}
+                        disabled={!provider.connectable}
+                        title={provider.connectable ? `Conectar ${provider.label}` : provider.description}
+                      >
+                        <span className="provider-catalog-item__glyph" aria-hidden="true">{provider.label.slice(0, 1)}</span>
+                        <span>
+                          <strong>{provider.label}</strong>
+                          <small>{provider.description}</small>
+                          <span className={`provider-compatibility provider-compatibility--${provider.availability}`}>
+                            {availabilityLabel(provider)}
+                          </span>
+                        </span>
+                        {provider.connectable ? <ChevronIcon /> : <LockIcon />}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+
+          {displayedGroups.length === 0 && (
+            <div className="provider-empty-state">
+              <strong>No encontramos providers que coincidan.</strong>
+              <p>
+                {providerQuery
+                  ? `No hay resultados para "${providerQuery}" en ${selectedCategory === "all" ? "el catálogo" : selectedCategory}.`
+                  : "No hay providers disponibles en esta categoría."}
+              </p>
+              {(providerQuery || selectedCategory !== "all") && (
+                <button
+                  type="button"
+                  className="provider-directory__clear-btn"
+                  onClick={() => {
+                    setProviderQuery("");
+                    setSelectedCategory("all");
+                  }}
+                >
+                  Restablecer filtros
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -414,7 +639,7 @@ function testErrorMessage(result) {
 function slugify(value) { return String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-"); }
 function CloseIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" /></svg>; }
 function BackIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11.5 4.5 6 10l5.5 5.5M6.5 10h8" /></svg>; }
-function ChevronIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m8 4 6 6-6 6" /></svg>; }
+function ChevronIcon({ className = "" }) { return <svg viewBox="0 0 20 20" className={className} aria-hidden="true"><path d="m8 4 6 6-6 6" /></svg>; }
 function PlusIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" /></svg>; }
 function EditIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4.5 15.5 3.1-.6L15 7.5 12.5 5 5.1 12.4l-.6 3.1ZM11.7 5.8l2.5 2.5" /></svg>; }
 function TrashIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 6.5h11M8 3.8h4M6.3 6.5l.6 9h6.2l.6-9M8.5 9v4M11.5 9v4" /></svg>; }
