@@ -32,6 +32,33 @@ export function FlashcardView({ graph, onOpenNode }) {
   const [practiceIndex, setPracticeIndex] = useState(0);
   const [streak, setStreak] = useState(0);
   const [practiceComplete, setPracticeComplete] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+
+  const toggleSpeech = useCallback((textToRead) => {
+    if (typeof window === "undefined" || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+    const synth = window.speechSynthesis;
+    if (synth.speaking || speaking) {
+      synth.cancel();
+      setSpeaking(false);
+      return;
+    }
+    if (!textToRead) return;
+    synth.cancel();
+    const utterance = new window.SpeechSynthesisUtterance(textToRead);
+    utterance.lang = "es-419";
+    utterance.rate = 1.0;
+    utterance.onstart = () => setSpeaking(true);
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    synth.speak(utterance);
+  }, [speaking]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+    }
+  }, [activeCardId, modalFlipped]);
 
   useEffect(() => {
     let cancelled = false;
@@ -273,23 +300,50 @@ export function FlashcardView({ graph, onOpenNode }) {
                 <button type="button" className="modal-close" onClick={closeCard} aria-label="Cerrar flashcard"><CloseIcon /></button>
               </header>
 
-              <div
-                className={`flashcard-modal__body ${modalFlipped ? "is-flipped" : ""}`}
-                onClick={() => setModalFlipped((v) => !v)}
-                title="Hacé clic o presioná Espacio para girar"
-              >
+              <div className={`flashcard-modal__body ${modalFlipped ? "is-flipped" : ""}`}>
                 {!modalFlipped ? (
                   <div className="flashcard-modal__front">
                     <span className="flashcard-modal__eyebrow">PREGUNTA DE REPASO</span>
                     <h3>¿Cómo explicarías este concepto y qué riesgos o trade-offs tiene?</h3>
                     <p className="flashcard-modal__hint">{node.lesson?.summary ?? "Recuperá el modelo mental antes de mirar la respuesta."}</p>
-                    <div className="flashcard-modal__flip-hint">
-                      <kbd>ESPACIO</kbd> o clic para revelar modelo mental y respuesta
-                    </div>
+                    <button
+                      type="button"
+                      className="flashcard-modal__flip-cta"
+                      onClick={() => setModalFlipped(true)}
+                      aria-label="Revelar modelo mental y respuesta"
+                    >
+                      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5a6.5 6.5 0 0 1 6.5 6.5h-2a4.5 4.5 0 1 0-1.3 3.2l1.4 1.4A6.5 6.5 0 1 1 10 3.5zm3.5 3.5L18 10l-4.5 3V7z" fill="currentColor"/></svg>
+                      <span>Revelar respuesta y modelo mental</span>
+                      <kbd>ESPACIO</kbd>
+                    </button>
                   </div>
                 ) : (
                   <div className="flashcard-modal__answer">
-                    <span className="flashcard-modal__eyebrow">MODELO MENTAL CANÓNICO</span>
+                    <div className="flashcard-modal__user-attempt-header">
+                      <span className="flashcard-modal__eyebrow">MODELO MENTAL CANÓNICO</span>
+                      <button
+                        type="button"
+                        className={`flashcard-tts-btn ${speaking ? "is-playing" : ""}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSpeech(`${node.lesson?.summary ?? ""}. ${node.lesson?.why ? "Por qué importa: " + node.lesson.why : ""}`);
+                        }}
+                        aria-label={speaking ? "Detener lectura" : "Leer modelo mental en voz alta"}
+                        title={speaking ? "Detener lectura" : "Leer modelo mental en voz alta"}
+                      >
+                        {speaking ? (
+                          <>
+                            <svg viewBox="0 0 20 20" aria-hidden="true" className="tts-icon-pulse"><path d="M6 5h3v10H6zm5 0h3v10h-3z" fill="currentColor" /></svg>
+                            <span>Detener</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M9 4.5 5 8H2v4h3l4 3.5v-11ZM13.5 6.5a5 5 0 0 1 0 7M16 4a9 9 0 0 1 0 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            <span>Escuchar modelo</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                     <div className="flashcard-modal__canonical">
                       <p><strong>En una frase:</strong> {node.lesson?.summary}</p>
                       {node.lesson?.why && <p><strong>Por qué importa:</strong> {node.lesson?.why}</p>}
@@ -297,7 +351,31 @@ export function FlashcardView({ graph, onOpenNode }) {
 
                     {attempt && (
                       <div className="flashcard-modal__user-attempt">
-                        <span className="flashcard-modal__eyebrow">TU RESPUESTA EVALUADA</span>
+                        <div className="flashcard-modal__user-attempt-header">
+                          <span className="flashcard-modal__eyebrow">TU RESPUESTA EVALUADA</span>
+                          <button
+                            type="button"
+                            className={`flashcard-tts-btn ${speaking ? "is-playing" : ""}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSpeech(attempt.answer);
+                            }}
+                            aria-label={speaking ? "Detener lectura de tu respuesta" : "Leer tu respuesta en voz alta"}
+                            title={speaking ? "Detener lectura" : "Leer tu respuesta en voz alta"}
+                          >
+                            {speaking ? (
+                              <>
+                                <svg viewBox="0 0 20 20" aria-hidden="true" className="tts-icon-pulse"><path d="M6 5h3v10H6zm5 0h3v10h-3z" fill="currentColor" /></svg>
+                                <span>Detener</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M9 4.5 5 8H2v4h3l4 3.5v-11ZM13.5 6.5a5 5 0 0 1 0 7M16 4a9 9 0 0 1 0 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                <span>Escuchar mi respuesta</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                         <ReadingChunks text={attempt.answer} className="flashcard-modal__long-answer" />
                         <div className="flashcard-modal__meta-row">
                           <ModelMeta model={attempt.model} routedVia={attempt.routedVia} />

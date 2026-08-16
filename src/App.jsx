@@ -1771,21 +1771,19 @@ const backupInputRef = useRef(null);
             )}
           </div>
 
-          <div className="workspace-nav-backup" aria-label="Respaldo y datos locales">
-            <div className="workspace-nav-section-title">
-              <span>DATOS Y RESPALDO</span>
-              <small>Exportá o restaurá tu progreso en JSON</small>
-            </div>
-            <div className="workspace-nav-backup__buttons">
-              <button type="button" className="workspace-nav-backup__btn" onClick={exportBackup}>
-                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m-4-4 4 4 4-4M3 15v2h14v-2" /></svg>
-                Exportar datos
-              </button>
-              <button type="button" className="workspace-nav-backup__btn" onClick={() => backupInputRef.current?.click()}>
-                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V3m-4 4 4-4 4 4M3 15v2h14v-2" /></svg>
-                Importar datos
-              </button>
-            </div>
+          <div className="workspace-nav-footer">
+            <button
+              type="button"
+              className="workspace-nav-settings-btn"
+              onClick={() => {
+                setWorkspaceNavOpen(false);
+                setProgressPanelOpen(false);
+                setProviderSettingsOpen(true);
+              }}
+            >
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a2 2 0 0 0-2 2c0 .4-.1.8-.4 1.1-.3.3-.7.4-1.1.4A2 2 0 0 0 4.5 7.5c-.3.3-.7.4-1.1.4A2 2 0 0 0 2 10a2 2 0 0 0 2 2c.4 0 .8.1 1.1.4.3.3.4.7.4 1.1A2 2 0 0 0 7.5 17.5c.3.3.4.7.4 1.1A2 2 0 0 0 10 20a2 2 0 0 0 2-2c0-.4.1-.8.4-1.1.3-.3.7-.4 1.1-.4A2 2 0 0 0 15.5 14.5c.3-.3.7-.4 1.1-.4A2 2 0 0 0 18 12a2 2 0 0 0-2-2c-.4 0-.8-.1-1.1-.4-.3-.3-.4-.7-.4-1.1A2 2 0 0 0 12.5 4.5c-.3-.3-.4-.7-.4-1.1A2 2 0 0 0 10 2zM10 13a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="none" stroke="currentColor" strokeWidth="1.6" /></svg>
+              <span>Ajustes, IA y Respaldo</span>
+            </button>
           </div>
         </nav>
 

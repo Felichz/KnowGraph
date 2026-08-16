@@ -20,7 +20,7 @@ const FALLBACK_DIRECTORY = PROVIDER_LIBRARY.map((provider) => ({
   modelCount: 0,
 }));
 
-export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
+export function ProviderSettingsPanel({ open, profile, onClose, onSaved, onExportBackup, onImportBackup }) {
   const [settings, setSettings] = useState({ version: 4, activeProfileId: null, profiles: [] });
   const [view, setView] = useState("connections");
   const [draft, setDraft] = useState(() => ({ ...EMPTY_PROVIDER_PROFILE }));
@@ -367,6 +367,31 @@ export function ProviderSettingsPanel({ open, profile, onClose, onSaved }) {
                 </article>
               );
             })}
+          </section>
+
+                    <section className="provider-backup-section" aria-label="Gestión de datos y respaldo">
+            <div className="provider-backup-section__header">
+              <span className="guide-kicker">GESTIÓN DE DATOS Y RESPALDO</span>
+              <p>Exportá tu progreso, borradores de respuestas y configuración en JSON para respaldar o sincronizar entre dispositivos.</p>
+            </div>
+            <div className="provider-backup-section__actions">
+              <button
+                type="button"
+                className="provider-backup-btn"
+                onClick={onExportBackup}
+              >
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m-4-4 4 4 4-4M3 15v2h14v-2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                Exportar respaldo (.json)
+              </button>
+              <button
+                type="button"
+                className="provider-backup-btn"
+                onClick={onImportBackup}
+              >
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V3m-4 4 4-4 4 4M3 15v2h14v-2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                Importar respaldo (.json)
+              </button>
+            </div>
           </section>
 
           <p className="provider-storage-note">{storageDescription} La clave viaja solo al gateway al pedir una respuesta; el gateway no la persiste.</p>
