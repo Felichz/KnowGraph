@@ -226,11 +226,17 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
                 <rect
                   className="topology-stage__surface"
                   x={x - 26}
-                  y={firstY - 24}
+                  y={firstY - 76}
                   width={layout.config.nodeWidth + 52}
-                  height={lastY - firstY + 48}
+                  height={lastY - firstY + 104}
                   rx="14"
                 />
+                <g className="topology-stage__header" transform={`translate(${x}, ${firstY - 54})`}>
+                  <text className="topology-stage__index" x="0" y="12">ETAPA {rank + 1}</text>
+                  <text className="topology-stage__meta" x="0" y="28">
+                    {rank === 0 ? "Punto de partida" : `${layer.length} conceptos`}
+                  </text>
+                </g>
               </g>
             );
           })}
@@ -325,22 +331,6 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
               );
             })}
           </g>
-        </g>
-        <g className="topology-stage-ruler" aria-hidden="true">
-          {layout.layers.map((layer, rank) => {
-            const worldX = layout.config.paddingX + rank * (layout.config.nodeWidth + layout.config.columnGap);
-            const screenX = view.x + worldX * view.k;
-            const stageWidth = (layout.config.nodeWidth + 52) * view.k;
-            return (
-              <g key={rank} transform={`translate(${screenX},0)`} opacity={stageWidth < 78 ? 0 : 1}>
-                <rect x={-26 * view.k} y="78" width={stageWidth} height="45" rx="8" />
-                <text className="topology-stage__index" x="0" y="96">ETAPA {rank + 1}</text>
-                <text className="topology-stage__meta" x="0" y="113">
-                  {rank === 0 ? "Punto de partida" : `${layer.length} conceptos`}
-                </text>
-              </g>
-            );
-          })}
         </g>
       </svg>
     </div>

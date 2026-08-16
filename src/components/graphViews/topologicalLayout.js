@@ -6,8 +6,8 @@ const DEFAULTS = {
   // nodes instead of letting it collide with the previous row.
   rowGap: 38,
   paddingX: 104,
-  paddingTop: 126,
-  paddingBottom: 92,
+  paddingTop: 170,
+  paddingBottom: 110,
   sweeps: 8,
 };
 
