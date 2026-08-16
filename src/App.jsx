@@ -1203,6 +1203,7 @@ export default function App() {
   const [lessonContextOpen, setLessonContextOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const ttsSpeechRef = useRef(null);
   const ttsSpeedRef = useRef(1);
   const ttsPlaybackRef = useRef({ segments: [], index: 0, generation: 0 });

@@ -1132,7 +1132,6 @@ function DebounceRing({ progress, onTrigger, shortcutState }) {
       </span>
       <span className="debounce-feedback__label">evaluar ahora · {remainingSeconds}s</span>
       <ShortcutKeys shortcutState={shortcutState} />
-      <span className="debounce-feedback__cancel-hint"><kbd>Esc</kbd> detener</span>
     </button>
   );
 }
