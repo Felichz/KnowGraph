@@ -274,7 +274,10 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
               const isSelected = selected?.id === node.id;
               const isHovered = hoveredNodeId === node.id;
               const inFocusedChain = !hoveredNodeId || focus.nodes.has(node.id);
-              const dimmed = visual.dimmed || !inFocusedChain;
+              const isAncestor = Boolean(hoveredNodeId && focus.ancestors.has(node.id));
+              const isDescendant = Boolean(hoveredNodeId && focus.descendants.has(node.id));
+              const isRelation = isAncestor || isDescendant;
+              const dimmed = visual.dimmed || (hoveredNodeId ? !inFocusedChain : false);
               const lines = splitLabel(node.label);
               const score = visual.score?.displayScore ?? 0;
               const baseWidth = (Math.min(score, 100) / 120) * (layout.config.nodeWidth - 24);
@@ -285,7 +288,7 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
               return (
                 <g
                   key={node.id}
-                  className={`topology-node guide-node-${visual.guideLevel} ${isSelected ? "is-selected" : ""} ${isHovered ? "is-hovered" : ""} ${visual.isChecked ? "is-complete" : ""} ${!visual.isChecked && visual.guideLevel !== 1 ? "is-incomplete" : ""} ${visual.extra > 0 ? "has-excellence" : ""} ${dimmed ? "is-dimmed" : ""}`}
+                  className={`topology-node guide-node-${visual.guideLevel} ${isSelected ? "is-selected" : ""} ${isHovered ? "is-hovered" : ""} ${isAncestor ? "is-ancestor" : ""} ${isDescendant ? "is-descendant" : ""} ${isRelation ? "is-relation" : ""} ${visual.isChecked ? "is-complete" : "is-uncompleted"} ${visual.extra > 0 ? "has-excellence" : ""} ${dimmed ? "is-dimmed" : ""}`}
                   transform={`translate(${x},${y})`}
                   style={{ "--node-color": visual.color }}
                   role="button"
