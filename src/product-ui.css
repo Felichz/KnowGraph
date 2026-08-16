@@ -4150,14 +4150,6 @@ body { background: var(--p-bg); }
   outline: none;
   cursor: pointer;
 }
-.topology-node.is-dimmed { opacity: .13; }
-
-.topology-node.is-incomplete { opacity: .45; filter: saturate(.3); transition: opacity .25s ease, filter .25s ease; }
-.topology-node.is-incomplete:hover { opacity: .8; filter: saturate(.7); }
-.topology-node.is-dimmed.is-incomplete { opacity: .11; }
-
-/* Completed nodes: visible but muted */
-.topology-node.is-complete { opacity: .65; filter: saturate(.5); }
 .topology-node__surface {
   fill: #101720;
   stroke: color-mix(in srgb, var(--node-color) 54%, #344253);
@@ -5541,9 +5533,6 @@ body { background: var(--p-bg); }
 .topology-node__surface {
   fill: #0c1219 !important;
 }
-.topology-node.is-dimmed {
-  opacity: 0.2 !important;
-}
 
 /* 3. Code Copy Button */
 .code-copy-button {
@@ -5771,91 +5760,86 @@ body { background: var(--p-bg); }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   NODE CONTRAST & RELATIONAL HOVER NETWORK
+   NODE CONTRAST & RELATIONAL HOVER NETWORK (STABLE & PRECISE)
    ══════════════════════════════════════════════════════════════════════════════ */
 
-/* 1. Base Node Styling (Crisp, solid, never washed out) */
+/* 1. Base Node: Smooth transitions for opacity and stroke, NEVER transform (avoids SVG jitter) */
 .topology-node {
   outline: none !important;
   cursor: pointer !important;
-  opacity: 0.92 !important;
-  filter: none !important;
-  transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-              filter 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.18s ease !important;
+  transition: opacity 0.2s ease, filter 0.2s ease !important;
 }
 
-/* 2. Completed Nodes (Solid, crisp, full presence, never transparent) */
-.topology-node.is-complete {
+.topology-node__surface {
+  transition: fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease !important;
+}
+
+/* 2. DEFAULT VIEW (No hover active anywhere on the map) */
+/* Completed nodes: FULL 100% presence, solid surface, sharp green/cyan score */
+.topology-nodes:not(.has-hover) .topology-node.is-complete {
   opacity: 1 !important;
   filter: none !important;
 }
-.topology-node.is-complete .topology-node__surface {
+.topology-nodes:not(.has-hover) .topology-node.is-complete .topology-node__surface {
   fill: #0d151e !important;
-  stroke: rgba(100, 231, 220, 0.45) !important;
-  stroke-width: 1.2px !important;
+  stroke: rgba(100, 231, 220, 0.5) !important;
+  stroke-width: 1.3px !important;
 }
-.topology-node.is-complete .topology-node__score {
+.topology-nodes:not(.has-hover) .topology-node.is-complete .topology-node__score {
   fill: #7ee8de !important;
   font-weight: 700 !important;
 }
-.topology-node.is-complete .topology-node__label {
-  fill: #f1f6fa !important;
-}
 
-/* 3. Uncompleted / Normal Nodes */
-.topology-node.is-uncompleted {
-  opacity: 0.88 !important;
-  filter: none !important;
-}
-.topology-node.is-uncompleted .topology-node__surface {
-  fill: #0c1219 !important;
-  stroke: rgba(52, 73, 98, 0.55) !important;
-  stroke-width: 1.2px !important;
-}
-
-/* 4. Active Guide Node (Next recommended) */
-.topology-node.guide-node-1 {
+/* Next recommended node (MEJOR SIGUIENTE): FULL 100% presence, pulsing glow */
+.topology-nodes:not(.has-hover) .topology-node.guide-node-1 {
   opacity: 1 !important;
-  filter: drop-shadow(0 0 8px rgba(100, 231, 220, 0.45)) drop-shadow(0 0 20px rgba(100, 231, 220, 0.2)) !important;
+  filter: drop-shadow(0 0 8px rgba(100, 231, 220, 0.5)) drop-shadow(0 0 20px rgba(100, 231, 220, 0.22)) !important;
 }
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   HOVER STATE & RELATIONAL NETWORK ISOLATION
-   ══════════════════════════════════════════════════════════════════════════════ */
+/* Uncompleted nodes in default view: PRESERVE TRANSPARENCY & MUTED STATE */
+.topology-nodes:not(.has-hover) .topology-node.is-uncompleted:not(.guide-node-1) {
+  opacity: 0.42 !important;
+  filter: saturate(0.4) !important;
+}
+.topology-nodes:not(.has-hover) .topology-node.is-uncompleted:not(.guide-node-1) .topology-node__surface {
+  fill: #0a0f16 !important;
+  stroke: rgba(43, 62, 84, 0.55) !important;
+  stroke-width: 1px !important;
+}
 
-/* The hovered card itself */
-.topology-node.is-hovered {
+/* 3. HOVER STATE (Active hover on a node) */
+
+/* The hovered card itself: FULL 100% opacity, elevated border glow, ZERO translation */
+.topology-nodes.has-hover .topology-node.is-hovered {
   opacity: 1 !important;
-  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 12px rgba(100, 231, 220, 0.35)) !important;
-  transform: translateY(-2px) !important;
+  filter: drop-shadow(0 0 14px rgba(100, 231, 220, 0.55)) !important;
 }
-.topology-node.is-hovered .topology-node__surface {
-  fill: #131c26 !important;
+.topology-nodes.has-hover .topology-node.is-hovered .topology-node__surface {
+  fill: #131d28 !important;
   stroke: #64e7dc !important;
   stroke-width: 2px !important;
 }
 
-/* Related cards (Ancestors that it needs, Descendants that it enables) */
-.topology-node.is-relation {
+/* Direct relations (Nodes that point to it [ancestors] or that it points to [descendants]): LIGHT UP TO 100% */
+.topology-nodes.has-hover .topology-node.is-relation {
   opacity: 1 !important;
-  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.4)) !important;
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5)) !important;
 }
-.topology-node.is-ancestor .topology-node__surface {
-  fill: #0f1824 !important;
+.topology-nodes.has-hover .topology-node.is-ancestor .topology-node__surface {
+  fill: #0f1925 !important;
   stroke: #5aa9ff !important;
   stroke-width: 1.8px !important;
 }
-.topology-node.is-descendant .topology-node__surface {
+.topology-nodes.has-hover .topology-node.is-descendant .topology-node__surface {
   fill: #0f1c24 !important;
   stroke: #2dd4bf !important;
   stroke-width: 1.8px !important;
 }
 
-/* All other nodes that are NOT in the active relational network fade heavily */
-.topology-node.is-dimmed {
-  opacity: 0.12 !important;
-  filter: grayscale(0.7) blur(0.2px) !important;
+/* All other nodes NOT in the hovered relational network: DIMMED & MUTED */
+.topology-nodes.has-hover .topology-node.is-dimmed {
+  opacity: 0.1 !important;
+  filter: grayscale(0.8) blur(0.2px) !important;
   pointer-events: none !important;
 }
 
@@ -5870,11 +5854,11 @@ body { background: var(--p-bg); }
   stroke: #5aa9ff !important;
   stroke-width: 2.5px !important;
   stroke-opacity: 1 !important;
-  filter: drop-shadow(0 0 4px rgba(90, 169, 255, 0.5)) !important;
+  filter: drop-shadow(0 0 4px rgba(90, 169, 255, 0.6)) !important;
 }
 .topology-edge.is-outgoing {
   stroke: #2dd4bf !important;
   stroke-width: 2.5px !important;
   stroke-opacity: 1 !important;
-  filter: drop-shadow(0 0 4px rgba(45, 212, 191, 0.5)) !important;
+  filter: drop-shadow(0 0 4px rgba(45, 212, 191, 0.6)) !important;
 }

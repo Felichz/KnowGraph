@@ -127,8 +127,7 @@ export function createTopologicalLayout(graph, options = {}) {
   const positions = new Map();
 
   layers.forEach((layer, rank) => {
-    const layerHeight = layer.length * config.nodeHeight + Math.max(0, layer.length - 1) * config.rowGap;
-    const startY = config.paddingTop + (contentHeight - layerHeight) / 2;
+    const startY = config.paddingTop;
     layer.forEach((node, index) => {
       positions.set(node.id, {
         node,

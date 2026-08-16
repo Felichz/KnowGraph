@@ -226,14 +226,14 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
                 <rect
                   className="topology-stage__surface"
                   x={x - 26}
-                  y={firstY - 76}
+                  y={firstY - 56}
                   width={layout.config.nodeWidth + 52}
-                  height={lastY - firstY + 104}
+                  height={lastY - firstY + 76}
                   rx="14"
                 />
-                <g className="topology-stage__header" transform={`translate(${x}, ${firstY - 54})`}>
+                <g className="topology-stage__header" transform={`translate(${x}, ${firstY - 38})`}>
                   <text className="topology-stage__index" x="0" y="12">ETAPA {rank + 1}</text>
-                  <text className="topology-stage__meta" x="0" y="28">
+                  <text className="topology-stage__meta" x="0" y="26">
                     {rank === 0 ? "Punto de partida" : `${layer.length} conceptos`}
                   </text>
                 </g>
@@ -268,7 +268,7 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
             })}
           </g>
 
-          <g className="topology-nodes">
+          <g className={`topology-nodes ${hoveredNodeId ? "has-hover" : ""}`}>
             {[...layout.positions.values()].map(({ node, x, y, rank }) => {
               const visual = getNodeVisual(node, context);
               const isSelected = selected?.id === node.id;
