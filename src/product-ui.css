@@ -4318,6 +4318,11 @@ body { background: var(--p-bg); }
   padding: 10px 13px 10px 15px;
   background: #11171f;
 }
+.backup-data { display: grid; gap: 10px; margin: 16px 15px 18px; border: 1px solid var(--p-line); border-radius: 10px; padding: 13px 14px; background: rgba(255, 255, 255, .015); }
+.backup-data__heading { display: grid; gap: 4px; }
+.backup-data__heading .guide-kicker { color: #8292a5; font: 700 10px Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: .14em; }
+.backup-data__heading p { margin: 0; color: #8fa3b6; font-size: 11px; line-height: 1.45; }
+.backup-data__actions { display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .workspace-progress-panel__header > div { display: grid; min-width: 0; gap: 3px; }
 .workspace-progress-panel__header strong { color: var(--p-text); font-size: 13px; font-weight: 680; }
 .workspace-progress-panel__header span { color: #7f8b9b; font-size: 11px; }
@@ -5720,4 +5725,47 @@ body { background: var(--p-bg); }
   font-family: "JetBrains Mono", ui-monospace, monospace !important;
   font-weight: 700 !important;
   color: var(--p-cyan) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   COACHING VIEW FULL-WIDTH CLEANUP
+   ══════════════════════════════════════════════════════════════════════════════ */
+.lesson-layout--coach {
+  display: block !important;
+  width: 100% !important;
+}
+.lesson-content--coach {
+  width: 100% !important;
+  max-width: 960px !important;
+  margin: 0 auto !important;
+  padding: 24px clamp(16px, 3vw, 40px) 40px !important;
+}
+.lesson-content--coach .paraphrase-review {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.paraphrase-review__head h3 {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #f1f5f9 !important;
+}
+.paraphrase-review__intro {
+  max-width: 800px !important;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+  color: #94a3b8 !important;
+}
+.paraphrase-review__textarea {
+  width: 100% !important;
+  min-height: 300px !important;
+  font-size: 15.5px !important;
+  line-height: 1.7 !important;
+  padding: 18px 20px !important;
+  border-radius: 12px !important;
+  background: #080d14 !important;
+  border: 1px solid #233345 !important;
+}
+.paraphrase-review__textarea:focus {
+  border-color: var(--p-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(91, 230, 218, 0.12) !important;
 }

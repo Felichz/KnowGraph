@@ -15,6 +15,7 @@ import { ProviderSettingsPanel } from "./components/ProviderSettingsPanel.jsx";
 import GraphTopologyView from "./components/graphViews/GraphTopologyView.jsx";
 import { ReadingChunks } from "./components/ReadingChunks.jsx";
 import { listAllAttempts } from "./ai/learningStore.js";
+import { applyBackup, createBackup, downloadBackup, parseBackup } from "./ai/backup.js";
 import { hashCardContent } from "./ai/contentHash.js";
 import { getCompletionView, getScoreView, isEvaluationSurfaceComplete } from "./ai/types.js";
 import { CommandPalette } from "./components/CommandPalette.jsx";
@@ -1174,8 +1175,9 @@ function getSeniorityProgress(bands, checked, nodeIds) {
 
 export default function App() {
   const initialRoute = getAppRoute(typeof window !== "undefined" ? window.location.pathname : "/react");
-  const lessonModalRef = useRef(null);
-  const modalCloseRef = useRef(null);
+const lessonModalRef = useRef(null);
+const modalCloseRef = useRef(null);
+const backupInputRef = useRef(null);
   const modalReturnFocusRef = useRef(null);
   const modalWasOpenRef = useRef(false);
   const [graphKey, setGraphKey] = useState(() => initialRoute.graphKey);
@@ -1558,6 +1560,27 @@ export default function App() {
     if (nextGraphKey === graphKey) return;
     navigateAppRoute(getAppRoute(`/${nextGraphKey}`));
   };
+  const exportBackup = async () => {
+    try {
+      downloadBackup(await createBackup());
+    } catch (error) {
+      window.alert(`No se pudo exportar el respaldo: ${error?.message ?? error}`);
+    }
+  };
+  const handleBackupFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const backup = parseBackup(await file.text());
+      const confirmed = window.confirm("Esto reemplazará tu progreso, borradores y conexiones actuales con el contenido del respaldo. Las API keys no se restauran: tendrás que volver a ingresarlas. ¿Continuar?");
+      if (!confirmed) return;
+      await applyBackup(backup);
+      window.location.reload();
+    } catch (error) {
+      window.alert(`No se pudo importar el respaldo: ${error?.message ?? error}`);
+    }
+  };
   const total = graph.nodes.length;
   const done = checked.size;
   const percentage = Math.round((done / total) * 100);
@@ -1816,6 +1839,17 @@ export default function App() {
           ))}
         </div>
       </section>
+
+      <section className="backup-data" aria-label="Datos y respaldo">
+        <div className="backup-data__heading">
+          <span className="guide-kicker">DATOS</span>
+          <p>Respaldo local de progreso, borradores, revisiones y conexiones. Las API keys quedan fuera del archivo.</p>
+        </div>
+        <div className="backup-data__actions">
+          <button type="button" className="provider-link-button" onClick={exportBackup}>Exportar respaldo</button>
+          <button type="button" className="provider-link-button" onClick={() => backupInputRef.current?.click()}>Importar respaldo</button>
+        </div>
+      </section>
       </aside>
 
       <ProviderSettingsPanel
@@ -1825,26 +1859,28 @@ export default function App() {
         onSaved={setProviderProfile}
       />
 
-      <section className="learning-guide" aria-label="Ruta sugerida de aprendizaje">
-        <div className="guide-heading">
-          <span className="guide-kicker">RUTA SUGERIDA</span>
-          <span className="guide-help">Las flechas muestran qué concepto habilita al siguiente.</span>
-        </div>
-        <div className="guide-levels">
-          {guidance.levels.map((level, index) => (
-            <div className={`guide-level guide-level-${index + 1}`} key={index}>
-              <span className="guide-level-label">{index === 0 ? "AHORA" : index === 1 ? "DESPUÉS" : "MÁS ADELANTE"}</span>
-              <div className="guide-items">
-                {level.length ? level.map((node) => (
-                  <button key={node.id} className="guide-item" onClick={() => openLesson(node)}>
-                    <span className="guide-number">{node.priority}</span>{node.label}
-                  </button>
-                )) : <span className="guide-empty">No hay nodos disponibles</span>}
+      {viewMode === "graph" && (
+        <section className="learning-guide" aria-label="Ruta sugerida de aprendizaje">
+          <div className="guide-heading">
+            <span className="guide-kicker">RUTA SUGERIDA</span>
+            <span className="guide-help">Las flechas muestran qué concepto habilita al siguiente.</span>
+          </div>
+          <div className="guide-levels">
+            {guidance.levels.map((level, index) => (
+              <div className={`guide-level guide-level-${index + 1}`} key={index}>
+                <span className="guide-level-label">{index === 0 ? "AHORA" : index === 1 ? "DESPUÉS" : "MÁS ADELANTE"}</span>
+                <div className="guide-items">
+                  {level.length ? level.map((node) => (
+                    <button key={node.id} className="guide-item" onClick={() => openLesson(node)}>
+                      <span className="guide-number">{node.priority}</span>{node.label}
+                    </button>
+                  )) : <span className="guide-empty">No hay nodos disponibles</span>}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="canvas-row">
         {viewMode === "flashcards" ? (
@@ -1993,37 +2029,7 @@ export default function App() {
           </nav>
 
           <div className={`lesson-layout lesson-layout--${lessonView} ${zenMode ? "is-zen" : ""}`}>
-            {lessonView === "coach" && !zenMode && (
-              <aside className="lesson-studio-guide" aria-label="Guía de referencia rápida">
-                <div className="lesson-studio-guide__section">
-                  <span className="lesson-section-label">EN UNA FRASE</span>
-                  <p className="lesson-studio-guide__summary">{selected.lesson.summary}</p>
-                </div>
-                {selected.lesson.why && (
-                  <div className="lesson-studio-guide__section">
-                    <span className="lesson-section-label">POR QUÉ IMPORTA</span>
-                    <p className="lesson-studio-guide__why">{selected.lesson.why}</p>
-                  </div>
-                )}
-                {selected.lesson.prompt && (
-                  <div className="lesson-studio-guide__section lesson-studio-guide__prompt">
-                    <span className="lesson-section-label">CONSIGNA ESPERADA</span>
-                    <p>{selected.lesson.prompt}</p>
-                  </div>
-                )}
-                {selected.lesson.steps?.length > 0 && (
-                  <div className="lesson-studio-guide__section">
-                    <span className="lesson-section-label">PUNTOS CLAVE PARA CUBRIR</span>
-                    <ul className="lesson-studio-guide__checklist">
-                      {selected.lesson.steps.map((step, sIdx) => (
-                        <li key={sIdx}>{step}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </aside>
-            )}
-            <article className={`lesson-content lesson-content--${lessonView} ${lessonView === "coach" && !zenMode ? "is-split" : ""}`} aria-label={lessonView === "read" ? "Contenido de lectura" : lessonView === "coach" ? "Coaching de la explicación" : "Evaluación e historial"}>
+            <article className={`lesson-content lesson-content--${lessonView}`} aria-label={lessonView === "read" ? "Contenido de lectura" : lessonView === "coach" ? "Coaching de la explicación" : "Evaluación e historial"}>
               {lessonView === "read" && <>
               {ttsState.error && <div className="tts-error" role="alert">{ttsState.error}</div>}
               <section className="lesson-intro">
@@ -2185,6 +2191,7 @@ export default function App() {
           <DeepDivePopover active={activeDeepDive} onClose={closeDeepDive} />
         </section>
       </div>}
+      <input ref={backupInputRef} type="file" accept="application/json,.json" hidden tabIndex={-1} onChange={handleBackupFile} aria-hidden="true" />
       <CommandPalette
         open={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
@@ -2194,6 +2201,8 @@ export default function App() {
         onOpenFlashcards={() => setViewMode("flashcards")}
         onOpenProviderSettings={() => setProviderSettingsOpen(true)}
         onOpenProgress={() => setProgressPanelOpen(true)}
+        onExportBackup={exportBackup}
+        onImportBackup={() => backupInputRef.current?.click()}
         graphConfigs={GRAPH_CONFIGS}
         activeGraphKey={graphKey}
       />
