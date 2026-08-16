@@ -154,3 +154,30 @@ export async function listAllAttempts() {
   await tx.done;
   return all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
+
+const STATE_STORES = ["attempts", "drafts", "liveReviews", "coachIterations"];
+
+export async function exportLearningState() {
+  const db = await getDb();
+  const tx = db.transaction(STATE_STORES, "readonly");
+  const result = {};
+  for (const name of STATE_STORES) {
+    result[name] = await tx.objectStore(name).getAll();
+  }
+  await tx.done;
+  return result;
+}
+
+export async function importLearningState(payload) {
+  const db = await getDb();
+  const tx = db.transaction(STATE_STORES, "readwrite");
+  for (const name of STATE_STORES) {
+    const store = tx.objectStore(name);
+    await store.clear();
+    const rows = Array.isArray(payload?.[name]) ? payload[name] : [];
+    for (const row of rows) {
+      if (row && typeof row === "object") await store.put(row);
+    }
+  }
+  await tx.done;
+}

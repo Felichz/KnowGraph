@@ -9,6 +9,8 @@ export function CommandPalette({
   onOpenFlashcards,
   onOpenProviderSettings,
   onOpenProgress,
+  onExportBackup,
+  onImportBackup,
   graphConfigs = {},
   activeGraphKey = "react",
 }) {
@@ -52,6 +54,22 @@ export function CommandPalette({
         description: "Conexiones de OpenCode, Groq, Ollama, OpenAI y endpoints locales",
         icon: "⚙",
         run: () => { onClose(); onOpenProviderSettings?.(); },
+      },
+      {
+        id: "action-backup-export",
+        type: "action",
+        label: "Exportar respaldo",
+        description: "Descargar progreso, borradores y conexiones (sin API keys)",
+        icon: "↓",
+        run: () => { onClose(); onExportBackup?.(); },
+      },
+      {
+        id: "action-backup-import",
+        type: "action",
+        label: "Importar respaldo",
+        description: "Restaurar desde un archivo de respaldo",
+        icon: "↑",
+        run: () => { onClose(); onImportBackup?.(); },
       },
       ...Object.values(graphConfigs)
         .filter((g) => g.id !== activeGraphKey)

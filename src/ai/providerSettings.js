@@ -135,7 +135,22 @@ export async function clearProviderProfile() {
 export function providerStorageDescription() {
   return window.learningDesktop?.providerSettings
     ? "La clave se guarda cifrada en este dispositivo."
-    : "La clave se conserva solo mientras esta pestaÃ±a permanezca abierta.";
+    : "La clave se conserva solo mientras esta pestaña permanezca abierta.";
+}
+
+export async function exportProviderSettings() {
+  const stored = await readStoredState();
+  return {
+    version: stored.version,
+    activeProfileId: stored.activeProfileId,
+    profiles: stored.profiles.map(({ apiKey: _apiKey, ...profile }) => profile),
+  };
+}
+
+export async function importProviderSettings(value) {
+  const stored = normalizeProviderState(value);
+  await writeStoredState(stored);
+  return stored;
 }
 
 async function upsertProvider(value, { activate, requireModel }) {
