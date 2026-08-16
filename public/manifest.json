@@ -1,0 +1,16 @@
+﻿{
+  "name": "Mapas de entrevista — React y Rails",
+  "short_name": "KnowGraph",
+  "description": "Grafo de conocimiento para entrevistas técnicas de React y Rails",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0d13",
+  "theme_color": "#0b0d13",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

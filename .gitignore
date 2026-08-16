@@ -7,6 +7,7 @@ dist/
 electron-dist/
 release/
 test-results/
+tmp/
 *.log
 server/node_modules/
 elevenlabs-tts-cache/
