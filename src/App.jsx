@@ -1723,44 +1723,71 @@ const backupInputRef = useRef(null);
         </button>
       </header>
 
-      <section className={`map-workspace ${workspaceNavOpen ? "is-nav-open" : "is-nav-closed"} ${progressPanelOpen ? "is-progress-open" : "is-progress-closed"} ${providerSettingsOpen ? "is-provider-open" : "is-provider-closed"}`} aria-label="Workspace de aprendizaje">
-      <div id="workspace-navigation" className="graph-switcher" aria-label="Elegir grafo">
-        <div className="workspace-nav-heading">
-          <div><span>WORKSPACE</span><strong>Navegación</strong></div>
-          <button type="button" onClick={() => setWorkspaceNavOpen(false)} aria-label="Cerrar navegación"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
-        </div>
-        <span className="workspace-nav-label">MAPA DE CONOCIMIENTO</span>
-        {Object.values(GRAPH_CONFIGS).map((item) => <button key={item.id} className={`graph-switch ${item.id === graphKey ? "is-active" : ""}`} onClick={() => switchGraph(item.id)}>{item.label}</button>)}
-        <ViewModeToggle mode={viewMode} onChange={setViewMode} />
-      </div>
+            <section className={`map-workspace ${workspaceNavOpen ? "is-nav-open" : "is-nav-closed"} ${progressPanelOpen ? "is-progress-open" : "is-progress-closed"} ${providerSettingsOpen ? "is-provider-open" : "is-provider-closed"}`} aria-label="Workspace de aprendizaje">
+        <nav id="workspace-navigation" className="workspace-nav-drawer" aria-label="Navegación del workspace">
+          <div className="graph-switcher" aria-label="Elegir grafo">
+            <div className="workspace-nav-heading">
+              <div><span>WORKSPACE</span><strong>Navegación</strong></div>
+              <button type="button" onClick={() => setWorkspaceNavOpen(false)} aria-label="Cerrar navegación"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+            </div>
+            <span className="workspace-nav-label">MAPA DE CONOCIMIENTO</span>
+            {Object.values(GRAPH_CONFIGS).map((item) => (
+              <button key={item.id} className={`graph-switch ${item.id === graphKey ? "is-active" : ""}`} onClick={() => switchGraph(item.id)}>
+                {item.label}
+              </button>
+            ))}
+            <ViewModeToggle mode={viewMode} onChange={setViewMode} />
+          </div>
 
-      <div className="legend">
-        <div className="workspace-nav-section-title"><span>FOCO</span><small>Elegí un grupo para aislarlo</small></div>
-        <button className={`category-chip category-all ${activeCats.size === Object.keys(graph.categories).length ? "is-active" : ""}`} onClick={showAllCategories} aria-pressed={activeCats.size === Object.keys(graph.categories).length}>Todos</button>
-        {Object.entries(graph.categories).map(([key, category]) => {
-          const active = activeCats.has(key);
-          const categoryNodes = graph.nodes.filter((node) => node.cat === key);
-          const focused = activeCats.size === 1 && active;
-          return <button key={key} className={`category-chip ${focused ? "is-focused" : ""}`} onClick={() => focusCategory(key)} aria-pressed={focused} style={{ "--category-color": category.color, opacity: active ? 1 : 0.42 }}>
-            <span className="category-dot" style={{ background: category.color }} />{category.label}<span className="category-count">{categoryNodes.filter((node) => checked.has(node.id)).length}/{categoryNodes.length}</span>
-          </button>;
-        })}
-      </div>
+          <div className="legend">
+            <div className="workspace-nav-section-title"><span>FOCO</span><small>Elegí un grupo para aislarlo</small></div>
+            <button className={`category-chip category-all ${activeCats.size === Object.keys(graph.categories).length ? "is-active" : ""}`} onClick={showAllCategories} aria-pressed={activeCats.size === Object.keys(graph.categories).length}>Todos</button>
+            {Object.entries(graph.categories).map(([key, category]) => {
+              const active = activeCats.has(key);
+              const categoryNodes = graph.nodes.filter((node) => node.cat === key);
+              const focused = activeCats.size === 1 && active;
+              return (
+                <button key={key} className={`category-chip ${focused ? "is-focused" : ""}`} onClick={() => focusCategory(key)} aria-pressed={focused} style={{ "--category-color": category.color, opacity: active ? 1 : 0.42 }}>
+                  <span className="category-dot" style={{ background: category.color }} />{category.label}<span className="category-count">{categoryNodes.filter((node) => checked.has(node.id)).length}/{categoryNodes.length}</span>
+                </button>
+              );
+            })}
+          </div>
 
-      <div className="map-focus-strip" aria-label="Próximo desafío sugerido">
-        <div className="map-focus-strip__copy">
-          <span>PRÓXIMO DESAFÍO</span>
-          <strong>{primaryNext ? primaryNext.label : "Ruta completada"}</strong>
-        </div>
-        <span className="map-focus-strip__scope">
-          {activeCats.size === Object.keys(graph.categories).length
-            ? "Viendo la ruta completa"
-            : `Foco: ${[...activeCats].map((key) => graph.categories[key]?.label).filter(Boolean).join(", ")}`}
-        </span>
-        {primaryNext && <button type="button" onClick={() => openLesson(primaryNext)}>
-          Abrir card <span aria-hidden="true">→</span>
-        </button>}
-      </div>
+          <div className="map-focus-strip" aria-label="Próximo desafío sugerido">
+            <div className="map-focus-strip__copy">
+              <span>PRÓXIMO DESAFÍO</span>
+              <strong>{primaryNext ? primaryNext.label : "Ruta completada"}</strong>
+            </div>
+            <span className="map-focus-strip__scope">
+              {activeCats.size === Object.keys(graph.categories).length
+                ? "Viendo la ruta completa"
+                : `Foco: ${[...activeCats].map((key) => graph.categories[key]?.label).filter(Boolean).join(", ")}`}
+            </span>
+            {primaryNext && (
+              <button type="button" onClick={() => openLesson(primaryNext)}>
+                Abrir card <span aria-hidden="true">→</span>
+              </button>
+            )}
+          </div>
+
+          <div className="workspace-nav-backup" aria-label="Respaldo y datos locales">
+            <div className="workspace-nav-section-title">
+              <span>DATOS Y RESPALDO</span>
+              <small>Exportá o restaurá tu progreso en JSON</small>
+            </div>
+            <div className="workspace-nav-backup__buttons">
+              <button type="button" className="workspace-nav-backup__btn" onClick={exportBackup}>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m-4-4 4 4 4-4M3 15v2h14v-2" /></svg>
+                Exportar datos
+              </button>
+              <button type="button" className="workspace-nav-backup__btn" onClick={() => backupInputRef.current?.click()}>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V3m-4 4 4-4 4 4M3 15v2h14v-2" /></svg>
+                Importar datos
+              </button>
+            </div>
+          </div>
+        </nav>
 
       <aside id="workspace-progress-panel" className="workspace-progress-panel" aria-label="Progreso del mapa">
         <header className="workspace-progress-panel__header">
