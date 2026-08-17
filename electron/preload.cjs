@@ -12,4 +12,8 @@ contextBridge.exposeInMainWorld("learningDesktop", Object.freeze({
     save: (profile) => ipcRenderer.invoke("provider-settings:save", profile),
     clear: () => ipcRenderer.invoke("provider-settings:clear"),
   }),
+  backup: Object.freeze({
+    save: (content, defaultFilename) => ipcRenderer.invoke("backup:save", { content, defaultFilename }),
+    load: () => ipcRenderer.invoke("backup:load"),
+  }),
 }));

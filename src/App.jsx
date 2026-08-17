@@ -1563,10 +1563,27 @@ const backupInputRef = useRef(null);
   };
   const exportBackup = async () => {
     try {
-      downloadBackup(await createBackup());
+      await downloadBackup(await createBackup());
     } catch (error) {
       window.alert(`No se pudo exportar el respaldo: ${error?.message ?? error}`);
     }
+  };
+  const importBackup = async () => {
+    if (typeof window !== "undefined" && window.learningDesktop?.backup?.load) {
+      try {
+        const result = await window.learningDesktop.backup.load();
+        if (result?.canceled || !result?.content) return;
+        const backup = parseBackup(result.content);
+        const confirmed = window.confirm("Esto reemplazará tu progreso, borradores y conexiones actuales con el contenido del respaldo. Las API keys no se restauran: tendrás que volver a ingresarlas. ¿Continuar?");
+        if (!confirmed) return;
+        await applyBackup(backup);
+        window.location.reload();
+      } catch (error) {
+        window.alert(`No se pudo importar el respaldo: ${error?.message ?? error}`);
+      }
+      return;
+    }
+    backupInputRef.current?.click();
   };
   const handleBackupFile = async (event) => {
     const file = event.target.files?.[0];
@@ -1911,7 +1928,7 @@ const backupInputRef = useRef(null);
         </div>
         <div className="backup-data__actions">
           <button type="button" className="provider-link-button" onClick={exportBackup}>Exportar respaldo</button>
-          <button type="button" className="provider-link-button" onClick={() => backupInputRef.current?.click()}>Importar respaldo</button>
+          <button type="button" className="provider-link-button" onClick={importBackup}>Importar respaldo</button>
         </div>
       </section>
       </aside>
@@ -1921,6 +1938,8 @@ const backupInputRef = useRef(null);
         profile={providerProfile}
         onClose={() => setProviderSettingsOpen(false)}
         onSaved={setProviderProfile}
+        onExportBackup={exportBackup}
+        onImportBackup={importBackup}
       />
 
       {viewMode === "graph" && (
@@ -2266,7 +2285,7 @@ const backupInputRef = useRef(null);
         onOpenProviderSettings={() => setProviderSettingsOpen(true)}
         onOpenProgress={() => setProgressPanelOpen(true)}
         onExportBackup={exportBackup}
-        onImportBackup={() => backupInputRef.current?.click()}
+        onImportBackup={importBackup}
         graphConfigs={GRAPH_CONFIGS}
         activeGraphKey={graphKey}
       />

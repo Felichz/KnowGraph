@@ -42,12 +42,31 @@ export async function applyBackup(value) {
   await importLearningState(value?.learning ?? null);
 }
 
-export function downloadBackup(backup) {
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+export async function downloadBackup(backup) {
+  const jsonContent = JSON.stringify(backup, null, 2);
+  const defaultFilename = `learning-workspace-backup-${new Date().toISOString().slice(0, 10)}.json`;
+
+  if (typeof window !== "undefined" && window.learningDesktop?.backup?.save) {
+    const result = await window.learningDesktop.backup.save(jsonContent, defaultFilename);
+    if (result?.canceled) return;
+    if (!result?.success) {
+      throw new Error(result?.error || "Error al guardar el archivo en disco.");
+    }
+    return;
+  }
+
+  const blob = new Blob([jsonContent], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
+  anchor.style.display = "none";
   anchor.href = url;
-  anchor.download = `learning-workspace-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  anchor.download = defaultFilename;
+  document.body.appendChild(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => {
+    try {
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+    } catch {}
+  }, 1000);
 }

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, session, shell, safeStorage, ipcMain } = require("electron");
+const { app, BrowserWindow, Menu, session, shell, safeStorage, ipcMain, dialog } = require("electron");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
 const http = require("node:http");
@@ -159,6 +159,44 @@ function registerProviderSettingsIpc() {
     const location = providerSettingsPath();
     if (fs.existsSync(location)) fs.rmSync(location);
     return true;
+  });
+}
+
+function registerBackupIpc() {
+  ipcMain.handle("backup:save", async (_event, { content, defaultFilename }) => {
+    try {
+      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+        title: "Guardar respaldo de aprendizaje",
+        defaultPath: defaultFilename || `learning-workspace-backup-${new Date().toISOString().slice(0, 10)}.json`,
+        filters: [
+          { name: "Archivos JSON", extensions: ["json"] },
+          { name: "Todos los archivos", extensions: ["*"] },
+        ],
+      });
+      if (canceled || !filePath) return { canceled: true };
+      await fs.promises.writeFile(filePath, content, "utf8");
+      return { success: true, filePath };
+    } catch (error) {
+      return { success: false, error: error?.message || String(error) };
+    }
+  });
+
+  ipcMain.handle("backup:load", async () => {
+    try {
+      const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+        title: "Seleccionar archivo de respaldo",
+        properties: ["openFile"],
+        filters: [
+          { name: "Archivos JSON", extensions: ["json"] },
+          { name: "Todos los archivos", extensions: ["*"] },
+        ],
+      });
+      if (canceled || !filePaths || !filePaths[0]) return { canceled: true };
+      const content = await fs.promises.readFile(filePaths[0], "utf8");
+      return { success: true, content, filePath: filePaths[0] };
+    } catch (error) {
+      return { success: false, error: error?.message || String(error) };
+    }
   });
 }
 
@@ -372,6 +410,7 @@ function stopLocalServices() {
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
   registerProviderSettingsIpc();
+  registerBackupIpc();
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
   try {
     await createWindow();
