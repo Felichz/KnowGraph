@@ -23,7 +23,7 @@ import { CoachChat } from "./CoachChat.jsx";
 
 const LIVE_DEBOUNCE_MS = 5_000;
 
-export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "all", onRequestCoach, onEvaluationSaved, onNavigateBack, onNavigateNext, hasPrevious, hasNext }) {
+export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "all", onRequestCoach, onRequestEvaluate, onEvaluationSaved, onNavigateBack, onNavigateNext, hasPrevious, hasNext }) {
   const contentHash = hashCardContent(node);
 
   const [draft, setDraftState] = useState("");
@@ -856,8 +856,13 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
           )}
           <CoachIterationHistory
             iterations={coachIterations}
+            attempts={attempts}
             viewIndex={isViewingCoachHistory ? coachActiveIndex : null}
             onSelect={selectCoachIteration}
+            onSelectAttempt={(index) => {
+              selectAttempt(index);
+              onRequestEvaluate?.();
+            }}
             onReturnCurrent={returnToCurrentCoach}
           />
       </div>
@@ -901,7 +906,17 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
         )}
         {!pending && canonicalAttempt ? (
           <div className="paraphrase-review__result">
-          <AttemptHistory attempts={attempts} viewIndex={view.mode === "attempt" ? view.index : attempts.length - 1} onSelect={selectAttempt} onBackToDraft={backToDraft} />
+          <AttemptHistory
+            attempts={attempts}
+            coachIterations={coachIterations}
+            viewIndex={view.mode === "attempt" ? view.index : attempts.length - 1}
+            onSelect={selectAttempt}
+            onSelectCoachIteration={(index) => {
+              selectCoachIteration(index);
+              onRequestCoach?.();
+            }}
+            onBackToDraft={backToDraft}
+          />
            <EvaluationFeedback
              evaluation={canonicalAttempt.evaluation}
              attemptContentHash={canonicalAttempt.contentHash}
@@ -918,10 +933,29 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
             {onNavigateNext && hasNext && <button type="button" className="quiz-next-button" onClick={onNavigateNext}>Siguiente card →</button>}
           </div>
         </div>
+        ) : !pending && coachIterations.length > 0 ? (
+          <div className="canonical-review__coaching-preview">
+            <AttemptHistory
+              attempts={[]}
+              coachIterations={coachIterations}
+              onSelectCoachIteration={(index) => {
+                selectCoachIteration(index);
+                onRequestCoach?.();
+              }}
+              onBackToDraft={backToDraft}
+            />
+            <div className="canonical-review__empty canonical-review__empty--coaching">
+              <strong>Tenés {coachIterations.length} {coachIterations.length === 1 ? "checkpoint" : "checkpoints"} de coaching registrados.</strong>
+              <span>El gráfico arriba muestra la evolución de tus borradores. Procesá la evaluación completa para obtener el score formal de 120 puntos y la rúbrica detallada.</span>
+              <button type="button" className="quiz-primary-button" style={{ marginTop: "14px" }} onClick={() => submitFullEvaluation(draft, "manual")} disabled={!draft.trim() || Boolean(pending)}>
+                {pending ? "Procesando..." : "Procesar evaluación completa ahora"}
+              </button>
+            </div>
+          </div>
         ) : !pending ? (
           <div className="canonical-review__empty">
             <strong>Todavía no hay una evaluación completa.</strong>
-            <span>El coaching rápido vive en la vista anterior. Cuando proceses este borrador aparecerán acá el score canónico, las barras y el feedback detallado.</span>
+            <span>El coaching rápido vive en la vista de Coaching. A medida que escribas tu explicación, los checkpoints y evaluaciones se irán combinando en este gráfico.</span>
           </div>
         ) : null}
       </section>}

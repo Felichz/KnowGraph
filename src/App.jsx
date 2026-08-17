@@ -2201,6 +2201,7 @@ const backupInputRef = useRef(null);
                 viewMode={lessonView === "coach" ? "coach" : lessonView === "evaluate" ? "evaluate" : "hidden"}
                 onEvaluationSaved={handleEvaluationSaved}
                 onRequestCoach={() => setLessonView("coach")}
+                onRequestEvaluate={() => setLessonView("evaluate")}
                 onNavigateBack={goBack}
                 onNavigateNext={nextFocusNode ? () => openLesson(nextFocusNode, true) : undefined}
                 hasPrevious={lessonHistory.length > 0}
