@@ -23,7 +23,13 @@ const Schema = z.object({
   GATEWAY_PORT: z.coerce.number().int().positive().default(4317),
   GATEWAY_HOST: z.string().min(1).default("127.0.0.1"),
   CORS_ALLOWED_ORIGINS: z.string().optional().default(""),
-  ALLOW_PRIVATE_PROVIDER_URLS: z.enum(["true", "false"]).default("false"),
+  ALLOW_PRIVATE_PROVIDER_URLS: z.enum(["true", "false"]).default(
+    process.env.ALLOW_PRIVATE_PROVIDER_URLS === "true" ||
+    process.env.ELECTRON_RUN_AS_NODE === "1" ||
+    process.env.NODE_ENV !== "production"
+      ? "true"
+      : "false"
+  ),
 });
 
 const parsed = Schema.safeParse({

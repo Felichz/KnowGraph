@@ -20,7 +20,7 @@ function providerSettingsPath() {
   return path.join(app.getPath("userData"), "provider-settings.bin");
 }
 
-const PROVIDER_ADAPTERS = ["openai", "openrouter", "minimax", "groq", "mistral", "cerebras", "togetherai", "fireworks-ai", "deepseek", "xai", "nvidia", "huggingface", "perplexity", "deepinfra", "chutes", "baseten", "moonshotai", "zai", "stepfun", "alibaba", "ollama", "lmstudio", "custom"];
+const PROVIDER_ADAPTERS = ["openai", "openrouter", "minimax", "groq", "mistral", "cerebras", "togetherai", "fireworks-ai", "deepseek", "xai", "nvidia", "huggingface", "perplexity", "deepinfra", "chutes", "baseten", "moonshotai", "zai", "stepfun", "alibaba", "freellmapi", "ollama", "lmstudio", "custom"];
 const PROVIDER_PRESETS = {
   openai: { label: "OpenAI", baseUrl: "https://api.openai.com/v1", model: "" },
   openrouter: { label: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1", model: "" },
@@ -42,6 +42,7 @@ const PROVIDER_PRESETS = {
   zai: { label: "Z.AI", baseUrl: "https://api.z.ai/api/paas/v4", model: "" },
   stepfun: { label: "StepFun", baseUrl: "https://api.stepfun.com/v1", model: "" },
   alibaba: { label: "Alibaba Cloud / Qwen", baseUrl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", model: "" },
+  freellmapi: { label: "FreeLLMAPI", baseUrl: "http://127.0.0.1:31415/v1", model: "auto" },
   ollama: { label: "Ollama", baseUrl: "http://127.0.0.1:11434/v1", model: "" },
   lmstudio: { label: "LM Studio", baseUrl: "http://127.0.0.1:1234/v1", model: "" },
   custom: { label: "Endpoint compatible", baseUrl: "", model: "" },
@@ -204,6 +205,7 @@ async function ensureGateway() {
     env: {
       ...process.env,
       ELECTRON_RUN_AS_NODE: "1",
+      ALLOW_PRIVATE_PROVIDER_URLS: "true",
       GATEWAY_HOST,
       GATEWAY_PORT: String(GATEWAY_PORT),
     },
