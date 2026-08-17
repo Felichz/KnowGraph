@@ -1186,6 +1186,7 @@ const backupInputRef = useRef(null);
   const [latestAttemptsByNode, setLatestAttemptsByNode] = useState(() => new Map());
   const [activeCats, setActiveCats] = useState(() => new Set(Object.keys(GRAPH_CONFIGS.react.categories)));
   const [selected, setSelected] = useState(() => getRouteNode(initialRoute));
+  const [mobileFocusedNode, setMobileFocusedNode] = useState(null);
   const [lessonView, setLessonView] = useState("read"); // "read" | "coach" | "evaluate"
   const [lessonHistory, setLessonHistory] = useState(() => {
     const previousNodeIds = typeof window !== "undefined" && Array.isArray(window.history.state?.previousNodeIds)
@@ -1723,7 +1724,14 @@ const backupInputRef = useRef(null);
         </button>
       </header>
 
-            <section className={`map-workspace ${workspaceNavOpen ? "is-nav-open" : "is-nav-closed"} ${progressPanelOpen ? "is-progress-open" : "is-progress-closed"} ${providerSettingsOpen ? "is-provider-open" : "is-provider-closed"}`} aria-label="Workspace de aprendizaje">
+                  {workspaceNavOpen && (
+        <div
+          className="workspace-nav-backdrop"
+          role="presentation"
+          onClick={() => setWorkspaceNavOpen(false)}
+        />
+      )}
+      <section className={`map-workspace ${workspaceNavOpen ? "is-nav-open" : "is-nav-closed"} ${progressPanelOpen ? "is-progress-open" : "is-progress-closed"} ${providerSettingsOpen ? "is-provider-open" : "is-provider-closed"}`} aria-label="Workspace de aprendizaje">
         <nav id="workspace-navigation" className="workspace-nav-drawer" aria-label="Navegación del workspace">
           <div className="graph-switcher" aria-label="Elegir grafo">
             <div className="workspace-nav-heading">
@@ -2231,7 +2239,145 @@ const backupInputRef = useRef(null);
         graphConfigs={GRAPH_CONFIGS}
         activeGraphKey={graphKey}
       />
-    </main>
+    
+      {/* Mobile Graph Interactive HUD */}
+      {viewMode === "graph" && (
+        <aside className="mobile-graph-hud" aria-label="Acceso rápido al concepto seleccionado">
+          {(() => {
+            const current = mobileFocusedNode || primaryNext || graph.nodes[0];
+            if (!current) return null;
+            const currentCat = graph.categories[current.cat] || { label: "General", color: "#64e7dc" };
+            const allRouteNodes = guidance.levels.flat();
+            const currentIndex = allRouteNodes.findIndex((n) => n.id === current.id);
+            const totalRoute = allRouteNodes.length;
+            const isDone = checked.has(current.id);
+            const guideLevel = guidance.levelById.get(current.id);
+
+            return (
+              <div className="mobile-graph-hud__card">
+                <div className="mobile-graph-hud__header">
+                  <span className="mobile-graph-hud__cat" style={{ "--cat-color": currentCat.color }}>
+                    <span className="mobile-graph-hud__dot" style={{ background: currentCat.color }} />
+                    {currentCat.label}
+                  </span>
+                  <span className={`mobile-graph-hud__badge ${isDone ? "is-done" : guideLevel === 1 ? "is-next" : ""}`}>
+                    {isDone ? "✓ DOMINADO" : guideLevel === 1 ? "🔥 MEJOR SIGUIENTE" : `ETAPA ${current.stage || guideLevel || 1}`}
+                  </span>
+                </div>
+                <h3 className="mobile-graph-hud__title">{current.label}</h3>
+                <div className="mobile-graph-hud__actions">
+                  <button
+                    type="button"
+                    className="mobile-graph-hud__cta"
+                    onClick={() => openLesson(current)}
+                  >
+                    <span>Estudiar lección</span>
+                    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </button>
+                  {totalRoute > 1 && (
+                    <div className="mobile-graph-hud__stepper" aria-label="Paso de la ruta">
+                      <button
+                        type="button"
+                        aria-label="Concepto anterior"
+                        disabled={currentIndex <= 0}
+                        onClick={() => {
+                          if (currentIndex > 0) setMobileFocusedNode(allRouteNodes[currentIndex - 1]);
+                        }}
+                      >
+                        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13 16l-6-6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                      </button>
+                      <span>{currentIndex >= 0 ? currentIndex + 1 : 1}/{totalRoute}</span>
+                      <button
+                        type="button"
+                        aria-label="Concepto siguiente"
+                        disabled={currentIndex >= totalRoute - 1}
+                        onClick={() => {
+                          if (currentIndex < totalRoute - 1) setMobileFocusedNode(allRouteNodes[currentIndex + 1]);
+                        }}
+                      >
+                        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </aside>
+      )}
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="mobile-bottom-nav" aria-label="Navegación principal móvil">
+        <button
+          type="button"
+          className={`mobile-bottom-nav__item ${viewMode === "graph" && !progressPanelOpen && !providerSettingsOpen ? "is-active" : ""}`}
+          onClick={() => {
+            setViewMode("graph");
+            setProgressPanelOpen(false);
+            setProviderSettingsOpen(false);
+            setWorkspaceNavOpen(false);
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.5" fill="none" stroke="currentColor" strokeWidth="2"/><circle cx="18" cy="6" r="2.5" fill="none" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="18" r="2.5" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M8 7.5l3 7.5M16 7.5l-3 7.5" fill="none" stroke="currentColor" strokeWidth="1.8"/></svg>
+          <span>Grafo</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav__item ${viewMode === "flashcards" && !progressPanelOpen && !providerSettingsOpen ? "is-active" : ""}`}
+          onClick={() => {
+            setViewMode("flashcards");
+            setProgressPanelOpen(false);
+            setProviderSettingsOpen(false);
+            setWorkspaceNavOpen(false);
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="12" rx="2.5" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M8 20h8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><path d="M12 16v4" fill="none" stroke="currentColor" strokeWidth="2"/></svg>
+          <span>Flashcards</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav__item ${progressPanelOpen ? "is-active" : ""}`}
+          onClick={() => {
+            setProgressPanelOpen((p) => !p);
+            setProviderSettingsOpen(false);
+            setWorkspaceNavOpen(false);
+          }}
+        >
+          <div className="mobile-bottom-nav__icon-wrap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 20V10M12 20V4M6 20v-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>
+            {percentage > 0 && <span className="mobile-bottom-nav__badge-dot" />}
+          </div>
+          <span>Progreso</span>
+        </button>
+
+        <button
+          type="button"
+          className="mobile-bottom-nav__item"
+          onClick={() => {
+            setCommandPaletteOpen(true);
+            setWorkspaceNavOpen(false);
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M20 20l-4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+          <span>Buscar</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav__item ${providerSettingsOpen ? "is-active" : ""}`}
+          onClick={() => {
+            setProviderSettingsOpen((p) => !p);
+            setProgressPanelOpen(false);
+            setWorkspaceNavOpen(false);
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" strokeWidth="1.8"/></svg>
+          <span>Ajustes</span>
+        </button>
+      </nav>
+</main>
   );
 }
 
