@@ -3971,7 +3971,7 @@ body { background: var(--p-bg); }
   background: #090d13;
 }
 
- {
+.topology-graph-bar {
   position: absolute;
   z-index: 4;
   top: 14px;
@@ -4235,7 +4235,7 @@ body { background: var(--p-bg); }
 
 @media (max-width: 760px) {
   .map-workspace .graph-area::after { content: none; }
-   {
+  .topology-graph-bar {
     top: 9px;
     right: 9px;
     left: 9px;
@@ -7220,5 +7220,215 @@ body { background: var(--p-bg); }
 
   .mobile-bottom-nav {
     z-index: 600 !important;
+  }
+}
+
+/* ==========================================================================
+   MOBILE ERGONOMIC POLISH: VOICE DICTATE, RATINGS & SEARCH SHEET
+   ========================================================================== */
+
+.voice-dictate-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(100, 231, 220, 0.08);
+  border: 1px solid rgba(100, 231, 220, 0.24);
+  color: #64e7dc;
+  font: 600 12px Inter, sans-serif;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: all 0.15s ease;
+}
+
+.voice-dictate-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.voice-dictate-button:hover {
+  background: rgba(100, 231, 220, 0.16);
+  border-color: rgba(100, 231, 220, 0.4);
+}
+
+.voice-dictate-button.is-recording {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #f87171;
+  animation: voicePulse 1.2s infinite ease-in-out;
+}
+
+@keyframes voicePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+@media (max-width: 768px) {
+  /* 1. Mobile Textarea: 16px font to eliminate iOS zoom shaking */
+  .paraphrase-review__textarea {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+    min-height: 180px !important;
+    padding: 14px !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  /* 2. Voice Button on Mobile */
+  .voice-dictate-button {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+    font-size: 13px !important;
+  }
+
+  /* 3. Flashcard Ratings: High-contrast 2x2 grid for thumbs */
+  .flashcard-modal__ratings {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .flashcard-rating-btn {
+    min-height: 48px !important;
+    height: 48px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .flashcard-rating-btn:active {
+    transform: scale(0.96) !important;
+  }
+
+  .flashcard-rating-btn.rating-again {
+    background: rgba(239, 68, 68, 0.16) !important;
+    border-color: rgba(239, 68, 68, 0.35) !important;
+    color: #f87171 !important;
+  }
+
+  .flashcard-rating-btn.rating-hard {
+    background: rgba(245, 158, 11, 0.16) !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+    color: #fbbf24 !important;
+  }
+
+  .flashcard-rating-btn.rating-good {
+    background: rgba(6, 182, 212, 0.16) !important;
+    border-color: rgba(6, 182, 212, 0.35) !important;
+    color: #38bdf8 !important;
+  }
+
+  .flashcard-rating-btn.rating-easy {
+    background: rgba(34, 197, 94, 0.16) !important;
+    border-color: rgba(34, 197, 94, 0.35) !important;
+    color: #4ade80 !important;
+  }
+
+  /* 4. Full-Screen Search Palette on Mobile */
+  .command-palette {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-width: 100vw !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #080d14 !important;
+    z-index: 1100 !important;
+  }
+
+  .command-palette__input-wrap {
+    padding: 12px 14px !important;
+  }
+
+  .command-palette__input {
+    font-size: 16px !important;
+    height: 48px !important;
+  }
+
+  .command-palette__shortcuts {
+    display: none !important;
+  }
+
+  .command-palette__item {
+    min-height: 52px !important;
+    padding: 12px 14px !important;
+  }
+
+  .command-palette__item-enter-hint {
+    display: none !important;
+  }
+}
+
+/* Flashcard Modal Footer Mobile Sticky & Thumb Targets */
+@media (max-width: 768px) {
+  .flashcard-modal__footer {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    background: #090d14 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 30 !important;
+  }
+
+  .flashcard-modal__nav {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .flashcard-modal__nav button {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #f1f5f9 !important;
+    font-size: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .flashcard-modal__actions {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .flashcard-modal__actions button {
+    flex: 1 1 0 !important;
+    min-height: 46px !important;
+    height: 46px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* Hide bottom nav bar when any modal/studio is active on mobile */
+@media (max-width: 768px) {
+  .desktop-shell.has-open-lesson > .mobile-bottom-nav,
+  .desktop-shell:has(.flashcard-modal) > .mobile-bottom-nav,
+  .desktop-shell:has(.flashcard-modal-backdrop) > .mobile-bottom-nav,
+  .desktop-shell:has(.command-palette) > .mobile-bottom-nav {
+    display: none !important;
   }
 }

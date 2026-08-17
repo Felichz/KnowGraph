@@ -45,6 +45,58 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
   const [shortcutFeedback, setShortcutFeedback] = useState({ modifier: false, enter: false, triggered: false });
   const [cancelFeedback, setCancelFeedback] = useState(false);
   const [error, setError] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const toggleSpeechRecognition = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      alert("El reconocimiento de voz no está disponible en este navegador.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRec();
+      recognition.lang = "es-ES";
+      recognition.continuous = true;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            transcript += event.results[i][0].transcript + " ";
+          }
+        }
+        if (transcript.trim()) {
+          setDraftState((prev) => {
+            const next = prev ? `${prev.trim()} ${transcript.trim()}` : transcript.trim();
+            userEditedDraftRef.current = true;
+            draftRef.current = next;
+            if (draftSaveRef.current) clearTimeout(draftSaveRef.current);
+            draftSaveRef.current = setTimeout(() => {
+              saveDraft(graphId, node.id, next).catch(() => {});
+            }, 300);
+            return next;
+          });
+        }
+      };
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (e) {
+      setIsListening(false);
+    }
+  };
 
   const textareaRef = useRef(null);
   const draftRef = useRef("");
@@ -712,6 +764,21 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       <div className="mastery-workspace">
           <div className="mastery-workspace__editor">
             <div className="paraphrase-review__editor">
+              <div className="paraphrase-review__editor-tools">
+                <button
+                  type="button"
+                  className={`voice-dictate-button ${isListening ? "is-recording" : ""}`}
+                  onClick={toggleSpeechRecognition}
+                  aria-label={isListening ? "Detener dictado por voz" : "Dictar respuesta por voz"}
+                  title={isListening ? "Detener dictado" : "Dictar respuesta con tu voz"}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" fill="currentColor"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  <span>{isListening ? "Grabando voz... Tocá para detener" : "Dictar por voz"}</span>
+                </button>
+              </div>
               <textarea
                 ref={textareaRef}
                 className={`paraphrase-review__textarea ${isViewingCoachHistory ? "is-readonly" : ""}`}

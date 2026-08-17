@@ -1740,22 +1740,53 @@ const backupInputRef = useRef(null);
             </div>
             <span className="workspace-nav-label">MAPA DE CONOCIMIENTO</span>
             {Object.values(GRAPH_CONFIGS).map((item) => (
-              <button key={item.id} className={`graph-switch ${item.id === graphKey ? "is-active" : ""}`} onClick={() => switchGraph(item.id)}>
+              <button
+                key={item.id}
+                className={`graph-switch ${item.id === graphKey ? "is-active" : ""}`}
+                onClick={() => {
+                  switchGraph(item.id);
+                  setWorkspaceNavOpen(false);
+                }}
+              >
                 {item.label}
               </button>
             ))}
-            <ViewModeToggle mode={viewMode} onChange={setViewMode} />
+            <ViewModeToggle
+              mode={viewMode}
+              onChange={(mode) => {
+                setViewMode(mode);
+                setWorkspaceNavOpen(false);
+              }}
+            />
           </div>
 
           <div className="legend">
             <div className="workspace-nav-section-title"><span>FOCO</span><small>Elegí un grupo para aislarlo</small></div>
-            <button className={`category-chip category-all ${activeCats.size === Object.keys(graph.categories).length ? "is-active" : ""}`} onClick={showAllCategories} aria-pressed={activeCats.size === Object.keys(graph.categories).length}>Todos</button>
+            <button
+              className={`category-chip category-all ${activeCats.size === Object.keys(graph.categories).length ? "is-active" : ""}`}
+              onClick={() => {
+                showAllCategories();
+                setWorkspaceNavOpen(false);
+              }}
+              aria-pressed={activeCats.size === Object.keys(graph.categories).length}
+            >
+              Todos
+            </button>
             {Object.entries(graph.categories).map(([key, category]) => {
               const active = activeCats.has(key);
               const categoryNodes = graph.nodes.filter((node) => node.cat === key);
               const focused = activeCats.size === 1 && active;
               return (
-                <button key={key} className={`category-chip ${focused ? "is-focused" : ""}`} onClick={() => focusCategory(key)} aria-pressed={focused} style={{ "--category-color": category.color, opacity: active ? 1 : 0.42 }}>
+                <button
+                  key={key}
+                  className={`category-chip ${focused ? "is-focused" : ""}`}
+                  onClick={() => {
+                    focusCategory(key);
+                    setWorkspaceNavOpen(false);
+                  }}
+                  aria-pressed={focused}
+                  style={{ "--category-color": category.color, opacity: active ? 1 : 0.42 }}
+                >
                   <span className="category-dot" style={{ background: category.color }} />{category.label}<span className="category-count">{categoryNodes.filter((node) => checked.has(node.id)).length}/{categoryNodes.length}</span>
                 </button>
               );
