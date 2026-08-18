@@ -7275,12 +7275,44 @@ body { background: var(--p-bg); }
     -webkit-tap-highlight-color: transparent !important;
   }
 
-  /* 2. Voice Button on Mobile */
-  .voice-dictate-button {
+  /* 2. Tool buttons on Mobile */
+  .paraphrase-review__editor-tools {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .paraphrase-review__tool-buttons {
     width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .voice-dictate-button {
+    flex: 1 !important;
+    width: auto !important;
     justify-content: center !important;
-    min-height: 44px !important;
-    font-size: 13px !important;
+    min-height: 42px !important;
+    font-size: 12px !important;
+    padding: 0 8px !important;
+  }
+
+  .ai-generate-wrapper {
+    flex: 1 !important;
+    display: flex !important;
+  }
+
+  .ai-generate-button {
+    flex: 1 !important;
+    width: 100% !important;
+    min-height: 42px !important;
+    font-size: 12px !important;
+    justify-content: center !important;
+    padding: 0 8px !important;
+  }
+
+  .ai-generated-tag {
+    align-self: flex-start !important;
   }
 
   /* 3. Flashcard Ratings: High-contrast 2x2 grid for thumbs */
@@ -7516,3 +7548,346 @@ body { background: var(--p-bg); }
   border: 1px dashed rgba(167, 139, 250, 0.22);
   background: rgba(167, 139, 250, 0.03);
 }
+
+/* ==========================================================================
+   AI PARAPHRASE GENERATOR (SKILL V5) & FLASHCARD AI BADGES
+   ========================================================================== */
+
+.paraphrase-review__editor-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.paraphrase-review__tool-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.voice-dictate-button {
+  margin-bottom: 0;
+}
+
+.ai-generate-wrapper {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  gap: 6px;
+}
+
+.ai-generate-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.14) 0%, rgba(139, 92, 246, 0.22) 100%);
+  border: 1px solid rgba(167, 139, 250, 0.38);
+  color: #ddd6fe;
+  font: 600 12px/1 Inter, -apple-system, sans-serif;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.ai-generate-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.24) 0%, rgba(139, 92, 246, 0.36) 100%);
+  border-color: rgba(196, 181, 253, 0.65);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(167, 139, 250, 0.3);
+  transform: translateY(-1px);
+}
+
+.ai-generate-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ai-generate-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ai-generate-button.is-generating {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.28) 0%, rgba(192, 132, 252, 0.36) 100%);
+  border-color: #c084fc;
+  color: #ffffff;
+  animation: aiGeneratePulse 1.4s infinite ease-in-out;
+}
+
+.ai-generate-button__icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+@keyframes aiGeneratePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(167, 139, 250, 0); }
+}
+
+.ai-generate-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ai-generate-tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--p-text-3, #94a3b8);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.ai-generate-tooltip-trigger svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ai-generate-tooltip-trigger:hover,
+.ai-generate-tooltip-trigger:focus-visible {
+  background: rgba(167, 139, 250, 0.18);
+  border-color: rgba(167, 139, 250, 0.5);
+  color: #c4b5fd;
+}
+
+.ai-generate-tooltip-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: -20px;
+  width: min(340px, 86vw);
+  background: #0f172a;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 16px rgba(139, 92, 246, 0.15);
+  z-index: 1000;
+  animation: tooltipFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+}
+
+@keyframes tooltipFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-generate-tooltip-badge {
+  display: inline-block;
+  font: 700 9.5px/1 "JetBrains Mono", ui-monospace, monospace;
+  color: #a78bfa;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.ai-generate-tooltip-title {
+  display: block;
+  font: 600 13px/1.3 Inter, sans-serif;
+  color: #f8fafc;
+  margin-bottom: 8px;
+}
+
+.ai-generate-tooltip-popover p {
+  margin: 0 0 8px 0;
+  font: 400 11.5px/1.5 Inter, sans-serif;
+  color: #cbd5e1;
+}
+
+.ai-generate-tooltip-popover p:last-child {
+  margin-bottom: 0;
+}
+
+.ai-generate-tooltip-popover strong {
+  color: #f1f5f9;
+}
+
+.ai-generate-tooltip-popover em {
+  color: #c4b5fd;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.ai-generated-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  color: #c4b5fd;
+  font: 600 11px/1 Inter, sans-serif;
+  animation: fadeIn 0.2s ease;
+}
+
+.ai-generated-tag__spark {
+  color: #e9d5ff;
+  font-size: 11px;
+}
+
+/* Flashcards UI: AI Generated Tag & Notice */
+.flashcard__ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font: 600 10.5px/1.2 "JetBrains Mono", ui-monospace, monospace;
+  background: rgba(167, 139, 250, 0.14);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  color: #c4b5fd;
+}
+
+.flashcard-modal__eyebrow-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.flashcard-modal__ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font: 600 10.5px/1.2 Inter, sans-serif;
+  background: rgba(167, 139, 250, 0.16);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  color: #ddd6fe;
+}
+
+.flashcard-modal__ai-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px dashed rgba(167, 139, 250, 0.32);
+}
+
+.flashcard-modal__ai-notice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.flashcard-modal__ai-notice-text strong {
+  font: 600 12px/1.3 Inter, sans-serif;
+  color: #ede9fe;
+}
+
+.flashcard-modal__ai-notice-text span {
+  font: 400 11px/1.4 Inter, sans-serif;
+  color: #94a3b8;
+}
+
+.flashcard-modal__ai-notice-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(167, 139, 250, 0.22);
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  color: #f5f3ff;
+  font: 600 11.5px/1 Inter, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.flashcard-modal__ai-notice-btn:hover {
+  background: rgba(167, 139, 250, 0.38);
+  border-color: #c4b5fd;
+}
+
+/* Coach Hint Tooltip: Incorporate Focus Actions */
+.coach-hint__tooltip-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.coach-hint__generating-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.2);
+  border: 1px solid rgba(167, 139, 250, 0.5);
+  color: #ddd6fe;
+  font: 700 10.5px/1 "JetBrains Mono", ui-monospace, monospace;
+  animation: aiGeneratePulse 1.4s infinite ease-in-out;
+}
+
+.coach-hint__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.coach-hint__incorporate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.22) 0%, rgba(139, 92, 246, 0.35) 100%);
+  border: 1px solid rgba(167, 139, 250, 0.5);
+  color: #f5f3ff;
+  font: 600 13px/1 Inter, -apple-system, sans-serif;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.coach-hint__incorporate-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.36) 0%, rgba(139, 92, 246, 0.52) 100%);
+  border-color: rgba(196, 181, 253, 0.8);
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(167, 139, 250, 0.4);
+  transform: translateY(-1px);
+}
+
+.coach-hint__incorporate-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.coach-hint__incorporate-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.coach-hint__incorporate-btn.is-generating {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.36) 0%, rgba(192, 132, 252, 0.45) 100%);
+  border-color: #c084fc;
+  color: #ffffff;
+  animation: aiGeneratePulse 1.4s infinite ease-in-out;
+}
+
+.coach-hint__incorporate-icon {
+  font-size: 14px;
+}
+
+

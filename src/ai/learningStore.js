@@ -81,17 +81,46 @@ export async function getDraft(graphId, nodeId) {
   const tx = db.transaction("drafts", "readonly");
   const value = await tx.store.get(`${graphId}:${nodeId}`);
   await tx.done;
+  if (typeof value === "string") return value;
   return value?.text ?? "";
 }
 
-export async function setDraft(graphId, nodeId, text) {
+export async function getDraftRecord(graphId, nodeId) {
+  const db = await getDb();
+  const tx = db.transaction("drafts", "readonly");
+  const value = await tx.store.get(`${graphId}:${nodeId}`);
+  await tx.done;
+  if (!value) return null;
+  if (typeof value === "string") {
+    return { key: `${graphId}:${nodeId}`, text: value, isAiGenerated: false };
+  }
+  return value;
+}
+
+export async function setDraft(graphId, nodeId, text, options = {}) {
   const db = await getDb();
   const key = `${graphId}:${nodeId}`;
   if (!text) {
     await db.delete("drafts", key);
     return;
   }
-  await db.put("drafts", { key, text, updatedAt: new Date().toISOString() });
+  const isAiGenerated = Boolean(options.isAiGenerated);
+  await db.put("drafts", {
+    key,
+    text,
+    isAiGenerated,
+    source: isAiGenerated ? "ai" : (options.source ?? "user"),
+    generatedAt: isAiGenerated ? (options.generatedAt ?? new Date().toISOString()) : undefined,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export async function listAllDrafts() {
+  const db = await getDb();
+  const tx = db.transaction("drafts", "readonly");
+  const all = await tx.store.getAll();
+  await tx.done;
+  return all;
 }
 
 export async function deleteDraft(graphId, nodeId) {

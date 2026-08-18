@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { coachChatStream, evaluateParaphraseStream, isCancel, liveReviewStream, userFacingAiError } from "../ai/client.js";
+import { coachChatStream, evaluateParaphraseStream, generateParaphraseStream, improveParaphraseStream, isCancel, liveReviewStream, userFacingAiError } from "../ai/client.js";
 import {
   getDraft,
+  getDraftRecord,
   getLiveReview,
   setDraft,
   listAttempts,
@@ -45,6 +46,12 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
   const [shortcutFeedback, setShortcutFeedback] = useState({ modifier: false, enter: false, triggered: false });
   const [cancelFeedback, setCancelFeedback] = useState(false);
   const [error, setError] = useState(null);
+  const [isDraftAiGenerated, setIsDraftAiGenerated] = useState(false);
+  const [isGeneratingParaphrase, setIsGeneratingParaphrase] = useState(false);
+  const [paraphraseMode, setParaphraseMode] = useState(null);
+  const [paraphraseProgress, setParaphraseProgress] = useState(0);
+  const [aiTooltipOpen, setAiTooltipOpen] = useState(false);
+  const paraphraseControllerRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
 
@@ -137,15 +144,17 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     initialLoadRef.current = true;
     let cancelled = false;
     (async () => {
-      const [storedDraft, list, storedLiveReview, storedCoachIterations] = await Promise.all([
-        getDraft(graphId, node.id),
+      const [storedDraftRecord, list, storedLiveReview, storedCoachIterations] = await Promise.all([
+        getDraftRecord(graphId, node.id),
         listAttempts(graphId, node.id),
         getLiveReview(graphId, node.id),
         listCoachIterations(graphId, node.id),
       ]);
       if (cancelled || !initialLoadRef.current) return;
       initialLoadRef.current = false;
-      const initialText = storedDraft || list.at(-1)?.answer || "";
+      const storedText = storedDraftRecord?.text ?? (typeof storedDraftRecord === "string" ? storedDraftRecord : "");
+      const initialText = storedText || list.at(-1)?.answer || "";
+      const isAi = Boolean(storedDraftRecord?.isAiGenerated || (!storedText && list.at(-1)?.isAiGenerated));
       const initialAnswerHash = hashAnswer(initialText.trim());
       const latestCoachIteration = storedCoachIterations.at(-1);
       const reusableIterationReview = latestCoachIteration
@@ -160,6 +169,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
         : null);
       userEditedDraftRef.current = false;
       draftRef.current = initialText;
+      setIsDraftAiGenerated(isAi);
       setDraftState(initialText);
       setAttempts(list);
       setCoachIterations(storedCoachIterations);
@@ -178,6 +188,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       liveRequestRef.current = null;
       activeRequestRef.current = null;
       liveControllerRef.current?.abort();
+      paraphraseControllerRef.current?.abort();
       chatControllerRef.current?.abort();
       chatRequestRef.current = null;
       pendingControllerRef.current?.abort();
@@ -191,6 +202,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     if (streamFrameRef.current) cancelAnimationFrame(streamFrameRef.current);
     if (streamBlockFrameRef.current) cancelAnimationFrame(streamBlockFrameRef.current);
     liveControllerRef.current?.abort();
+    paraphraseControllerRef.current?.abort();
     chatControllerRef.current?.abort();
     chatRequestRef.current = null;
     pendingControllerRef.current?.abort();
@@ -203,10 +215,10 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     draftRef.current = draft;
     if (draftSaveRef.current) clearTimeout(draftSaveRef.current);
     draftSaveRef.current = setTimeout(() => {
-      setDraft(graphId, node.id, draft);
+      setDraft(graphId, node.id, draft, { isAiGenerated: isDraftAiGenerated });
     }, 400);
     return undefined;
-  }, [draft, graphId, node.id]);
+  }, [draft, graphId, node.id, isDraftAiGenerated]);
 
   useLayoutEffect(() => {
     const textarea = textareaRef.current;
@@ -222,6 +234,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     const scroller = event.currentTarget.closest(".lesson-content");
     const scrollTop = scroller?.scrollTop;
     userEditedDraftRef.current = true;
+    setIsDraftAiGenerated(false);
     setDraftState(event.target.value);
     if (scroller && Number.isFinite(scrollTop)) {
       requestAnimationFrame(() => {
@@ -229,6 +242,119 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       });
     }
   }, []);
+
+  const cancelParaphraseGeneration = useCallback(() => {
+    if (paraphraseControllerRef.current) {
+      paraphraseControllerRef.current.abort();
+      paraphraseControllerRef.current = null;
+    }
+    setIsGeneratingParaphrase(false);
+    setParaphraseMode(null);
+  }, []);
+
+  const handleGenerateAiParaphrase = useCallback(async () => {
+    if (isGeneratingParaphrase) {
+      cancelParaphraseGeneration();
+      return;
+    }
+
+    if (draft.trim().length > 40 && !isDraftAiGenerated) {
+      const confirmed = window.confirm(
+        "Ya escribiste parte de tu respuesta. ¿Querés reemplazarla con una paráfrasis pedagógica completa generada con IA?"
+      );
+      if (!confirmed) return;
+    }
+
+    cancelLiveReview();
+    const controller = new AbortController();
+    paraphraseControllerRef.current = controller;
+    setIsGeneratingParaphrase(true);
+    setParaphraseMode("generate");
+    setParaphraseProgress(0);
+    userEditedDraftRef.current = false;
+
+    let accumulated = "";
+    try {
+      const result = await generateParaphraseStream({
+        node,
+        provider: providerProfile,
+        signal: controller.signal,
+        onProgress: (length) => {
+          setParaphraseProgress(length);
+        },
+        onDelta: (delta) => {
+          accumulated += delta;
+          setDraftState(accumulated);
+          draftRef.current = accumulated;
+        },
+      });
+
+      const finalText = result.text || accumulated;
+      setDraftState(finalText);
+      draftRef.current = finalText;
+      setIsDraftAiGenerated(true);
+      await setDraft(graphId, node.id, finalText, { isAiGenerated: true, generatedAt: new Date().toISOString() });
+      startLiveReview(finalText);
+    } catch (err) {
+      if (!isCancel(err)) {
+        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "No se pudo generar la paráfrasis con IA.") });
+      }
+    } finally {
+      setIsGeneratingParaphrase(false);
+      setParaphraseMode(null);
+      paraphraseControllerRef.current = null;
+    }
+  }, [cancelLiveReview, cancelParaphraseGeneration, draft, isDraftAiGenerated, isGeneratingParaphrase, node, providerProfile, graphId, startLiveReview]);
+
+  const handleIncorporateFocus = useCallback(async (hintToIncorporate) => {
+    if (isGeneratingParaphrase) {
+      cancelParaphraseGeneration();
+      return;
+    }
+
+    cancelLiveReview();
+    const controller = new AbortController();
+    paraphraseControllerRef.current = controller;
+    setIsGeneratingParaphrase(true);
+    setParaphraseMode("improve");
+    setParaphraseProgress(0);
+    userEditedDraftRef.current = false;
+
+    let accumulated = "";
+    try {
+      const result = await improveParaphraseStream({
+        node,
+        currentDraft: draft,
+        focusTitle: hintToIncorporate?.text ?? "",
+        focusDetail: hintToIncorporate?.detail ?? hintToIncorporate?.text ?? "",
+        provider: providerProfile,
+        signal: controller.signal,
+        onProgress: (length) => {
+          setParaphraseProgress(length);
+        },
+        onDelta: (delta) => {
+          accumulated += delta;
+          setDraftState(accumulated);
+          draftRef.current = accumulated;
+        },
+      });
+
+      const finalText = result.text || accumulated;
+      setDraftState(finalText);
+      draftRef.current = finalText;
+      setIsDraftAiGenerated(true);
+      await setDraft(graphId, node.id, finalText, { isAiGenerated: true, generatedAt: new Date().toISOString() });
+      startLiveReview(finalText);
+    } catch (err) {
+      if (!isCancel(err)) {
+        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "No se pudo incorporar el foco con IA.") });
+      }
+    } finally {
+      setIsGeneratingParaphrase(false);
+      setParaphraseMode(null);
+      paraphraseControllerRef.current = null;
+    }
+  }, [cancelLiveReview, cancelParaphraseGeneration, draft, isGeneratingParaphrase, node, providerProfile, graphId, startLiveReview]);
 
   const startLiveReview = useCallback(async (answer) => {
     const trimmed = answer.trim();
@@ -324,6 +450,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
         fallbackFrom: result.fallbackFrom,
         durationMs: Date.now() - startedAt,
         messages: [],
+        isAiGenerated: Boolean(isDraftAiGenerated),
       };
       try {
         await saveCoachIteration(iteration);
@@ -682,7 +809,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       });
       if (activeRequestRef.current !== requestId) return;
       const durationMs = Date.now() - startedAt;
-      const attempt = { ...result.attempt, answer, durationMs };
+      const attempt = { ...result.attempt, answer, durationMs, isAiGenerated: Boolean(isDraftAiGenerated) };
       await saveAttempt(attempt);
       // Pintar el resultado recibido inmediatamente. La lectura posterior de
       // IndexedDB queda como sincronizacion, pero no debe ser el momento que
@@ -765,19 +892,71 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
           <div className="mastery-workspace__editor">
             <div className="paraphrase-review__editor">
               <div className="paraphrase-review__editor-tools">
-                <button
-                  type="button"
-                  className={`voice-dictate-button ${isListening ? "is-recording" : ""}`}
-                  onClick={toggleSpeechRecognition}
-                  aria-label={isListening ? "Detener dictado por voz" : "Dictar respuesta por voz"}
-                  title={isListening ? "Detener dictado" : "Dictar respuesta con tu voz"}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" fill="currentColor"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                  <span>{isListening ? "Grabando voz... Tocá para detener" : "Dictar por voz"}</span>
-                </button>
+                <div className="paraphrase-review__tool-buttons">
+                  <button
+                    type="button"
+                    className={`voice-dictate-button ${isListening ? "is-recording" : ""}`}
+                    onClick={toggleSpeechRecognition}
+                    aria-label={isListening ? "Detener dictado por voz" : "Dictar respuesta por voz"}
+                    title={isListening ? "Detener dictado" : "Dictar respuesta con tu voz"}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" fill="currentColor"/>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    <span>{isListening ? "Grabando voz..." : "Dictar por voz"}</span>
+                  </button>
+
+                  <div className="ai-generate-wrapper">
+                    <button
+                      type="button"
+                      className={`ai-generate-button ${isGeneratingParaphrase ? "is-generating" : ""}`}
+                      onClick={handleGenerateAiParaphrase}
+                      disabled={isGeneratingParaphrase || Boolean(pending)}
+                      aria-label={isGeneratingParaphrase ? "Generando paráfrasis fluida con IA..." : "Generar paráfrasis con IA"}
+                      title="Generar una paráfrasis pedagógica fluida con IA (Skill V5)"
+                    >
+                      <span className="ai-generate-button__icon" aria-hidden="true">✨</span>
+                      <span>{isGeneratingParaphrase ? "Generando con IA..." : "Generar con IA"}</span>
+                    </button>
+
+                    <div className="ai-generate-tooltip-wrapper">
+                      <button
+                        type="button"
+                        className="ai-generate-tooltip-trigger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAiTooltipOpen((v) => !v);
+                        }}
+                        onMouseEnter={() => setAiTooltipOpen(true)}
+                        onMouseLeave={() => setAiTooltipOpen(false)}
+                        aria-label="¿Por qué y cuándo conviene generar con IA?"
+                        title="¿Por qué y cuándo conviene generar con IA?"
+                      >
+                        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M10 8.5v5M10 5.8v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                      </button>
+                      {aiTooltipOpen && (
+                        <div className="ai-generate-tooltip-popover" role="tooltip">
+                          <div className="ai-generate-tooltip-badge">✨ PARAFRASEO RÁPIDO</div>
+                          <strong className="ai-generate-tooltip-title">¿Por qué y cuándo usar esta opción?</strong>
+                          <p>
+                            <strong>Ahorro de tiempo para entrevistas:</strong> Si ya dominás este concepto y estás corto de tiempo, podés auto-generar una paráfrasis pedagógica fluida en segundos para avanzar rápido en el grafo sin detenerte a escribirlo a mano.
+                          </p>
+                          <p>
+                            <strong>Identificación en Flashcards:</strong> La card queda taggeada como <em>✨ Generada con IA</em> para que luego puedas filtrarla al instante y ensayarla manualmente desde cero cuando tengas más tiempo.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {isDraftAiGenerated && !isGeneratingParaphrase && (
+                  <span className="ai-generated-tag" title="Este borrador fue generado automáticamente con IA. Modificalo libremente o volvé a practicarlo desde cero.">
+                    <span className="ai-generated-tag__spark" aria-hidden="true">✨</span>
+                    <span>Generado con IA</span>
+                  </span>
+                )}
               </div>
               <textarea
                 ref={textareaRef}
@@ -839,6 +1018,8 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
               </>
             )}
             coverageNode={node}
+            onIncorporateFocus={isViewingCoachHistory ? undefined : handleIncorporateFocus}
+            isIncorporatingFocus={isGeneratingParaphrase && paraphraseMode === "improve"}
           />
           {visibleCoachReview?.hint && (
             <LiveHint

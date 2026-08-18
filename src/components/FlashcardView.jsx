@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { listAllAttempts } from "../ai/learningStore.js";
+import { listAllAttempts, listAllDrafts } from "../ai/learningStore.js";
 import { getScoreView, STATUS_LABEL } from "../ai/types.js";
 import { ModelMeta } from "./ModelMeta.jsx";
 import { formatEvaluationDuration } from "../ai/types.js";
@@ -8,6 +8,7 @@ import { ReadingChunks } from "./ReadingChunks.jsx";
 
 const FILTERS = [
   { id: "all", label: "Todas" },
+  { id: "ai-generated", label: "✨ Con IA" },
   { id: "no-attempt", label: "Sin intento" },
   { id: "below-mastery", label: "Base < 100" },
   { id: "mastery", label: "Base alcanzada" },
@@ -24,6 +25,7 @@ function CloseIcon() {
 
 export function FlashcardView({ graph, onOpenNode }) {
   const [attempts, setAttempts] = useState([]);
+  const [drafts, setDrafts] = useState([]);
   const [filter, setFilter] = useState("all");
   const [spotlightId, setSpotlightId] = useState(null);
   const [activeCardId, setActiveCardId] = useState(null);
@@ -62,11 +64,26 @@ export function FlashcardView({ graph, onOpenNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    listAllAttempts().then((all) => {
-      if (!cancelled) setAttempts(all.filter((attempt) => attempt.graphId === graph.id));
+    Promise.all([
+      listAllAttempts(),
+      listAllDrafts(),
+    ]).then(([allAttempts, allDrafts]) => {
+      if (!cancelled) {
+        setAttempts(allAttempts.filter((attempt) => attempt.graphId === graph.id));
+        setDrafts(allDrafts.filter((draft) => draft.key?.startsWith(`${graph.id}:`)));
+      }
     });
     return () => { cancelled = true; };
   }, [graph.id]);
+
+  const draftByNode = useMemo(() => {
+    const map = new Map();
+    for (const draft of drafts) {
+      const [, nodeId] = String(draft.key ?? "").split(":");
+      if (nodeId) map.set(nodeId, draft);
+    }
+    return map;
+  }, [drafts]);
 
   const representativeByNode = useMemo(() => {
     const grouped = new Map();
@@ -82,13 +99,19 @@ export function FlashcardView({ graph, onOpenNode }) {
   }, [attempts]);
 
   const cards = useMemo(() => {
-    const list = (graph.nodes ?? []).map((node) => ({ node, attempt: representativeByNode.get(node.id) ?? null }));
+    const list = (graph.nodes ?? []).map((node) => {
+      const attempt = representativeByNode.get(node.id) ?? null;
+      const draft = draftByNode.get(node.id) ?? null;
+      const isAiGenerated = Boolean(attempt?.isAiGenerated || draft?.isAiGenerated);
+      return { node, attempt, draft, isAiGenerated };
+    });
+    if (filter === "ai-generated") return list.filter((card) => card.isAiGenerated);
     if (filter === "no-attempt") return list.filter((card) => !card.attempt);
     if (filter === "below-mastery") return list.filter((card) => card.attempt && !getScoreView(card.attempt.evaluation).isMastery);
     if (filter === "mastery") return list.filter((card) => card.attempt && getScoreView(card.attempt.evaluation).isMastery);
     if (filter === "extra") return list.filter((card) => card.attempt && getScoreView(card.attempt.evaluation).isExtra);
     return list;
-  }, [representativeByNode, filter, graph.nodes]);
+  }, [representativeByNode, draftByNode, filter, graph.nodes]);
 
   useEffect(() => {
     setSpotlightId(null);
@@ -240,6 +263,11 @@ export function FlashcardView({ graph, onOpenNode }) {
                     {attempt
                       ? <span className={`flashcard__badge flashcard__badge--${status}`}>{score.displayScore}/120 · {STATUS_LABEL[status]}</span>
                       : <span className="flashcard__badge flashcard__badge--none">Sin intento</span>}
+                    {card.isAiGenerated && (
+                      <span className="flashcard__ai-badge" title="Esta explicación fue generada automáticamente con IA">
+                        ✨ Con IA
+                      </span>
+                    )}
                   </div>
                   <div className={`flashcard__progress ${score?.isExtra ? "is-extra" : ""}`} aria-hidden="true">
                     <span style={{ width: `${score ? Math.min(100, (score.displayScore / 120) * 100) : 0}%` }} />
@@ -261,7 +289,7 @@ export function FlashcardView({ graph, onOpenNode }) {
       {activeCardId && (() => {
         const active = cards.find(({ node }) => node.id === activeCardId);
         if (!active) return null;
-        const { node, attempt } = active;
+        const { node, attempt, draft, isAiGenerated } = active;
         const activeIndex = cards.findIndex(({ node: cardNode }) => cardNode.id === node.id);
         const score = attempt ? getScoreView(attempt.evaluation) : null;
         const status = score?.status;
@@ -304,8 +332,9 @@ export function FlashcardView({ graph, onOpenNode }) {
                 {!modalFlipped ? (
                   <div className="flashcard-modal__front">
                     <span className="flashcard-modal__eyebrow">PREGUNTA DE REPASO</span>
-                    <h3>¿Cómo explicarías este concepto y qué riesgos o trade-offs tiene?</h3>
-                    <p className="flashcard-modal__hint">{node.lesson?.summary ?? "Recuperá el modelo mental antes de mirar la respuesta."}</p>
+                    <p className="flashcard-modal__prompt">
+                      {node.lesson?.prompt ?? `Explicá qué es ${node.label ?? node.title}, por qué importa y cómo se aplica en un proyecto real.`}
+                    </p>
                     <button
                       type="button"
                       className="flashcard-modal__flip-cta"
@@ -349,10 +378,17 @@ export function FlashcardView({ graph, onOpenNode }) {
                       {node.lesson?.why && <p><strong>Por qué importa:</strong> {node.lesson?.why}</p>}
                     </div>
 
-                    {attempt && (
+                    {attempt ? (
                       <div className="flashcard-modal__user-attempt">
                         <div className="flashcard-modal__user-attempt-header">
-                          <span className="flashcard-modal__eyebrow">TU RESPUESTA EVALUADA</span>
+                          <div className="flashcard-modal__eyebrow-container">
+                            <span className="flashcard-modal__eyebrow">TU RESPUESTA EVALUADA</span>
+                            {attempt.isAiGenerated && (
+                              <span className="flashcard-modal__ai-badge" title="Esta paráfrasis fue generada automáticamente con IA">
+                                ✨ Generada con IA
+                              </span>
+                            )}
+                          </div>
                           <button
                             type="button"
                             className={`flashcard-tts-btn ${speaking ? "is-playing" : ""}`}
@@ -386,6 +422,32 @@ export function FlashcardView({ graph, onOpenNode }) {
                             {score.displayScore}/120 · {STATUS_LABEL[status]}
                           </span>
                         </div>
+                      </div>
+                    ) : draft?.text ? (
+                      <div className="flashcard-modal__user-attempt flashcard-modal__user-attempt--draft">
+                        <div className="flashcard-modal__user-attempt-header">
+                          <div className="flashcard-modal__eyebrow-container">
+                            <span className="flashcard-modal__eyebrow">BORRADOR EN PROGRESO</span>
+                            {draft.isAiGenerated && (
+                              <span className="flashcard-modal__ai-badge">
+                                ✨ Generado con IA
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <ReadingChunks text={draft.text} className="flashcard-modal__long-answer" />
+                      </div>
+                    ) : null}
+
+                    {isAiGenerated && (
+                      <div className="flashcard-modal__ai-notice">
+                        <div className="flashcard-modal__ai-notice-text">
+                          <strong>✨ Card generada con IA</strong>
+                          <span>¿Querés consolidar tu propio modelo mental escribiéndolo desde cero?</span>
+                        </div>
+                        <button type="button" className="flashcard-modal__ai-notice-btn" onClick={() => onOpenNode?.(node)}>
+                          Practicar en Coaching →
+                        </button>
                       </div>
                     )}
                   </div>

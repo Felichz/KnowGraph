@@ -5,7 +5,17 @@ import { LiveRequestFeedback } from "./LiveRequestFeedback.jsx";
 import { CoachCoverage } from "./CoachCoverage.jsx";
 import { CoachHintTooltip } from "./CoachHintTooltip.jsx";
 
-export function LiveReviewPanel({ status = "idle", review, error, progress, hint, footerMeta, coverageNode }) {
+export function LiveReviewPanel({
+  status = "idle",
+  review,
+  error,
+  progress,
+  hint,
+  footerMeta,
+  coverageNode,
+  onIncorporateFocus,
+  isIncorporatingFocus = false,
+}) {
   const [coverageSpace, setCoverageSpace] = useState(0);
   const [hintSpace, setHintSpace] = useState(0);
   const tooltipSpace = Math.max(coverageSpace, hintSpace);
@@ -58,7 +68,15 @@ export function LiveReviewPanel({ status = "idle", review, error, progress, hint
           </div>
         ) : null}
 
-        {hint && <CoachHintTooltip hint={hint} isStale={status === "waiting" || status === "running"} onTooltipSpaceChange={setHintSpace} />}
+        {hint && (
+          <CoachHintTooltip
+            hint={hint}
+            isStale={status === "waiting" || status === "running"}
+            onTooltipSpaceChange={setHintSpace}
+            onIncorporateFocus={onIncorporateFocus}
+            isIncorporatingFocus={isIncorporatingFocus}
+          />
+        )}
 
         {footerMeta && <div className="live-review__footer-meta">{footerMeta}</div>}
       </div>

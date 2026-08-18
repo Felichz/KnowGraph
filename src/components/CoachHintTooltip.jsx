@@ -1,7 +1,13 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { ChunkedMarkdown } from "./CoachChat.jsx";
 
-export function CoachHintTooltip({ hint, onTooltipSpaceChange, isStale = false }) {
+export function CoachHintTooltip({
+  hint,
+  onTooltipSpaceChange,
+  isStale = false,
+  onIncorporateFocus,
+  isIncorporatingFocus = false,
+}) {
   const detailsRef = useRef(null);
   const tooltipRef = useRef(null);
   const reservedSpaceRef = useRef(0);
@@ -81,10 +87,36 @@ export function CoachHintTooltip({ hint, onTooltipSpaceChange, isStale = false }
         </summary>
         <div ref={tooltipRef} className="coach-hint__tooltip" data-no-reading-focus="true" role="group" aria-label="Explicación detallada del próximo foco">
           <header className="coach-hint__tooltip-header">
-            <span className="lesson-section-label">EXPLICACIÓN DEL FOCO</span>
+            <div className="coach-hint__tooltip-header-top">
+              <span className="lesson-section-label">EXPLICACIÓN DEL FOCO</span>
+              {isIncorporatingFocus && (
+                <span className="coach-hint__generating-pill">
+                  <span className="coach-hint__sparkle" aria-hidden="true">✨</span>
+                  <span>Incorporando...</span>
+                </span>
+              )}
+            </div>
             <strong>{hint.text}</strong>
           </header>
           <ChunkedMarkdown text={detail} />
+          {onIncorporateFocus && (
+            <footer className="coach-hint__actions">
+              <button
+                type="button"
+                className={`coach-hint__incorporate-btn ${isIncorporatingFocus ? "is-generating" : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onIncorporateFocus(hint);
+                }}
+                disabled={isIncorporatingFocus || isStale}
+                aria-label="Incorporar este foco al borrador con IA"
+                title="Integra esta explicación directamente en tu paráfrasis usando IA"
+              >
+                <span className="coach-hint__incorporate-icon" aria-hidden="true">✨</span>
+                <span>{isIncorporatingFocus ? "Incorporando foco con IA..." : "Incorporar este foco al borrador con IA"}</span>
+              </button>
+            </footer>
+          )}
         </div>
       </details>
     </div>

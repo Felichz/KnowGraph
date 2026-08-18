@@ -419,3 +419,49 @@ export function buildEvaluationUserPayload({ node, learnerAnswer }) {
     learnerAnswer: String(learnerAnswer ?? "").slice(0, MAX_LEARNER_ANSWER_CHARS),
   });
 }
+
+export function buildParaphraseUserPayload({ node }) {
+  if (!node) return "";
+  const lesson = node.lesson ?? {};
+  const lines = [
+    `TÍTULO DEL CONCEPTO: ${node.label ?? node.title ?? node.id}`,
+  ];
+  if (lesson.level) lines.push(`NIVEL / AUDIENCIA: ${lesson.level}`);
+  if (lesson.summary) lines.push(`RESUMEN ESENCIAL:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`POR QUÉ IMPORTA:\n${lesson.why}`);
+  if (lesson.explanation) lines.push(`EXPLICACIÓN DETALLADA / MODELO MENTAL:\n${lesson.explanation}`);
+  if (lesson.code) {
+    lines.push(`BLOQUE DE CÓDIGO / EJEMPLO FORMAL (${lesson.codeLabel || "snippet"}):\n\`\`\`\n${lesson.code}\n\`\`\``);
+  }
+  if (Array.isArray(lesson.steps) && lesson.steps.length > 0) {
+    lines.push(`PRINCIPIOS CLAVE / PASOS:\n${lesson.steps.map((s) => `- ${s}`).join("\n")}`);
+  }
+  if (Array.isArray(lesson.pitfalls) && lesson.pitfalls.length > 0) {
+    lines.push(`ERRORES COMUNES / SÍNTOMAS Y TRADE-OFFS:\n${lesson.pitfalls.map((p) => `- ${p}`).join("\n")}`);
+  }
+  if (lesson.takeaway) lines.push(`IDEA PARA RECORDAR / REGLA PRÁCTICA:\n${lesson.takeaway}`);
+  if (lesson.table) {
+    lines.push(`TABLA COMPARATIVA (${lesson.tableTitle || ""}):\n${JSON.stringify(lesson.table, null, 2)}`);
+  }
+  if (lesson.prompt) lines.push(`CONSIGNA DE APLICACIÓN:\n${lesson.prompt}`);
+  if (lesson.docNotes?.length) {
+    lines.push(`NOTAS DE DOCUMENTACIÓN:\n${lesson.docNotes.map((n) => `- ${n}`).join("\n")}`);
+  }
+  return lines.join("\n\n");
+}
+
+export function buildIncorporateFocusUserPayload({ node, currentDraft, focusTitle, focusDetail }) {
+  const lesson = node?.lesson ?? {};
+  const lines = [
+    `CONCEPTO: ${node?.label ?? node?.title ?? "Tema"}`,
+    `BORRADOR ACTUAL DEL ESTUDIANTE:\n"""\n${String(currentDraft ?? "").trim()}\n"""`,
+    `FOCO ESPECÍFICO A INTEGRAR (HINT DEL COACH):\n- Foco: ${focusTitle ?? ""}\n- Explicación del foco:\n${focusDetail ?? ""}`,
+  ];
+  if (lesson.summary) lines.push(`RESUMEN CANÓNICO DE REFERENCIA:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`POR QUÉ IMPORTA:\n${lesson.why}`);
+  if (lesson.code) lines.push(`CÓDIGO DE REFERENCIA:\n\`\`\`\n${lesson.code}\n\`\`\``);
+  if (lesson.takeaway) lines.push(`REGLA DE CIERRE RECOMENDADA:\n${lesson.takeaway}`);
+  return lines.join("\n\n");
+}
+
+
