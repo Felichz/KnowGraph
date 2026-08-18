@@ -2553,29 +2553,30 @@ body { background: var(--p-bg); }
 }
 .coach-hint__trigger::-webkit-details-marker { display: none; }
 .coach-hint__trigger-copy { display: grid; min-width: 0; gap: 3px; }
-.coach-hint__eyebrow { color: var(--lesson-color); font: 800 11px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .11em; }
-.coach-hint__label { overflow: hidden; color: var(--p-text); font-size: 11.5px; font-weight: 620; line-height: 1.43; text-overflow: ellipsis; white-space: nowrap; }
+.coach-hint__eyebrow { color: var(--lesson-color); font: 800 11.5px/1.3 "JetBrains Mono", ui-monospace, monospace; letter-spacing: .09em; }
+.coach-hint__label { overflow: hidden; color: var(--p-text); font-size: 13px; font-weight: 600; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
 .coach-hint__chevron { flex: 0 0 auto; color: var(--lesson-color); font-size: 15px; transform: rotate(180deg); }
 .coach-hint__details[open] .coach-hint__chevron { transform: none; }
 .coach-hint__trigger:hover .coach-hint__label { color: #fff; }
 .coach-hint__tooltip {
   position: absolute;
-  right: 0;
   bottom: calc(100% + 9px);
-  left: 0;
+  left: var(--tooltip-left, 0);
   display: grid;
-  width: min(760px, calc(100vw - 48px));
-  max-width: calc(100vw - 48px);
-  max-height: calc(100vh - 140px);
+  width: var(--tooltip-width, min(780px, calc(100vw - 32px)));
+  max-width: calc(100vw - 32px);
+  max-height: var(--tooltip-max-height, min(700px, calc(100vh - 120px)));
   overflow-y: auto;
-  gap: 17px;
-  border: 1px solid color-mix(in srgb, var(--lesson-color) 34%, var(--p-line-strong));
-  border-radius: 10px;
-  padding: 19px 21px;
-  background: #0d151d;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, .44);
-  z-index: 4;
+  gap: 18px;
+  border: 1px solid color-mix(in srgb, var(--lesson-color) 40%, var(--p-line-strong));
+  border-radius: 12px;
+  padding: 22px 24px;
+  background: #0b131b;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  z-index: 50;
   pointer-events: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
 }
 .coach-hint__details:not([open]) > .coach-hint__tooltip,
 .coach-hint__details[open]:not([data-layout-ready="true"]) > .coach-hint__tooltip {
@@ -2583,43 +2584,43 @@ body { background: var(--p-bg); }
   visibility: hidden;
   pointer-events: none;
 }
-.coach-hint__tooltip-header { display: grid; gap: 5px; }
-.coach-hint__tooltip-header strong { color: var(--p-text); font-size: 15px; line-height: 1.4; }
-.coach-hint__markdown { display: grid; gap: 13px; min-width: 0; color: var(--p-text-2); font-size: 15px; line-height: 1.72; }
-.coach-hint__markdown p { margin: 0; overflow-wrap: anywhere; }
+.coach-hint__tooltip-header { display: grid; gap: 6px; }
+.coach-hint__tooltip-header strong { color: #ffffff; font-size: 17.5px; font-weight: 700; line-height: 1.38; }
+.coach-hint__markdown { display: grid; gap: 14px; min-width: 0; color: var(--p-text-2); font-size: 16px; line-height: 1.75; }
+.coach-hint__markdown p { margin: 0; font-size: 16px; line-height: 1.75; overflow-wrap: anywhere; }
 .coach-hint__markdown h1,
 .coach-hint__markdown h2,
 .coach-hint__markdown h3,
 .coach-hint__markdown h4,
 .coach-hint__markdown h5,
-.coach-hint__markdown h6 { margin: 4px 0 0; color: var(--p-text); line-height: 1.3; letter-spacing: -.015em; }
-.coach-hint__markdown h1 { font-size: 19px; }
-.coach-hint__markdown h2 { font-size: 17px; }
-.coach-hint__markdown h3 { font-size: 15px; }
+.coach-hint__markdown h6 { margin: 6px 0 0; color: #ffffff; line-height: 1.35; letter-spacing: -.015em; }
+.coach-hint__markdown h1 { font-size: 21px; }
+.coach-hint__markdown h2 { font-size: 19px; }
+.coach-hint__markdown h3 { font-size: 17.5px; }
 .coach-hint__markdown h4,
 .coach-hint__markdown h5,
-.coach-hint__markdown h6 { font-size: 14px; }
+.coach-hint__markdown h6 { font-size: 16px; }
 .coach-hint__markdown ul,
-.coach-hint__markdown ol { display: grid; gap: 7px; margin: 0; padding-left: 22px; }
-.coach-hint__markdown li { padding-left: 3px; }
-.coach-hint__markdown a { color: #9edcff; text-decoration: underline; text-decoration-color: rgba(158, 220, 255, .4); text-underline-offset: 2px; }
-.coach-hint__markdown blockquote { margin: 0; border-left: 1px solid color-mix(in srgb, var(--lesson-color) 55%, transparent); padding: 2px 0 2px 12px; color: var(--p-text-3); }
-.coach-hint__markdown hr { width: 100%; margin: 3px 0; border: 0; border-top: 1px solid var(--p-line); }
+.coach-hint__markdown ol { display: grid; gap: 8px; margin: 0; padding-left: 24px; font-size: 16px; line-height: 1.72; }
+.coach-hint__markdown li { padding-left: 4px; }
+.coach-hint__markdown a { color: #9edcff; text-decoration: underline; text-decoration-color: rgba(158, 220, 255, .45); text-underline-offset: 2px; }
+.coach-hint__markdown blockquote { margin: 0; border-left: 2px solid color-mix(in srgb, var(--lesson-color) 65%, transparent); padding: 4px 0 4px 14px; color: var(--p-text-3); font-size: 15.5px; }
+.coach-hint__markdown hr { width: 100%; margin: 4px 0; border: 0; border-top: 1px solid var(--p-line); }
 .coach-hint__markdown .coach-chat__table-wrap { max-width: 100%; overflow-x: auto; }
-.coach-hint__markdown table { width: 100%; min-width: 440px; border-collapse: collapse; font-size: 13px; line-height: 1.5; }
+.coach-hint__markdown table { width: 100%; min-width: 440px; border-collapse: collapse; font-size: 14px; line-height: 1.55; }
 .coach-hint__markdown th,
-.coach-hint__markdown td { border-bottom: 1px solid rgba(126, 151, 174, .17); padding: 8px 10px; text-align: left; vertical-align: top; }
-.coach-hint__markdown th { color: var(--p-text); background: rgba(100, 231, 220, .08); font-weight: 720; }
+.coach-hint__markdown td { border-bottom: 1px solid rgba(126, 151, 174, .2); padding: 10px 12px; text-align: left; vertical-align: top; }
+.coach-hint__markdown th { color: #ffffff; background: rgba(100, 231, 220, .1); font-weight: 700; }
 .coach-hint__markdown td { color: var(--p-text-2); }
 .coach-hint__markdown tr:last-child td { border-bottom: 0; }
-.coach-hint__markdown pre { max-width: 100%; overflow-x: auto; margin: 2px 0; border: 1px solid var(--p-line); border-radius: 7px; padding: 10px; background: #070b10; }
-.coach-hint__markdown pre code { color: #c8fff9; font: 13px/1.6 "JetBrains Mono", ui-monospace, monospace; }
-.coach-hint__chunk { position: relative; z-index: 1; display: inline; border-radius: 4px; padding: .08em .16em; background: rgba(100, 231, 220, .055); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.coach-hint__chunk--b { background: rgba(100, 231, 220, .095); }
-.coach-hint__chunk:hover { z-index: 2; color: #fff; background: rgba(100, 231, 220, .16); box-shadow: 0 8px 22px rgba(0, 0, 0, .24); }
+.coach-hint__markdown pre { max-width: 100%; overflow-x: auto; margin: 4px 0; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 12px 15px; background: #06090e; }
+.coach-hint__markdown pre code { color: #c8fff9; font: 14px/1.65 "JetBrains Mono", ui-monospace, monospace; }
+.coach-hint__chunk { position: relative; z-index: 1; display: inline; border-radius: 4px; padding: .08em .2em; background: rgba(100, 231, 220, .07); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.coach-hint__chunk--b { background: rgba(100, 231, 220, .12); }
+.coach-hint__chunk:hover { z-index: 2; color: #fff; background: rgba(100, 231, 220, .2); box-shadow: 0 8px 22px rgba(0, 0, 0, .3); }
 .coach-hint__chunk:hover * { color: #fff !important; }
 .coach-hint__chunk:hover code { color: #c8fff9 !important; }
-.coach-hint__chunk code { border: 1px solid var(--p-line); border-radius: 4px; padding: 1px 4px; color: #c8fff9; background: #080d12; font: 12px "JetBrains Mono", ui-monospace, monospace; }
+.coach-hint__chunk code { border: 1px solid var(--p-line); border-radius: 4px; padding: 2px 6px; color: #c8fff9; background: #080d12; font: 13.5px "JetBrains Mono", ui-monospace, monospace; }
 
 /* Coach-hint chunks are rendered as inline markdown spans rather than the
    ReadingChunks component. Give them the same global spotlight behavior so
@@ -7826,13 +7827,13 @@ body { background: var(--p-bg); }
 .coach-hint__generating-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
+  gap: 6px;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(167, 139, 250, 0.2);
-  border: 1px solid rgba(167, 139, 250, 0.5);
-  color: #ddd6fe;
-  font: 700 10.5px/1 "JetBrains Mono", ui-monospace, monospace;
+  background: rgba(167, 139, 250, 0.22);
+  border: 1px solid rgba(167, 139, 250, 0.55);
+  color: #ede9fe;
+  font: 700 11.5px/1 "JetBrains Mono", ui-monospace, monospace;
   animation: aiGeneratePulse 1.4s infinite ease-in-out;
 }
 
@@ -7841,32 +7842,32 @@ body { background: var(--p-bg); }
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  padding-top: 14px;
-  margin-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 16px;
+  margin-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .coach-hint__incorporate-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  min-height: 38px;
-  padding: 0 16px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(167, 139, 250, 0.22) 0%, rgba(139, 92, 246, 0.35) 100%);
-  border: 1px solid rgba(167, 139, 250, 0.5);
-  color: #f5f3ff;
-  font: 600 13px/1 Inter, -apple-system, sans-serif;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.26) 0%, rgba(139, 92, 246, 0.44) 100%);
+  border: 1px solid rgba(167, 139, 250, 0.55);
+  color: #ffffff;
+  font: 600 14px/1 Inter, -apple-system, sans-serif;
   cursor: pointer;
   transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
 .coach-hint__incorporate-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(167, 139, 250, 0.36) 0%, rgba(139, 92, 246, 0.52) 100%);
-  border-color: rgba(196, 181, 253, 0.8);
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.42) 0%, rgba(139, 92, 246, 0.6) 100%);
+  border-color: rgba(196, 181, 253, 0.9);
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(167, 139, 250, 0.4);
+  box-shadow: 0 0 20px rgba(167, 139, 250, 0.45);
   transform: translateY(-1px);
 }
 

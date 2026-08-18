@@ -13,11 +13,43 @@ export function CoachHintTooltip({
   const reservedSpaceRef = useRef(0);
   const detail = String(hint?.detail ?? hint?.text ?? "").trim();
 
+  const updateTooltipPosition = useCallback(() => {
+    const details = detailsRef.current;
+    const tooltip = tooltipRef.current;
+    if (!details || !tooltip || !details.open) return;
+
+    const detailsRect = details.getBoundingClientRect();
+    const vw = window.visualViewport?.width || window.innerWidth || document.documentElement.clientWidth;
+    const vh = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight;
+    const modal = details.closest(".lesson-modal");
+    const topBoundary = modal ? Math.max(16, modal.getBoundingClientRect().top + 16) : 16;
+
+    const margin = 16;
+    const desiredWidth = Math.min(800, vw - margin * 2);
+
+    let leftOffset = 0;
+    const tooltipRight = detailsRect.left + desiredWidth;
+    if (tooltipRight > vw - margin) {
+      leftOffset = (vw - margin) - tooltipRight;
+    }
+    if (detailsRect.left + leftOffset < margin) {
+      leftOffset = margin - detailsRect.left;
+    }
+
+    const availableHeight = Math.max(220, (detailsRect.top - 12) - topBoundary);
+
+    tooltip.style.setProperty("--tooltip-width", `${desiredWidth}px`);
+    tooltip.style.setProperty("--tooltip-left", `${leftOffset}px`);
+    tooltip.style.setProperty("--tooltip-max-height", `${availableHeight}px`);
+  }, []);
+
   const measureTooltipSpace = useCallback(() => {
     const details = detailsRef.current;
     const tooltip = tooltipRef.current;
     const footer = details?.closest(".live-review");
     if (!details || !tooltip || !footer) return;
+
+    updateTooltipPosition();
 
     const footerRect = footer.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
@@ -27,19 +59,21 @@ export function CoachHintTooltip({
     if (nextSpace === reservedSpaceRef.current) return;
     reservedSpaceRef.current = nextSpace;
     onTooltipSpaceChange?.(nextSpace);
-  }, [onTooltipSpaceChange]);
+  }, [onTooltipSpaceChange, updateTooltipPosition]);
 
   const prepareTooltipLayout = useCallback(() => {
     const details = detailsRef.current;
     if (!details) return;
 
     details.dataset.layoutReady = "false";
+    updateTooltipPosition();
     measureTooltipSpace();
     requestAnimationFrame(() => {
+      updateTooltipPosition();
       measureTooltipSpace();
       if (details.isConnected) details.dataset.layoutReady = "true";
     });
-  }, [measureTooltipSpace]);
+  }, [measureTooltipSpace, updateTooltipPosition]);
 
   useLayoutEffect(() => {
     prepareTooltipLayout();
@@ -48,18 +82,28 @@ export function CoachHintTooltip({
     const footer = details?.closest(".live-review");
     if (!details || !tooltip || !footer) return undefined;
 
+    const handleResize = () => {
+      updateTooltipPosition();
+      measureTooltipSpace();
+    };
+
     const resizeObserver = typeof ResizeObserver === "function"
-      ? new ResizeObserver(measureTooltipSpace)
+      ? new ResizeObserver(handleResize)
       : null;
     resizeObserver?.observe(tooltip);
     resizeObserver?.observe(footer);
-    window.addEventListener("resize", measureTooltipSpace);
+    window.addEventListener("resize", handleResize);
+    window.visualViewport?.addEventListener("resize", handleResize);
+    window.visualViewport?.addEventListener("scroll", handleResize);
+
     return () => {
       resizeObserver?.disconnect();
-      window.removeEventListener("resize", measureTooltipSpace);
+      window.removeEventListener("resize", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleResize);
+      window.visualViewport?.removeEventListener("scroll", handleResize);
       onTooltipSpaceChange?.(0);
     };
-  }, [measureTooltipSpace, onTooltipSpaceChange, prepareTooltipLayout]);
+  }, [measureTooltipSpace, onTooltipSpaceChange, prepareTooltipLayout, updateTooltipPosition]);
 
   useEffect(() => {
     const closeOnOutsidePointer = (event) => {
