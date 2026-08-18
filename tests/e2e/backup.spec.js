@@ -46,11 +46,11 @@ test.describe("backup de estado e2e", () => {
     expect(backup.app).toBe("learning-workspace");
     expect(backup.kind).toBe("state-backup");
     expect(backup.version).toBe(1);
-    expect(backup.secretsIncluded).toBe(false);
+    expect(backup.secretsIncluded).toBe(true);
     expect(Object.keys(backup.learning)).toEqual(["attempts", "drafts", "liveReviews", "coachIterations"]);
     expect(backup.providers.profiles[0].label).toBe("Endpoint propio");
-    expect(backup.providers.profiles[0]).not.toHaveProperty("apiKey");
-    expect(JSON.stringify(backup)).not.toContain("SECRET_KEY_123");
+    expect(backup.providers.profiles[0].apiKey).toBe("SECRET_KEY_123");
+    expect(JSON.stringify(backup)).toContain("SECRET_KEY_123");
 
     await page.keyboard.press("Control+k");
     await page.locator(".command-palette__input").fill("respaldo");

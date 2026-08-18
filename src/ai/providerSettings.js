@@ -1,4 +1,4 @@
-﻿import {
+import {
   PROVIDER_ADAPTERS,
   PROVIDER_LIBRARY,
   PROVIDER_PRESETS,
@@ -143,14 +143,28 @@ export async function exportProviderSettings() {
   return {
     version: stored.version,
     activeProfileId: stored.activeProfileId,
-    profiles: stored.profiles.map(({ apiKey: _apiKey, ...profile }) => profile),
+    profiles: stored.profiles.map((profile) => ({ ...profile })),
   };
 }
 
 export async function importProviderSettings(value) {
-  const stored = normalizeProviderState(value);
-  await writeStoredState(stored);
-  return stored;
+  const existing = await readStoredState();
+  const incoming = normalizeProviderState(value);
+  const mergedProfiles = incoming.profiles.map((incomingProfile) => {
+    if (!incomingProfile.apiKey) {
+      const match = existing.profiles.find((p) => p.id === incomingProfile.id);
+      if (match?.apiKey) {
+        return { ...incomingProfile, apiKey: match.apiKey };
+      }
+    }
+    return incomingProfile;
+  });
+  const finalState = {
+    ...incoming,
+    profiles: mergedProfiles,
+  };
+  await writeStoredState(finalState);
+  return finalState;
 }
 
 async function upsertProvider(value, { activate, requireModel }) {

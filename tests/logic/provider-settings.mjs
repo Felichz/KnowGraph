@@ -50,4 +50,23 @@ assert.equal((await loadProviderProfile())?.id, savedGroq.id, "Activar una conex
 await removeProviderProfile(savedGroq.id);
 assert.equal(await loadProviderProfile(), null, "Eliminar la conexión activa debe volver al provider del gateway");
 
-console.log("Provider settings OK: migración v3, conexiones múltiples y selección activa.");
+const { exportProviderSettings, importProviderSettings } = await import("../../src/ai/providerSettings.js");
+const exported = await exportProviderSettings();
+assert.equal(exported.profiles[0].apiKey, "custom-key", "La exportación debe conservar el API key de cada profile");
+
+const imported = await importProviderSettings({
+  version: 4,
+  activeProfileId: "provider_imported_1",
+  profiles: [{
+    id: "provider_imported_1",
+    label: "Imported Service",
+    adapter: "custom",
+    baseUrl: "https://api.imported.example/v1",
+    apiKey: "imported-secret-key-123",
+    model: "imported-model",
+  }],
+});
+assert.equal(imported.profiles[0].apiKey, "imported-secret-key-123", "La importación debe restaurar el API key de cada profile");
+
+console.log("Provider settings OK: migración v3, conexiones múltiples, exportación e importación con API keys y selección activa.");
+

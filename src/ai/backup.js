@@ -21,7 +21,7 @@ export async function createBackup() {
     kind: BACKUP_KIND,
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
-    secretsIncluded: false,
+    secretsIncluded: true,
     learning,
     providers,
   };
