@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { coachChatStream, evaluateParaphraseStream, generateParaphraseStream, improveParaphraseStream, isCancel, liveReviewStream, reconcileParaphraseStream, userFacingAiError } from "../ai/client.js";
+import { coachChatStream, evaluateParaphraseStream, generateParaphraseStream, improveParaphraseStream, isCancel, liveReviewStream, polishParaphraseStream, reconcileParaphraseStream, userFacingAiError } from "../ai/client.js";
 import {
   getDraft,
   getDraftRecord,
@@ -52,6 +52,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
   const [paraphraseMode, setParaphraseMode] = useState(null);
   const [paraphraseProgress, setParaphraseProgress] = useState(0);
   const [aiTooltipOpen, setAiTooltipOpen] = useState(false);
+  const [polishTooltipOpen, setPolishTooltipOpen] = useState(false);
   const paraphraseControllerRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
@@ -588,6 +589,58 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     }
   }, [activeChatIteration, cancelLiveReview, cancelParaphraseGeneration, draft, graphId, isGeneratingParaphrase, node, providerProfile, startLiveReview]);
 
+  const handlePolishPedagogy = useCallback(async () => {
+    if (isGeneratingParaphrase) {
+      cancelParaphraseGeneration();
+      return;
+    }
+
+    if (!draft.trim() || draft.trim().length < 20) {
+      return;
+    }
+
+    cancelLiveReview();
+    const controller = new AbortController();
+    paraphraseControllerRef.current = controller;
+    setIsGeneratingParaphrase(true);
+    setParaphraseMode("polish");
+    setParaphraseProgress(0);
+    userEditedDraftRef.current = false;
+
+    let accumulated = "";
+    try {
+      const result = await polishParaphraseStream({
+        node,
+        currentDraft: draft,
+        provider: providerProfile,
+        signal: controller.signal,
+        onProgress: (length) => {
+          setParaphraseProgress(length);
+        },
+        onDelta: (delta) => {
+          accumulated += delta;
+          setDraftState(accumulated);
+          draftRef.current = accumulated;
+        },
+      });
+
+      const finalText = result.text || accumulated;
+      setDraftState(finalText);
+      draftRef.current = finalText;
+      setIsDraftAiGenerated(true);
+      await setDraft(graphId, node.id, finalText, { isAiGenerated: true, generatedAt: new Date().toISOString() });
+      startLiveReview(finalText);
+    } catch (err) {
+      if (!isCancel(err)) {
+        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "No se pudo hacer la explicación más pedagógica con IA.") });
+      }
+    } finally {
+      setIsGeneratingParaphrase(false);
+      setParaphraseMode(null);
+      paraphraseControllerRef.current = null;
+    }
+  }, [cancelLiveReview, cancelParaphraseGeneration, draft, graphId, isGeneratingParaphrase, node, providerProfile, startLiveReview]);
+
   useEffect(() => {
     if (!debounceStartedAt) return undefined;
     const onKeyDown = (event) => {
@@ -1009,6 +1062,49 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
                           </p>
                           <p>
                             <strong>Identificación en Flashcards:</strong> La card queda taggeada como <em>✨ Generada con IA</em> para que luego puedas filtrarla al instante y ensayarla manualmente desde cero cuando tengas más tiempo.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="ai-polish-wrapper">
+                    <button
+                      type="button"
+                      className={`ai-polish-button ${isGeneratingParaphrase && paraphraseMode === "polish" ? "is-generating" : ""}`}
+                      onClick={handlePolishPedagogy}
+                      disabled={isGeneratingParaphrase || Boolean(pending) || !draft.trim() || draft.trim().length < 20}
+                      aria-label={isGeneratingParaphrase && paraphraseMode === "polish" ? "Reescribiendo con máxima claridad didáctica..." : "Hacer más pedagógico y claro con IA"}
+                      title="Reescribe tu respuesta para desarmar la jerga densa, estructurar párrafos cortos y hacerla intuitiva y didáctica (Skill Pedagógica)"
+                    >
+                      <span className="ai-polish-button__icon" aria-hidden="true">💡</span>
+                      <span>{isGeneratingParaphrase && paraphraseMode === "polish" ? "Haciendo didáctico..." : "Hacer más pedagógico"}</span>
+                    </button>
+
+                    <div className="ai-polish-tooltip-wrapper">
+                      <button
+                        type="button"
+                        className="ai-polish-tooltip-trigger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPolishTooltipOpen((v) => !v);
+                        }}
+                        onMouseEnter={() => setPolishTooltipOpen(true)}
+                        onMouseLeave={() => setPolishTooltipOpen(false)}
+                        aria-label="¿Qué hace la opción de Hacer más pedagógico?"
+                        title="¿Qué hace la opción de Hacer más pedagógico?"
+                      >
+                        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M10 8.5v5M10 5.8v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                      </button>
+                      {polishTooltipOpen && (
+                        <div className="ai-polish-tooltip-popover" role="tooltip">
+                          <div className="ai-polish-tooltip-badge">💡 SKILL PEDAGÓGICA Y DIDÁCTICA</div>
+                          <strong className="ai-polish-tooltip-title">Claridad para enseñar, no para resumir</strong>
+                          <p>
+                            <strong>Desarma la jerga densa:</strong> Si el texto amontona 10 conceptos abstractos seguidos o parece un monólogo técnico denso, esta opción lo reescribe paso a paso con modelos mentales claros.
+                          </p>
+                          <p>
+                            <strong>Párrafos cortos y respirables:</strong> Separa las ideas en bloques de 3 a 4 líneas con transiciones fluidas, causa-efecto comprensible y un cierre memorable.
                           </p>
                         </div>
                       )}

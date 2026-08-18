@@ -486,4 +486,21 @@ export function buildReconcileChatUserPayload({ node, currentDraft, messages = [
   return lines.join("\n\n");
 }
 
+export function buildPolishPedagogyUserPayload({ node, currentDraft }) {
+  const lesson = node?.lesson ?? {};
+  const lines = [
+    `CONCEPTO A ENSEÑAR: ${node?.label ?? node?.title ?? node?.id ?? "Concepto técnico"}`,
+    `TEXTO ACTUAL A REESCRIBIR DE MANERA DIDÁCTICA Y HUMANA:\n"""\n${String(currentDraft ?? "").trim()}\n"""`,
+  ];
+  if (lesson.summary) lines.push(`RESUMEN ESENCIAL DE REFERENCIA:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`POR QUÉ IMPORTA / CASO DE USO REAL:\n${lesson.why}`);
+  if (lesson.explanation) lines.push(`EXPLICACIÓN CANÓNICA:\n${lesson.explanation}`);
+  if (lesson.code) lines.push(`CÓDIGO DE REFERENCIA:\n\`\`\`\n${lesson.code}\n\`\`\``);
+  if (Array.isArray(lesson.pitfalls) && lesson.pitfalls.length > 0) {
+    lines.push(`ERRORES Y TRADE-OFFS CLAVE:\n${lesson.pitfalls.map((p) => `- ${p}`).join("\n")}`);
+  }
+  if (lesson.takeaway) lines.push(`REGLA PRÁCTICA FINAL:\n${lesson.takeaway}`);
+  return lines.join("\n\n");
+}
+
 

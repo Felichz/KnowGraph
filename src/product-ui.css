@@ -7784,6 +7784,140 @@ body { background: var(--p-bg); }
   font-weight: 600;
 }
 
+.ai-polish-wrapper {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  gap: 6px;
+}
+
+.ai-polish-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(217, 119, 6, 0.22) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  color: #fde68a;
+  font: 600 12px/1 Inter, -apple-system, sans-serif;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.ai-polish-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.38) 100%);
+  border-color: rgba(252, 211, 77, 0.7);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.3);
+  transform: translateY(-1px);
+}
+
+.ai-polish-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ai-polish-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ai-polish-button.is-generating {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.28) 0%, rgba(251, 191, 36, 0.38) 100%);
+  border-color: #fbbf24;
+  color: #ffffff;
+  animation: aiPolishPulse 1.4s infinite ease-in-out;
+}
+
+.ai-polish-button__icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+@keyframes aiPolishPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+}
+
+.ai-polish-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ai-polish-tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--p-text-3, #94a3b8);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.ai-polish-tooltip-trigger svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ai-polish-tooltip-trigger:hover,
+.ai-polish-tooltip-trigger:focus-visible {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fde68a;
+}
+
+.ai-polish-tooltip-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: -20px;
+  width: min(340px, 86vw);
+  background: #0f172a;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 16px rgba(245, 158, 11, 0.15);
+  z-index: 1000;
+  animation: tooltipFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+}
+
+.ai-polish-tooltip-badge {
+  display: inline-block;
+  font: 700 9.5px/1 "JetBrains Mono", ui-monospace, monospace;
+  color: #fbbf24;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.ai-polish-tooltip-title {
+  display: block;
+  font: 600 13px/1.3 Inter, sans-serif;
+  color: #f8fafc;
+  margin-bottom: 8px;
+}
+
+.ai-polish-tooltip-popover p {
+  margin: 0 0 8px 0;
+  font: 400 11.5px/1.5 Inter, sans-serif;
+  color: #cbd5e1;
+}
+
+.ai-polish-tooltip-popover p:last-child {
+  margin-bottom: 0;
+}
+
+.ai-polish-tooltip-popover strong {
+  color: #f1f5f9;
+}
+
 .ai-generated-tag {
   display: inline-flex;
   align-items: center;

@@ -67,5 +67,22 @@ assert.equal(hash1, hash2, "El hash debe ser determinista para el mismo draft y 
 assert.notEqual(hash1, hashDiffDraft, "Cambiar el borrador debe invalidar el hash previo");
 assert.notEqual(hash1, hashDiffMessages, "Agregar un mensaje al chat debe invalidar el hash previo");
 
+// Test Polish Pedagogy Schema and Prompt
+const { buildPolishPedagogyUserPayload } = await import("../../server/ai/schemas.js");
+const { POLISH_PEDAGOGY_SYSTEM_PROMPT } = await import("../../server/ai/prompts.js");
+
+const polishPayload = buildPolishPedagogyUserPayload({
+  node: sampleNode,
+  currentDraft: "La autenticación en una arquitectura React + API no es un monolito, sino un reparto...",
+});
+
+assert.ok(polishPayload.includes("CONCEPTO A ENSEÑAR: useEffect"));
+assert.ok(polishPayload.includes("TEXTO ACTUAL A REESCRIBIR DE MANERA DIDÁCTICA Y HUMANA:"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("SKILL PEDAGÓGICA Y DIDÁCTICA"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("MODELO MENTAL Y ENCUADRE INTUITIVO"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("DESGLOSE PROGRESIVO"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("CONTROL DE DENSIDAD Y PÁRRAFOS CORTOS"));
+
 console.log("paraphrase AI schemas & prompts: OK");
+
 
