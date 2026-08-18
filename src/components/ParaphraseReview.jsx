@@ -243,119 +243,6 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     }
   }, []);
 
-  const cancelParaphraseGeneration = useCallback(() => {
-    if (paraphraseControllerRef.current) {
-      paraphraseControllerRef.current.abort();
-      paraphraseControllerRef.current = null;
-    }
-    setIsGeneratingParaphrase(false);
-    setParaphraseMode(null);
-  }, []);
-
-  const handleGenerateAiParaphrase = useCallback(async () => {
-    if (isGeneratingParaphrase) {
-      cancelParaphraseGeneration();
-      return;
-    }
-
-    if (draft.trim().length > 40 && !isDraftAiGenerated) {
-      const confirmed = window.confirm(
-        "Ya escribiste parte de tu respuesta. ¿Querés reemplazarla con una paráfrasis pedagógica completa generada con IA?"
-      );
-      if (!confirmed) return;
-    }
-
-    cancelLiveReview();
-    const controller = new AbortController();
-    paraphraseControllerRef.current = controller;
-    setIsGeneratingParaphrase(true);
-    setParaphraseMode("generate");
-    setParaphraseProgress(0);
-    userEditedDraftRef.current = false;
-
-    let accumulated = "";
-    try {
-      const result = await generateParaphraseStream({
-        node,
-        provider: providerProfile,
-        signal: controller.signal,
-        onProgress: (length) => {
-          setParaphraseProgress(length);
-        },
-        onDelta: (delta) => {
-          accumulated += delta;
-          setDraftState(accumulated);
-          draftRef.current = accumulated;
-        },
-      });
-
-      const finalText = result.text || accumulated;
-      setDraftState(finalText);
-      draftRef.current = finalText;
-      setIsDraftAiGenerated(true);
-      await setDraft(graphId, node.id, finalText, { isAiGenerated: true, generatedAt: new Date().toISOString() });
-      startLiveReview(finalText);
-    } catch (err) {
-      if (!isCancel(err)) {
-        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "No se pudo generar la paráfrasis con IA.") });
-      }
-    } finally {
-      setIsGeneratingParaphrase(false);
-      setParaphraseMode(null);
-      paraphraseControllerRef.current = null;
-    }
-  }, [cancelLiveReview, cancelParaphraseGeneration, draft, isDraftAiGenerated, isGeneratingParaphrase, node, providerProfile, graphId, startLiveReview]);
-
-  const handleIncorporateFocus = useCallback(async (hintToIncorporate) => {
-    if (isGeneratingParaphrase) {
-      cancelParaphraseGeneration();
-      return;
-    }
-
-    cancelLiveReview();
-    const controller = new AbortController();
-    paraphraseControllerRef.current = controller;
-    setIsGeneratingParaphrase(true);
-    setParaphraseMode("improve");
-    setParaphraseProgress(0);
-    userEditedDraftRef.current = false;
-
-    let accumulated = "";
-    try {
-      const result = await improveParaphraseStream({
-        node,
-        currentDraft: draft,
-        focusTitle: hintToIncorporate?.text ?? "",
-        focusDetail: hintToIncorporate?.detail ?? hintToIncorporate?.text ?? "",
-        provider: providerProfile,
-        signal: controller.signal,
-        onProgress: (length) => {
-          setParaphraseProgress(length);
-        },
-        onDelta: (delta) => {
-          accumulated += delta;
-          setDraftState(accumulated);
-          draftRef.current = accumulated;
-        },
-      });
-
-      const finalText = result.text || accumulated;
-      setDraftState(finalText);
-      draftRef.current = finalText;
-      setIsDraftAiGenerated(true);
-      await setDraft(graphId, node.id, finalText, { isAiGenerated: true, generatedAt: new Date().toISOString() });
-      startLiveReview(finalText);
-    } catch (err) {
-      if (!isCancel(err)) {
-        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "No se pudo incorporar el foco con IA.") });
-      }
-    } finally {
-      setIsGeneratingParaphrase(false);
-      setParaphraseMode(null);
-      paraphraseControllerRef.current = null;
-    }
-  }, [cancelLiveReview, cancelParaphraseGeneration, draft, isGeneratingParaphrase, node, providerProfile, graphId, startLiveReview]);
-
   const startLiveReview = useCallback(async (answer) => {
     const trimmed = answer.trim();
     if (!trimmed || trimmed.length < 20) {
@@ -522,6 +409,119 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     }, 520);
     triggerLiveReviewNow();
   }, [draft, liveStatus, triggerLiveReviewNow]);
+
+  const cancelParaphraseGeneration = useCallback(() => {
+    if (paraphraseControllerRef.current) {
+      paraphraseControllerRef.current.abort();
+      paraphraseControllerRef.current = null;
+    }
+    setIsGeneratingParaphrase(false);
+    setParaphraseMode(null);
+  }, []);
+
+  const handleGenerateAiParaphrase = useCallback(async () => {
+    if (isGeneratingParaphrase) {
+      cancelParaphraseGeneration();
+      return;
+    }
+
+    if (draft.trim().length > 40 && !isDraftAiGenerated) {
+      const confirmed = window.confirm(
+        "Ya escribiste parte de tu respuesta. ¿Querés reemplazarla con una paráfrasis pedagógica completa generada con IA?"
+      );
+      if (!confirmed) return;
+    }
+
+    cancelLiveReview();
+    const controller = new AbortController();
+    paraphraseControllerRef.current = controller;
+    setIsGeneratingParaphrase(true);
+    setParaphraseMode("generate");
+    setParaphraseProgress(0);
+    userEditedDraftRef.current = false;
+
+    let accumulated = "";
+    try {
+      const result = await generateParaphraseStream({
+        node,
+        provider: providerProfile,
+        signal: controller.signal,
+        onProgress: (length) => {
+          setParaphraseProgress(length);
+        },
+        onDelta: (delta) => {
+          accumulated += delta;
+          setDraftState(accumulated);
+          draftRef.current = accumulated;
+        },
+      });
+
+      const finalText = result.text || accumulated;
+      setDraftState(finalText);
+      draftRef.current = finalText;
+      setIsDraftAiGenerated(true);
+      await setDraft(graphId, node.id, finalText, { isAiGenerated: true, generatedAt: new Date().toISOString() });
+      startLiveReview(finalText);
+    } catch (err) {
+      if (!isCancel(err)) {
+        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "No se pudo generar la paráfrasis con IA.") });
+      }
+    } finally {
+      setIsGeneratingParaphrase(false);
+      setParaphraseMode(null);
+      paraphraseControllerRef.current = null;
+    }
+  }, [cancelLiveReview, cancelParaphraseGeneration, draft, isDraftAiGenerated, isGeneratingParaphrase, node, providerProfile, graphId, startLiveReview]);
+
+  const handleIncorporateFocus = useCallback(async (hintToIncorporate) => {
+    if (isGeneratingParaphrase) {
+      cancelParaphraseGeneration();
+      return;
+    }
+
+    cancelLiveReview();
+    const controller = new AbortController();
+    paraphraseControllerRef.current = controller;
+    setIsGeneratingParaphrase(true);
+    setParaphraseMode("improve");
+    setParaphraseProgress(0);
+    userEditedDraftRef.current = false;
+
+    let accumulated = "";
+    try {
+      const result = await improveParaphraseStream({
+        node,
+        currentDraft: draft,
+        focusTitle: hintToIncorporate?.text ?? "",
+        focusDetail: hintToIncorporate?.detail ?? hintToIncorporate?.text ?? "",
+        provider: providerProfile,
+        signal: controller.signal,
+        onProgress: (length) => {
+          setParaphraseProgress(length);
+        },
+        onDelta: (delta) => {
+          accumulated += delta;
+          setDraftState(accumulated);
+          draftRef.current = accumulated;
+        },
+      });
+
+      const finalText = result.text || accumulated;
+      setDraftState(finalText);
+      draftRef.current = finalText;
+      setIsDraftAiGenerated(true);
+      await setDraft(graphId, node.id, finalText, { isAiGenerated: true, generatedAt: new Date().toISOString() });
+      startLiveReview(finalText);
+    } catch (err) {
+      if (!isCancel(err)) {
+        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "No se pudo incorporar el foco con IA.") });
+      }
+    } finally {
+      setIsGeneratingParaphrase(false);
+      setParaphraseMode(null);
+      paraphraseControllerRef.current = null;
+    }
+  }, [cancelLiveReview, cancelParaphraseGeneration, draft, isGeneratingParaphrase, node, providerProfile, graphId, startLiveReview]);
 
   useEffect(() => {
     if (!debounceStartedAt) return undefined;

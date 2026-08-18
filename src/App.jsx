@@ -1276,6 +1276,7 @@ const backupInputRef = useRef(null);
 
   const openLesson = useCallback((node, rememberCurrent = false) => {
     if (!node) return;
+    setWorkspaceNavOpen(false);
     if (selected?.id === node.id) {
       closeLesson();
       return;

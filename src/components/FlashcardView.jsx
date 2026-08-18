@@ -236,7 +236,7 @@ export function FlashcardView({ graph, onOpenNode }) {
       </div>
 
       <div className="flashcards__grid">
-        {cards.map(({ node, attempt }, cardIndex) => {
+        {cards.map(({ node, attempt, isAiGenerated }, cardIndex) => {
           const score = attempt ? getScoreView(attempt.evaluation) : null;
           const status = score?.status;
           const categoryLabel = graph.categories?.[node.cat]?.label ?? node.cat ?? "Concepto";
@@ -263,7 +263,7 @@ export function FlashcardView({ graph, onOpenNode }) {
                     {attempt
                       ? <span className={`flashcard__badge flashcard__badge--${status}`}>{score.displayScore}/120 · {STATUS_LABEL[status]}</span>
                       : <span className="flashcard__badge flashcard__badge--none">Sin intento</span>}
-                    {card.isAiGenerated && (
+                    {isAiGenerated && (
                       <span className="flashcard__ai-badge" title="Esta explicación fue generada automáticamente con IA">
                         ✨ Con IA
                       </span>
