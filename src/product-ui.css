@@ -2228,6 +2228,10 @@ body { background: var(--p-bg); }
 .coach-coverage__tooltip-header > div { display: grid; gap: 4px; }
 .coach-coverage__tooltip-header strong { color: var(--p-text); font-size: 12px; }
 .coach-coverage__tooltip-status { color: var(--p-text-3); font: 800 11px "JetBrains Mono", ui-monospace, monospace; }
+.coach-coverage__tooltip-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.coach-coverage__tooltip-header > div { display: grid; gap: 4px; }
+.coach-coverage__tooltip-header strong { color: var(--p-text); font-size: 12px; }
+.coach-coverage__tooltip-status { color: var(--p-text-3); font: 800 11px "JetBrains Mono", ui-monospace, monospace; }
 .coach-coverage__groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .coach-coverage__group { min-width: 0; }
 .coach-coverage__group h4 { margin: 0 0 7px; color: var(--p-text-3); font: 800 11px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
@@ -2271,6 +2275,7 @@ body { background: var(--p-bg); }
   gap: 14px;
 }
 .coach-chat__header > div { display: grid; gap: 3px; }
+.coach-chat__header-titles { display: grid; gap: 3px; }
 .coach-chat__header span {
   color: var(--p-text-3);
   font: 800 11px "JetBrains Mono", ui-monospace, monospace;
@@ -2278,6 +2283,66 @@ body { background: var(--p-bg); }
 }
 .coach-chat__header strong { color: var(--p-text); font-size: 12px; }
 .coach-chat__header small { color: var(--p-text-3); font-size: 11px; }
+
+.coach-chat__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.coach-chat__reconcile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 11px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.18) 0%, rgba(139, 92, 246, 0.3) 100%);
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  color: #ede9fe;
+  font: 600 11.5px/1 Inter, -apple-system, sans-serif;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.coach-chat__reconcile-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.35) 0%, rgba(139, 92, 246, 0.52) 100%);
+  border-color: rgba(196, 181, 253, 0.85);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(167, 139, 250, 0.4);
+  transform: translateY(-1px);
+}
+
+.coach-chat__reconcile-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.coach-chat__reconcile-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.coach-chat__reconcile-btn.is-reconciled {
+  background: rgba(100, 231, 220, 0.08);
+  border-color: rgba(100, 231, 220, 0.35);
+  color: #a7f3d0;
+  opacity: 0.88;
+  cursor: default;
+}
+
+.coach-chat__reconcile-btn.is-generating {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(192, 132, 252, 0.45) 100%);
+  border-color: #c084fc;
+  color: #ffffff;
+  animation: aiGeneratePulse 1.4s infinite ease-in-out;
+}
+
+.coach-chat__reconcile-icon {
+  font-size: 12px;
+}
+
 .coach-chat__messages { display: grid; gap: 9px; min-height: 0; overflow: visible; padding: 2px 5px 2px 0; }
 .coach-chat__message { display: grid; max-width: min(88%, 680px); gap: 4px; border-radius: 9px; padding: 10px 12px; }
 .coach-chat__message > span { color: var(--p-text-3); font: 800 11px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .1em; }

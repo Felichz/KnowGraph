@@ -2,7 +2,18 @@ import React, { useEffect, useRef, useState } from "react";
 import { LiveRequestFeedback } from "./LiveRequestFeedback.jsx";
 import { ReadingChunks, splitReadingChunks } from "./ReadingChunks.jsx";
 
-export function CoachChat({ iteration, status = "idle", streamingText = "", progress, error, onSend, onStop }) {
+export function CoachChat({
+  iteration,
+  status = "idle",
+  streamingText = "",
+  progress,
+  error,
+  onSend,
+  onStop,
+  onReconcile,
+  isReconciling = false,
+  isAlreadyReconciled = false,
+}) {
   const [question, setQuestion] = useState("");
   const endRef = useRef(null);
   const running = status === "running";
@@ -27,11 +38,40 @@ export function CoachChat({ iteration, status = "idle", streamingText = "", prog
   return (
     <section className="coach-chat" aria-label="Conversación con el coach">
       <header className="coach-chat__header">
-        <div>
+        <div className="coach-chat__header-titles">
           <span>CONVERSACIÓN DE ESTA ITERACIÓN</span>
           <strong>Preguntale al coach</strong>
         </div>
-        {messages.length > 0 && <small>{messages.length} mensaje{messages.length === 1 ? "" : "s"}</small>}
+        <div className="coach-chat__header-actions">
+          {onReconcile && (
+            <button
+              type="button"
+              className={`coach-chat__reconcile-btn ${isReconciling ? "is-generating" : ""} ${isAlreadyReconciled ? "is-reconciled" : ""}`}
+              onClick={onReconcile}
+              disabled={isReconciling || isAlreadyReconciled || running || messages.length === 0}
+              title={
+                messages.length === 0
+                  ? "Hacé preguntas en el chat para que la IA pueda integrar las aclaraciones y respuestas en tu borrador"
+                  : isAlreadyReconciled
+                    ? "El borrador actual ya contiene integradas todas las respuestas y aclaraciones de este chat"
+                    : "Reconcilia el borrador actual integrando las respuestas, ejemplos y dudas aclaradas en este chat con IA"
+              }
+              aria-label={isAlreadyReconciled ? "Chat ya reconciliado con la respuesta" : "Integrar dudas y respuestas del chat a mi respuesta"}
+            >
+              <span className="coach-chat__reconcile-icon" aria-hidden="true">
+                {isAlreadyReconciled ? "✓" : "✨"}
+              </span>
+              <span>
+                {isReconciling
+                  ? "Reconciliando con IA..."
+                  : isAlreadyReconciled
+                    ? "Reconciliado con el chat"
+                    : "Integrar chat a mi respuesta"}
+              </span>
+            </button>
+          )}
+          {messages.length > 0 && <small>{messages.length} mensaje{messages.length === 1 ? "" : "s"}</small>}
+        </div>
       </header>
 
       {!iteration ? (

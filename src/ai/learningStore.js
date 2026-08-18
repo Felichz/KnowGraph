@@ -176,6 +176,20 @@ export async function updateCoachIterationMessages(iterationId, messages) {
   await tx.done;
 }
 
+export async function updateCoachIterationReconciledHash(iterationId, reconciledHash) {
+  const db = await getDb();
+  const tx = db.transaction("coachIterations", "readwrite");
+  const iteration = await tx.store.get(iterationId);
+  if (iteration) {
+    await tx.store.put({
+      ...iteration,
+      reconciledHash,
+      reconciledAt: new Date().toISOString(),
+    });
+  }
+  await tx.done;
+}
+
 export async function listAllAttempts() {
   const db = await getDb();
   const tx = db.transaction("attempts", "readonly");

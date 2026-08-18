@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { coachChatStream, evaluateParaphraseStream, generateParaphraseStream, improveParaphraseStream, isCancel, liveReviewStream, userFacingAiError } from "../ai/client.js";
+import { coachChatStream, evaluateParaphraseStream, generateParaphraseStream, improveParaphraseStream, isCancel, liveReviewStream, reconcileParaphraseStream, userFacingAiError } from "../ai/client.js";
 import {
   getDraft,
   getDraftRecord,
@@ -11,8 +11,9 @@ import {
   saveCoachIteration,
   saveLiveReview,
   updateCoachIterationMessages,
+  updateCoachIterationReconciledHash,
 } from "../ai/learningStore.js";
-import { hashAnswer, hashCardContent } from "../ai/contentHash.js";
+import { hashAnswer, hashCardContent, hashReconcileInput } from "../ai/contentHash.js";
 import { buildLiveReviewState, normalizeLiveReviewState } from "../ai/liveReview.js";
 import { EvaluationFeedback } from "./EvaluationFeedback.jsx";
 import { AttemptHistory } from "./AttemptHistory.jsx";
@@ -523,6 +524,70 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     }
   }, [cancelLiveReview, cancelParaphraseGeneration, draft, isGeneratingParaphrase, node, providerProfile, graphId, startLiveReview]);
 
+  const handleReconcileChatWithDraft = useCallback(async () => {
+    if (isGeneratingParaphrase) {
+      cancelParaphraseGeneration();
+      return;
+    }
+
+    const messages = activeChatIteration?.messages || [];
+    if (messages.length === 0) return;
+
+    const inputHash = hashReconcileInput(draft, messages);
+    if (activeChatIteration?.reconciledHash === inputHash) return;
+
+    cancelLiveReview();
+    const controller = new AbortController();
+    paraphraseControllerRef.current = controller;
+    setIsGeneratingParaphrase(true);
+    setParaphraseMode("reconcile");
+    setParaphraseProgress(0);
+    userEditedDraftRef.current = false;
+
+    let accumulated = "";
+    try {
+      const result = await reconcileParaphraseStream({
+        node,
+        currentDraft: draft,
+        messages,
+        provider: providerProfile,
+        signal: controller.signal,
+        onProgress: (length) => {
+          setParaphraseProgress(length);
+        },
+        onDelta: (delta) => {
+          accumulated += delta;
+          setDraftState(accumulated);
+          draftRef.current = accumulated;
+        },
+      });
+
+      const finalText = result.text || accumulated;
+      setDraftState(finalText);
+      draftRef.current = finalText;
+      setIsDraftAiGenerated(true);
+      await setDraft(graphId, node.id, finalText, { isAiGenerated: true, generatedAt: new Date().toISOString() });
+
+      // Save reconciledHash on the iteration
+      if (activeChatIteration?.id) {
+        const nextHash = hashReconcileInput(finalText, messages);
+        await updateCoachIterationReconciledHash(activeChatIteration.id, nextHash);
+        const storedIterations = await listCoachIterations(graphId, node.id);
+        setCoachIterations(storedIterations);
+      }
+
+      startLiveReview(finalText);
+    } catch (err) {
+      if (!isCancel(err)) {
+        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "No se pudo reconciliar el borrador con el chat.") });
+      }
+    } finally {
+      setIsGeneratingParaphrase(false);
+      setParaphraseMode(null);
+      paraphraseControllerRef.current = null;
+    }
+  }, [activeChatIteration, cancelLiveReview, cancelParaphraseGeneration, draft, graphId, isGeneratingParaphrase, node, providerProfile, startLiveReview]);
+
   useEffect(() => {
     if (!debounceStartedAt) return undefined;
     const onKeyDown = (event) => {
@@ -1021,20 +1086,30 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
             onIncorporateFocus={isViewingCoachHistory ? undefined : handleIncorporateFocus}
             isIncorporatingFocus={isGeneratingParaphrase && paraphraseMode === "improve"}
           />
-          {visibleCoachReview?.hint && (
-            <LiveHint
-              key={`${selectedCoachIteration?.id ?? "draft"}:${visibleCoachReview.hint.id ?? visibleCoachReview.hint.text}`}
-              chatProps={{
-                iteration: activeChatIteration,
-                status: chatState.iterationId === activeChatIteration?.id ? chatState.status : "idle",
-                streamingText: chatState.iterationId === activeChatIteration?.id ? chatState.streamingText : "",
-                progress: chatState.iterationId === activeChatIteration?.id ? chatState.progress : null,
-                error: chatState.iterationId === activeChatIteration?.id ? chatState.error : null,
-                onSend: sendCoachQuestion,
-                onStop: stopCoachResponse,
-              }}
-            />
-          )}
+          {visibleCoachReview?.hint && (() => {
+            const currentReconcileHash = hashReconcileInput(draft, activeChatIteration?.messages || []);
+            const isAlreadyReconciled = Boolean(
+              activeChatIteration?.reconciledHash
+              && activeChatIteration.reconciledHash === currentReconcileHash
+            );
+            return (
+              <LiveHint
+                key={`${selectedCoachIteration?.id ?? "draft"}:${visibleCoachReview.hint.id ?? visibleCoachReview.hint.text}`}
+                chatProps={{
+                  iteration: activeChatIteration,
+                  status: chatState.iterationId === activeChatIteration?.id ? chatState.status : "idle",
+                  streamingText: chatState.iterationId === activeChatIteration?.id ? chatState.streamingText : "",
+                  progress: chatState.iterationId === activeChatIteration?.id ? chatState.progress : null,
+                  error: chatState.iterationId === activeChatIteration?.id ? chatState.error : null,
+                  onSend: sendCoachQuestion,
+                  onStop: stopCoachResponse,
+                  onReconcile: isViewingCoachHistory ? undefined : handleReconcileChatWithDraft,
+                  isReconciling: isGeneratingParaphrase && paraphraseMode === "reconcile",
+                  isAlreadyReconciled,
+                }}
+              />
+            );
+          })()}
           <CoachIterationHistory
             iterations={coachIterations}
             attempts={attempts}

@@ -407,6 +407,64 @@ export async function improveParaphraseStream({
   return finalPayload;
 }
 
+export async function reconcileParaphraseStream({
+  node,
+  currentDraft,
+  messages,
+  provider,
+  signal,
+  onProgress,
+  onDelta,
+} = {}) {
+  const res = await fetch(aiUrl("/api/ai/paraphrase/reconcile/stream"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ node, currentDraft, messages, provider }),
+    signal,
+  });
+
+  if (!res.ok || !res.body) {
+    let body = {};
+    try { body = await res.json(); } catch {}
+    throw new AiError(body.code ?? "upstream", body.message ?? `HTTP ${res.status}`, body.details);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let finalPayload = null;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let separator;
+      while ((separator = findSseSeparator(buffer)) !== null) {
+        const raw = buffer.slice(0, separator.start);
+        buffer = buffer.slice(separator.start + separator.length);
+        const event = parseSseEvent(raw);
+        if (!event.data) continue;
+        let payload;
+        try { payload = JSON.parse(event.data); } catch {
+          throw new AiError("upstream", "El gateway envió un evento inválido", null);
+        }
+        if (event.name === "progress") onProgress?.(payload.length ?? 0, payload.stage ?? "generating");
+        else if (event.name === "delta") onDelta?.(payload.text ?? "", payload.length ?? 0);
+        else if (event.name === "done") finalPayload = payload;
+        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
+      }
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+
+  if (!finalPayload?.text) {
+    throw new AiError("upstream", "La reconciliación terminó sin un texto válido", null);
+  }
+  return finalPayload;
+}
+
+
 function findSseSeparator(buffer) {
   const lf = buffer.indexOf("\n\n");
   const crlf = buffer.indexOf("\r\n\r\n");

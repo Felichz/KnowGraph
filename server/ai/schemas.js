@@ -464,4 +464,26 @@ export function buildIncorporateFocusUserPayload({ node, currentDraft, focusTitl
   return lines.join("\n\n");
 }
 
+export function buildReconcileChatUserPayload({ node, currentDraft, messages = [] }) {
+  const lesson = node?.lesson ?? {};
+  const formattedChat = (Array.isArray(messages) ? messages : [])
+    .filter((m) => m && m.content)
+    .map((m, idx) => {
+      const roleLabel = m.role === "assistant" ? "COACH" : "ESTUDIANTE";
+      return `[Mensaje ${idx + 1} - ${roleLabel}]:\n${m.content}`;
+    })
+    .join("\n\n");
+
+  const lines = [
+    `CONCEPTO: ${node?.label ?? node?.title ?? "Tema"}`,
+    `BORRADOR ACTUAL DEL ESTUDIANTE:\n"""\n${String(currentDraft ?? "").trim()}\n"""`,
+    `CONVERSACIÓN DEL CHAT CON EL COACH (Dudas, aclaraciones y explicaciones):\n"""\n${formattedChat || "Sin mensajes en el chat"}\n"""`,
+  ];
+  if (lesson.summary) lines.push(`RESUMEN CANÓNICO DE REFERENCIA:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`POR QUÉ IMPORTA:\n${lesson.why}`);
+  if (lesson.code) lines.push(`CÓDIGO DE REFERENCIA:\n\`\`\`\n${lesson.code}\n\`\`\``);
+  if (lesson.takeaway) lines.push(`REGLA DE CIERRE RECOMENDADA:\n${lesson.takeaway}`);
+  return lines.join("\n\n");
+}
+
 

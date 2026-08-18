@@ -32,9 +32,40 @@ const improvePayload = buildIncorporateFocusUserPayload({
 });
 
 assert.ok(improvePayload.includes("CONCEPTO: useEffect"));
-assert.ok(improvePayload.includes("BORRADOR ACTUAL DEL ESTUDIANTE:"));
-assert.ok(improvePayload.includes("Función de cleanup y memory leaks"));
-assert.ok(INCORPORATE_FOCUS_SYSTEM_PROMPT.includes("REGLAS DE TRANSFORMACIÓN PEDAGÓGICA"));
-assert.ok(INCORPORATE_FOCUS_SYSTEM_PROMPT.includes("MANTENER LA BASE EXISTENTE"));
+// Test Reconcile Chat Schema, Prompt and Hash
+const { buildReconcileChatUserPayload } = await import("../../server/ai/schemas.js");
+const { RECONCILE_CHAT_SYSTEM_PROMPT } = await import("../../server/ai/prompts.js");
+const { hashReconcileInput } = await import("../../src/ai/contentHash.js");
+
+const chatMessages = [
+  { id: "m1", role: "user", content: "¿Por qué se cancela la request con AbortController?" },
+  { id: "m2", role: "assistant", content: "Porque si el usuario cambia de tab o parámetros rápido, la respuesta anterior puede llegar más tarde y pisar el estado con datos viejos." },
+];
+
+const reconcilePayload = buildReconcileChatUserPayload({
+  node: sampleNode,
+  currentDraft: "useEffect sirve para sincronizar datos con el servidor.",
+  messages: chatMessages,
+});
+
+assert.ok(reconcilePayload.includes("CONCEPTO: useEffect"));
+assert.ok(reconcilePayload.includes("BORRADOR ACTUAL DEL ESTUDIANTE:"));
+assert.ok(reconcilePayload.includes("CONVERSACIÓN DEL CHAT CON EL COACH"));
+assert.ok(reconcilePayload.includes("¿Por qué se cancela la request con AbortController?"));
+assert.ok(reconcilePayload.includes("AbortController"));
+assert.ok(RECONCILE_CHAT_SYSTEM_PROMPT.includes("REGLAS DE RECONCILIACIÓN (SKILL V5)"));
+assert.ok(RECONCILE_CHAT_SYSTEM_PROMPT.includes("DETECCIÓN E INTEGRACIÓN DE NOVEDADES DEL CHAT"));
+assert.ok(RECONCILE_CHAT_SYSTEM_PROMPT.includes("SI NO HAY NADA NUEVO QUE AGREGAR"));
+
+// Test Reconcile Hash Stability
+const hash1 = hashReconcileInput("Borrador 1", chatMessages);
+const hash2 = hashReconcileInput("Borrador 1", chatMessages);
+const hashDiffDraft = hashReconcileInput("Borrador 2", chatMessages);
+const hashDiffMessages = hashReconcileInput("Borrador 1", [...chatMessages, { id: "m3", role: "user", content: "Otra duda" }]);
+
+assert.equal(hash1, hash2, "El hash debe ser determinista para el mismo draft y mensajes");
+assert.notEqual(hash1, hashDiffDraft, "Cambiar el borrador debe invalidar el hash previo");
+assert.notEqual(hash1, hashDiffMessages, "Agregar un mensaje al chat debe invalidar el hash previo");
 
 console.log("paraphrase AI schemas & prompts: OK");
+

@@ -23,6 +23,18 @@ export function hashAnswer(answer) {
   return `draft:${fnv1a64(String(answer ?? "")).toString(16)}`;
 }
 
+export function hashReconcileInput(draft, messages = []) {
+  const canonical = JSON.stringify({
+    draft: String(draft ?? "").trim(),
+    messages: (Array.isArray(messages) ? messages : []).map((m) => ({
+      id: m?.id,
+      role: m?.role,
+      content: String(m?.content ?? "").trim(),
+    })),
+  });
+  return `reconcile:${fnv1a64(canonical).toString(16)}`;
+}
+
 /**
  * FNV-1a 64-bit. No es criptográfico, pero es estable, chico y rápido.
  * Suficiente para detectar cambios de contenido del lado del cliente;

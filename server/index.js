@@ -3,7 +3,7 @@ import { config } from "./config.js";
 import { evaluateParaphrase } from "./ai/evaluator.js";
 import { reviewLive } from "./ai/liveReview.js";
 import { answerCoachQuestion, MAX_COACH_CHAT_MESSAGE_CHARS } from "./ai/coachChat.js";
-import { generatePedagogicalParaphrase, improveParaphraseWithFocus } from "./ai/paraphraseGenerator.js";
+import { generatePedagogicalParaphrase, improveParaphraseWithFocus, reconcileParaphraseWithChat } from "./ai/paraphraseGenerator.js";
 import { checkUpstream, listUpstreamModels, probeProvider } from "./ai/llmClient.js";
 import { getProviderCatalogModels, getProviderDirectory, mergeModelLists } from "./ai/modelCatalog.js";
 import { parseRequestProvider, requestProvider } from "./ai/providers.js";
@@ -445,6 +445,62 @@ export async function gatewayHandler(req, res) {
           currentDraft,
           focusTitle,
           focusDetail,
+          provider,
+          signal,
+          onChunk: (delta, accumulated) => {
+            writeEvent("delta", { text: delta, length: accumulated.length });
+          },
+        });
+        writeEvent("done", result);
+        res.end();
+      } catch (e) {
+        const { status, body: errorBody } = jsonErrorResponse(e);
+        writeEvent("error", { ...errorBody, httpStatus: status });
+        res.end();
+      }
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/reconcile") {
+      const body = await readJsonBody(req);
+      const { node, currentDraft, messages } = body ?? {};
+      if (!node || typeof node !== "object") {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
+      }
+      const signal = reqAbortedSignal(req);
+      const provider = await parseRequestProvider(body?.provider);
+      const result = await reconcileParaphraseWithChat({ node, currentDraft, messages, provider, signal });
+      return sendJson(res, 200, result);
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/reconcile/stream") {
+      const body = await readJsonBody(req);
+      const { node, currentDraft, messages } = body ?? {};
+      if (!node || typeof node !== "object") {
+        throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
+      }
+
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders?.();
+
+      const writeEvent = (type, data) => {
+        if (res.writableEnded) return;
+        res.write(`event: ${type}\n`);
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      };
+
+      const signal = reqAbortedSignal(req);
+      const provider = await parseRequestProvider(body?.provider);
+      try {
+        writeEvent("progress", { stage: "generating", length: 0 });
+        const result = await reconcileParaphraseWithChat({
+          node,
+          currentDraft,
+          messages,
           provider,
           signal,
           onChunk: (delta, accumulated) => {
