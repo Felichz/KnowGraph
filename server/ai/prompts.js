@@ -252,17 +252,22 @@ Tu misión es tomar la explicación/paráfrasis ACTUAL que escribió el estudian
 
 REGLAS DE TRANSFORMACIÓN PEDAGÓGICA (SKILL V5):
 1. MANTENER LA BASE EXISTENTE: Preservá todas las ideas correctas, términos precisos, analogías y bloques de código válidos que el estudiante ya haya redactado. No descartes su trabajo previo.
-2. INTEGRACIÓN FLUIDA DEL FOCO: Incorporá de forma natural y orgánica la explicación del foco provista (el concepto faltante o el trade-off a profundizar).
-3. PROSA NARRATIVA CONTINUA:
+2. UBICACIÓN TEMÁTICA PRECISA: Ubicá el contenido incorporado en el punto exacto de la narrativa donde tenga sentido lógico según el flujo conceptual (por ejemplo: si es un trade-off o riesgo, tras explicar el funcionamiento; si es una aclaración de definición, en la apertura o contexto). No lo tires arbitrariamente al final.
+3. SEPARACIÓN DE PÁRRAFOS Y CONTROL DE DENSIDAD (NO ENGORDAR PÁRRAFOS):
+   - Evitá engordar o sobrecargar párrafos ya existentes. No pegues la nueva información dentro de un párrafo largo convirtiéndolo en un bloque denso e incomprensible.
+   - Párrafos de 3-5 líneas como máximo: Dale al nuevo foco su propio párrafo bien delimitado o dividí el párrafo existente por ideas completas.
+   - Mantené transiciones y conectores fluidos entre párrafos ("Por otro lado", "A diferencia de", "Cuando esto se implementa...", "En consecuencia").
+4. PROSA NARRATIVA CONTINUA:
    - Cero viñetas (- o *), cero listas numeradas (1., 2.), cero encabezados artificiales (como "En resumen:", "Paso 1:").
    - Utilizá conectores lógicos de contraste y causa: "mientras que", "en cambio", "a diferencia de", "por lo tanto".
-4. SÍNTOMAS Y TRADE-OFFS: Si el foco trata sobre un riesgo, error común o trade-off, expresalo con precisión de causa-efecto ("Cuando esto se usa mal, los síntomas son predecibles: [A] produce [X], y [B] produce [Y]").
-5. COBERTURA TÉCNICA: Mantené nombres exactos de funciones, clases, flags o términos técnicos clave.
-6. CIERRE ACCIONABLE: Concluí con una regla práctica memorable.
-7. IDIOMA Y TONO: Español rioplatense neutro o técnico natural.
+5. SÍNTOMAS Y TRADE-OFFS: Si el foco trata sobre un riesgo, error común o trade-off, expresalo con precisión de causa-efecto ("Cuando esto se usa mal, los síntomas son predecibles: [A] produce [X], y [B] produce [Y]").
+6. COBERTURA TÉCNICA: Mantené nombres exactos de funciones, clases, flags o términos técnicos clave.
+7. CIERRE ACCIONABLE: Concluí con una regla práctica memorable.
+8. IDIOMA Y TONO: Español rioplatense neutro o técnico natural.
 
 INSTRUCCIÓN FINAL:
-Devolvé ÚNICAMENTE la paráfrasis mejorada en prosa continua, sin preámbulos, sin metatexto, sin saludos, sin viñetas y sin títulos.
+Devolvé ÚNICAMENTE la paráfrasis mejorada en prosa continua, con párrafos bien estructurados y separados, sin preámbulos, sin metatexto, sin saludos, sin viñetas y sin títulos.
 `.trim();
+
 
 
