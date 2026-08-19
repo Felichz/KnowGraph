@@ -15,7 +15,7 @@
     "desktop:dist": "npm run build && npm run build:gateway && electron-builder",
     "preview": "vite preview",
     "audit:react": "node scripts/audit-react-graph.mjs",
-    "test:logic": "node tests/logic/learning-controller.mjs && node tests/logic/topological-layout.mjs && node tests/logic/provider-settings.mjs && node tests/logic/paraphrase-ai.mjs",
+    "test:logic": "node tests/logic/learning-controller.mjs && node tests/logic/topological-layout.mjs && node tests/logic/provider-settings.mjs && node tests/logic/paraphrase-ai.mjs && node tests/logic/background-tasks.mjs",
     "check": "npm run audit:react && npm run build"
   },
   "dependencies": {
@@ -43,29 +43,20 @@
       "output": "release"
     },
     "files": [
-      "dist/**",
-      "electron/**",
+      "dist/**/*",
+      "electron/**/*",
+      "electron-dist/**/*",
       "package.json"
     ],
-    "extraResources": [
-      {
-        "from": "electron-dist/gateway.cjs",
-        "to": "gateway.cjs"
-      },
-      {
-        "from": "server/.env.example",
-        "to": "gateway.env.example"
-      }
-    ],
     "win": {
-      "target": "nsis",
-      "signAndEditExecutable": false
+      "target": [
+        "nsis",
+        "zip"
+      ]
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "allowToChangeInstallationDirectory": true
     }
   }
 }

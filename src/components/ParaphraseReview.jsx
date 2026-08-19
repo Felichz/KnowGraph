@@ -22,6 +22,7 @@ import { LiveRequestFeedback } from "./LiveRequestFeedback.jsx";
 import { ProgressLoader } from "./ProgressLoader.jsx";
 import { CoachIterationHistory } from "./CoachIterationHistory.jsx";
 import { CoachChat } from "./CoachChat.jsx";
+import { useBackgroundTasks } from "../ai/backgroundTaskManager.js";
 
 const LIVE_DEBOUNCE_MS = 5_000;
 
@@ -110,6 +111,13 @@ function PedagogicalSparkline({ history = [], threshold = 95 }) {
 
 export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "all", onRequestCoach, onRequestEvaluate, onEvaluationSaved, onNavigateBack, onNavigateNext, hasPrevious, hasNext }) {
   const contentHash = hashCardContent(node);
+  const {
+    currentTask,
+    startHarness: bgStartHarness,
+    startEvaluation: bgStartEvaluation,
+    cancelTask: bgCancelTask,
+    dismissTask: bgDismissTask,
+  } = useBackgroundTasks(graphId, node?.id);
 
   const [draft, setDraftState] = useState("");
   const [attempts, setAttempts] = useState([]);
@@ -238,6 +246,57 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
   const activeChatIteration = isViewingCoachHistory || currentIterationMatchesDraft ? selectedCoachIteration : null;
 
   useEffect(() => {
+    if (!currentTask) return;
+
+    if (currentTask.type === "pedagogical_harness") {
+      setHarnessState({
+        isActive: currentTask.status === "running",
+        stage: currentTask.stage,
+        message: currentTask.message,
+        currentScore: currentTask.score,
+        rubric: currentTask.rubric,
+        critique: currentTask.critique || [],
+        history: currentTask.history || [],
+        passedThreshold: currentTask.passedThreshold,
+        iteration: currentTask.iteration || 0,
+        isOpen: true,
+      });
+
+      if (currentTask.draft && (!draftRef.current || currentTask.status === "running" || isDraftAiGenerated)) {
+        setDraftState(currentTask.draft);
+        draftRef.current = currentTask.draft;
+        setIsDraftAiGenerated(true);
+      }
+
+      setIsGeneratingParaphrase(currentTask.status === "running");
+      setParaphraseMode(currentTask.status === "running" ? "polish_judge" : null);
+
+      if (currentTask.status === "completed" && currentTask.draft) {
+        startLiveReview(currentTask.draft);
+      }
+    } else if (currentTask.type === "evaluation") {
+      if (currentTask.status === "running") {
+        setPending({ startedAt: currentTask.startedAt, answerKey: currentTask.draft, source: "full" });
+        setStreamingSections(currentTask.streamingSections || {});
+        setStreamingBlocks(currentTask.streamingBlocks || {});
+        setStreamingChars(currentTask.progress || 0);
+      } else if (currentTask.status === "completed" && currentTask.attempt) {
+        setPending(null);
+        setAttempts((prev) => [
+          ...prev.filter((item) => item.id !== currentTask.attempt.id),
+          currentTask.attempt,
+        ].sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
+        onEvaluationSaved?.(currentTask.attempt);
+      } else if (currentTask.status === "cancelled" || currentTask.status === "error") {
+        setPending(null);
+        if (currentTask.error) {
+          setError({ code: "upstream", message: currentTask.error });
+        }
+      }
+    }
+  }, [currentTask, isDraftAiGenerated, onEvaluationSaved, startLiveReview]);
+
+  useEffect(() => {
     initialLoadRef.current = true;
     let cancelled = false;
     (async () => {
@@ -250,8 +309,8 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       if (cancelled || !initialLoadRef.current) return;
       initialLoadRef.current = false;
       const storedText = storedDraftRecord?.text ?? (typeof storedDraftRecord === "string" ? storedDraftRecord : "");
-      const initialText = storedText || list.at(-1)?.answer || "";
-      const isAi = Boolean(storedDraftRecord?.isAiGenerated || (!storedText && list.at(-1)?.isAiGenerated));
+      const initialText = (currentTask?.status === "running" && currentTask?.draft) || storedText || list.at(-1)?.answer || "";
+      const isAi = Boolean((currentTask && currentTask.type === "pedagogical_harness") || storedDraftRecord?.isAiGenerated || (!storedText && list.at(-1)?.isAiGenerated));
       const initialAnswerHash = hashAnswer(initialText.trim());
       const latestCoachIteration = storedCoachIterations.at(-1);
       const reusableIterationReview = latestCoachIteration
@@ -278,19 +337,19 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       setLiveProgress({ phase: "idle", chars: 0, startedAt: null, now: 0 });
       setLiveError(null);
       setError(null);
-      setPending(null);
+      if (!currentTask || currentTask.status !== "running") {
+        setPending(null);
+      }
     })();
     return () => {
       cancelled = true;
       liveRequestRef.current = null;
       activeRequestRef.current = null;
       liveControllerRef.current?.abort();
-      paraphraseControllerRef.current?.abort();
       chatControllerRef.current?.abort();
       chatRequestRef.current = null;
-      pendingControllerRef.current?.abort();
     };
-  }, [contentHash, graphId, node.id]);
+  }, [contentHash, currentTask, graphId, node.id]);
 
   useEffect(() => () => {
     if (draftSaveRef.current) clearTimeout(draftSaveRef.current);
@@ -508,16 +567,17 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
   }, [draft, liveStatus, triggerLiveReviewNow]);
 
   const cancelParaphraseGeneration = useCallback(() => {
+    bgCancelTask();
     if (paraphraseControllerRef.current) {
       paraphraseControllerRef.current.abort();
       paraphraseControllerRef.current = null;
     }
     setIsGeneratingParaphrase(false);
     setParaphraseMode(null);
-  }, []);
+  }, [bgCancelTask]);
 
   const handleGenerateAiParaphrase = useCallback(async () => {
-    if (isGeneratingParaphrase) {
+    if (currentTask?.status === "running" || isGeneratingParaphrase) {
       cancelParaphraseGeneration();
       return;
     }
@@ -530,45 +590,14 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     }
 
     cancelLiveReview();
-    const controller = new AbortController();
-    paraphraseControllerRef.current = controller;
-    setIsGeneratingParaphrase(true);
-    setParaphraseMode("generate");
-    setParaphraseProgress(0);
     userEditedDraftRef.current = false;
-
-    let accumulated = "";
-    try {
-      const result = await generateParaphraseStream({
-        node,
-        provider: providerProfile,
-        signal: controller.signal,
-        onProgress: (length) => {
-          setParaphraseProgress(length);
-        },
-        onDelta: (delta) => {
-          accumulated += delta;
-          setDraftState(accumulated);
-          draftRef.current = accumulated;
-        },
-      });
-
-      const finalText = result.text || accumulated;
-      setDraftState(finalText);
-      draftRef.current = finalText;
-      setIsDraftAiGenerated(true);
-      await setDraft(graphId, node.id, finalText, { isAiGenerated: true, generatedAt: new Date().toISOString() });
-      startLiveReview(finalText);
-    } catch (err) {
-      if (!isCancel(err)) {
-        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "No se pudo generar la paráfrasis con IA.") });
-      }
-    } finally {
-      setIsGeneratingParaphrase(false);
-      setParaphraseMode(null);
-      paraphraseControllerRef.current = null;
-    }
-  }, [cancelLiveReview, cancelParaphraseGeneration, draft, isDraftAiGenerated, isGeneratingParaphrase, node, providerProfile, graphId, startLiveReview]);
+    bgStartHarness({
+      node,
+      initialDraft: "",
+      providerProfile,
+      maxIterations: 6,
+    });
+  }, [bgCancelTask, bgStartHarness, cancelLiveReview, cancelParaphraseGeneration, currentTask?.status, draft, isDraftAiGenerated, isGeneratingParaphrase, node, providerProfile]);
 
   const handleIncorporateFocus = useCallback(async (hintToIncorporate) => {
     if (isGeneratingParaphrase) {
@@ -685,191 +714,20 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
   }, [activeChatIteration, cancelLiveReview, cancelParaphraseGeneration, draft, graphId, isGeneratingParaphrase, node, providerProfile, startLiveReview]);
 
   const handlePolishPedagogy = useCallback(async () => {
-    if (isGeneratingParaphrase) {
+    if (currentTask?.status === "running" || isGeneratingParaphrase) {
       cancelParaphraseGeneration();
       return;
     }
 
     cancelLiveReview();
-    const controller = new AbortController();
-    paraphraseControllerRef.current = controller;
-    setIsGeneratingParaphrase(true);
-    setParaphraseMode("polish_judge");
-    setParaphraseProgress(0);
     userEditedDraftRef.current = false;
-
-    let currentDraft = draft.trim();
-    const history = [];
-
-    setHarnessState({
-      isActive: true,
-      stage: "judging",
-      message: "⚖️ Evaluando calidad pedagógica con Juez...",
-      currentScore: null,
-      rubric: null,
-      critique: [],
-      history: [],
-      passedThreshold: false,
-      iteration: 0,
-      isOpen: true,
+    bgStartHarness({
+      node,
+      initialDraft: draft,
+      providerProfile,
+      maxIterations: 6,
     });
-
-    try {
-      // Si no hay borrador o es muy corto, generamos el borrador inicial
-      if (!currentDraft || currentDraft.length < 15) {
-        setHarnessState((prev) => ({
-          ...prev,
-          stage: "generating_initial",
-          message: "🪄 Generando borrador inicial...",
-        }));
-        let initAcc = "";
-        const genRes = await polishParaphraseStream({
-          node,
-          currentDraft: "",
-          provider: providerProfile,
-          signal: controller.signal,
-          onDelta: (delta) => {
-            initAcc += delta;
-            setDraftState(initAcc);
-            draftRef.current = initAcc;
-          },
-        });
-        currentDraft = genRes.text || initAcc;
-      }
-
-      // Paso 1: Evaluación Inicial con el Juez
-      setHarnessState((prev) => ({
-        ...prev,
-        stage: "judging",
-        iteration: 0,
-        message: "⚖️ Evaluando calidad pedagógica inicial con Juez...",
-      }));
-
-      let judgeResult = await judgePedagogy({
-        node,
-        draft: currentDraft,
-        provider: providerProfile,
-        signal: controller.signal,
-      });
-
-      history.push({
-        iteration: 0,
-        score: judgeResult.score,
-        rubric: judgeResult.rubric,
-        verdict: judgeResult.verdict,
-        critique: judgeResult.pedagogicalCritique,
-        draft: currentDraft,
-      });
-
-      setHarnessState((prev) => ({
-        ...prev,
-        currentScore: judgeResult.score,
-        rubric: judgeResult.rubric,
-        critique: judgeResult.pedagogicalCritique || [],
-        passedThreshold: judgeResult.passedThreshold,
-        history: [...history],
-        iteration: 0,
-        message: judgeResult.passedThreshold
-          ? `✨ ¡Meta de calidad alcanzada (${judgeResult.score}/100)!`
-          : `⚖️ Juez asignó ${judgeResult.score}/100 (Meta: 95+)`,
-      }));
-
-      // Bucle de Refinamiento (hasta 6 iteraciones o hasta alcanzar 95+)
-      let iter = 0;
-      const maxIterations = 6;
-
-      while (!judgeResult.passedThreshold && iter < maxIterations) {
-        if (controller.signal.aborted) break;
-        iter += 1;
-
-        setHarnessState((prev) => ({
-          ...prev,
-          stage: "refining",
-          iteration: iter,
-          message: `🪄 Refinando explicación según crítica del Juez (Iteración ${iter}/${maxIterations})...`,
-        }));
-
-        let refinedAcc = "";
-        const refineRes = await refinePedagogyStream({
-          node,
-          draft: currentDraft,
-          critique: judgeResult.pedagogicalCritique,
-          currentScore: judgeResult.score,
-          provider: providerProfile,
-          signal: controller.signal,
-          onDelta: (delta) => {
-            refinedAcc += delta;
-            setDraftState(refinedAcc);
-            draftRef.current = refinedAcc;
-          },
-        });
-
-        currentDraft = refineRes.text || refinedAcc;
-        setDraftState(currentDraft);
-        draftRef.current = currentDraft;
-
-        // Re-evaluación del Juez sobre el texto refinado
-        setHarnessState((prev) => ({
-          ...prev,
-          stage: "judging",
-          iteration: iter,
-          message: `⚖️ Re-evaluando calidad con Juez (Iteración ${iter})...`,
-        }));
-
-        judgeResult = await judgePedagogy({
-          node,
-          draft: currentDraft,
-          provider: providerProfile,
-          signal: controller.signal,
-        });
-
-        history.push({
-          iteration: iter,
-          score: judgeResult.score,
-          rubric: judgeResult.rubric,
-          verdict: judgeResult.verdict,
-          critique: judgeResult.pedagogicalCritique,
-          draft: currentDraft,
-        });
-
-        setHarnessState((prev) => ({
-          ...prev,
-          currentScore: judgeResult.score,
-          rubric: judgeResult.rubric,
-          critique: judgeResult.pedagogicalCritique || [],
-          passedThreshold: judgeResult.passedThreshold,
-          history: [...history],
-          iteration: iter,
-          message: judgeResult.passedThreshold
-            ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
-            : `⚖️ Juez asignó ${judgeResult.score}/100 en Iteración ${iter} (Meta: 95+)`,
-        }));
-      }
-
-      setHarnessState((prev) => ({
-        ...prev,
-        isActive: false,
-        stage: "done",
-        message: judgeResult.passedThreshold
-          ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
-          : `Evaluación completada (${judgeResult.score}/100)`,
-        isOpen: true,
-      }));
-
-      setIsDraftAiGenerated(true);
-      await setDraft(graphId, node.id, currentDraft, { isAiGenerated: true, generatedAt: new Date().toISOString() });
-      startLiveReview(currentDraft);
-    } catch (err) {
-      if (!isCancel(err)) {
-        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "Error durante el perfeccionamiento con Juez pedagógico.") });
-      }
-      setHarnessState((prev) => ({ ...prev, isActive: false }));
-    } finally {
-      setIsGeneratingParaphrase(false);
-      setParaphraseMode(null);
-      paraphraseControllerRef.current = null;
-    }
-  }, [cancelLiveReview, cancelParaphraseGeneration, draft, graphId, isGeneratingParaphrase, node, providerProfile, startLiveReview]);
+  }, [bgCancelTask, bgStartHarness, cancelLiveReview, cancelParaphraseGeneration, currentTask?.status, draft, isGeneratingParaphrase, node, providerProfile]);
 
   useEffect(() => {
     if (!debounceStartedAt) return undefined;
@@ -1091,99 +949,27 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
 
   const submitFullEvaluation = useCallback(async (answerOverride = draft, source = "manual") => {
     const answer = answerOverride.trim();
-    if (!answer || pendingControllerRef.current) return;
+    if (!answer || currentTask?.status === "running") return;
     initialLoadRef.current = false;
+    cancelLiveReview();
+    userEditedDraftRef.current = false;
 
-    const controller = new AbortController();
-    const requestId = Symbol("full-evaluation");
-    const answerKey = hashAnswer(answer);
-    activeRequestRef.current = requestId;
-    pendingControllerRef.current = controller;
-    const startedAt = Date.now();
-    setPending({ controller, startedAt, answerKey, source });
-    streamCharsRef.current = 0;
-    setStreamingChars(0);
-    setStreamingSections({});
-    streamBlocksRef.current = {};
-    setStreamingBlocks({});
-    setError(null);
-
-    try {
-      const result = await evaluateParaphraseStream({
-        graphId,
-        nodeId: node.id,
-        answer,
-        contentHash,
-        node,
-        provider: providerProfile,
-        signal: controller.signal,
-        onProgress: (length) => {
-          if (activeRequestRef.current !== requestId) return;
-          streamCharsRef.current = length;
-          if (!streamFrameRef.current) {
-            streamFrameRef.current = requestAnimationFrame(() => {
-              streamFrameRef.current = null;
-              setStreamingChars(streamCharsRef.current);
-            });
-          }
-        },
-        onSection: (field, value) => {
-          if (activeRequestRef.current !== requestId) return;
-          setStreamingSections((previous) => ({ ...previous, [field]: value }));
-        },
-        onReset: (fallback) => {
-          if (activeRequestRef.current !== requestId) return;
-          const preserveScores = fallback?.scope === "feedback";
-          streamCharsRef.current = 0;
-          setStreamingChars(0);
-          setStreamingSections((previous) => preserveScores && previous.scoreSummary
-            ? { scoreSummary: previous.scoreSummary }
-            : {});
-          streamBlocksRef.current = preserveScores
-            ? Object.fromEntries(Object.entries(streamBlocksRef.current).filter(([id]) => id.startsWith("scoreSummary.")))
-            : {};
-          setStreamingBlocks({ ...streamBlocksRef.current });
-        },
-        onBlock: (block) => {
-          if (activeRequestRef.current !== requestId) return;
-          streamBlocksRef.current = { ...streamBlocksRef.current, [block.id]: { ...streamBlocksRef.current[block.id], ...block } };
-          if (!streamBlockFrameRef.current) {
-            streamBlockFrameRef.current = requestAnimationFrame(() => {
-              streamBlockFrameRef.current = null;
-              setStreamingBlocks({ ...streamBlocksRef.current });
-            });
-          }
-        },
-      });
-      if (activeRequestRef.current !== requestId) return;
-      const durationMs = Date.now() - startedAt;
-      const attempt = { ...result.attempt, answer, durationMs, isAiGenerated: Boolean(isDraftAiGenerated) };
-      await saveAttempt(attempt);
-      // Pintar el resultado recibido inmediatamente. La lectura posterior de
-      // IndexedDB queda como sincronizacion, pero no debe ser el momento que
-      // desbloquea la UI: una respuesta valida ya esta disponible en memoria.
-      setAttempts((previous) => [...previous.filter((item) => item.id !== attempt.id), attempt]
-        .sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
-      setView({ mode: "draft" });
-      onEvaluationSaved?.(attempt);
-      const list = await listAttempts(graphId, node.id);
-      setAttempts(list);
-      setPending(null);
-      pendingControllerRef.current = null;
-      activeRequestRef.current = null;
-    } catch (e) {
-      if (activeRequestRef.current !== requestId) return;
-      pendingControllerRef.current = null;
-      activeRequestRef.current = null;
-      setPending(null);
-      if (isCancel(e)) return;
-      setError({ code: e?.code ?? "upstream", message: userFacingAiError(e, "Error desconocido") });
-    }
-  }, [contentHash, draft, graphId, node, onEvaluationSaved, providerProfile]);
+    bgStartEvaluation({
+      node,
+      answer,
+      contentHash,
+      providerProfile,
+      isDraftAiGenerated,
+      onAttemptSaved: (attempt) => {
+        onEvaluationSaved?.(attempt);
+      },
+    });
+  }, [bgStartEvaluation, cancelLiveReview, contentHash, currentTask?.status, draft, isDraftAiGenerated, node, onEvaluationSaved, providerProfile]);
 
   const cancel = useCallback(() => {
-    pending?.controller?.abort();
-  }, [pending]);
+    bgCancelTask();
+    setPending(null);
+  }, [bgCancelTask]);
 
   const selectAttempt = useCallback((index) => {
     setView({ mode: "attempt", index });

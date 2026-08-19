@@ -8299,4 +8299,231 @@ body { background: var(--p-bg); }
   font-size: 14px;
 }
 
+/* ==========================================================================
+   Background AI Tasks UI (Topological Graph Node, Flashcards, HUD, Tabs)
+   ========================================================================== */
+
+/* 1. Topological Graph Node Active AI Glow & Pulse */
+.topology-node.has-active-task .topology-node__surface {
+  stroke: #38bdf8 !important;
+  stroke-width: 2px !important;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.45));
+}
+
+.topology-node__active-task-aura {
+  fill: none;
+  stroke: rgba(56, 189, 248, 0.4);
+  stroke-width: 2px;
+  stroke-dasharray: 6 4;
+  animation: topologyTaskAuraSpin 4s linear infinite;
+}
+
+@keyframes topologyTaskAuraSpin {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 40; }
+}
+
+.topology-node__active-pulse-ring {
+  fill: none;
+  stroke: #38bdf8;
+  stroke-width: 1.5px;
+  animation: topologyActivePulse 1.6s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+}
+
+.topology-node__active-dot {
+  fill: #38bdf8;
+  animation: topologyActiveGlow 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes topologyActivePulse {
+  0% { r: 3.5; opacity: 1; }
+  100% { r: 9; opacity: 0; }
+}
+
+@keyframes topologyActiveGlow {
+  0% { filter: drop-shadow(0 0 2px #38bdf8); }
+  100% { filter: drop-shadow(0 0 6px #7dd3fc); }
+}
+
+/* 2. Flashcard Active Task Badge */
+.flashcard__badge--active-task {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.22) 0%, rgba(99, 102, 241, 0.28) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.55) !important;
+  color: #7dd3fc !important;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.task-spinner-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+  animation: taskDotPulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes taskDotPulse {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.3); opacity: 1; }
+}
+
+/* 3. Card View Active Task Banner */
+.card-active-bg-task-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px 0;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 9px;
+  font: 500 12.5px/1.4 Inter, sans-serif;
+  color: #e0f2fe;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  animation: fadeInDown 0.22s ease-out;
+}
+
+.card-active-bg-task-banner__pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
+  animation: taskDotPulse 1.2s ease-in-out infinite alternate;
+  flex-shrink: 0;
+}
+
+.card-active-bg-task-banner__icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.card-active-bg-task-banner__msg {
+  flex: 1;
+  color: #f1f5f9;
+  font-weight: 500;
+}
+
+.card-active-bg-task-banner__btn {
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #7dd3fc;
+  font: 600 11.5px/1 Inter, sans-serif;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.card-active-bg-task-banner__btn:hover {
+  background: rgba(56, 189, 248, 0.28);
+  color: #ffffff;
+}
+
+/* 4. Tab Active Task Dot */
+.tab-task-pulse-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+  margin-left: 6px;
+  vertical-align: middle;
+  animation: taskDotPulse 1.2s ease-in-out infinite alternate;
+}
+
+/* 5. Global Floating Background Tasks HUD */
+.global-bg-tasks-hud {
+  position: fixed;
+  bottom: 84px;
+  right: 24px;
+  z-index: 999;
+  animation: fadeInUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 768px) {
+  .global-bg-tasks-hud {
+    bottom: 74px;
+    right: 14px;
+    left: 14px;
+  }
+}
+
+.global-bg-tasks-hud__inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.2);
+}
+
+.global-bg-tasks-hud__pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
+  animation: taskDotPulse 1.2s ease-in-out infinite alternate;
+  flex-shrink: 0;
+}
+
+.global-bg-tasks-hud__icon {
+  font-size: 15px;
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.global-bg-tasks-hud__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.global-bg-tasks-hud__title {
+  font: 600 12.5px/1.2 Inter, sans-serif;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.global-bg-tasks-hud__msg {
+  font: 400 11px/1.3 Inter, sans-serif;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+.global-bg-tasks-hud__btn {
+  margin-left: 8px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.24) 0%, rgba(99, 102, 241, 0.32) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  color: #ffffff;
+  font: 600 11.5px/1 Inter, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.global-bg-tasks-hud__btn:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.38) 0%, rgba(99, 102, 241, 0.46) 100%);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
 

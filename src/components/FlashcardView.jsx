@@ -5,6 +5,7 @@ import { ModelMeta } from "./ModelMeta.jsx";
 import { formatEvaluationDuration } from "../ai/types.js";
 import { selectRepresentativeAttempt } from "../ai/attemptSelection.js";
 import { ReadingChunks } from "./ReadingChunks.jsx";
+import { useBackgroundTasks } from "../ai/backgroundTaskManager.js";
 
 const FILTERS = [
   { id: "all", label: "Todas" },
@@ -24,6 +25,7 @@ function CloseIcon() {
 }
 
 export function FlashcardView({ graph, onOpenNode }) {
+  const { activeTaskNodeIds } = useBackgroundTasks(graph.id);
   const [attempts, setAttempts] = useState([]);
   const [drafts, setDrafts] = useState([]);
   const [filter, setFilter] = useState("all");
@@ -260,9 +262,16 @@ export function FlashcardView({ graph, onOpenNode }) {
                   <h3 className="flashcard__title">{node.label ?? node.title}</h3>
                   <p className="flashcard__summary">{node.lesson?.summary ?? "Recuperá el concepto, su propósito y el criterio para aplicarlo."}</p>
                   <div className="flashcard__status-row">
-                    {attempt
-                      ? <span className={`flashcard__badge flashcard__badge--${status}`}>{score.displayScore}/120 · {STATUS_LABEL[status]}</span>
-                      : <span className="flashcard__badge flashcard__badge--none">Sin intento</span>}
+                    {activeTaskNodeIds?.has(node.id) ? (
+                      <span className="flashcard__badge flashcard__badge--active-task" title="IA trabajando activamente en esta card en segundo plano">
+                        <span className="task-spinner-dot" aria-hidden="true" />
+                        <span>IA en progreso</span>
+                      </span>
+                    ) : attempt ? (
+                      <span className={`flashcard__badge flashcard__badge--${status}`}>{score.displayScore}/120 · {STATUS_LABEL[status]}</span>
+                    ) : (
+                      <span className="flashcard__badge flashcard__badge--none">Sin intento</span>
+                    )}
                     {isAiGenerated && (
                       <span className="flashcard__ai-badge" title="Esta explicación fue generada automáticamente con IA">
                         ✨ Con IA

@@ -5,10 +5,11 @@
 import { getScoreView } from "../../ai/types.js";
 
 export function getNodeVisual(node, context) {
-  const { graph, checked, latestAttemptsByNode, activeCats, guidance } = context;
+  const { graph, checked, latestAttemptsByNode, activeCats, guidance, activeTaskNodeIds } = context;
   const category = graph.categories[node.cat];
   const attempt = latestAttemptsByNode.get(node.id);
   const score = attempt ? getScoreView(attempt.evaluation) : null;
+  const hasActiveTask = activeTaskNodeIds?.has(node.id) ?? false;
   return {
     category,
     color: category?.color ?? "#8f96a5",
@@ -18,6 +19,7 @@ export function getNodeVisual(node, context) {
     extra: score ? Math.max(0, score.extraPoints) : 0,
     guideLevel: guidance.levelById.get(node.id) ?? 0,
     dimmed: !activeCats.has(node.cat),
+    hasActiveTask,
   };
 }
 

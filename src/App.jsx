@@ -17,9 +17,9 @@ import { ReadingChunks } from "./components/ReadingChunks.jsx";
 import { listAllAttempts } from "./ai/learningStore.js";
 import { applyBackup, createBackup, downloadBackup, parseBackup } from "./ai/backup.js";
 import { hashCardContent } from "./ai/contentHash.js";
-import { getCompletionView, getScoreView, isEvaluationSurfaceComplete } from "./ai/types.js";
 import { CommandPalette } from "./components/CommandPalette.jsx";
 import { loadProviderProfile } from "./ai/providerSettings.js";
+import { useBackgroundTasks } from "./ai/backgroundTaskManager.js";
 
 let mermaidLoader;
 function loadMermaid() {
@@ -1210,6 +1210,7 @@ const backupInputRef = useRef(null);
   const ttsSpeechRef = useRef(null);
   const ttsSpeedRef = useRef(1);
   const ttsPlaybackRef = useRef({ segments: [], index: 0, generation: 0 });
+  const { activeTasks, activeTaskNodeIds, currentTask: currentCardTask } = useBackgroundTasks(graphKey, selected?.id);
 
   useEffect(() => {
     const handleGlobalKey = (e) => {
@@ -1650,6 +1651,7 @@ const backupInputRef = useRef(null);
     seniorityProgress,
     milestoneByNodeId,
     seniorityByNodeId,
+    activeTaskNodeIds,
   };
   const toggleLessonNode = (node) => {
     if (selected?.id === node.id) closeLesson();
@@ -2102,15 +2104,50 @@ const backupInputRef = useRef(null);
               <span className="lesson-view-tabs__index">01</span>
               <span className="lesson-view-tabs__copy"><strong>Lectura</strong><small>Entender el concepto</small></span>
             </button>
-            <button type="button" role="tab" className={lessonView === "coach" ? "is-active" : ""} aria-selected={lessonView === "coach"} onClick={() => { setActiveDeepDive(null); setLessonView("coach"); }}>
+            <button type="button" role="tab" className={`${lessonView === "coach" ? "is-active" : ""} ${currentCardTask?.status === "running" && currentCardTask?.type === "pedagogical_harness" ? "has-active-task" : ""}`} aria-selected={lessonView === "coach"} onClick={() => { setActiveDeepDive(null); setLessonView("coach"); }}>
               <span className="lesson-view-tabs__index">02</span>
-              <span className="lesson-view-tabs__copy"><strong>Coaching</strong><small>Ensayar tu respuesta</small></span>
+              <span className="lesson-view-tabs__copy">
+                <strong>
+                  Coaching
+                  {currentCardTask?.status === "running" && currentCardTask?.type === "pedagogical_harness" && (
+                    <span className="tab-task-pulse-dot" title="Perfeccionamiento con IA en progreso" />
+                  )}
+                </strong>
+                <small>Ensayar tu respuesta</small>
+              </span>
             </button>
-            <button type="button" role="tab" className={lessonView === "evaluate" ? "is-active" : ""} aria-selected={lessonView === "evaluate"} onClick={() => { setActiveDeepDive(null); setLessonView("evaluate"); }}>
+            <button type="button" role="tab" className={`${lessonView === "evaluate" ? "is-active" : ""} ${currentCardTask?.status === "running" && currentCardTask?.type === "evaluation" ? "has-active-task" : ""}`} aria-selected={lessonView === "evaluate"} onClick={() => { setActiveDeepDive(null); setLessonView("evaluate"); }}>
               <span className="lesson-view-tabs__index">03</span>
-              <span className="lesson-view-tabs__copy"><strong>Evaluar</strong><small>Confirmar dominio</small></span>
+              <span className="lesson-view-tabs__copy">
+                <strong>
+                  Evaluar
+                  {currentCardTask?.status === "running" && currentCardTask?.type === "evaluation" && (
+                    <span className="tab-task-pulse-dot" title="Evaluación con IA en progreso" />
+                  )}
+                </strong>
+                <small>Confirmar dominio</small>
+              </span>
             </button>
           </nav>
+
+          {currentCardTask?.status === "running" && (
+            <div className="card-active-bg-task-banner" role="status" aria-live="polite">
+              <span className="card-active-bg-task-banner__pulse-dot" aria-hidden="true" />
+              <span className="card-active-bg-task-banner__icon" aria-hidden="true">
+                {currentCardTask.stage === "judging" ? "⚖️" : currentCardTask.stage === "evaluating" ? "🧠" : "🪄"}
+              </span>
+              <span className="card-active-bg-task-banner__msg">{currentCardTask.message}</span>
+              {lessonView === "read" && (
+                <button
+                  type="button"
+                  className="card-active-bg-task-banner__btn"
+                  onClick={() => setLessonView(currentCardTask.type === "evaluation" ? "evaluate" : "coach")}
+                >
+                  Ver en vivo →
+                </button>
+              )}
+            </div>
+          )}
 
           <div className={`lesson-layout lesson-layout--${lessonView} ${zenMode ? "is-zen" : ""}`}>
             <article className={`lesson-content lesson-content--${lessonView}`} aria-label={lessonView === "read" ? "Contenido de lectura" : lessonView === "coach" ? "Coaching de la explicación" : "Evaluación e historial"}>
@@ -2355,6 +2392,35 @@ const backupInputRef = useRef(null);
               </div>
             );
           })()}
+        </aside>
+      )}
+
+      {/* Global Background Tasks Floating HUD */}
+      {activeTasks.length > 0 && (
+        <aside className="global-bg-tasks-hud" role="status" aria-live="polite" aria-label="Tareas activas de IA">
+          <div className="global-bg-tasks-hud__inner">
+            <span className="global-bg-tasks-hud__pulse-dot" aria-hidden="true" />
+            <span className="global-bg-tasks-hud__icon" aria-hidden="true">⚡</span>
+            <div className="global-bg-tasks-hud__content">
+              <span className="global-bg-tasks-hud__title">
+                {activeTasks.length === 1
+                  ? `${activeTasks[0].node?.label || "Concepto"}`
+                  : `${activeTasks.length} tarjetas con IA activa`}
+              </span>
+              <span className="global-bg-tasks-hud__msg">
+                {activeTasks.length === 1 ? activeTasks[0].message : "Procesando en segundo plano"}
+              </span>
+            </div>
+            {activeTasks.length === 1 && selected?.id !== activeTasks[0].nodeId && (
+              <button
+                type="button"
+                className="global-bg-tasks-hud__btn"
+                onClick={() => openLesson(activeTasks[0].node, true)}
+              >
+                Abrir card →
+              </button>
+            )}
+          </div>
         </aside>
       )}
 

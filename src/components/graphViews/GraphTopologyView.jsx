@@ -288,12 +288,12 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
               return (
                 <g
                   key={node.id}
-                  className={`topology-node guide-node-${visual.guideLevel} ${isSelected ? "is-selected" : ""} ${isHovered ? "is-hovered" : ""} ${isAncestor ? "is-ancestor" : ""} ${isDescendant ? "is-descendant" : ""} ${isRelation ? "is-relation" : ""} ${visual.isChecked ? "is-complete" : "is-uncompleted"} ${visual.extra > 0 ? "has-excellence" : ""} ${dimmed ? "is-dimmed" : ""}`}
+                  className={`topology-node guide-node-${visual.guideLevel} ${isSelected ? "is-selected" : ""} ${visual.hasActiveTask ? "has-active-task" : ""} ${isHovered ? "is-hovered" : ""} ${isAncestor ? "is-ancestor" : ""} ${isDescendant ? "is-descendant" : ""} ${isRelation ? "is-relation" : ""} ${visual.isChecked ? "is-complete" : "is-uncompleted"} ${visual.extra > 0 ? "has-excellence" : ""} ${dimmed ? "is-dimmed" : ""}`}
                   transform={`translate(${x},${y})`}
                   style={{ "--node-color": visual.color }}
                   role="button"
                   tabIndex={visual.dimmed ? -1 : 0}
-                  aria-label={`${nodeAriaLabel(node, visual)} Etapa ${rank + 1} de ${layout.maxRank + 1}.`}
+                  aria-label={`${nodeAriaLabel(node, visual)} ${visual.hasActiveTask ? "IA trabajando activamente en esta card." : ""} Etapa ${rank + 1} de ${layout.maxRank + 1}.`}
                   aria-pressed={isSelected}
                   onPointerEnter={() => setHoveredNodeId(node.id)}
                   onPointerLeave={() => setHoveredNodeId(null)}
@@ -306,12 +306,19 @@ export default function GraphTopologyView({ context, selected, onToggleNode, onB
                     onToggleNode(node);
                   }}
                 >
-                  <title>{`${node.label}. Etapa ${rank + 1}. ${scoreLabel}.`}</title>
+                  <title>{`${node.label}. Etapa ${rank + 1}. ${scoreLabel}.${visual.hasActiveTask ? " (IA activa en segundo plano)" : ""}`}</title>
                   {visual.extra > 0 && <rect className="topology-node__excellence-aura" x="-7" y="-7" width={layout.config.nodeWidth + 14} height={layout.config.nodeHeight + 14} rx="15" />}
+                  {visual.hasActiveTask && <rect className="topology-node__active-task-aura" x="-4" y="-4" width={layout.config.nodeWidth + 8} height={layout.config.nodeHeight + 8} rx="14" />}
                   <rect className="topology-node__surface" width={layout.config.nodeWidth} height={layout.config.nodeHeight} rx="11" />
                   <circle className="topology-node__category-dot" cx="14" cy="17" r="3.5" />
                   <text className="topology-node__category" x="24" y="20">{truncateMeta(visual.category.label)}</text>
-                  <text className="topology-node__score" x={layout.config.nodeWidth - 12} y="20" textAnchor="end">{scoreLabel}</text>
+                  <text className="topology-node__score" x={layout.config.nodeWidth - (visual.hasActiveTask ? 28 : 12)} y="20" textAnchor="end">{scoreLabel}</text>
+                  {visual.hasActiveTask && (
+                    <g className="topology-node__active-indicator" transform={`translate(${layout.config.nodeWidth - 14}, 17)`} aria-hidden="true">
+                      <circle r="6" className="topology-node__active-pulse-ring" />
+                      <circle r="3.5" className="topology-node__active-dot" />
+                    </g>
+                  )}
                   <text className="topology-node__label" x="14" y={lines.length > 1 ? "43" : "49"}>
                     {lines.map((line, index) => <tspan key={line} x="14" dy={index === 0 ? 0 : 16}>{line}</tspan>)}
                   </text>
