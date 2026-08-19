@@ -8530,12 +8530,16 @@ body { background: var(--p-bg); }
   animation: taskDotPulse 1.2s ease-in-out infinite alternate;
 }
 
-/* 5. Global Floating Background Tasks HUD */
+/* 5. Global Floating Background Tasks HUD & Interactive Popover */
 .global-bg-tasks-hud {
   position: fixed;
   bottom: 84px;
   right: 24px;
   z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
   animation: fadeInUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -8544,6 +8548,7 @@ body { background: var(--p-bg); }
     bottom: 74px;
     right: 14px;
     left: 14px;
+    align-items: stretch;
   }
 }
 
@@ -8552,12 +8557,20 @@ body { background: var(--p-bg); }
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  background: rgba(15, 23, 42, 0.92);
+  background: rgba(15, 23, 42, 0.94);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(56, 189, 248, 0.45);
   border-radius: 12px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.2);
+  transition: all 0.16s ease;
+  user-select: none;
+}
+
+.global-bg-tasks-hud__inner:hover {
+  background: rgba(15, 23, 42, 0.98);
+  border-color: rgba(56, 189, 248, 0.7);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.6), 0 0 24px rgba(56, 189, 248, 0.3);
 }
 
 .global-bg-tasks-hud__pulse-dot {
@@ -8600,23 +8613,170 @@ body { background: var(--p-bg); }
   max-width: 260px;
 }
 
-.global-bg-tasks-hud__btn {
-  margin-left: 8px;
-  padding: 6px 12px;
-  border-radius: 7px;
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.24) 0%, rgba(99, 102, 241, 0.32) 100%);
-  border: 1px solid rgba(56, 189, 248, 0.5);
-  color: #ffffff;
-  font: 600 11.5px/1 Inter, sans-serif;
+.global-bg-tasks-hud__toggle-chevron {
+  font-size: 10px;
+  color: #38bdf8;
+  margin-left: 4px;
+  opacity: 0.85;
+}
+
+/* Popover details panel */
+.global-bg-tasks-hud__popover {
+  width: min(380px, calc(100vw - 32px));
+  background: #0b131e;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 24px rgba(56, 189, 248, 0.18);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: tooltipFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+}
+
+.global-bg-tasks-hud__popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.global-bg-tasks-hud__popover-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #f1f5f9;
+}
+
+.global-bg-tasks-hud__popover-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
   cursor: pointer;
-  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.global-bg-tasks-hud__popover-close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.global-bg-tasks-hud__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.global-bg-tasks-hud__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 9px;
   transition: all 0.15s ease;
+}
+
+.global-bg-tasks-hud__item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.global-bg-tasks-hud__item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.global-bg-tasks-hud__item-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.global-bg-tasks-hud__item-tag {
+  font: 700 9px/1 "JetBrains Mono", monospace;
+  color: #38bdf8;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.global-bg-tasks-hud__item-score {
+  font: 700 9.5px/1 "JetBrains Mono", monospace;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.global-bg-tasks-hud__item-name {
+  font: 600 12.5px/1.3 Inter, sans-serif;
+  color: #f8fafc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-bg-tasks-hud__item-status {
+  margin: 0;
+  font: 400 11px/1.3 Inter, sans-serif;
+  color: #94a3b8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-bg-tasks-hud__item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
 }
 
-.global-bg-tasks-hud__btn:hover {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.38) 0%, rgba(99, 102, 241, 0.46) 100%);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+.global-bg-tasks-hud__action-btn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  font: 600 11px/1 Inter, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.global-bg-tasks-hud__action-btn.is-open {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(99, 102, 241, 0.28) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  color: #ffffff;
+}
+
+.global-bg-tasks-hud__action-btn.is-open:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.35) 0%, rgba(99, 102, 241, 0.42) 100%);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+.global-bg-tasks-hud__action-btn.is-cancel {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.global-bg-tasks-hud__action-btn.is-cancel:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #ffffff;
 }
 
 

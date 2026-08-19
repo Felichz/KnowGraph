@@ -16,11 +16,10 @@ import GraphTopologyView from "./components/graphViews/GraphTopologyView.jsx";
 import { ReadingChunks } from "./components/ReadingChunks.jsx";
 import { listAllAttempts } from "./ai/learningStore.js";
 import { applyBackup, createBackup, downloadBackup, parseBackup } from "./ai/backup.js";
-import { hashCardContent } from "./ai/contentHash.js";
 import { getCompletionView, getScoreView, isEvaluationSurfaceComplete } from "./ai/types.js";
 import { CommandPalette } from "./components/CommandPalette.jsx";
 import { loadProviderProfile } from "./ai/providerSettings.js";
-import { useBackgroundTasks } from "./ai/backgroundTaskManager.js";
+import { cancelTask, useBackgroundTasks } from "./ai/backgroundTaskManager.js";
 
 let mermaidLoader;
 function loadMermaid() {
@@ -1208,6 +1207,7 @@ const backupInputRef = useRef(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [bgTasksPopoverOpen, setBgTasksPopoverOpen] = useState(false);
   const ttsSpeechRef = useRef(null);
   const ttsSpeedRef = useRef(1);
   const ttsPlaybackRef = useRef({ segments: [], index: 0, generation: 0 });
@@ -2396,31 +2396,119 @@ const backupInputRef = useRef(null);
         </aside>
       )}
 
-      {/* Global Background Tasks Floating HUD */}
+      {/* Global Background Tasks Floating HUD & Interactive Popover */}
       {activeTasks.length > 0 && (
-        <aside className="global-bg-tasks-hud" role="status" aria-live="polite" aria-label="Tareas activas de IA">
-          <div className="global-bg-tasks-hud__inner">
+        <aside
+          className={`global-bg-tasks-hud ${bgTasksPopoverOpen ? "is-expanded" : ""}`}
+          role="status"
+          aria-live="polite"
+          aria-label="Tareas activas de IA"
+          onMouseEnter={() => setBgTasksPopoverOpen(true)}
+          onMouseLeave={() => setBgTasksPopoverOpen(false)}
+        >
+          {bgTasksPopoverOpen && (
+            <div className="global-bg-tasks-hud__popover" role="dialog" aria-label="Detalle de tareas en segundo plano">
+              <div className="global-bg-tasks-hud__popover-header">
+                <div className="global-bg-tasks-hud__popover-title">
+                  <span className="global-bg-tasks-hud__pulse-dot" aria-hidden="true" />
+                  <strong>Tareas en Segundo Plano ({activeTasks.length})</strong>
+                </div>
+                <button
+                  type="button"
+                  className="global-bg-tasks-hud__popover-close"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setBgTasksPopoverOpen(false);
+                  }}
+                  aria-label="Cerrar panel de tareas"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="global-bg-tasks-hud__list">
+                {activeTasks.map((task) => {
+                  const node =
+                    GRAPH_CONFIGS[task.graphId]?.nodes.find((n) => n.id === task.nodeId) ||
+                    task.node;
+                  const isCurrentCard = selected?.id === task.nodeId;
+                  return (
+                    <div key={task.cardKey || task.id} className="global-bg-tasks-hud__item">
+                      <div className="global-bg-tasks-hud__item-info">
+                        <div className="global-bg-tasks-hud__item-top">
+                          <span className="global-bg-tasks-hud__item-tag">
+                            {task.type === "pedagogical_harness"
+                              ? `✨ JUEZ PEDAGÓGICO${task.iteration ? ` (Iteración ${task.iteration})` : ""}`
+                              : "🧠 EVALUACIÓN"}
+                          </span>
+                          {task.score !== undefined && task.score !== null && (
+                            <span className="global-bg-tasks-hud__item-score">
+                              {task.score}/100
+                            </span>
+                          )}
+                        </div>
+                        <strong className="global-bg-tasks-hud__item-name">
+                          {node?.label || task.nodeId}
+                        </strong>
+                        <p className="global-bg-tasks-hud__item-status">
+                          {task.message || "Procesando con IA..."}
+                          {task.progress ? ` (${task.progress} chars)` : ""}
+                        </p>
+                      </div>
+
+                      <div className="global-bg-tasks-hud__item-actions">
+                        {!isCurrentCard && node && (
+                          <button
+                            type="button"
+                            className="global-bg-tasks-hud__action-btn is-open"
+                            onClick={() => {
+                              openLesson(node, true);
+                              setBgTasksPopoverOpen(false);
+                            }}
+                            title={`Abrir card ${node.label}`}
+                          >
+                            Abrir card →
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="global-bg-tasks-hud__action-btn is-cancel"
+                          onClick={() => cancelTask(task.graphId, task.nodeId)}
+                          title="Cancelar esta tarea en segundo plano"
+                        >
+                          Cancelar ✕
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div
+            className="global-bg-tasks-hud__inner"
+            onClick={() => setBgTasksPopoverOpen((prev) => !prev)}
+            style={{ cursor: "pointer" }}
+            title="Hacé click o pasa el cursor para ver todas las cards activas"
+          >
             <span className="global-bg-tasks-hud__pulse-dot" aria-hidden="true" />
             <span className="global-bg-tasks-hud__icon" aria-hidden="true">⚡</span>
             <div className="global-bg-tasks-hud__content">
               <span className="global-bg-tasks-hud__title">
                 {activeTasks.length === 1
-                  ? `${activeTasks[0].node?.label || "Concepto"}`
+                  ? `${GRAPH_CONFIGS[activeTasks[0].graphId]?.nodes.find((n) => n.id === activeTasks[0].nodeId)?.label || activeTasks[0].node?.label || "Concepto"}`
                   : `${activeTasks.length} tarjetas con IA activa`}
               </span>
               <span className="global-bg-tasks-hud__msg">
-                {activeTasks.length === 1 ? activeTasks[0].message : "Procesando en segundo plano"}
+                {activeTasks.length === 1
+                  ? activeTasks[0].message
+                  : "Hacé click o hover para ver detalles"}
               </span>
             </div>
-            {activeTasks.length === 1 && selected?.id !== activeTasks[0].nodeId && (
-              <button
-                type="button"
-                className="global-bg-tasks-hud__btn"
-                onClick={() => openLesson(activeTasks[0].node, true)}
-              >
-                Abrir card →
-              </button>
-            )}
+            <span className="global-bg-tasks-hud__toggle-chevron" aria-hidden="true">
+              {bgTasksPopoverOpen ? "▲" : "▼"}
+            </span>
           </div>
         </aside>
       )}
