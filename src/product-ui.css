@@ -2710,6 +2710,59 @@ body { background: var(--p-bg); }
   filter: none !important;
 }
 
+/* Multi-tab / background Evaluation Banner */
+.paraphrase-review__evaluation-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(59, 130, 246, 0.16) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  animation: bannerPulse 2s infinite ease-in-out;
+}
+
+@keyframes bannerPulse {
+  0%, 100% { border-color: rgba(6, 182, 212, 0.35); }
+  50% { border-color: rgba(6, 182, 212, 0.7); }
+}
+
+.paraphrase-review__evaluation-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #a5f3fc;
+  font-size: 12.5px;
+  font-weight: 550;
+}
+
+.paraphrase-review__evaluation-banner-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.paraphrase-review__evaluation-banner-btn {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(6, 182, 212, 0.22);
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.paraphrase-review__evaluation-banner-btn:hover {
+  background: rgba(6, 182, 212, 0.4);
+  border-color: #67e8f9;
+  transform: translateY(-1px);
+}
+
 /* Chunked Draft View inside Paraphrase / Coaching Review */
 .chunked-draft-view {
   display: flex;

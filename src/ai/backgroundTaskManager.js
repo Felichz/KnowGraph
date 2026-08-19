@@ -14,6 +14,7 @@ import { hashAnswer, hashCardContent } from "./contentHash.js";
 const tasksMap = new Map();
 let tasksSnapshot = new Map();
 const listeners = new Set();
+const ACTIVE_TASKS_STORAGE_KEY = "knowgraph_active_tasks";
 
 // Cross-tab broadcast channel for reactive multi-tab task synchronization
 export const taskSyncChannel =
@@ -23,12 +24,80 @@ export const taskSyncChannel =
 
 function sanitizeTaskForBroadcast(task) {
   if (!task) return null;
-  const { abortController, onUpdate, ...serializable } = task;
-  return serializable;
+  return {
+    id: task.id,
+    graphId: task.graphId,
+    nodeId: task.nodeId,
+    cardKey: task.cardKey,
+    type: task.type,
+    status: task.status,
+    stage: task.stage,
+    message: task.message,
+    progress: task.progress,
+    draft: task.draft,
+    score: task.score,
+    rubric: task.rubric,
+    critique: task.critique,
+    history: task.history,
+    passedThreshold: task.passedThreshold,
+    iteration: task.iteration,
+    streamingSections: task.streamingSections,
+    streamingBlocks: task.streamingBlocks,
+    attempt: task.attempt,
+    error: task.error,
+    startedAt: task.startedAt,
+    updatedAt: task.updatedAt,
+    completedAt: task.completedAt,
+  };
 }
+
+function persistActiveTasksLocally() {
+  if (typeof localStorage === "undefined") return;
+  try {
+    const runningTasks = Array.from(tasksMap.values())
+      .filter((t) => t.status === "running")
+      .map(sanitizeTaskForBroadcast);
+    if (runningTasks.length > 0) {
+      localStorage.setItem(ACTIVE_TASKS_STORAGE_KEY, JSON.stringify(runningTasks));
+    } else {
+      localStorage.removeItem(ACTIVE_TASKS_STORAGE_KEY);
+    }
+  } catch {
+    // ignore storage quota errors
+  }
+}
+
+function hydrateFromLocalStorage() {
+  if (typeof localStorage === "undefined") return;
+  try {
+    const raw = localStorage.getItem(ACTIVE_TASKS_STORAGE_KEY);
+    if (!raw) return;
+    const tasks = JSON.parse(raw);
+    if (Array.isArray(tasks)) {
+      const now = Date.now();
+      tasks.forEach((task) => {
+        if (
+          task &&
+          task.cardKey &&
+          task.status === "running" &&
+          now - (task.updatedAt || task.startedAt || 0) < 600_000
+        ) {
+          tasksMap.set(task.cardKey, task);
+        }
+      });
+      tasksSnapshot = new Map(tasksMap);
+    }
+  } catch {
+    // ignore parse errors
+  }
+}
+
+// Initial synchronous hydration on module evaluation
+hydrateFromLocalStorage();
 
 function notifyListeners(broadcast = true, mutationData = null) {
   tasksSnapshot = new Map(tasksMap);
+  persistActiveTasksLocally();
   listeners.forEach((listener) => {
     try {
       listener(tasksSnapshot);
@@ -47,11 +116,38 @@ function notifyListeners(broadcast = true, mutationData = null) {
 }
 
 if (taskSyncChannel) {
+  // Request active tasks from any other open tab
+  try {
+    taskSyncChannel.postMessage({ type: "SYNC_REQUEST" });
+  } catch (e) {
+    // ignore
+  }
+
   taskSyncChannel.onmessage = (event) => {
     const data = event?.data;
     if (!data || !data.type) return;
 
-    if (data.type === "TASK_MUTATION" && data.cardKey && data.task) {
+    if (data.type === "SYNC_REQUEST") {
+      const running = Array.from(tasksMap.values()).map(sanitizeTaskForBroadcast);
+      if (running.length > 0) {
+        taskSyncChannel.postMessage({ type: "SYNC_RESPONSE", tasks: running });
+      }
+    } else if (data.type === "SYNC_RESPONSE" && Array.isArray(data.tasks)) {
+      let changed = false;
+      data.tasks.forEach((task) => {
+        if (task && task.cardKey) {
+          const existing = tasksMap.get(task.cardKey);
+          const abortController = existing?.abortController;
+          if (!existing || (task.updatedAt || 0) >= (existing.updatedAt || 0)) {
+            tasksMap.set(task.cardKey, { ...task, abortController });
+            changed = true;
+          }
+        }
+      });
+      if (changed) {
+        notifyListeners(false);
+      }
+    } else if (data.type === "TASK_MUTATION" && data.cardKey && data.task) {
       const existing = tasksMap.get(data.cardKey);
       const abortController = existing?.abortController;
       if (!existing || (data.task.updatedAt || 0) >= (existing.updatedAt || 0)) {

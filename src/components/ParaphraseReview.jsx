@@ -1038,6 +1038,24 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       <div className="mastery-workspace">
           <div className="mastery-workspace__editor">
             <div className="paraphrase-review__editor">
+              {currentTask?.type === "evaluation" && currentTask.status === "running" && (
+                <div className="paraphrase-review__evaluation-banner" role="status">
+                  <div className="paraphrase-review__evaluation-banner-content">
+                    <span className="paraphrase-review__evaluation-banner-icon" aria-hidden="true">🧠</span>
+                    <span>Evaluando tu explicación con IA en segundo plano{currentTask.progress ? ` (${currentTask.progress} caracteres recibidos)` : "..."}</span>
+                  </div>
+                  {onRequestEvaluate && (
+                    <button
+                      type="button"
+                      className="paraphrase-review__evaluation-banner-btn"
+                      onClick={onRequestEvaluate}
+                      title="Ir a la pestaña de evaluación para ver la respuesta detallada"
+                    >
+                      Ver Evaluación ➔
+                    </button>
+                  )}
+                </div>
+              )}
               <div className="paraphrase-review__editor-tools">
                 <div className="paraphrase-review__tool-buttons">
                   <button
