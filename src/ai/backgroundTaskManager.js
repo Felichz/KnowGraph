@@ -23,6 +23,14 @@ function notifyListeners() {
   });
 }
 
+function updateTaskState(cardKey, task, updates = {}) {
+  Object.assign(task, updates, { updatedAt: Date.now() });
+  const snapshot = { ...task };
+  tasksMap.set(cardKey, snapshot);
+  notifyListeners();
+  return snapshot;
+}
+
 export function getTask(graphId, nodeId) {
   if (!graphId || !nodeId) return null;
   return tasksMap.get(`${graphId}:${nodeId}`) ?? null;
@@ -53,11 +61,12 @@ export function cancelTask(graphId, nodeId) {
     if (task.abortController) {
       task.abortController.abort();
     }
-    task.status = "cancelled";
-    task.stage = "cancelled";
-    task.message = "Cancelado por el usuario";
-    task.completedAt = Date.now();
-    notifyListeners();
+    updateTaskState(cardKey, task, {
+      status: "cancelled",
+      stage: "cancelled",
+      message: "Cancelado por el usuario",
+      completedAt: Date.now(),
+    });
   }
 }
 
@@ -87,7 +96,7 @@ export async function startPedagogicalHarness({
   const controller = new AbortController();
   const taskId = `harness-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-  const task = {
+  let task = {
     id: taskId,
     graphId,
     nodeId: node.id,
@@ -114,8 +123,7 @@ export async function startPedagogicalHarness({
     abortController: controller,
   };
 
-  tasksMap.set(cardKey, task);
-  notifyListeners();
+  task = updateTaskState(cardKey, task);
   onUpdate?.(task);
 
   // Background async loop
@@ -124,10 +132,10 @@ export async function startPedagogicalHarness({
     try {
       // Step 0: If draft is empty or very short, generate initial draft with IA
       if (!currentDraft || currentDraft.length < 15) {
-        task.stage = "generating_initial";
-        task.message = "🪄 Generando borrador inicial con IA...";
-        task.updatedAt = Date.now();
-        notifyListeners();
+        task = updateTaskState(cardKey, task, {
+          stage: "generating_initial",
+          message: "🪄 Generando borrador inicial con IA...",
+        });
         onUpdate?.(task);
 
         let initAcc = "";
@@ -138,33 +146,32 @@ export async function startPedagogicalHarness({
           signal: controller.signal,
           onDelta: (delta) => {
             initAcc += delta;
-            task.draft = initAcc;
-            task.progress = initAcc.length;
-            task.updatedAt = Date.now();
+            task = updateTaskState(cardKey, task, {
+              draft: initAcc,
+              progress: initAcc.length,
+            });
             setDraft(graphId, node.id, initAcc, {
               isAiGenerated: true,
               generatedAt: new Date().toISOString(),
             });
-            notifyListeners();
             onUpdate?.(task);
           },
         });
         currentDraft = (genRes.text || initAcc).trim();
-        task.draft = currentDraft;
+        task = updateTaskState(cardKey, task, { draft: currentDraft });
         await setDraft(graphId, node.id, currentDraft, {
           isAiGenerated: true,
           generatedAt: new Date().toISOString(),
         });
-        notifyListeners();
         onUpdate?.(task);
       }
 
       // Step 1: Initial Judge QA Evaluation
-      task.stage = "judging";
-      task.iteration = 0;
-      task.message = "⚖️ Evaluando calidad pedagógica inicial con Juez...";
-      task.updatedAt = Date.now();
-      notifyListeners();
+      task = updateTaskState(cardKey, task, {
+        stage: "judging",
+        iteration: 0,
+        message: "⚖️ Evaluando calidad pedagógica inicial con Juez...",
+      });
       onUpdate?.(task);
 
       let judgeResult = await judgePedagogy({
@@ -174,11 +181,7 @@ export async function startPedagogicalHarness({
         signal: controller.signal,
       });
 
-      task.score = judgeResult.score;
-      task.rubric = judgeResult.rubric;
-      task.critique = judgeResult.pedagogicalCritique || [];
-      task.passedThreshold = judgeResult.passedThreshold;
-      task.history = [
+      const initialHistory = [
         {
           iteration: 0,
           score: judgeResult.score,
@@ -188,18 +191,29 @@ export async function startPedagogicalHarness({
           draft: currentDraft,
         },
       ];
-      task.updatedAt = Date.now();
-      notifyListeners();
+
+      task = updateTaskState(cardKey, task, {
+        score: judgeResult.score,
+        rubric: judgeResult.rubric,
+        critique: judgeResult.pedagogicalCritique || [],
+        passedThreshold: judgeResult.passedThreshold,
+        history: initialHistory,
+        message: judgeResult.passedThreshold
+          ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
+          : `⚖️ Juez asignó ${judgeResult.score}/100 (Meta: 95+)`,
+      });
       onUpdate?.(task);
 
       let iter = 0;
+      let historyList = [...initialHistory];
+
       while (!judgeResult.passedThreshold && iter < maxIterations) {
         iter += 1;
-        task.iteration = iter;
-        task.stage = "refining";
-        task.message = `🪄 Refinando explicación según crítica del Juez (Iteración ${iter}/${maxIterations})...`;
-        task.updatedAt = Date.now();
-        notifyListeners();
+        task = updateTaskState(cardKey, task, {
+          iteration: iter,
+          stage: "refining",
+          message: `🪄 Refinando explicación según crítica del Juez (Iteración ${iter}/${maxIterations})...`,
+        });
         onUpdate?.(task);
 
         let refinedAcc = "";
@@ -212,30 +226,30 @@ export async function startPedagogicalHarness({
           signal: controller.signal,
           onDelta: (delta) => {
             refinedAcc += delta;
-            task.draft = refinedAcc;
-            task.progress = refinedAcc.length;
-            task.updatedAt = Date.now();
+            task = updateTaskState(cardKey, task, {
+              draft: refinedAcc,
+              progress: refinedAcc.length,
+            });
             setDraft(graphId, node.id, refinedAcc, {
               isAiGenerated: true,
               generatedAt: new Date().toISOString(),
             });
-            notifyListeners();
             onUpdate?.(task);
           },
         });
 
         currentDraft = (refineRes.text || refinedAcc).trim();
-        task.draft = currentDraft;
+        task = updateTaskState(cardKey, task, { draft: currentDraft });
         await setDraft(graphId, node.id, currentDraft, {
           isAiGenerated: true,
           generatedAt: new Date().toISOString(),
         });
 
         // Re-judge
-        task.stage = "judging";
-        task.message = `⚖️ Re-evaluando calidad pedagógica (Iteración ${iter}/${maxIterations})...`;
-        task.updatedAt = Date.now();
-        notifyListeners();
+        task = updateTaskState(cardKey, task, {
+          stage: "judging",
+          message: `⚖️ Re-evaluando calidad pedagógica (Iteración ${iter}/${maxIterations})...`,
+        });
         onUpdate?.(task);
 
         judgeResult = await judgePedagogy({
@@ -245,12 +259,8 @@ export async function startPedagogicalHarness({
           signal: controller.signal,
         });
 
-        task.score = judgeResult.score;
-        task.rubric = judgeResult.rubric;
-        task.critique = judgeResult.pedagogicalCritique || [];
-        task.passedThreshold = judgeResult.passedThreshold;
-        task.history = [
-          ...task.history,
+        historyList = [
+          ...historyList,
           {
             iteration: iter,
             score: judgeResult.score,
@@ -260,33 +270,48 @@ export async function startPedagogicalHarness({
             draft: currentDraft,
           },
         ];
-        task.updatedAt = Date.now();
-        notifyListeners();
+
+        task = updateTaskState(cardKey, task, {
+          score: judgeResult.score,
+          rubric: judgeResult.rubric,
+          critique: judgeResult.pedagogicalCritique || [],
+          passedThreshold: judgeResult.passedThreshold,
+          history: historyList,
+          message: judgeResult.passedThreshold
+            ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
+            : `⚖️ Juez asignó ${judgeResult.score}/100 en Iteración ${iter} (Meta: 95+)`,
+        });
         onUpdate?.(task);
       }
 
       // Success / Done
-      task.status = "completed";
-      task.stage = "done";
-      task.completedAt = Date.now();
-      task.message = judgeResult.passedThreshold
-        ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
-        : `Límite de ${maxIterations} iteraciones alcanzado (Puntaje: ${judgeResult.score}/100)`;
-      notifyListeners();
+      task = updateTaskState(cardKey, task, {
+        status: "completed",
+        stage: "done",
+        completedAt: Date.now(),
+        message: judgeResult.passedThreshold
+          ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
+          : `Límite de ${maxIterations} iteraciones alcanzado (Puntaje: ${judgeResult.score}/100)`,
+      });
       onUpdate?.(task);
     } catch (err) {
       if (controller.signal.aborted || isCancel(err)) {
-        task.status = "cancelled";
-        task.stage = "cancelled";
-        task.message = "Cancelado por el usuario";
+        task = updateTaskState(cardKey, task, {
+          status: "cancelled",
+          stage: "cancelled",
+          message: "Cancelado por el usuario",
+          completedAt: Date.now(),
+        });
       } else {
-        task.status = "error";
-        task.stage = "error";
-        task.error = userFacingAiError(err, "No se pudo completar el perfeccionamiento pedagógico.");
-        task.message = task.error;
+        const errorMsg = userFacingAiError(err, "No se pudo completar el perfeccionamiento pedagógico.");
+        task = updateTaskState(cardKey, task, {
+          status: "error",
+          stage: "error",
+          error: errorMsg,
+          message: errorMsg,
+          completedAt: Date.now(),
+        });
       }
-      task.completedAt = Date.now();
-      notifyListeners();
       onUpdate?.(task);
     }
   })();
@@ -312,7 +337,7 @@ export async function startEvaluation({
   const controller = new AbortController();
   const taskId = `eval-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-  const task = {
+  let task = {
     id: taskId,
     graphId,
     nodeId: node.id,
@@ -334,8 +359,7 @@ export async function startEvaluation({
     abortController: controller,
   };
 
-  tasksMap.set(cardKey, task);
-  notifyListeners();
+  task = updateTaskState(cardKey, task);
   onUpdate?.(task);
 
   (async () => {
@@ -350,34 +374,32 @@ export async function startEvaluation({
         provider: providerProfile,
         signal: controller.signal,
         onProgress: (length) => {
-          task.progress = length;
-          task.updatedAt = Date.now();
-          notifyListeners();
+          task = updateTaskState(cardKey, task, { progress: length });
           onUpdate?.(task);
         },
         onSection: (field, value) => {
-          task.streamingSections = { ...task.streamingSections, [field]: value };
-          task.updatedAt = Date.now();
-          notifyListeners();
+          task = updateTaskState(cardKey, task, {
+            streamingSections: { ...task.streamingSections, [field]: value },
+          });
           onUpdate?.(task);
         },
         onReset: (fallback) => {
           const preserveScores = fallback?.scope === "feedback";
-          task.progress = 0;
-          task.streamingSections = preserveScores && task.streamingSections.scoreSummary
-            ? { scoreSummary: task.streamingSections.scoreSummary }
-            : {};
-          task.streamingBlocks = preserveScores
-            ? Object.fromEntries(Object.entries(task.streamingBlocks).filter(([id]) => id.startsWith("scoreSummary.")))
-            : {};
-          task.updatedAt = Date.now();
-          notifyListeners();
+          task = updateTaskState(cardKey, task, {
+            progress: 0,
+            streamingSections: preserveScores && task.streamingSections?.scoreSummary
+              ? { scoreSummary: task.streamingSections.scoreSummary }
+              : {},
+            streamingBlocks: preserveScores
+              ? Object.fromEntries(Object.entries(task.streamingBlocks || {}).filter(([id]) => id.startsWith("scoreSummary.")))
+              : {},
+          });
           onUpdate?.(task);
         },
         onBlock: (block) => {
-          task.streamingBlocks = { ...task.streamingBlocks, [block.id]: { ...task.streamingBlocks[block.id], ...block } };
-          task.updatedAt = Date.now();
-          notifyListeners();
+          task = updateTaskState(cardKey, task, {
+            streamingBlocks: { ...task.streamingBlocks, [block.id]: { ...(task.streamingBlocks?.[block.id] || {}), ...block } },
+          });
           onUpdate?.(task);
         },
       });
@@ -390,27 +412,33 @@ export async function startEvaluation({
         isAiGenerated: Boolean(isDraftAiGenerated),
       };
       await saveAttempt(attempt);
-      task.attempt = attempt;
-      task.status = "completed";
-      task.stage = "done";
-      task.completedAt = Date.now();
-      task.message = "Evaluación completada";
-      notifyListeners();
+      task = updateTaskState(cardKey, task, {
+        attempt,
+        status: "completed",
+        stage: "done",
+        completedAt: Date.now(),
+        message: "Evaluación completada",
+      });
       onUpdate?.(task);
       onAttemptSaved?.(attempt);
     } catch (err) {
       if (controller.signal.aborted || isCancel(err)) {
-        task.status = "cancelled";
-        task.stage = "cancelled";
-        task.message = "Evaluación cancelada";
+        task = updateTaskState(cardKey, task, {
+          status: "cancelled",
+          stage: "cancelled",
+          message: "Evaluación cancelada",
+          completedAt: Date.now(),
+        });
       } else {
-        task.status = "error";
-        task.stage = "error";
-        task.error = userFacingAiError(err, "No se pudo completar la evaluación.");
-        task.message = task.error;
+        const errorMsg = userFacingAiError(err, "No se pudo completar la evaluación.");
+        task = updateTaskState(cardKey, task, {
+          status: "error",
+          stage: "error",
+          error: errorMsg,
+          message: errorMsg,
+          completedAt: Date.now(),
+        });
       }
-      task.completedAt = Date.now();
-      notifyListeners();
       onUpdate?.(task);
     }
   })();
