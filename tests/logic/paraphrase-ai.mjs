@@ -76,12 +76,12 @@ const polishPayload = buildPolishPedagogyUserPayload({
   currentDraft: "La autenticación en una arquitectura React + API no es un monolito, sino un reparto...",
 });
 
-assert.ok(polishPayload.includes("CONCEPTO A ENSEÑAR: useEffect"));
-assert.ok(polishPayload.includes("TEXTO ACTUAL A REESCRIBIR DE MANERA DIDÁCTICA Y HUMANA:"));
-assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("SKILL PEDAGÓGICA Y DIDÁCTICA"));
-assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("MODELO MENTAL Y ENCUADRE INTUITIVO"));
+assert.ok(polishPayload.includes("TEMA: useEffect"));
+assert.ok(polishPayload.includes("TEXTO ACTUAL A TRANSFORMAR:"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("DIDÁCTICA HUMANA"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("ARQUITECTURA PEDAGÓGICA OBLIGATORIA"));
 assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("DESGLOSE PROGRESIVO"));
-assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("CONTROL DE DENSIDAD Y PÁRRAFOS CORTOS"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("CONTROL DE DENSIDAD"));
 
 console.log("paraphrase AI schemas & prompts: OK");
 
