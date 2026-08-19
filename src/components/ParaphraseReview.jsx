@@ -143,8 +143,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
   const [isGeneratingParaphrase, setIsGeneratingParaphrase] = useState(false);
   const [paraphraseMode, setParaphraseMode] = useState(null);
   const [paraphraseProgress, setParaphraseProgress] = useState(0);
-  const [aiTooltipOpen, setAiTooltipOpen] = useState(false);
-  const [polishTooltipOpen, setPolishTooltipOpen] = useState(false);
+  const [harnessTooltipOpen, setHarnessTooltipOpen] = useState(false);
   const [harnessState, setHarnessState] = useState({
     isActive: false,
     stage: null,
@@ -611,28 +610,21 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     setParaphraseMode(null);
   }, [bgCancelTask]);
 
-  const handleGenerateAiParaphrase = useCallback(async () => {
+  const handlePedagogicalHarness = useCallback(async () => {
     if (currentTask?.status === "running" || isGeneratingParaphrase) {
       cancelParaphraseGeneration();
       return;
-    }
-
-    if (draft.trim().length > 40 && !isDraftAiGenerated) {
-      const confirmed = window.confirm(
-        "Ya escribiste parte de tu respuesta. ¿Querés reemplazarla con una paráfrasis pedagógica completa generada con IA?"
-      );
-      if (!confirmed) return;
     }
 
     cancelLiveReview();
     userEditedDraftRef.current = false;
     bgStartHarness({
       node,
-      initialDraft: "",
+      initialDraft: draft.trim(),
       providerProfile,
       maxIterations: 6,
     });
-  }, [bgCancelTask, bgStartHarness, cancelLiveReview, cancelParaphraseGeneration, currentTask?.status, draft, isDraftAiGenerated, isGeneratingParaphrase, node, providerProfile]);
+  }, [bgStartHarness, cancelLiveReview, cancelParaphraseGeneration, currentTask?.status, draft, isGeneratingParaphrase, node, providerProfile]);
 
   const handleIncorporateFocus = useCallback(async (hintToIncorporate) => {
     if (isGeneratingParaphrase) {
@@ -748,21 +740,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     }
   }, [activeChatIteration, cancelLiveReview, cancelParaphraseGeneration, draft, graphId, isGeneratingParaphrase, node, providerProfile, startLiveReview]);
 
-  const handlePolishPedagogy = useCallback(async () => {
-    if (currentTask?.status === "running" || isGeneratingParaphrase) {
-      cancelParaphraseGeneration();
-      return;
-    }
 
-    cancelLiveReview();
-    userEditedDraftRef.current = false;
-    bgStartHarness({
-      node,
-      initialDraft: draft,
-      providerProfile,
-      maxIterations: 6,
-    });
-  }, [bgCancelTask, bgStartHarness, cancelLiveReview, cancelParaphraseGeneration, currentTask?.status, draft, isGeneratingParaphrase, node, providerProfile]);
 
   useEffect(() => {
     if (!debounceStartedAt) return undefined;
@@ -1076,97 +1054,66 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
                     <span>{isListening ? "Grabando voz..." : "Dictar por voz"}</span>
                   </button>
 
-                  <div className="ai-generate-wrapper">
+                  <div className="ai-harness-wrapper">
                     <button
                       type="button"
-                      className={`ai-generate-button ${isGeneratingParaphrase ? "is-generating" : ""}`}
-                      onClick={handleGenerateAiParaphrase}
-                      disabled={isGeneratingParaphrase || Boolean(pending)}
-                      aria-label={isGeneratingParaphrase ? "Generando paráfrasis fluida con IA..." : "Generar paráfrasis con IA"}
-                      title="Generar una paráfrasis pedagógica fluida con IA (Skill V5)"
+                      className={`ai-harness-button ${isGeneratingParaphrase && paraphraseMode === "polish_judge" ? "is-generating" : ""} ${harnessState.passedThreshold ? "is-mastery" : ""}`}
+                      onClick={handlePedagogicalHarness}
+                      disabled={Boolean(pending)}
+                      aria-label={
+                        isGeneratingParaphrase && paraphraseMode === "polish_judge"
+                          ? "Perfeccionando explicación con Juez Pedagógico..."
+                          : draft.trim().length < 15
+                          ? "Generar explicación con Juez IA (100/100)"
+                          : "Perfeccionar explicación con Juez IA (95+)"
+                      }
+                      title="Ejecuta el Harness Pedagógico de IA con evaluación y refinamiento automático del Juez hasta alcanzar maestría (95+/100)"
                     >
-                      <span className="ai-generate-button__icon" aria-hidden="true">✨</span>
-                      <span>{isGeneratingParaphrase ? "Generando con IA..." : "Generar con IA"}</span>
-                    </button>
-
-                    <div className="ai-generate-tooltip-wrapper">
-                      <button
-                        type="button"
-                        className="ai-generate-tooltip-trigger"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setAiTooltipOpen((v) => !v);
-                        }}
-                        onMouseEnter={() => setAiTooltipOpen(true)}
-                        onMouseLeave={() => setAiTooltipOpen(false)}
-                        aria-label="¿Por qué y cuándo conviene generar con IA?"
-                        title="¿Por qué y cuándo conviene generar con IA?"
-                      >
-                        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M10 8.5v5M10 5.8v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                      </button>
-                      {aiTooltipOpen && (
-                        <div className="ai-generate-tooltip-popover" role="tooltip">
-                          <div className="ai-generate-tooltip-badge">✨ PARAFRASEO RÁPIDO</div>
-                          <strong className="ai-generate-tooltip-title">¿Por qué y cuándo usar esta opción?</strong>
-                          <p>
-                            <strong>Ahorro de tiempo para entrevistas:</strong> Si ya dominás este concepto y estás corto de tiempo, podés auto-generar una paráfrasis pedagógica fluida en segundos para avanzar rápido en el grafo sin detenerte a escribirlo a mano.
-                          </p>
-                          <p>
-                            <strong>Identificación en Flashcards:</strong> La card queda taggeada como <em>✨ Generada con IA</em> para que luego puedas filtrarla al instante y ensayarla manualmente desde cero cuando tengas más tiempo.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="ai-polish-wrapper">
-                    <button
-                      type="button"
-                      className={`ai-polish-button ${isGeneratingParaphrase && paraphraseMode === "polish_judge" ? "is-generating" : ""}`}
-                      onClick={handlePolishPedagogy}
-                      disabled={isGeneratingParaphrase || Boolean(pending)}
-                      aria-label={isGeneratingParaphrase && paraphraseMode === "polish_judge" ? "Perfeccionando explicación con Juez Pedagógico..." : "Perfeccionar con Juez IA (Harness Loop)"}
-                      title="Ejecuta un loop interactivo de Juez + Refinador para evaluar y perfeccionar la pedagogía hasta alcanzar 90+/100"
-                    >
-                      <span className="ai-polish-button__icon" aria-hidden="true">💡</span>
+                      <span className="ai-harness-button__icon" aria-hidden="true">
+                        {isGeneratingParaphrase && paraphraseMode === "polish_judge" ? "⚡" : (harnessState.passedThreshold ? "✨" : (draft.trim().length < 15 ? "✨" : "🪄"))}
+                      </span>
                       <span>
                         {isGeneratingParaphrase && paraphraseMode === "polish_judge"
                           ? (harnessState.stage === "judging"
                               ? `⚖️ Juez: ${harnessState.iteration === 0 ? "Evaluando" : `Iteración ${harnessState.iteration}`}...`
-                              : `🪄 Refinando: Iteración ${harnessState.iteration}...`)
+                              : (harnessState.stage === "generating_initial"
+                                  ? "🪄 Generando borrador base..."
+                                  : `🪄 Refinando: Iteración ${harnessState.iteration}...`))
                           : (harnessState.currentScore !== null
-                              ? `💡 Perfeccionar (${harnessState.currentScore}/100)`
-                              : "💡 Perfeccionar con Juez")}
+                              ? `✨ Perfeccionado (${harnessState.currentScore}/100)`
+                              : (draft.trim().length < 15
+                                  ? "✨ Generar con Juez IA"
+                                  : "🪄 Perfeccionar con Juez"))}
                       </span>
                     </button>
 
-                    <div className="ai-polish-tooltip-wrapper">
+                    <div className="ai-harness-tooltip-wrapper">
                       <button
                         type="button"
-                        className="ai-polish-tooltip-trigger"
+                        className="ai-harness-tooltip-trigger"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setPolishTooltipOpen((v) => !v);
+                          setHarnessTooltipOpen((v) => !v);
                         }}
-                        onMouseEnter={() => setPolishTooltipOpen(true)}
-                        onMouseLeave={() => setPolishTooltipOpen(false)}
+                        onMouseEnter={() => setHarnessTooltipOpen(true)}
+                        onMouseLeave={() => setHarnessTooltipOpen(false)}
                         aria-label="¿Cómo funciona el Harness con Juez Pedagógico?"
                         title="¿Cómo funciona el Harness con Juez Pedagógico?"
                       >
                         <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M10 8.5v5M10 5.8v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
                       </button>
-                      {polishTooltipOpen && (
-                        <div className="ai-polish-tooltip-popover" role="tooltip">
-                          <div className="ai-polish-tooltip-badge">💡 HARNESS CON LLM-AS-A-JUDGE</div>
-                          <strong className="ai-polish-tooltip-title">Loop de Auto-Perfeccionamiento Pedagógico</strong>
+                      {harnessTooltipOpen && (
+                        <div className="ai-harness-tooltip-popover" role="tooltip">
+                          <div className="ai-harness-tooltip-badge">🏆 HARNESS PEDAGÓGICO INTEGRADO</div>
+                          <strong className="ai-harness-tooltip-title">Generación y Perfeccionamiento con Juez IA</strong>
                           <p>
-                            <strong>1. Juez Evaluador:</strong> Asigna un puntaje en 5 dimensiones (🪝 Anclaje contextual, 🔭 Autocontención del alcance, ⏳ Ritmo cognitivo, ⚖️ Causalidad y 🎯 Código/Cierre).
+                            <strong>Flujo automatizado de calidad:</strong> Si el borrador está vacío, la IA redacta la explicación base desde cero. De inmediato, el <strong>Juez Pedagógico</strong> la audita en 5 dimensiones (anclaje real, autocontención, ritmo, causalidad y código/cierre).
                           </p>
                           <p>
-                            <strong>2. Refinamiento Iterativo:</strong> Si el puntaje es menor a 95/100, el Juez genera observaciones y el Refinador reescribe el texto hasta alcanzar la maestría didáctica.
+                            <strong>Refinamiento iterativo:</strong> Si el puntaje es menor a 95/100, el Refinador aplica las críticas del Juez y reescribe en bucle automático hasta alcanzar la maestría didáctica.
                           </p>
                           <p>
-                            <strong>3. Minimapa en Vivo:</strong> Muestra la trayectoria de mejora y el desglose de cada dimensión en tiempo real.
+                            <strong>Borradores propios:</strong> Si ya escribiste tu texto, el Juez evalúa tu redacción, aprueba de inmediato si ya es sólida o te ayuda a cerrar los gaps detectados.
                           </p>
                         </div>
                       )}
