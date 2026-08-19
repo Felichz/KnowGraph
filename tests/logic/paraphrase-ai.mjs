@@ -78,10 +78,10 @@ const polishPayload = buildPolishPedagogyUserPayload({
 
 assert.ok(polishPayload.includes("TEMA: useEffect"));
 assert.ok(polishPayload.includes("TEXTO ACTUAL A TRANSFORMAR:"));
-assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("DIDÁCTICA HUMANA"));
-assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("ARQUITECTURA PEDAGÓGICA OBLIGATORIA"));
-assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("DESGLOSE PROGRESIVO"));
-assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("CONTROL DE DENSIDAD"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("MAESTRÍA PEDAGÓGICA"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("PROGRESIÓN COGNITIVA"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("DILUCIÓN DE JERGA"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("CAUSALIDAD TRANSPARENTE"));
 
 console.log("paraphrase AI schemas & prompts: OK");
 
