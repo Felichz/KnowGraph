@@ -280,7 +280,7 @@ export async function judgePedagogy({ node, draft, provider, signal }) {
   } catch {
     parsed = {
       score: 75,
-      rubric: { intuitionAndClarity: 18, cognitivePacing: 18, causalityAndTradeoffs: 20, applicationAndFailureModes: 19 },
+      rubric: { intuitionAndClarity: 15, selfContainedScope: 15, cognitivePacing: 15, causalityAndTradeoffs: 15, applicationAndFailureModes: 15 },
       passedThreshold: false,
       verdict: "Evaluación completada",
       pedagogicalCritique: ["Mejorar la fluidez y claridad general."],
@@ -291,10 +291,11 @@ export async function judgePedagogy({ node, draft, provider, signal }) {
   return {
     score,
     rubric: parsed.rubric || {
-      intuitionAndClarity: Math.round(score * 0.25),
-      cognitivePacing: Math.round(score * 0.25),
-      causalityAndTradeoffs: Math.round(score * 0.25),
-      applicationAndFailureModes: Math.round(score * 0.25),
+      intuitionAndClarity: Math.round(score * 0.20),
+      selfContainedScope: Math.round(score * 0.20),
+      cognitivePacing: Math.round(score * 0.20),
+      causalityAndTradeoffs: Math.round(score * 0.20),
+      applicationAndFailureModes: Math.round(score * 0.20),
     },
     passedThreshold: score >= 95 && (!Array.isArray(parsed.pedagogicalCritique) || parsed.pedagogicalCritique.length === 0),
     verdict: parsed.verdict || (score >= 95 ? "Maestría pedagógica alcanzada" : "Requiere refinamiento"),

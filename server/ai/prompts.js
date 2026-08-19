@@ -359,40 +359,45 @@ CRITERIO DE RIGOR, TANGIBILIDAD Y HEURÍSTICA DE SCOPE:
 1. Distinción de Scope: Prerrequisitos comunes de programación no requieren definiciones básicas. Sin embargo, todo fenómeno, amenaza, trampa o problema que justifique las decisiones de diseño dentro de esta card DEBE estar aterrizado en su mecanismo esencial (en 1 o 2 frases cotidianas) al mencionarlo. Si se nombra un problema técnico como justificación sin desarmar en qué consiste el fenómeno, DEBES penalizar y exigir su desmitificación.
 2. Tangibilidad Operativa: Si el texto usa términos abstractos como cajas negras sin aterrizar su mecánica tangible, o si el código es un fragmento suelto de una sola línea que no muestra la resolución del caso principal, DEBES penalizar el puntaje y exigir que se subsane.
 
-DIMENSIONES DE AUDITORÍA (Todas de 0 a 25 puntos, total 0 a 100):
+DIMENSIONES DE AUDITORÍA (Todas de 0 a 20 puntos, total 0 a 100):
 
-1. intuitionAndClarity (0-25):
+1. intuitionAndClarity (0-20):
    - ¿Abre desarmando el problema del mundo real con un modelo mental intuitivo antes de la jerga técnica?
-   - ¿Aterriza los motivos y problemas clave del scope en lenguaje llano antes de presentar sus soluciones técnicas?
-   - 24-25: Apertura brillante, modelo mental perfecto y alcance 100% autocontenido en sus motivos de diseño.
-   - 17-23: Apertura aceptable pero nombra problemas o amenazas clave de pasada sin explicarlas brevemente.
-   - 0-16: Empieza tirando definiciones frías, listas secas, términos sin aterrizar o analogías forzadas.
+   - 19-20: Apertura brillante, contextualiza la necesidad humana/técnica con total claridad.
+   - 14-18: Apertura aceptable pero algo abstracta o estándar.
+   - 0-13: Empieza tirando definiciones frías, listas secas o analogías forzadas.
 
-2. cognitivePacing (0-25):
+2. selfContainedScope (0-20):
+   - ¿Es autocontenido en los motivos clave del tema? Si menciona una amenaza, fenómeno o trampa dentro del scope que motiva una decisión técnica, ¿explica en 1 o 2 frases en qué consiste el problema físico antes de dar su solución?
+   - 19-20: Alcance 100% autocontenido; todo motivo clave está desarmado con palabras llanas, cero siglas/conceptos huérfanos.
+   - 14-18: Nombra un motivo o amenaza clave de pasada sin aterrizar brevemente en qué consiste el ataque o fallo.
+   - 0-13: Asume conocimiento previo de las amenazas o fenómenos centrales del tema, dejando al lector sin entender el porqué real de la defensa.
+
+3. cognitivePacing (0-20):
    - ¿Aplica "un concepto a la vez" con ritmo respirable y párrafos cortos bien delimitados (máx 3-4 líneas)?
-   - 24-25: Flujo cognitivo impecable; cada idea respira, cero oraciones asfixiantes.
-   - 17-23: Párrafo algo cargado pero legible.
-   - 0-16: Párrafo de más de 5 líneas que debería dividirse, amontonamiento de conceptos o monólogo denso.
+   - 19-20: Flujo cognitivo impecable; cada idea respira, cero oraciones asfixiantes.
+   - 14-18: Párrafo algo cargado pero legible.
+   - 0-13: Párrafo de más de 5 líneas que debería dividirse, amontonamiento de conceptos o monólogo denso.
 
-3. causalityAndTradeoffs (0-25):
+4. causalityAndTradeoffs (0-20):
    - ¿Explica el porqué físico y arquitectónico de cada decisión con causa-efecto transparente?
-   - 24-25: Explica con claridad qué ganamos y qué costo o riesgo asumimos con cada enfoque.
-   - 17-23: Menciona los mecanismos pero no siempre explicita el porqué de la decisión.
-   - 0-16: Solo describe piezas aisladas sin análisis de causa-efecto ni trade-offs.
+   - 19-20: Explica con claridad qué ganamos y qué costo o riesgo asumimos con cada enfoque.
+   - 14-18: Menciona los mecanismos pero no siempre explicita el porqué de la decisión.
+   - 0-13: Solo describe piezas aisladas sin análisis de causa-efecto ni trade-offs.
 
-4. applicationAndFailureModes (0-25):
+5. applicationAndFailureModes (0-20):
    - ¿Integra el código operativo tangible (mostrando la función o flujo real), describe errores comunes observables y cierra con una regla memorable?
-   - 24-25: Código operativo conciso y didáctico (muestra el manejo del caso clave), errores con síntomas visibles en producción y cierre contundente.
-   - 17-23: Código o errores presentes pero algo desconectados o fragmentarios.
-   - 0-16: Texto truncado/incompleto, código ausente, falta de síntomas observables de error o falta de regla práctica final.
+   - 19-20: Código operativo conciso y didáctico (muestra el manejo del caso clave), errores con síntomas visibles en producción y cierre contundente.
+   - 14-18: Código o errores presentes pero algo desconectados o fragmentarios.
+   - 0-13: Texto truncado/incompleto, código ausente, falta de síntomas observables de error o falta de regla práctica final.
 
 REGLA DE EVALUACIÓN Y UMBRAL:
-- Si encontrás CUALQUIER punto de mejora concreto (por ejemplo, motivos/amenazas del scope nombrados sin desarmar su mecánica, jerga abstracta sin desmitificar, código fragmentario, párrafos densos, o falta de regla de oro), DEBES listarlo en 'pedagogicalCritique', penalizar la dimensión correspondiente (dejando el total < 90), y fijar "passedThreshold": false.
+- Si encontrás CUALQUIER punto de mejora concreto (por ejemplo, motivos/amenazas del scope nombrados sin desarmar su mecánica, jerga abstracta sin desmitificar, código fragmentario, párrafos densos, o falta de regla de oro), DEBES listarlo en 'pedagogicalCritique', penalizar la dimensión correspondiente (dejando el total < 95), y fijar "passedThreshold": false.
 - "passedThreshold": true SOLO cuando score >= 95 Y "pedagogicalCritique" es un array vacío [] (cero tareas pendientes).
 
 FORMATO DE RESPUESTA OBLIGATORIO:
 Devolvé ÚNICAMENTE un objeto JSON válido con esta estructura exacta, sin markdown alrededor:
-{"score":82,"rubric":{"intuitionAndClarity":22,"cognitivePacing":16,"causalityAndTradeoffs":23,"applicationAndFailureModes":21},"passedThreshold":false,"verdict":"Explicación correcta pero abstracta; requiere aterrizar el problema que motiva la técnica y mostrar la función operativa.","pedagogicalCritique":["Desarmar en 1 frase sencilla en qué consiste el problema o amenaza que motiva la técnica antes de presentar su mitigación.","Mostrar la función operativa concreta."]}
+{"score":84,"rubric":{"intuitionAndClarity":17,"selfContainedScope":16,"cognitivePacing":17,"causalityAndTradeoffs":17,"applicationAndFailureModes":17},"passedThreshold":false,"verdict":"Explicación correcta pero abstracta; requiere aterrizar el problema que motiva la técnica y mostrar la función operativa.","pedagogicalCritique":["Desarmar en 1 frase sencilla en qué consiste el problema o amenaza que motiva la técnica antes de presentar su mitigación.","Mostrar la función operativa concreta."]}
 `.trim();
 
 export const PEDAGOGICAL_REFINER_SYSTEM_PROMPT = `
