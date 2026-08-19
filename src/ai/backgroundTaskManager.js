@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import {
   evaluateParaphraseStream,
   isCancel,
@@ -12,24 +12,98 @@ import { hashAnswer, hashCardContent } from "./contentHash.js";
 
 // Global in-memory map of tasks keyed by `${graphId}:${nodeId}`
 const tasksMap = new Map();
+let tasksSnapshot = new Map();
 const listeners = new Set();
 
-function notifyListeners() {
+// Cross-tab broadcast channel for reactive multi-tab task synchronization
+export const taskSyncChannel =
+  typeof BroadcastChannel !== "undefined"
+    ? new BroadcastChannel("knowgraph_tasks_sync")
+    : null;
+
+function sanitizeTaskForBroadcast(task) {
+  if (!task) return null;
+  const { abortController, onUpdate, ...serializable } = task;
+  return serializable;
+}
+
+function notifyListeners(broadcast = true, mutationData = null) {
+  tasksSnapshot = new Map(tasksMap);
   listeners.forEach((listener) => {
     try {
-      listener(tasksMap);
+      listener(tasksSnapshot);
     } catch (e) {
       console.error("[backgroundTaskManager] listener error:", e);
     }
   });
+
+  if (broadcast && taskSyncChannel && mutationData) {
+    try {
+      taskSyncChannel.postMessage(mutationData);
+    } catch (e) {
+      console.warn("[backgroundTaskManager] broadcast error:", e);
+    }
+  }
 }
 
-function updateTaskState(cardKey, task, updates = {}) {
+if (taskSyncChannel) {
+  taskSyncChannel.onmessage = (event) => {
+    const data = event?.data;
+    if (!data || !data.type) return;
+
+    if (data.type === "TASK_MUTATION" && data.cardKey && data.task) {
+      const existing = tasksMap.get(data.cardKey);
+      const abortController = existing?.abortController;
+      if (!existing || (data.task.updatedAt || 0) >= (existing.updatedAt || 0)) {
+        tasksMap.set(data.cardKey, { ...data.task, abortController });
+        notifyListeners(false);
+      }
+    } else if (data.type === "TASK_CANCEL" && data.cardKey) {
+      const task = tasksMap.get(data.cardKey);
+      if (task && task.status === "running") {
+        if (task.abortController) {
+          task.abortController.abort();
+        }
+        updateTaskState(
+          data.cardKey,
+          task,
+          {
+            status: "cancelled",
+            stage: "cancelled",
+            message: "Cancelado por el usuario",
+            completedAt: Date.now(),
+          },
+          false
+        );
+      }
+    } else if (data.type === "TASK_DISMISS" && data.cardKey) {
+      if (tasksMap.has(data.cardKey)) {
+        tasksMap.delete(data.cardKey);
+        notifyListeners(false);
+      }
+    }
+  };
+}
+
+function updateTaskState(cardKey, task, updates = {}, broadcast = true) {
   Object.assign(task, updates, { updatedAt: Date.now() });
   const snapshot = { ...task };
   tasksMap.set(cardKey, snapshot);
-  notifyListeners();
+  notifyListeners(broadcast, {
+    type: "TASK_MUTATION",
+    cardKey,
+    task: sanitizeTaskForBroadcast(snapshot),
+  });
   return snapshot;
+}
+
+export function subscribeToTasks(callback) {
+  listeners.add(callback);
+  return () => listeners.delete(callback);
+}
+
+export function getTasksSnapshot() {
+  return tasksSnapshot;
 }
 
 export function getTask(graphId, nodeId) {
@@ -62,12 +136,19 @@ export function cancelTask(graphId, nodeId) {
     if (task.abortController) {
       task.abortController.abort();
     }
-    updateTaskState(cardKey, task, {
-      status: "cancelled",
-      stage: "cancelled",
-      message: "Cancelado por el usuario",
-      completedAt: Date.now(),
-    });
+    updateTaskState(
+      cardKey,
+      task,
+      {
+        status: "cancelled",
+        stage: "cancelled",
+        message: "Cancelado por el usuario",
+        completedAt: Date.now(),
+      },
+      true
+    );
+  } else if (taskSyncChannel) {
+    taskSyncChannel.postMessage({ type: "TASK_CANCEL", cardKey });
   }
 }
 
@@ -76,7 +157,7 @@ export function dismissTask(graphId, nodeId) {
   const task = tasksMap.get(cardKey);
   if (task && task.status !== "running") {
     tasksMap.delete(cardKey);
-    notifyListeners();
+    notifyListeners(true, { type: "TASK_DISMISS", cardKey });
   }
 }
 
@@ -500,17 +581,15 @@ export async function startEvaluation({
 }
 
 export function useBackgroundTasks(graphId, nodeId) {
-  const [, setTick] = useState(0);
-
-  useEffect(() => {
-    const listener = () => setTick((t) => t + 1);
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-  }, []);
+  const currentTasksSnapshot = useSyncExternalStore(
+    subscribeToTasks,
+    getTasksSnapshot,
+    getTasksSnapshot
+  );
 
   const cardKey = graphId && nodeId ? `${graphId}:${nodeId}` : null;
-  const currentTask = cardKey ? tasksMap.get(cardKey) ?? null : null;
-  const allTasks = Array.from(tasksMap.values());
+  const currentTask = cardKey ? currentTasksSnapshot.get(cardKey) ?? null : null;
+  const allTasks = Array.from(currentTasksSnapshot.values());
   const activeTasks = allTasks.filter((t) => t.status === "running");
   const activeTaskNodeIds = getActiveTaskNodeIds(graphId);
 
