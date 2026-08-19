@@ -245,56 +245,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
   );
   const activeChatIteration = isViewingCoachHistory || currentIterationMatchesDraft ? selectedCoachIteration : null;
 
-  useEffect(() => {
-    if (!currentTask) return;
 
-    if (currentTask.type === "pedagogical_harness") {
-      setHarnessState({
-        isActive: currentTask.status === "running",
-        stage: currentTask.stage,
-        message: currentTask.message,
-        currentScore: currentTask.score,
-        rubric: currentTask.rubric,
-        critique: currentTask.critique || [],
-        history: currentTask.history || [],
-        passedThreshold: currentTask.passedThreshold,
-        iteration: currentTask.iteration || 0,
-        isOpen: true,
-      });
-
-      if (currentTask.draft && (!draftRef.current || currentTask.status === "running" || isDraftAiGenerated)) {
-        setDraftState(currentTask.draft);
-        draftRef.current = currentTask.draft;
-        setIsDraftAiGenerated(true);
-      }
-
-      setIsGeneratingParaphrase(currentTask.status === "running");
-      setParaphraseMode(currentTask.status === "running" ? "polish_judge" : null);
-
-      if (currentTask.status === "completed" && currentTask.draft) {
-        startLiveReview(currentTask.draft);
-      }
-    } else if (currentTask.type === "evaluation") {
-      if (currentTask.status === "running") {
-        setPending({ startedAt: currentTask.startedAt, answerKey: currentTask.draft, source: "full" });
-        setStreamingSections(currentTask.streamingSections || {});
-        setStreamingBlocks(currentTask.streamingBlocks || {});
-        setStreamingChars(currentTask.progress || 0);
-      } else if (currentTask.status === "completed" && currentTask.attempt) {
-        setPending(null);
-        setAttempts((prev) => [
-          ...prev.filter((item) => item.id !== currentTask.attempt.id),
-          currentTask.attempt,
-        ].sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
-        onEvaluationSaved?.(currentTask.attempt);
-      } else if (currentTask.status === "cancelled" || currentTask.status === "error") {
-        setPending(null);
-        if (currentTask.error) {
-          setError({ code: "upstream", message: currentTask.error });
-        }
-      }
-    }
-  }, [currentTask, isDraftAiGenerated, onEvaluationSaved, startLiveReview]);
 
   useEffect(() => {
     initialLoadRef.current = true;
@@ -518,6 +469,57 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       setLiveError(userFacingAiError(e, "No se pudo conectar con el servicio de IA. Verificá que el gateway esté iniciado y que el provider esté disponible; después reintentá."));
     }
   }, [contentHash, graphId, node, node.id, providerProfile]);
+
+  useEffect(() => {
+    if (!currentTask) return;
+
+    if (currentTask.type === "pedagogical_harness") {
+      setHarnessState({
+        isActive: currentTask.status === "running",
+        stage: currentTask.stage,
+        message: currentTask.message,
+        currentScore: currentTask.score,
+        rubric: currentTask.rubric,
+        critique: currentTask.critique || [],
+        history: currentTask.history || [],
+        passedThreshold: currentTask.passedThreshold,
+        iteration: currentTask.iteration || 0,
+        isOpen: true,
+      });
+
+      if (currentTask.draft && (!draftRef.current || currentTask.status === "running" || isDraftAiGenerated)) {
+        setDraftState(currentTask.draft);
+        draftRef.current = currentTask.draft;
+        setIsDraftAiGenerated(true);
+      }
+
+      setIsGeneratingParaphrase(currentTask.status === "running");
+      setParaphraseMode(currentTask.status === "running" ? "polish_judge" : null);
+
+      if (currentTask.status === "completed" && currentTask.draft) {
+        startLiveReview(currentTask.draft);
+      }
+    } else if (currentTask.type === "evaluation") {
+      if (currentTask.status === "running") {
+        setPending({ startedAt: currentTask.startedAt, answerKey: currentTask.draft, source: "full" });
+        setStreamingSections(currentTask.streamingSections || {});
+        setStreamingBlocks(currentTask.streamingBlocks || {});
+        setStreamingChars(currentTask.progress || 0);
+      } else if (currentTask.status === "completed" && currentTask.attempt) {
+        setPending(null);
+        setAttempts((prev) => [
+          ...prev.filter((item) => item.id !== currentTask.attempt.id),
+          currentTask.attempt,
+        ].sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
+        onEvaluationSaved?.(currentTask.attempt);
+      } else if (currentTask.status === "cancelled" || currentTask.status === "error") {
+        setPending(null);
+        if (currentTask.error) {
+          setError({ code: "upstream", message: currentTask.error });
+        }
+      }
+    }
+  }, [currentTask, isDraftAiGenerated, onEvaluationSaved, startLiveReview]);
 
   const cancelLiveReview = useCallback(() => {
     const hasDebounce = Boolean(liveDebounceRef.current || liveDebounceClockRef.current || debounceStartedAt);
