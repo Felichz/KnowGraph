@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { coachChatStream, evaluateParaphraseStream, generateParaphraseStream, improveParaphraseStream, isCancel, liveReviewStream, polishParaphraseStream, polishPedagogyHarnessStream, reconcileParaphraseStream, userFacingAiError } from "../ai/client.js";
+import { coachChatStream, evaluateParaphraseStream, generateParaphraseStream, improveParaphraseStream, isCancel, judgePedagogy, liveReviewStream, polishParaphraseStream, polishPedagogyHarnessStream, reconcileParaphraseStream, refinePedagogyStream, userFacingAiError } from "../ai/client.js";
 import {
   getDraft,
   getDraftRecord,
@@ -698,10 +698,13 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     setParaphraseProgress(0);
     userEditedDraftRef.current = false;
 
+    let currentDraft = draft.trim();
+    const history = [];
+
     setHarnessState({
       isActive: true,
       stage: "judging",
-      message: "⚖️ Evaluando calidad pedagógica inicial con Juez...",
+      message: "⚖️ Evaluando calidad pedagógica con Juez...",
       currentScore: null,
       rubric: null,
       critique: [],
@@ -711,62 +714,151 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       isOpen: true,
     });
 
-    let currentAcc = "";
     try {
-      const result = await polishPedagogyHarnessStream({
+      // Si no hay borrador o es muy corto, generamos el borrador inicial
+      if (!currentDraft || currentDraft.length < 15) {
+        setHarnessState((prev) => ({
+          ...prev,
+          stage: "generating_initial",
+          message: "🪄 Generando borrador inicial...",
+        }));
+        let initAcc = "";
+        const genRes = await polishParaphraseStream({
+          node,
+          currentDraft: "",
+          provider: providerProfile,
+          signal: controller.signal,
+          onDelta: (delta) => {
+            initAcc += delta;
+            setDraftState(initAcc);
+            draftRef.current = initAcc;
+          },
+        });
+        currentDraft = genRes.text || initAcc;
+      }
+
+      // Paso 1: Evaluación Inicial con el Juez
+      setHarnessState((prev) => ({
+        ...prev,
+        stage: "judging",
+        iteration: 0,
+        message: "⚖️ Evaluando calidad pedagógica inicial con Juez...",
+      }));
+
+      let judgeResult = await judgePedagogy({
         node,
-        currentDraft: draft,
-        maxIterations: 3,
+        draft: currentDraft,
         provider: providerProfile,
         signal: controller.signal,
-        onEvent: (event) => {
-          if (event.type === "stage") {
-            setHarnessState((prev) => ({
-              ...prev,
-              stage: event.stage,
-              iteration: event.iteration ?? prev.iteration,
-              message: event.message || prev.message,
-            }));
-          } else if (event.type === "judge_result") {
-            setHarnessState((prev) => ({
-              ...prev,
-              currentScore: event.score,
-              rubric: event.rubric,
-              critique: event.critique || [],
-              passedThreshold: event.passedThreshold,
-              history: event.history || prev.history,
-              iteration: event.iteration,
-              message: event.passedThreshold
-                ? `✨ ¡Meta de calidad alcanzada (${event.score}/100)!`
-                : `⚖️ Juez asignó ${event.score}/100 (Meta: 90+)`,
-            }));
-          } else if (event.type === "delta") {
-            currentAcc = event.fullText || (currentAcc + event.text);
-            setDraftState(currentAcc);
-            draftRef.current = currentAcc;
-          }
-        },
       });
 
-      const finalText = result.text || currentAcc;
-      setDraftState(finalText);
-      draftRef.current = finalText;
-      setIsDraftAiGenerated(true);
+      history.push({
+        iteration: 0,
+        score: judgeResult.score,
+        rubric: judgeResult.rubric,
+        verdict: judgeResult.verdict,
+        critique: judgeResult.pedagogicalCritique,
+        draft: currentDraft,
+      });
+
+      setHarnessState((prev) => ({
+        ...prev,
+        currentScore: judgeResult.score,
+        rubric: judgeResult.rubric,
+        critique: judgeResult.pedagogicalCritique || [],
+        passedThreshold: judgeResult.passedThreshold,
+        history: [...history],
+        iteration: 0,
+        message: judgeResult.passedThreshold
+          ? `✨ ¡Meta de calidad alcanzada (${judgeResult.score}/100)!`
+          : `⚖️ Juez asignó ${judgeResult.score}/100 (Meta: 93+)`,
+      }));
+
+      // Bucle de Refinamiento (hasta 3 iteraciones)
+      let iter = 0;
+      const maxIterations = 3;
+
+      while (!judgeResult.passedThreshold && iter < maxIterations) {
+        if (controller.signal.aborted) break;
+        iter += 1;
+
+        setHarnessState((prev) => ({
+          ...prev,
+          stage: "refining",
+          iteration: iter,
+          message: `🪄 Refinando explicación según crítica del Juez (Iteración ${iter}/${maxIterations})...`,
+        }));
+
+        let refinedAcc = "";
+        const refineRes = await refinePedagogyStream({
+          node,
+          draft: currentDraft,
+          critique: judgeResult.pedagogicalCritique,
+          currentScore: judgeResult.score,
+          provider: providerProfile,
+          signal: controller.signal,
+          onDelta: (delta) => {
+            refinedAcc += delta;
+            setDraftState(refinedAcc);
+            draftRef.current = refinedAcc;
+          },
+        });
+
+        currentDraft = refineRes.text || refinedAcc;
+        setDraftState(currentDraft);
+        draftRef.current = currentDraft;
+
+        // Re-evaluación del Juez sobre el texto refinado
+        setHarnessState((prev) => ({
+          ...prev,
+          stage: "judging",
+          iteration: iter,
+          message: `⚖️ Re-evaluando calidad con Juez (Iteración ${iter})...`,
+        }));
+
+        judgeResult = await judgePedagogy({
+          node,
+          draft: currentDraft,
+          provider: providerProfile,
+          signal: controller.signal,
+        });
+
+        history.push({
+          iteration: iter,
+          score: judgeResult.score,
+          rubric: judgeResult.rubric,
+          verdict: judgeResult.verdict,
+          critique: judgeResult.pedagogicalCritique,
+          draft: currentDraft,
+        });
+
+        setHarnessState((prev) => ({
+          ...prev,
+          currentScore: judgeResult.score,
+          rubric: judgeResult.rubric,
+          critique: judgeResult.pedagogicalCritique || [],
+          passedThreshold: judgeResult.passedThreshold,
+          history: [...history],
+          iteration: iter,
+          message: judgeResult.passedThreshold
+            ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
+            : `⚖️ Juez asignó ${judgeResult.score}/100 en Iteración ${iter}`,
+        }));
+      }
+
       setHarnessState((prev) => ({
         ...prev,
         isActive: false,
         stage: "done",
-        message: result.passedThreshold
-          ? `✨ ¡Maestría pedagógica alcanzada (${result.finalScore}/100)!`
-          : `Proceso completado (${result.finalScore}/100)`,
-        currentScore: result.finalScore,
-        rubric: result.rubric,
-        history: result.history || prev.history,
-        passedThreshold: result.passedThreshold,
+        message: judgeResult.passedThreshold
+          ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
+          : `Evaluación completada (${judgeResult.score}/100)`,
         isOpen: true,
       }));
-      await setDraft(graphId, node.id, finalText, { isAiGenerated: true, generatedAt: new Date().toISOString() });
-      startLiveReview(finalText);
+
+      setIsDraftAiGenerated(true);
+      await setDraft(graphId, node.id, currentDraft, { isAiGenerated: true, generatedAt: new Date().toISOString() });
+      startLiveReview(currentDraft);
     } catch (err) {
       if (!isCancel(err)) {
         setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "Error durante el perfeccionamiento con Juez pedagógico.") });

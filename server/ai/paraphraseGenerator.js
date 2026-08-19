@@ -203,6 +203,58 @@ export async function polishParaphrasePedagogy({
   };
 }
 
+export async function refineParaphrasePedagogy({
+  node,
+  draft,
+  critique = [],
+  currentScore = 0,
+  provider,
+  signal,
+  onChunk,
+}) {
+  if (!node || typeof node !== "object") {
+    throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
+  }
+
+  const userPayload = buildPedagogicalRefinerUserPayload({
+    node,
+    draft,
+    critique,
+    currentScore,
+  });
+
+  let accumulated = "";
+  const raw = await chatCompletionWithFallback({
+    ...providerChain(config.tutorModel || config.evaluationModel, { provider }),
+    messages: [
+      { role: "system", content: PEDAGOGICAL_REFINER_SYSTEM_PROMPT },
+      { role: "user", content: userPayload },
+    ],
+    temperature: 0.45,
+    signal,
+    timeoutMs: LLM_REQUEST_TIMEOUT_MS,
+    onChunk: (delta, acc) => {
+      accumulated = acc;
+      onChunk?.(delta, acc);
+    },
+    maxAttempts: 1,
+  });
+
+  const content = String(raw?.choices?.[0]?.message?.content ?? accumulated).trim();
+  if (!content) {
+    throw new GatewayError(ErrorCodes.UPSTREAM, "El modelo no devolvió texto refinado");
+  }
+
+  return {
+    text: content,
+    model: raw?.requestedModel ?? config.tutorModel ?? config.evaluationModel,
+    routedVia: raw?.model ?? null,
+    provider: raw?.provider ?? null,
+    fallbackFrom: raw?.fallbackFrom ?? null,
+    isAiGenerated: true,
+  };
+}
+
 export async function judgePedagogy({ node, draft, provider, signal }) {
   if (!node || typeof node !== "object") {
     throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
