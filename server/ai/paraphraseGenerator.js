@@ -244,8 +244,8 @@ export async function judgePedagogy({ node, draft, provider, signal }) {
       causalityAndTradeoffs: Math.round(score * 0.25),
       applicationAndFailureModes: Math.round(score * 0.25),
     },
-    passedThreshold: score >= 90,
-    verdict: parsed.verdict || (score >= 90 ? "Maestría pedagógica alcanzada" : "Requiere refinamiento"),
+    passedThreshold: score >= 93 && (!Array.isArray(parsed.pedagogicalCritique) || parsed.pedagogicalCritique.length === 0),
+    verdict: parsed.verdict || (score >= 93 ? "Maestría pedagógica alcanzada" : "Requiere refinamiento"),
     pedagogicalCritique: Array.isArray(parsed.pedagogicalCritique) ? parsed.pedagogicalCritique : [],
   };
 }
