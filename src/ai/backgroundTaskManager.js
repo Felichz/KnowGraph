@@ -7,7 +7,8 @@ import {
   refinePedagogyStream,
   userFacingAiError,
 } from "./client.js";
-import { saveAttempt, setDraft } from "./learningStore.js";
+import { saveAttempt, saveCoachIteration, setDraft } from "./learningStore.js";
+import { hashAnswer, hashCardContent } from "./contentHash.js";
 
 // Global in-memory map of tasks keyed by `${graphId}:${nodeId}`
 const tasksMap = new Map();
@@ -204,6 +205,26 @@ export async function startPedagogicalHarness({
       });
       onUpdate?.(task);
 
+      // Persist iteration 0
+      await saveCoachIteration({
+        id: `harness_${taskId}_0`,
+        graphId,
+        nodeId: node.id,
+        answer: currentDraft,
+        answerHash: hashAnswer(currentDraft),
+        contentHash: hashCardContent(node),
+        source: "pedagogical_refiner",
+        isPedagogicalRefiner: true,
+        iteration: 0,
+        harnessSessionId: taskId,
+        score: judgeResult.score,
+        rubric: judgeResult.rubric,
+        verdict: judgeResult.verdict,
+        pedagogicalCritique: judgeResult.pedagogicalCritique || [],
+        passedThreshold: judgeResult.passedThreshold,
+        createdAt: new Date().toISOString(),
+      }).catch(() => {});
+
       let iter = 0;
       let historyList = [...initialHistory];
 
@@ -282,7 +303,39 @@ export async function startPedagogicalHarness({
             : `⚖️ Juez asignó ${judgeResult.score}/100 en Iteración ${iter} (Meta: 95+)`,
         });
         onUpdate?.(task);
+
+        // Persist iteration
+        await saveCoachIteration({
+          id: `harness_${taskId}_${iter}`,
+          graphId,
+          nodeId: node.id,
+          answer: currentDraft,
+          answerHash: hashAnswer(currentDraft),
+          contentHash: hashCardContent(node),
+          source: "pedagogical_refiner",
+          isPedagogicalRefiner: true,
+          iteration: iter,
+          harnessSessionId: taskId,
+          score: judgeResult.score,
+          rubric: judgeResult.rubric,
+          verdict: judgeResult.verdict,
+          pedagogicalCritique: judgeResult.pedagogicalCritique || [],
+          passedThreshold: judgeResult.passedThreshold,
+          createdAt: new Date().toISOString(),
+        }).catch(() => {});
       }
+
+      // Persist final draft with complete harness metadata
+      await setDraft(graphId, node.id, currentDraft, {
+        isAiGenerated: true,
+        source: "pedagogical_refiner",
+        harnessScore: judgeResult.score,
+        harnessRubric: judgeResult.rubric,
+        harnessCritique: judgeResult.pedagogicalCritique || [],
+        harnessHistory: historyList,
+        harnessPassedThreshold: judgeResult.passedThreshold,
+        generatedAt: new Date().toISOString(),
+      }).catch(() => {});
 
       // Success / Done
       task = updateTaskState(cardKey, task, {

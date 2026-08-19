@@ -109,9 +109,14 @@ export async function setDraft(graphId, nodeId, text, options = {}) {
     key,
     text,
     isAiGenerated,
-    source: isAiGenerated ? "ai" : (options.source ?? "user"),
+    source: isAiGenerated ? (options.source ?? "ai") : (options.source ?? "user"),
     generatedAt: isAiGenerated ? (options.generatedAt ?? new Date().toISOString()) : undefined,
     updatedAt: new Date().toISOString(),
+    ...(options.harnessHistory ? { harnessHistory: options.harnessHistory } : {}),
+    ...(options.harnessScore !== undefined ? { harnessScore: options.harnessScore } : {}),
+    ...(options.harnessRubric ? { harnessRubric: options.harnessRubric } : {}),
+    ...(options.harnessCritique ? { harnessCritique: options.harnessCritique } : {}),
+    ...(options.harnessPassedThreshold !== undefined ? { harnessPassedThreshold: options.harnessPassedThreshold } : {}),
   });
 }
 

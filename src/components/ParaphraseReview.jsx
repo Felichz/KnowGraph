@@ -288,6 +288,37 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       setLiveProgress({ phase: "idle", chars: 0, startedAt: null, now: 0 });
       setLiveError(null);
       setError(null);
+
+      if (storedDraftRecord?.harnessHistory && storedDraftRecord.harnessHistory.length > 0) {
+        setHarnessState({
+          isActive: false,
+          stage: "done",
+          message: storedDraftRecord.harnessPassedThreshold
+            ? `✨ ¡Maestría pedagógica alcanzada (${storedDraftRecord.harnessScore}/100)!`
+            : `Evaluación del Juez (${storedDraftRecord.harnessScore}/100)`,
+          currentScore: storedDraftRecord.harnessScore ?? null,
+          rubric: storedDraftRecord.harnessRubric ?? null,
+          critique: storedDraftRecord.harnessCritique || [],
+          history: storedDraftRecord.harnessHistory || [],
+          passedThreshold: Boolean(storedDraftRecord.harnessPassedThreshold),
+          iteration: storedDraftRecord.harnessHistory.length - 1,
+          isOpen: true,
+        });
+      } else if (!currentTask || currentTask.status !== "running") {
+        setHarnessState({
+          isActive: false,
+          stage: null,
+          message: "",
+          currentScore: null,
+          rubric: null,
+          critique: [],
+          history: [],
+          passedThreshold: false,
+          iteration: 0,
+          isOpen: false,
+        });
+      }
+
       if (!currentTask || currentTask.status !== "running") {
         setPending(null);
       }
