@@ -501,4 +501,32 @@ export function buildPolishPedagogyUserPayload({ node, currentDraft }) {
   return lines.join("\n\n");
 }
 
+export function buildPedagogicalJudgeUserPayload({ node, draft }) {
+  const lesson = node?.lesson ?? {};
+  const lines = [
+    `CONCEPTO A EVALUAR: ${node?.label ?? node?.title ?? node?.id ?? "Tema"}`,
+    `EXPLICACIÓN DEL ESTUDIANTE A JUZGAR:\n"""\n${String(draft ?? "").trim()}\n"""`,
+  ];
+  if (lesson.summary) lines.push(`RESUMEN CANÓNICO DE REFERENCIA:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`POR QUÉ IMPORTA / CASO DE USO:\n${lesson.why}`);
+  if (lesson.code) lines.push(`CÓDIGO / EJEMPLO ESPERADO:\n\`\`\`\n${lesson.code}\n\`\`\``);
+  if (lesson.takeaway) lines.push(`REGLA DE ORO CANÓNICA:\n${lesson.takeaway}`);
+  return lines.join("\n\n");
+}
+
+export function buildPedagogicalRefinerUserPayload({ node, draft, critique = [], currentScore = 0 }) {
+  const lesson = node?.lesson ?? {};
+  const lines = [
+    `CONCEPTO: ${node?.label ?? node?.title ?? node?.id ?? "Tema"}`,
+    `PUNTAJE PEDAGÓGICO ACTUAL: ${currentScore}/100 (Meta: >= 90)`,
+    `CRÍTICA CONCRETA DEL JUEZ PEDAGÓGICO (SUBSANAR CADA PUNTO):\n${critique.map((c, i) => `${i + 1}. ${c}`).join("\n") || "- Mejorar la fluidez, intuición y desglose progresivo del texto."}`,
+    `BORRADOR ACTUAL A PERFECCIONAR:\n"""\n${String(draft ?? "").trim()}\n"""`,
+  ];
+  if (lesson.summary) lines.push(`RESUMEN ESENCIAL DEL CONCEPTO:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`POR QUÉ IMPORTA:\n${lesson.why}`);
+  if (lesson.code) lines.push(`CÓDIGO DE REFERENCIA:\n\`\`\`\n${lesson.code}\n\`\`\``);
+  if (lesson.takeaway) lines.push(`REGLA PRÁCTICA FINAL:\n${lesson.takeaway}`);
+  return lines.join("\n\n");
+}
+
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { coachChatStream, evaluateParaphraseStream, generateParaphraseStream, improveParaphraseStream, isCancel, liveReviewStream, polishParaphraseStream, reconcileParaphraseStream, userFacingAiError } from "../ai/client.js";
+import { coachChatStream, evaluateParaphraseStream, generateParaphraseStream, improveParaphraseStream, isCancel, liveReviewStream, polishParaphraseStream, polishPedagogyHarnessStream, reconcileParaphraseStream, userFacingAiError } from "../ai/client.js";
 import {
   getDraft,
   getDraftRecord,
@@ -24,6 +24,89 @@ import { CoachIterationHistory } from "./CoachIterationHistory.jsx";
 import { CoachChat } from "./CoachChat.jsx";
 
 const LIVE_DEBOUNCE_MS = 5_000;
+
+function PedagogicalSparkline({ history = [], threshold = 90 }) {
+  if (!history || history.length === 0) return null;
+  const width = 170;
+  const height = 44;
+  const paddingX = 20;
+  const paddingY = 8;
+
+  const points = history.map((item, idx) => {
+    const x = history.length === 1
+      ? width / 2
+      : paddingX + (idx / (history.length - 1)) * (width - paddingX * 2);
+    const clampedScore = Math.max(0, Math.min(100, item.score ?? 0));
+    const y = height - paddingY - (clampedScore / 100) * (height - paddingY * 2);
+    return { x, y, score: item.score, iteration: item.iteration };
+  });
+
+  const polylineStr = points.map((p) => `${p.x},${p.y}`).join(" ");
+  const thresholdY = height - paddingY - (threshold / 100) * (height - paddingY * 2);
+
+  return (
+    <div className="pedagogical-sparkline-container" title={`Trayectoria del Juez: ${history.map((h) => `${h.score}/100`).join(" → ")}`}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="pedagogical-sparkline-svg">
+        <line
+          x1={paddingX}
+          y1={thresholdY}
+          x2={width - paddingX}
+          y2={thresholdY}
+          stroke="#10b981"
+          strokeDasharray="3,3"
+          strokeWidth="1.2"
+          opacity="0.6"
+        />
+        <text x={width - 2} y={thresholdY + 3} fill="#10b981" fontSize="8.5" textAnchor="end" opacity="0.8">90</text>
+
+        {points.length > 1 && (
+          <polyline
+            fill="none"
+            stroke="url(#sparklineGrad)"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            points={polylineStr}
+          />
+        )}
+
+        <defs>
+          <linearGradient id="sparklineGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+        </defs>
+
+        {points.map((p, i) => {
+          const isFinal = i === points.length - 1;
+          const isTargetReached = p.score >= threshold;
+          return (
+            <g key={i} className="sparkline-point">
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={isFinal ? 4 : 3}
+                fill={isTargetReached ? "#10b981" : (p.score >= 80 ? "#fbbf24" : "#f59e0b")}
+                stroke="#0f172a"
+                strokeWidth="1.5"
+              />
+              <text
+                x={p.x}
+                y={p.y - 5}
+                fill={isTargetReached ? "#34d399" : "#fbbf24"}
+                fontSize="9"
+                fontWeight="700"
+                textAnchor="middle"
+              >
+                {p.score}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
 
 export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "all", onRequestCoach, onRequestEvaluate, onEvaluationSaved, onNavigateBack, onNavigateNext, hasPrevious, hasNext }) {
   const contentHash = hashCardContent(node);
@@ -53,6 +136,18 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
   const [paraphraseProgress, setParaphraseProgress] = useState(0);
   const [aiTooltipOpen, setAiTooltipOpen] = useState(false);
   const [polishTooltipOpen, setPolishTooltipOpen] = useState(false);
+  const [harnessState, setHarnessState] = useState({
+    isActive: false,
+    stage: null,
+    message: "",
+    currentScore: null,
+    rubric: null,
+    critique: [],
+    history: [],
+    passedThreshold: false,
+    iteration: 0,
+    isOpen: false,
+  });
   const paraphraseControllerRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
@@ -595,45 +690,88 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       return;
     }
 
-    if (!draft.trim() || draft.trim().length < 20) {
-      return;
-    }
-
     cancelLiveReview();
     const controller = new AbortController();
     paraphraseControllerRef.current = controller;
     setIsGeneratingParaphrase(true);
-    setParaphraseMode("polish");
+    setParaphraseMode("polish_judge");
     setParaphraseProgress(0);
     userEditedDraftRef.current = false;
 
-    let accumulated = "";
+    setHarnessState({
+      isActive: true,
+      stage: "judging",
+      message: "⚖️ Evaluando calidad pedagógica inicial con Juez...",
+      currentScore: null,
+      rubric: null,
+      critique: [],
+      history: [],
+      passedThreshold: false,
+      iteration: 0,
+      isOpen: true,
+    });
+
+    let currentAcc = "";
     try {
-      const result = await polishParaphraseStream({
+      const result = await polishPedagogyHarnessStream({
         node,
         currentDraft: draft,
+        maxIterations: 3,
         provider: providerProfile,
         signal: controller.signal,
-        onProgress: (length) => {
-          setParaphraseProgress(length);
-        },
-        onDelta: (delta) => {
-          accumulated += delta;
-          setDraftState(accumulated);
-          draftRef.current = accumulated;
+        onEvent: (event) => {
+          if (event.type === "stage") {
+            setHarnessState((prev) => ({
+              ...prev,
+              stage: event.stage,
+              iteration: event.iteration ?? prev.iteration,
+              message: event.message || prev.message,
+            }));
+          } else if (event.type === "judge_result") {
+            setHarnessState((prev) => ({
+              ...prev,
+              currentScore: event.score,
+              rubric: event.rubric,
+              critique: event.critique || [],
+              passedThreshold: event.passedThreshold,
+              history: event.history || prev.history,
+              iteration: event.iteration,
+              message: event.passedThreshold
+                ? `✨ ¡Meta de calidad alcanzada (${event.score}/100)!`
+                : `⚖️ Juez asignó ${event.score}/100 (Meta: 90+)`,
+            }));
+          } else if (event.type === "delta") {
+            currentAcc = event.fullText || (currentAcc + event.text);
+            setDraftState(currentAcc);
+            draftRef.current = currentAcc;
+          }
         },
       });
 
-      const finalText = result.text || accumulated;
+      const finalText = result.text || currentAcc;
       setDraftState(finalText);
       draftRef.current = finalText;
       setIsDraftAiGenerated(true);
+      setHarnessState((prev) => ({
+        ...prev,
+        isActive: false,
+        stage: "done",
+        message: result.passedThreshold
+          ? `✨ ¡Maestría pedagógica alcanzada (${result.finalScore}/100)!`
+          : `Proceso completado (${result.finalScore}/100)`,
+        currentScore: result.finalScore,
+        rubric: result.rubric,
+        history: result.history || prev.history,
+        passedThreshold: result.passedThreshold,
+        isOpen: true,
+      }));
       await setDraft(graphId, node.id, finalText, { isAiGenerated: true, generatedAt: new Date().toISOString() });
       startLiveReview(finalText);
     } catch (err) {
       if (!isCancel(err)) {
-        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "No se pudo hacer la explicación más pedagógica con IA.") });
+        setError({ code: err?.code ?? "upstream", message: userFacingAiError(err, "Error durante el perfeccionamiento con Juez pedagógico.") });
       }
+      setHarnessState((prev) => ({ ...prev, isActive: false }));
     } finally {
       setIsGeneratingParaphrase(false);
       setParaphraseMode(null);
@@ -1071,14 +1209,22 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
                   <div className="ai-polish-wrapper">
                     <button
                       type="button"
-                      className={`ai-polish-button ${isGeneratingParaphrase && paraphraseMode === "polish" ? "is-generating" : ""}`}
+                      className={`ai-polish-button ${isGeneratingParaphrase && paraphraseMode === "polish_judge" ? "is-generating" : ""}`}
                       onClick={handlePolishPedagogy}
-                      disabled={isGeneratingParaphrase || Boolean(pending) || !draft.trim() || draft.trim().length < 20}
-                      aria-label={isGeneratingParaphrase && paraphraseMode === "polish" ? "Reescribiendo con máxima claridad didáctica..." : "Hacer más pedagógico y claro con IA"}
-                      title="Reescribe tu respuesta para desarmar la jerga densa, estructurar párrafos cortos y hacerla intuitiva y didáctica (Skill Pedagógica)"
+                      disabled={isGeneratingParaphrase || Boolean(pending)}
+                      aria-label={isGeneratingParaphrase && paraphraseMode === "polish_judge" ? "Perfeccionando explicación con Juez Pedagógico..." : "Perfeccionar con Juez IA (Harness Loop)"}
+                      title="Ejecuta un loop interactivo de Juez + Refinador para evaluar y perfeccionar la pedagogía hasta alcanzar 90+/100"
                     >
                       <span className="ai-polish-button__icon" aria-hidden="true">💡</span>
-                      <span>{isGeneratingParaphrase && paraphraseMode === "polish" ? "Haciendo didáctico..." : "Hacer más pedagógico"}</span>
+                      <span>
+                        {isGeneratingParaphrase && paraphraseMode === "polish_judge"
+                          ? (harnessState.stage === "judging"
+                              ? `⚖️ Juez: ${harnessState.iteration === 0 ? "Evaluando" : `Iteración ${harnessState.iteration}`}...`
+                              : `🪄 Refinando: Iteración ${harnessState.iteration}...`)
+                          : (harnessState.currentScore !== null
+                              ? `💡 Perfeccionar (${harnessState.currentScore}/100)`
+                              : "💡 Perfeccionar con Juez")}
+                      </span>
                     </button>
 
                     <div className="ai-polish-tooltip-wrapper">
@@ -1091,20 +1237,23 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
                         }}
                         onMouseEnter={() => setPolishTooltipOpen(true)}
                         onMouseLeave={() => setPolishTooltipOpen(false)}
-                        aria-label="¿Qué hace la opción de Hacer más pedagógico?"
-                        title="¿Qué hace la opción de Hacer más pedagógico?"
+                        aria-label="¿Cómo funciona el Harness con Juez Pedagógico?"
+                        title="¿Cómo funciona el Harness con Juez Pedagógico?"
                       >
                         <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M10 8.5v5M10 5.8v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
                       </button>
                       {polishTooltipOpen && (
                         <div className="ai-polish-tooltip-popover" role="tooltip">
-                          <div className="ai-polish-tooltip-badge">💡 SKILL PEDAGÓGICA Y DIDÁCTICA</div>
-                          <strong className="ai-polish-tooltip-title">Claridad para enseñar, no para resumir</strong>
+                          <div className="ai-polish-tooltip-badge">💡 HARNESS CON LLM-AS-A-JUDGE</div>
+                          <strong className="ai-polish-tooltip-title">Loop de Auto-Perfeccionamiento Pedagógico</strong>
                           <p>
-                            <strong>Desarma la jerga densa:</strong> Si el texto amontona 10 conceptos abstractos seguidos o parece un monólogo técnico denso, esta opción lo reescribe paso a paso con modelos mentales claros.
+                            <strong>1. Juez Evaluador:</strong> Asigna un puntaje en 4 dimensiones (Intuición, Ritmo cognitivo, Causalidad y Errores/Cierre).
                           </p>
                           <p>
-                            <strong>Párrafos cortos y respirables:</strong> Separa las ideas en bloques de 3 a 4 líneas con transiciones fluidas, causa-efecto comprensible y un cierre memorable.
+                            <strong>2. Refinamiento Iterativo:</strong> Si el puntaje es menor a 90/100, el Juez genera observaciones y el Refinador reescribe el texto hasta alcanzar la maestría didáctica.
+                          </p>
+                          <p>
+                            <strong>3. Minimapa en Vivo:</strong> Muestra la trayectoria de mejora y el desglose de cada dimensión en tiempo real.
                           </p>
                         </div>
                       )}
@@ -1119,6 +1268,87 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
                   </span>
                 )}
               </div>
+
+              {harnessState.isOpen && (
+                <div className={`pedagogical-harness-panel ${harnessState.isActive ? "is-running" : "is-complete"}`}>
+                  <div className="pedagogical-harness-panel__header">
+                    <div className="pedagogical-harness-panel__title-group">
+                      <span className="pedagogical-harness-panel__badge">
+                        {harnessState.isActive ? "⚡ HARNESS PEDAGÓGICO EN VIVO" : "🏆 EVALUACIÓN DEL JUEZ PEDAGÓGICO"}
+                      </span>
+                      <div className="pedagogical-harness-panel__status-msg">
+                        {harnessState.message}
+                      </div>
+                    </div>
+
+                    <div className="pedagogical-harness-panel__actions">
+                      {harnessState.isActive && (
+                        <button
+                          type="button"
+                          className="pedagogical-harness-panel__cancel-btn"
+                          onClick={cancelParaphraseGeneration}
+                        >
+                          Cancelar
+                        </button>
+                      )}
+                      {!harnessState.isActive && (
+                        <button
+                          type="button"
+                          className="pedagogical-harness-panel__close-btn"
+                          onClick={() => setHarnessState((prev) => ({ ...prev, isOpen: false }))}
+                          aria-label="Cerrar panel del Juez"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pedagogical-harness-panel__body">
+                    <div className="pedagogical-harness-panel__chart-block">
+                      <div className="pedagogical-harness-panel__chart-header">
+                        <span className="pedagogical-harness-panel__chart-title">Evolución de Calidad</span>
+                        <span className="pedagogical-harness-panel__target-pill">Meta: 90/100</span>
+                      </div>
+                      <PedagogicalSparkline history={harnessState.history} threshold={90} />
+                    </div>
+
+                    {harnessState.rubric && (
+                      <div className="pedagogical-harness-panel__rubric-grid">
+                        <div className="pedagogical-rubric-chip">
+                          <span className="pedagogical-rubric-chip__name">🧠 Intuición</span>
+                          <span className="pedagogical-rubric-chip__val">{harnessState.rubric.intuitionAndClarity ?? 0}/25</span>
+                        </div>
+                        <div className="pedagogical-rubric-chip">
+                          <span className="pedagogical-rubric-chip__name">⏳ Ritmo</span>
+                          <span className="pedagogical-rubric-chip__val">{harnessState.rubric.cognitivePacing ?? 0}/25</span>
+                        </div>
+                        <div className="pedagogical-rubric-chip">
+                          <span className="pedagogical-rubric-chip__name">⚖️ Causalidad</span>
+                          <span className="pedagogical-rubric-chip__val">{harnessState.rubric.causalityAndTradeoffs ?? 0}/25</span>
+                        </div>
+                        <div className="pedagogical-rubric-chip">
+                          <span className="pedagogical-rubric-chip__name">🎯 Errores/Cierre</span>
+                          <span className="pedagogical-rubric-chip__val">{harnessState.rubric.applicationAndFailureModes ?? 0}/25</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {Array.isArray(harnessState.critique) && harnessState.critique.length > 0 && (
+                    <div className="pedagogical-harness-panel__critique">
+                      <strong className="pedagogical-harness-panel__critique-title">
+                        {harnessState.isActive ? "🔍 Foco de mejora del Refinador:" : "🔍 Observaciones pedagógicas:"}
+                      </strong>
+                      <ul>
+                        {harnessState.critique.map((item, idx) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
               <textarea
                 ref={textareaRef}
                 className={`paraphrase-review__textarea ${isViewingCoachHistory ? "is-readonly" : ""}`}

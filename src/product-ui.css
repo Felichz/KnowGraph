@@ -7936,6 +7936,215 @@ body { background: var(--p-bg); }
   font-size: 11px;
 }
 
+/* Pedagogical Harness with Judge Panel */
+.pedagogical-harness-panel {
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.94) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 16px rgba(245, 158, 11, 0.08);
+  padding: 12px 16px;
+  animation: tooltipFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pedagogical-harness-panel.is-running {
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 20px rgba(245, 158, 11, 0.16);
+}
+
+.pedagogical-harness-panel.is-complete {
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 16px rgba(16, 185, 129, 0.1);
+}
+
+.pedagogical-harness-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pedagogical-harness-panel__title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pedagogical-harness-panel__badge {
+  font: 700 10px/1 "JetBrains Mono", monospace;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.06em;
+}
+
+.pedagogical-harness-panel.is-complete .pedagogical-harness-panel__badge {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.pedagogical-harness-panel__status-msg {
+  font: 600 12.5px/1.4 Inter, sans-serif;
+  color: #f8fafc;
+}
+
+.pedagogical-harness-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pedagogical-harness-panel__cancel-btn {
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  font: 600 11px/1 Inter, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pedagogical-harness-panel__cancel-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fee2e2;
+}
+
+.pedagogical-harness-panel__close-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #94a3b8;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.pedagogical-harness-panel__close-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.pedagogical-harness-panel__body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.pedagogical-harness-panel__chart-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pedagogical-harness-panel__chart-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pedagogical-harness-panel__chart-title {
+  font: 600 11px/1 Inter, sans-serif;
+  color: #cbd5e1;
+}
+
+.pedagogical-harness-panel__target-pill {
+  font: 700 9px/1 "JetBrains Mono", monospace;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.pedagogical-sparkline-container {
+  display: flex;
+  align-items: center;
+}
+
+.pedagogical-sparkline-svg {
+  overflow: visible;
+}
+
+.pedagogical-harness-panel__rubric-grid {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pedagogical-rubric-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 7px;
+  min-width: 65px;
+}
+
+.pedagogical-rubric-chip__name {
+  font: 500 10px/1 Inter, sans-serif;
+  color: #94a3b8;
+}
+
+.pedagogical-rubric-chip__val {
+  font: 700 11.5px/1 "JetBrains Mono", monospace;
+  color: #f1f5f9;
+}
+
+.pedagogical-harness-panel__critique {
+  background: rgba(0, 0, 0, 0.25);
+  border-left: 3px solid #fbbf24;
+  padding: 8px 12px;
+  border-radius: 0 6px 6px 0;
+  font: 400 11.5px/1.4 Inter, sans-serif;
+  color: #e2e8f0;
+}
+
+.pedagogical-harness-panel.is-complete .pedagogical-harness-panel__critique {
+  border-left-color: #34d399;
+}
+
+.pedagogical-harness-panel__critique-title {
+  display: block;
+  font-weight: 600;
+  color: #fde68a;
+  margin-bottom: 4px;
+}
+
+.pedagogical-harness-panel.is-complete .pedagogical-harness-panel__critique-title {
+  color: #6ee7b7;
+}
+
+.pedagogical-harness-panel__critique ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.pedagogical-harness-panel__critique li {
+  margin-bottom: 2px;
+}
+
+.pedagogical-harness-panel__critique li:last-child {
+  margin-bottom: 0;
+}
+
 /* Flashcards UI: AI Generated Tag & Notice */
 .flashcard__ai-badge {
   display: inline-flex;

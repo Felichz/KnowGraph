@@ -82,6 +82,33 @@ assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("MÁXIMA CLARIDAD PEDAGÓGICA")
 assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("RUPTURA DE ANCLAJE"));
 assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("DESGLOSE PROGRESIVO"));
 
+// Test Pedagogical Judge & Refiner
+const { buildPedagogicalJudgeUserPayload, buildPedagogicalRefinerUserPayload } = await import("../../server/ai/schemas.js");
+const { PEDAGOGICAL_JUDGE_SYSTEM_PROMPT, PEDAGOGICAL_REFINER_SYSTEM_PROMPT } = await import("../../server/ai/prompts.js");
+
+const judgePayload = buildPedagogicalJudgeUserPayload({
+  node: sampleNode,
+  draft: "Explicación de useEffect...",
+});
+assert.ok(judgePayload.includes("CONCEPTO A EVALUAR: useEffect"));
+assert.ok(judgePayload.includes("EXPLICACIÓN DEL ESTUDIANTE A JUZGAR:"));
+assert.ok(PEDAGOGICAL_JUDGE_SYSTEM_PROMPT.includes("LLM-as-a-Judge"));
+assert.ok(PEDAGOGICAL_JUDGE_SYSTEM_PROMPT.includes("intuitionAndClarity"));
+assert.ok(PEDAGOGICAL_JUDGE_SYSTEM_PROMPT.includes("cognitivePacing"));
+assert.ok(PEDAGOGICAL_JUDGE_SYSTEM_PROMPT.includes("causalityAndTradeoffs"));
+assert.ok(PEDAGOGICAL_JUDGE_SYSTEM_PROMPT.includes("applicationAndFailureModes"));
+
+const refinerPayload = buildPedagogicalRefinerUserPayload({
+  node: sampleNode,
+  draft: "Borrador previo...",
+  critique: ["El segundo párrafo es confuso."],
+  currentScore: 72,
+});
+assert.ok(refinerPayload.includes("PUNTAJE PEDAGÓGICO ACTUAL: 72/100"));
+assert.ok(refinerPayload.includes("El segundo párrafo es confuso."));
+assert.ok(PEDAGOGICAL_REFINER_SYSTEM_PROMPT.includes("refinador pedagógico senior"));
+assert.ok(PEDAGOGICAL_REFINER_SYSTEM_PROMPT.includes("pedagogicalCritique"));
+
 console.log("paraphrase AI schemas & prompts: OK");
 
 
