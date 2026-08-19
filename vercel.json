@@ -5,11 +5,12 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/ai/**/*.js": {
+    "api/ai/[...slug].js": {
       "maxDuration": 300
     }
   },
   "rewrites": [
+    { "source": "/api/ai/:path*", "destination": "/api/ai/[...slug]" },
     { "source": "/((?!api/ai(?:/|$)).*)", "destination": "/index.html" }
   ]
 }
