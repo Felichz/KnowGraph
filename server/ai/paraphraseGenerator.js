@@ -287,16 +287,20 @@ export async function judgePedagogy({ node, draft, provider, signal }) {
     };
   }
 
-  const score = Math.max(0, Math.min(100, Math.round(Number(parsed.score) || 0)));
+  const rawRubric = parsed.rubric || {};
+  const foundationalVal = Math.max(0, Math.min(20, Math.round(Number(rawRubric.foundationalContext ?? rawRubric.intuitionAndClarity) || (score * 0.20))));
+  const rubric = {
+    foundationalContext: foundationalVal,
+    intuitionAndClarity: foundationalVal,
+    selfContainedScope: Math.max(0, Math.min(20, Math.round(Number(rawRubric.selfContainedScope) || (score * 0.20)))),
+    cognitivePacing: Math.max(0, Math.min(20, Math.round(Number(rawRubric.cognitivePacing) || (score * 0.20)))),
+    causalityAndTradeoffs: Math.max(0, Math.min(20, Math.round(Number(rawRubric.causalityAndTradeoffs) || (score * 0.20)))),
+    applicationAndFailureModes: Math.max(0, Math.min(20, Math.round(Number(rawRubric.applicationAndFailureModes) || (score * 0.20)))),
+  };
+
   return {
     score,
-    rubric: parsed.rubric || {
-      foundationalContext: Math.round(score * 0.20),
-      selfContainedScope: Math.round(score * 0.20),
-      cognitivePacing: Math.round(score * 0.20),
-      causalityAndTradeoffs: Math.round(score * 0.20),
-      applicationAndFailureModes: Math.round(score * 0.20),
-    },
+    rubric,
     passedThreshold: score >= 95 && (!Array.isArray(parsed.pedagogicalCritique) || parsed.pedagogicalCritique.length === 0),
     verdict: parsed.verdict || (score >= 95 ? "Maestría pedagógica alcanzada" : "Requiere refinamiento"),
     pedagogicalCritique: Array.isArray(parsed.pedagogicalCritique) ? parsed.pedagogicalCritique : [],
