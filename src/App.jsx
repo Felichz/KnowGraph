@@ -17,6 +17,7 @@ import { ReadingChunks } from "./components/ReadingChunks.jsx";
 import { listAllAttempts } from "./ai/learningStore.js";
 import { applyBackup, createBackup, downloadBackup, parseBackup } from "./ai/backup.js";
 import { hashCardContent } from "./ai/contentHash.js";
+import { getCompletionView, getScoreView, isEvaluationSurfaceComplete } from "./ai/types.js";
 import { CommandPalette } from "./components/CommandPalette.jsx";
 import { loadProviderProfile } from "./ai/providerSettings.js";
 import { useBackgroundTasks } from "./ai/backgroundTaskManager.js";
