@@ -179,6 +179,7 @@ export async function polishParaphrasePedagogy({
       { role: "system", content: POLISH_PEDAGOGY_SYSTEM_PROMPT },
       { role: "user", content: userPayload },
     ],
+    temperature: 0.5,
     signal,
     timeoutMs: LLM_REQUEST_TIMEOUT_MS,
     onChunk: onChunk ? (delta, accumulated) => {

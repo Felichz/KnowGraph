@@ -489,13 +489,15 @@ export function buildReconcileChatUserPayload({ node, currentDraft, messages = [
 export function buildPolishPedagogyUserPayload({ node, currentDraft }) {
   const lesson = node?.lesson ?? {};
   const lines = [
-    `TEMA: ${node?.label ?? node?.title ?? node?.id ?? "Concepto técnico"}`,
-    `TEXTO ACTUAL A TRANSFORMAR:\n"""\n${String(currentDraft ?? "").trim()}\n"""`,
-    `CONSIGNA: Desarmá la jerga pesada del texto actual. Reorganizalo en 4 a 5 párrafos cortos (máx 3-4 líneas cada uno) que enseñen el modelo mental intuitivo, el porqué de cada pieza y cómo se conecta con el flujo real de la aplicación, sin muros de texto ni oraciones interminables.`,
+    `CONCEPTO TÉCNICO: ${node?.label ?? node?.title ?? node?.id ?? "Tema"}`,
   ];
-  if (lesson.summary) lines.push(`RESUMEN ESENCIAL DE REFERENCIA:\n${lesson.summary}`);
+  if (lesson.summary) lines.push(`RESUMEN ESENCIAL:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`POR QUÉ IMPORTA:\n${lesson.why}`);
   if (lesson.code) lines.push(`CÓDIGO DE REFERENCIA:\n\`\`\`\n${lesson.code}\n\`\`\``);
-  if (lesson.takeaway) lines.push(`REGLA PRÁCTICA DE CIERRE:\n${lesson.takeaway}`);
+  if (lesson.takeaway) lines.push(`REGLA DE ORO / CIERRE:\n${lesson.takeaway}`);
+  if (currentDraft && currentDraft.trim()) {
+    lines.push(`BORRADOR PREVIO (Transformalo con verdadera maestría didáctica desarmando cualquier jerga pesada o estructura rígida):\n"""\n${currentDraft.trim()}\n"""`);
+  }
   return lines.join("\n\n");
 }
 
