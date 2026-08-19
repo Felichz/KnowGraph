@@ -1339,7 +1339,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
                           <div className="ai-polish-tooltip-badge">💡 HARNESS CON LLM-AS-A-JUDGE</div>
                           <strong className="ai-polish-tooltip-title">Loop de Auto-Perfeccionamiento Pedagógico</strong>
                           <p>
-                            <strong>1. Juez Evaluador:</strong> Asigna un puntaje en 5 dimensiones (Intuición, Autocontención del alcance, Ritmo cognitivo, Causalidad y Código/Cierre).
+                            <strong>1. Juez Evaluador:</strong> Asigna un puntaje en 5 dimensiones (🪝 Anclaje contextual, 🔭 Autocontención del alcance, ⏳ Ritmo cognitivo, ⚖️ Causalidad y 🎯 Código/Cierre).
                           </p>
                           <p>
                             <strong>2. Refinamiento Iterativo:</strong> Si el puntaje es menor a 95/100, el Juez genera observaciones y el Refinador reescribe el texto hasta alcanzar la maestría didáctica.
@@ -1407,34 +1407,34 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
 
                     {harnessState.rubric && (
                       <div className="pedagogical-harness-panel__rubric-grid">
-                        <div className="pedagogical-rubric-chip" title="Apertura con modelo mental intuitivo del problema">
-                          <span className="pedagogical-rubric-chip__name">🧠 Intuición</span>
+                        <div className="pedagogical-rubric-chip" title="Anclaje en el mundo real, punto de partida ingenuo y dilema de apertura">
+                          <span className="pedagogical-rubric-chip__name">🪝 Anclaje</span>
                           <span className="pedagogical-rubric-chip__val">
-                            {harnessState.rubric.intuitionAndClarity ?? 0}/{harnessState.rubric.selfContainedScope !== undefined ? 20 : 25}
+                            {harnessState.rubric.foundationalContext ?? harnessState.rubric.intuitionAndClarity ?? 0}/20
                           </span>
                         </div>
-                        {harnessState.rubric.selfContainedScope !== undefined && (
-                          <div className="pedagogical-rubric-chip" title="Autocontención del scope y cero jerga/amenazas huérfanas">
-                            <span className="pedagogical-rubric-chip__name">🔭 Alcance</span>
-                            <span className="pedagogical-rubric-chip__val">{harnessState.rubric.selfContainedScope ?? 0}/20</span>
-                          </div>
-                        )}
+                        <div className="pedagogical-rubric-chip" title="Autocontención del scope y cero jerga/amenazas huérfanas">
+                          <span className="pedagogical-rubric-chip__name">🔭 Alcance</span>
+                          <span className="pedagogical-rubric-chip__val">
+                            {harnessState.rubric.selfContainedScope ?? 0}/20
+                          </span>
+                        </div>
                         <div className="pedagogical-rubric-chip" title="Ritmo respirable, una sola idea a la vez y párrafos delimitados">
                           <span className="pedagogical-rubric-chip__name">⏳ Ritmo</span>
                           <span className="pedagogical-rubric-chip__val">
-                            {harnessState.rubric.cognitivePacing ?? 0}/{harnessState.rubric.selfContainedScope !== undefined ? 20 : 25}
+                            {harnessState.rubric.cognitivePacing ?? 0}/20
                           </span>
                         </div>
                         <div className="pedagogical-rubric-chip" title="Causa y efecto físico/arquitectónico y análisis de trade-offs">
                           <span className="pedagogical-rubric-chip__name">⚖️ Causalidad</span>
                           <span className="pedagogical-rubric-chip__val">
-                            {harnessState.rubric.causalityAndTradeoffs ?? 0}/{harnessState.rubric.selfContainedScope !== undefined ? 20 : 25}
+                            {harnessState.rubric.causalityAndTradeoffs ?? 0}/20
                           </span>
                         </div>
                         <div className="pedagogical-rubric-chip" title="Código operativo funcional, errores observables en producción y regla memorable">
                           <span className="pedagogical-rubric-chip__name">🎯 Código/Cierre</span>
                           <span className="pedagogical-rubric-chip__val">
-                            {harnessState.rubric.applicationAndFailureModes ?? 0}/{harnessState.rubric.selfContainedScope !== undefined ? 20 : 25}
+                            {harnessState.rubric.applicationAndFailureModes ?? 0}/20
                           </span>
                         </div>
                       </div>

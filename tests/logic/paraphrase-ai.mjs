@@ -93,7 +93,7 @@ const judgePayload = buildPedagogicalJudgeUserPayload({
 assert.ok(judgePayload.includes("CONCEPTO A EVALUAR: useEffect"));
 assert.ok(judgePayload.includes("EXPLICACIÓN DEL ESTUDIANTE A JUZGAR:"));
 assert.ok(PEDAGOGICAL_JUDGE_SYSTEM_PROMPT.includes("LLM-as-a-Judge"));
-assert.ok(PEDAGOGICAL_JUDGE_SYSTEM_PROMPT.includes("intuitionAndClarity"));
+assert.ok(PEDAGOGICAL_JUDGE_SYSTEM_PROMPT.includes("foundationalContext"));
 assert.ok(PEDAGOGICAL_JUDGE_SYSTEM_PROMPT.includes("selfContainedScope"));
 assert.ok(PEDAGOGICAL_JUDGE_SYSTEM_PROMPT.includes("cognitivePacing"));
 assert.ok(PEDAGOGICAL_JUDGE_SYSTEM_PROMPT.includes("causalityAndTradeoffs"));
