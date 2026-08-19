@@ -287,6 +287,7 @@ export async function judgePedagogy({ node, draft, provider, signal }) {
     };
   }
 
+  const score = Math.max(0, Math.min(100, Math.round(Number(parsed.score) || 0)));
   const rawRubric = parsed.rubric || {};
   const foundationalVal = Math.max(0, Math.min(20, Math.round(Number(rawRubric.foundationalContext ?? rawRubric.intuitionAndClarity) || (score * 0.20))));
   const rubric = {

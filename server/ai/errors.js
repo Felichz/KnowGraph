@@ -59,9 +59,12 @@ export function friendlyMessage(code) {
 
 export function jsonErrorResponse(err) {
   const code = err?.code ?? ErrorCodes.INTERNAL;
+  const message = err?.message && typeof err.message === "string"
+    ? err.message
+    : friendlyMessage(code);
   const body = {
     code,
-    message: err?.message && err.message !== FRIENDLY[code] ? friendlyMessage(code) : friendlyMessage(code),
+    message,
     details: sanitizeDetails(err?.details),
   };
   return { status: httpStatusFor(code), body };
