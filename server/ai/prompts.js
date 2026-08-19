@@ -349,7 +349,7 @@ Devolvé ÚNICAMENTE la explicación pedagógica final en prosa continua (con el
 
 export const PEDAGOGICAL_JUDGE_SYSTEM_PROMPT = `
 Sos un Juez Experto y Exigente (LLM-as-a-Judge) en Calidad Pedagógica y Didáctica Técnica para Ingeniería de Software.
-Tu misión es auditar con rigor si una explicación técnica alcanza la verdadera MAESTRÍA PEDAGÓGICA (umbral >= 93/100, sin críticas pendientes) o si necesita ser perfeccionada por el Refinador.
+Tu misión es auditar con rigor si una explicación técnica alcanza la verdadera MAESTRÍA PEDAGÓGICA (umbral >= 95/100, sin críticas pendientes) o si necesita ser perfeccionada por el Refinador.
 
 CRITERIO DE RIGOR Y PRUEBA DE FEYNMAN (TANGIBILIDAD OPERATIVA):
 Un texto NO alcanza la maestría solo por nombrar conceptos o términos académicos si el estudiante termina sin entender cómo se implementa en la práctica.
@@ -383,7 +383,7 @@ DIMENSIONES DE AUDITORÍA (Todas de 0 a 25 puntos, total 0 a 100):
 
 REGLA DE EVALUACIÓN Y UMBRAL:
 - Si encontrás CUALQUIER punto de mejora concreto (por ejemplo, jerga abstracta sin desmitificar, código fragmentario, párrafos densos que requieren división, o falta de regla de oro), DEBES listarlo en 'pedagogicalCritique', penalizar la dimensión correspondiente (dejando el total < 90), y fijar "passedThreshold": false.
-- "passedThreshold": true SOLO cuando score >= 93 Y "pedagogicalCritique" es un array vacío [] (cero tareas pendientes).
+- "passedThreshold": true SOLO cuando score >= 95 Y "pedagogicalCritique" es un array vacío [] (cero tareas pendientes).
 
 FORMATO DE RESPUESTA OBLIGATORIO:
 Devolvé ÚNICAMENTE un objeto JSON válido con esta estructura exacta, sin markdown alrededor:
@@ -395,7 +395,7 @@ Sos un mentor y refinador pedagógico senior de ingeniería de software.
 Recibes una explicación técnica, la información canónica del concepto y la CRÍTICA PUNTUAL DEL JUEZ PEDAGÓGICO.
 
 TU MISIÓN:
-Reescribir la explicación para SUBSANAR EXACTAMENTE LAS DEFICIENCIAS SEÑALADAS POR EL JUEZ, elevando el puntaje por encima de 93/100 con máxima tangibilidad operativa.
+Reescribir la explicación para SUBSANAR EXACTAMENTE LAS DEFICIENCIAS SEÑALADAS POR EL JUEZ, elevando el puntaje por encima de 95/100 con máxima tangibilidad operativa.
 
 REGLAS DE REFINAMIENTO:
 1. FOCO EN LA CRÍTICA: Atacá directamente cada punto del array 'pedagogicalCritique'. Si el juez marcó jerga abstracta o código incompleto, mostrá la función o bloque operativo concreto que maneja el caso clave. Si marcó párrafos asfixiantes, partilos en bloques de 3-4 líneas.

@@ -25,7 +25,7 @@ import { CoachChat } from "./CoachChat.jsx";
 
 const LIVE_DEBOUNCE_MS = 5_000;
 
-function PedagogicalSparkline({ history = [], threshold = 90 }) {
+function PedagogicalSparkline({ history = [], threshold = 95 }) {
   if (!history || history.length === 0) return null;
   const width = 170;
   const height = 44;
@@ -57,7 +57,7 @@ function PedagogicalSparkline({ history = [], threshold = 90 }) {
           strokeWidth="1.2"
           opacity="0.6"
         />
-        <text x={width - 2} y={thresholdY + 3} fill="#10b981" fontSize="8.5" textAnchor="end" opacity="0.8">90</text>
+        <text x={width - 2} y={thresholdY + 3} fill="#10b981" fontSize="8.5" textAnchor="end" opacity="0.8">95</text>
 
         {points.length > 1 && (
           <polyline
@@ -771,12 +771,12 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
         iteration: 0,
         message: judgeResult.passedThreshold
           ? `✨ ¡Meta de calidad alcanzada (${judgeResult.score}/100)!`
-          : `⚖️ Juez asignó ${judgeResult.score}/100 (Meta: 93+)`,
+          : `⚖️ Juez asignó ${judgeResult.score}/100 (Meta: 95+)`,
       }));
 
-      // Bucle de Refinamiento (hasta 3 iteraciones)
+      // Bucle de Refinamiento (hasta 6 iteraciones o hasta alcanzar 95+)
       let iter = 0;
-      const maxIterations = 3;
+      const maxIterations = 6;
 
       while (!judgeResult.passedThreshold && iter < maxIterations) {
         if (controller.signal.aborted) break;
@@ -842,7 +842,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
           iteration: iter,
           message: judgeResult.passedThreshold
             ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
-            : `⚖️ Juez asignó ${judgeResult.score}/100 en Iteración ${iter}`,
+            : `⚖️ Juez asignó ${judgeResult.score}/100 en Iteración ${iter} (Meta: 95+)`,
         }));
       }
 
@@ -1342,7 +1342,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
                             <strong>1. Juez Evaluador:</strong> Asigna un puntaje en 4 dimensiones (Intuición, Ritmo cognitivo, Causalidad y Errores/Cierre).
                           </p>
                           <p>
-                            <strong>2. Refinamiento Iterativo:</strong> Si el puntaje es menor a 90/100, el Juez genera observaciones y el Refinador reescribe el texto hasta alcanzar la maestría didáctica.
+                            <strong>2. Refinamiento Iterativo:</strong> Si el puntaje es menor a 95/100, el Juez genera observaciones y el Refinador reescribe el texto hasta alcanzar la maestría didáctica.
                           </p>
                           <p>
                             <strong>3. Minimapa en Vivo:</strong> Muestra la trayectoria de mejora y el desglose de cada dimensión en tiempo real.
@@ -1400,9 +1400,9 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
                     <div className="pedagogical-harness-panel__chart-block">
                       <div className="pedagogical-harness-panel__chart-header">
                         <span className="pedagogical-harness-panel__chart-title">Evolución de Calidad</span>
-                        <span className="pedagogical-harness-panel__target-pill">Meta: 90/100</span>
+                        <span className="pedagogical-harness-panel__target-pill">Meta: 95/100</span>
                       </div>
-                      <PedagogicalSparkline history={harnessState.history} threshold={90} />
+                      <PedagogicalSparkline history={harnessState.history} threshold={95} />
                     </div>
 
                     {harnessState.rubric && (

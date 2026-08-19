@@ -518,7 +518,7 @@ export function buildPedagogicalRefinerUserPayload({ node, draft, critique = [],
   const lesson = node?.lesson ?? {};
   const lines = [
     `CONCEPTO: ${node?.label ?? node?.title ?? node?.id ?? "Tema"}`,
-    `PUNTAJE PEDAGÓGICO ACTUAL: ${currentScore}/100 (Meta: >= 90)`,
+    `PUNTAJE PEDAGÓGICO ACTUAL: ${currentScore}/100 (Meta: >= 95)`,
     `CRÍTICA CONCRETA DEL JUEZ PEDAGÓGICO (SUBSANAR CADA PUNTO):\n${critique.map((c, i) => `${i + 1}. ${c}`).join("\n") || "- Mejorar la fluidez, intuición y desglose progresivo del texto."}`,
     `BORRADOR ACTUAL A PERFECCIONAR:\n"""\n${String(draft ?? "").trim()}\n"""`,
   ];

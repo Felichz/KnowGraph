@@ -296,8 +296,8 @@ export async function judgePedagogy({ node, draft, provider, signal }) {
       causalityAndTradeoffs: Math.round(score * 0.25),
       applicationAndFailureModes: Math.round(score * 0.25),
     },
-    passedThreshold: score >= 93 && (!Array.isArray(parsed.pedagogicalCritique) || parsed.pedagogicalCritique.length === 0),
-    verdict: parsed.verdict || (score >= 93 ? "Maestría pedagógica alcanzada" : "Requiere refinamiento"),
+    passedThreshold: score >= 95 && (!Array.isArray(parsed.pedagogicalCritique) || parsed.pedagogicalCritique.length === 0),
+    verdict: parsed.verdict || (score >= 95 ? "Maestría pedagógica alcanzada" : "Requiere refinamiento"),
     pedagogicalCritique: Array.isArray(parsed.pedagogicalCritique) ? parsed.pedagogicalCritique : [],
   };
 }
@@ -307,7 +307,7 @@ export async function runPedagogicalHarness({
   initialDraft,
   provider,
   signal,
-  maxIterations = 3,
+  maxIterations = 6,
   onEvent,
 }) {
   if (!node || typeof node !== "object") {
