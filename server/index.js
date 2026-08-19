@@ -547,6 +547,7 @@ export async function gatewayHandler(req, res) {
         if (res.writableEnded) return;
         res.write(`event: ${type}\n`);
         res.write(`data: ${JSON.stringify(data)}\n\n`);
+        res.flush?.();
       };
 
       const signal = reqAbortedSignal(req);
@@ -590,6 +591,7 @@ export async function gatewayHandler(req, res) {
         if (res.writableEnded) return;
         res.write(`event: ${type}\n`);
         res.write(`data: ${JSON.stringify(data)}\n\n`);
+        res.flush?.();
       };
 
       const signal = reqAbortedSignal(req);
