@@ -22,6 +22,7 @@ import { LiveRequestFeedback } from "./LiveRequestFeedback.jsx";
 import { ProgressLoader } from "./ProgressLoader.jsx";
 import { CoachIterationHistory } from "./CoachIterationHistory.jsx";
 import { CoachChat } from "./CoachChat.jsx";
+import { ChunkedDraftView } from "./ChunkedDraftView.jsx";
 import { useBackgroundTasks } from "../ai/backgroundTaskManager.js";
 
 const LIVE_DEBOUNCE_MS = 5_000;
@@ -156,6 +157,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
     iteration: 0,
     isOpen: false,
   });
+  const [draftViewMode, setDraftViewMode] = useState("editor"); // "editor" | "chunks"
   const paraphraseControllerRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
@@ -1274,32 +1276,66 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
                   )}
                 </div>
               )}
-              <textarea
-                ref={textareaRef}
-                className={`paraphrase-review__textarea ${isViewingCoachHistory ? "is-readonly" : ""}`}
-                value={visibleCoachText}
-                onChange={isViewingCoachHistory ? undefined : handleDraftChange}
-                readOnly={isViewingCoachHistory}
-                onKeyDown={(event) => {
-                  if (isViewingCoachHistory) return;
-                  if (event.key === "Escape" && (debounceStartedAt || liveStatus === "running")) {
-                    event.preventDefault();
-                    // La card también tiene un listener global de Escape para
-                    // cerrarse. El coaching activo tiene prioridad y consume
-                    // el evento antes de que llegue a ese listener.
-                    event.stopPropagation();
-                    cancelLiveReview();
-                    return;
-                  }
-                  if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-                    event.preventDefault();
-                    triggerLiveReviewFromShortcut();
-                  }
-                }}
-                placeholder="Explicá qué es, cómo funciona, por qué importa y qué trade-offs tiene..."
-                rows={9}
-                aria-label={isViewingCoachHistory ? "Explicación guardada de esta iteración" : "Tu explicación con tus palabras"}
-              />
+              {!isViewingCoachHistory && (
+                <div className="paraphrase-review__editor-header">
+                  <div className="paraphrase-review__view-toggle" role="group" aria-label="Modo de visualización del borrador">
+                    <button
+                      type="button"
+                      className={`paraphrase-review__view-btn ${draftViewMode === "editor" ? "is-active" : ""}`}
+                      onClick={() => {
+                        setDraftViewMode("editor");
+                        setTimeout(() => textareaRef.current?.focus(), 50);
+                      }}
+                      title="Editar texto directamente"
+                    >
+                      ✏️ Editor
+                    </button>
+                    <button
+                      type="button"
+                      className={`paraphrase-review__view-btn ${draftViewMode === "chunks" ? "is-active" : ""}`}
+                      onClick={() => setDraftViewMode("chunks")}
+                      title="Ver análisis por chunks de lectura interactivos"
+                    >
+                      📖 Chunks de Lectura
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isViewingCoachHistory || draftViewMode === "chunks" ? (
+                <ChunkedDraftView
+                  text={visibleCoachText}
+                  isReadonly={isViewingCoachHistory}
+                  onEdit={() => {
+                    setDraftViewMode("editor");
+                    setTimeout(() => textareaRef.current?.focus(), 50);
+                  }}
+                />
+              ) : (
+                <textarea
+                  ref={textareaRef}
+                  className={`paraphrase-review__textarea ${isViewingCoachHistory ? "is-readonly" : ""}`}
+                  value={visibleCoachText}
+                  onChange={isViewingCoachHistory ? undefined : handleDraftChange}
+                  readOnly={isViewingCoachHistory}
+                  onKeyDown={(event) => {
+                    if (isViewingCoachHistory) return;
+                    if (event.key === "Escape" && (debounceStartedAt || liveStatus === "running")) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      cancelLiveReview();
+                      return;
+                    }
+                    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+                      event.preventDefault();
+                      triggerLiveReviewFromShortcut();
+                    }
+                  }}
+                  placeholder="Explicá qué es, cómo funciona, por qué importa y qué trade-offs tiene..."
+                  rows={9}
+                  aria-label={isViewingCoachHistory ? "Explicación guardada de esta iteración" : "Tu explicación con tus palabras"}
+                />
+              )}
             </div>
           </div>
           <LiveReviewPanel

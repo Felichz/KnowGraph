@@ -2709,6 +2709,123 @@ body { background: var(--p-bg); }
   opacity: 1 !important;
   filter: none !important;
 }
+
+/* Chunked Draft View inside Paraphrase / Coaching Review */
+.chunked-draft-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-height: 190px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--p-surface, #0d1218);
+  border: 1px solid var(--p-line, rgba(255, 255, 255, 0.08));
+  box-sizing: border-box;
+}
+
+.chunked-draft-view__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+}
+
+.chunked-draft-view__stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chunked-draft-view__stat-pill {
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(100, 231, 220, 0.08);
+  color: #70ddd4;
+  border: 1px solid rgba(100, 231, 220, 0.18);
+}
+
+.chunked-draft-view__edit-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--p-text-light, #e6edf3);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.chunked-draft-view__edit-btn:hover {
+  background: rgba(100, 231, 220, 0.15);
+  border-color: rgba(100, 231, 220, 0.35);
+  color: #c8fff9;
+}
+
+.chunked-draft-view__content {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--p-text-light, #e6edf3);
+}
+
+.chunked-draft-paragraph {
+  margin: 0 0 12px 0;
+}
+
+.chunked-draft-heading {
+  margin: 14px 0 8px 0;
+  color: #70ddd4;
+  font-size: 16px;
+}
+
+.chunked-draft-list {
+  margin: 0 0 12px 18px;
+  padding: 0;
+}
+
+.chunked-draft-list li {
+  margin-bottom: 6px;
+}
+
+.chunked-draft-interactive-chunk {
+  cursor: pointer;
+}
+
+/* Toolbar View Toggle */
+.paraphrase-review__view-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.paraphrase-review__view-btn {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--p-text-muted, #8b949e);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.paraphrase-review__view-btn.is-active {
+  background: rgba(100, 231, 220, 0.18);
+  color: #c8fff9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
 .live-review__footer-meta {
   display: flex;
   max-width: 220px;
