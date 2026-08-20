@@ -23,6 +23,7 @@ import { ProgressLoader } from "./ProgressLoader.jsx";
 import { CoachIterationHistory } from "./CoachIterationHistory.jsx";
 import { CoachChat } from "./CoachChat.jsx";
 import { ChunkedDraftView } from "./ChunkedDraftView.jsx";
+import { LearningThreadView } from "./LearningThreadView.jsx";
 import { useBackgroundTasks } from "../ai/backgroundTaskManager.js";
 
 const LIVE_DEBOUNCE_MS = 5_000;
@@ -121,6 +122,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
   } = useBackgroundTasks(graphId, node?.id);
 
   const [draft, setDraftState] = useState("");
+  const [draftRecord, setDraftRecord] = useState(null);
   const [attempts, setAttempts] = useState([]);
   const [view, setView] = useState({ mode: "draft" });
   const [pending, setPending] = useState(null);
@@ -279,6 +281,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
       draftRef.current = initialText;
       setIsDraftAiGenerated(isAi);
       setDraftState(initialText);
+      setDraftRecord(storedDraftRecord);
       setAttempts(list);
       setCoachIterations(storedCoachIterations);
       setCoachViewIndex(null);
@@ -1031,358 +1034,32 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
 
   return (
     <section className={`paraphrase-review paraphrase-review--${viewMode}`} aria-labelledby="paraphrase-review-title">
-      {viewMode !== "evaluate" && <>
-      <div className="paraphrase-review__head">
-        <div>
-          <span className="lesson-section-label">EXPLICÁ CON TUS PALABRAS</span>
-          <h3 id="paraphrase-review-title">Escribí y recibí coaching mientras avanzás</h3>
-        </div>
-        <span className="paraphrase-review__auto-badge">SIN ENVIAR · REVISIÓN AUTOMÁTICA</span>
-      </div>
-      <p className="paraphrase-review__intro">
-        Escribí como si respondieras en una entrevista. La app identifica qué ideas esenciales ya cubriste y mantiene visible el próximo gap mientras editás.
-      </p>
-
-      <div className="mastery-workspace">
-          <div className="mastery-workspace__editor">
-            <div className="paraphrase-review__editor">
-              {currentTask?.type === "evaluation" && currentTask.status === "running" && (
-                <div className="paraphrase-review__evaluation-banner" role="status">
-                  <div className="paraphrase-review__evaluation-banner-content">
-                    <span className="paraphrase-review__evaluation-banner-icon" aria-hidden="true">🧠</span>
-                    <span>Evaluando tu explicación con IA en segundo plano{currentTask.progress ? ` (${currentTask.progress} caracteres recibidos)` : "..."}</span>
-                  </div>
-                  {onRequestEvaluate && (
-                    <button
-                      type="button"
-                      className="paraphrase-review__evaluation-banner-btn"
-                      onClick={onRequestEvaluate}
-                      title="Ir a la pestaña de evaluación para ver la respuesta detallada"
-                    >
-                      Ver Evaluación ➔
-                    </button>
-                  )}
-                </div>
-              )}
-              <div className="paraphrase-review__editor-tools">
-                <div className="paraphrase-review__tool-buttons">
-                  <button
-                    type="button"
-                    className={`voice-dictate-button ${isListening ? "is-recording" : ""}`}
-                    onClick={toggleSpeechRecognition}
-                    aria-label={isListening ? "Detener dictado por voz" : "Dictar respuesta por voz"}
-                    title={isListening ? "Detener dictado" : "Dictar respuesta con tu voz"}
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" fill="currentColor"/>
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                    <span>{isListening ? "Grabando voz..." : "Dictar por voz"}</span>
-                  </button>
-
-                  <div className="ai-harness-wrapper">
-                    <button
-                      type="button"
-                      className={`ai-harness-button ${isGeneratingParaphrase && paraphraseMode === "polish_judge" ? "is-generating" : ""} ${harnessState.passedThreshold ? "is-mastery" : ""}`}
-                      onClick={handlePedagogicalHarness}
-                      disabled={Boolean(pending)}
-                      aria-label={
-                        isGeneratingParaphrase && paraphraseMode === "polish_judge"
-                          ? "Perfeccionando explicación con Juez Pedagógico..."
-                          : draft.trim().length < 15
-                          ? "Generar explicación con Juez IA (100/100)"
-                          : "Perfeccionar explicación con Juez IA (95+)"
-                      }
-                      title="Ejecuta el Harness Pedagógico de IA con evaluación y refinamiento automático del Juez hasta alcanzar maestría (95+/100)"
-                    >
-                      <span className="ai-harness-button__icon" aria-hidden="true">
-                        {isGeneratingParaphrase && paraphraseMode === "polish_judge" ? "⚡" : (harnessState.passedThreshold ? "✨" : (draft.trim().length < 15 ? "✨" : "🪄"))}
-                      </span>
-                      <span>
-                        {isGeneratingParaphrase && paraphraseMode === "polish_judge"
-                          ? (harnessState.stage === "judging"
-                              ? `⚖️ Juez: ${harnessState.iteration === 0 ? "Evaluando" : `Iteración ${harnessState.iteration}`}...`
-                              : (harnessState.stage === "generating_initial"
-                                  ? "🪄 Generando borrador base..."
-                                  : `🪄 Refinando: Iteración ${harnessState.iteration}...`))
-                          : (harnessState.currentScore !== null
-                              ? `✨ Perfeccionado (${harnessState.currentScore}/100)`
-                              : (draft.trim().length < 15
-                                  ? "✨ Generar con Juez IA"
-                                  : "🪄 Perfeccionar con Juez"))}
-                      </span>
-                    </button>
-
-                    <div className="ai-harness-tooltip-wrapper">
-                      <button
-                        type="button"
-                        className="ai-harness-tooltip-trigger"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setHarnessTooltipOpen((v) => !v);
-                        }}
-                        onMouseEnter={() => setHarnessTooltipOpen(true)}
-                        onMouseLeave={() => setHarnessTooltipOpen(false)}
-                        aria-label="¿Cómo funciona el Harness con Juez Pedagógico?"
-                        title="¿Cómo funciona el Harness con Juez Pedagógico?"
-                      >
-                        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M10 8.5v5M10 5.8v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                      </button>
-                      {harnessTooltipOpen && (
-                        <div className="ai-harness-tooltip-popover" role="tooltip">
-                          <div className="ai-harness-tooltip-badge">🏆 HARNESS PEDAGÓGICO INTEGRADO</div>
-                          <strong className="ai-harness-tooltip-title">Generación y Perfeccionamiento con Juez IA</strong>
-                          <p>
-                            <strong>Flujo automatizado de calidad:</strong> Si el borrador está vacío, la IA redacta la explicación base desde cero. De inmediato, el <strong>Juez Pedagógico</strong> la audita en 5 dimensiones (anclaje real, autocontención, ritmo, causalidad y código/cierre).
-                          </p>
-                          <p>
-                            <strong>Refinamiento iterativo:</strong> Si el puntaje es menor a 95/100, el Refinador aplica las críticas del Juez y reescribe en bucle automático hasta alcanzar la maestría didáctica.
-                          </p>
-                          <p>
-                            <strong>Borradores propios:</strong> Si ya escribiste tu texto, el Juez evalúa tu redacción, aprueba de inmediato si ya es sólida o te ayuda a cerrar los gaps detectados.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {isDraftAiGenerated && !isGeneratingParaphrase && (
-                  <span className="ai-generated-tag" title="Este borrador fue generado automáticamente con IA. Modificalo libremente o volvé a practicarlo desde cero.">
-                    <span className="ai-generated-tag__spark" aria-hidden="true">✨</span>
-                    <span>Generado con IA</span>
-                  </span>
-                )}
-              </div>
-
-              {harnessState.isOpen && (
-                <div className={`pedagogical-harness-panel ${harnessState.isActive ? "is-running" : "is-complete"}`}>
-                  <div className="pedagogical-harness-panel__header">
-                    <div className="pedagogical-harness-panel__title-group">
-                      <span className="pedagogical-harness-panel__badge">
-                        {harnessState.isActive ? "⚡ HARNESS PEDAGÓGICO EN VIVO" : "🏆 EVALUACIÓN DEL JUEZ PEDAGÓGICO"}
-                      </span>
-                      <div className="pedagogical-harness-panel__status-msg">
-                        {harnessState.message}
-                      </div>
-                    </div>
-
-                    <div className="pedagogical-harness-panel__actions">
-                      {harnessState.isActive && (
-                        <button
-                          type="button"
-                          className="pedagogical-harness-panel__cancel-btn"
-                          onClick={cancelParaphraseGeneration}
-                        >
-                          Cancelar
-                        </button>
-                      )}
-                      {!harnessState.isActive && (
-                        <button
-                          type="button"
-                          className="pedagogical-harness-panel__close-btn"
-                          onClick={() => setHarnessState((prev) => ({ ...prev, isOpen: false }))}
-                          aria-label="Cerrar panel del Juez"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="pedagogical-harness-panel__body">
-                    <div className="pedagogical-harness-panel__chart-block">
-                      <div className="pedagogical-harness-panel__chart-header">
-                        <span className="pedagogical-harness-panel__chart-title">Evolución de Calidad</span>
-                        <span className="pedagogical-harness-panel__target-pill">Meta: 95/100</span>
-                      </div>
-                      <PedagogicalSparkline history={harnessState.history} threshold={95} />
-                    </div>
-
-                    {harnessState.rubric && (
-                      <div className="pedagogical-harness-panel__rubric-grid">
-                        <div className="pedagogical-rubric-chip" title="Anclaje en el mundo real, punto de partida ingenuo y dilema de apertura">
-                          <span className="pedagogical-rubric-chip__name">🪝 Anclaje</span>
-                          <span className="pedagogical-rubric-chip__val">
-                            {harnessState.rubric.foundationalContext ?? harnessState.rubric.intuitionAndClarity ?? 0}/20
-                          </span>
-                        </div>
-                        <div className="pedagogical-rubric-chip" title="Autocontención del scope y cero jerga/amenazas huérfanas">
-                          <span className="pedagogical-rubric-chip__name">🔭 Alcance</span>
-                          <span className="pedagogical-rubric-chip__val">
-                            {harnessState.rubric.selfContainedScope ?? 0}/20
-                          </span>
-                        </div>
-                        <div className="pedagogical-rubric-chip" title="Ritmo respirable, una sola idea a la vez y párrafos delimitados">
-                          <span className="pedagogical-rubric-chip__name">⏳ Ritmo</span>
-                          <span className="pedagogical-rubric-chip__val">
-                            {harnessState.rubric.cognitivePacing ?? 0}/20
-                          </span>
-                        </div>
-                        <div className="pedagogical-rubric-chip" title="Causa y efecto físico/arquitectónico y análisis de trade-offs">
-                          <span className="pedagogical-rubric-chip__name">⚖️ Causalidad</span>
-                          <span className="pedagogical-rubric-chip__val">
-                            {harnessState.rubric.causalityAndTradeoffs ?? 0}/20
-                          </span>
-                        </div>
-                        <div className="pedagogical-rubric-chip" title="Código operativo funcional, errores observables en producción y regla memorable">
-                          <span className="pedagogical-rubric-chip__name">🎯 Código/Cierre</span>
-                          <span className="pedagogical-rubric-chip__val">
-                            {harnessState.rubric.applicationAndFailureModes ?? 0}/20
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {Array.isArray(harnessState.critique) && harnessState.critique.length > 0 && (
-                    <div className="pedagogical-harness-panel__critique">
-                      <strong className="pedagogical-harness-panel__critique-title">
-                        {harnessState.isActive ? "🔍 Foco de mejora del Refinador:" : "🔍 Observaciones pedagógicas:"}
-                      </strong>
-                      <ul>
-                        {harnessState.critique.map((item, idx) => (
-                          <li key={idx}>{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
-              {!isViewingCoachHistory && (
-                <div className="paraphrase-review__editor-header">
-                  <div className="paraphrase-review__view-toggle" role="group" aria-label="Modo de visualización del borrador">
-                    <button
-                      type="button"
-                      className={`paraphrase-review__view-btn ${draftViewMode === "editor" ? "is-active" : ""}`}
-                      onClick={() => {
-                        setDraftViewMode("editor");
-                        setTimeout(() => textareaRef.current?.focus(), 50);
-                      }}
-                      title="Editar texto directamente"
-                    >
-                      ✏️ Editor
-                    </button>
-                    <button
-                      type="button"
-                      className={`paraphrase-review__view-btn ${draftViewMode === "chunks" ? "is-active" : ""}`}
-                      onClick={() => setDraftViewMode("chunks")}
-                      title="Ver análisis por chunks de lectura interactivos"
-                    >
-                      📖 Chunks de Lectura
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {isViewingCoachHistory || draftViewMode === "chunks" ? (
-                <ChunkedDraftView
-                  text={visibleCoachText}
-                  isReadonly={isViewingCoachHistory}
-                  onEdit={() => {
-                    setDraftViewMode("editor");
-                    setTimeout(() => textareaRef.current?.focus(), 50);
-                  }}
-                />
-              ) : (
-                <textarea
-                  ref={textareaRef}
-                  className={`paraphrase-review__textarea ${isViewingCoachHistory ? "is-readonly" : ""}`}
-                  value={visibleCoachText}
-                  onChange={isViewingCoachHistory ? undefined : handleDraftChange}
-                  readOnly={isViewingCoachHistory}
-                  onKeyDown={(event) => {
-                    if (isViewingCoachHistory) return;
-                    if (event.key === "Escape" && (debounceStartedAt || liveStatus === "running")) {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      cancelLiveReview();
-                      return;
-                    }
-                    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-                      event.preventDefault();
-                      triggerLiveReviewFromShortcut();
-                    }
-                  }}
-                  placeholder="Explicá qué es, cómo funciona, por qué importa y qué trade-offs tiene..."
-                  rows={9}
-                  aria-label={isViewingCoachHistory ? "Explicación guardada de esta iteración" : "Tu explicación con tus palabras"}
-                />
-              )}
-            </div>
-          </div>
-          <LiveReviewPanel
-            status={visibleCoachStatus}
-            review={visibleCoachReview}
-            hint={visibleCoachReview?.hint}
-            error={isViewingCoachHistory ? null : liveError}
-            progress={isViewingCoachHistory ? null : { ...liveProgress, now: liveStatus === "running" ? Date.now() : liveProgress.now }}
-            footerMeta={(
-              <>
-                {isViewingCoachHistory ? (
-                  <span className="paraphrase-review__readonly-badge">SOLO LECTURA · ITERACIÓN {coachActiveIndex + 1}</span>
-                ) : !isViewingCoachHistory && (debounceStartedAt || liveStatus === "running") ? (
-                  <span className="live-coach-controls">
-                    {debounceStartedAt && (
-                      <DebounceRing progress={debounceProgress} onTrigger={triggerLiveReviewNow} shortcutState={shortcutFeedback} />
-                    )}
-                    <LiveCancelButton onCancel={cancelLiveReview} />
-                  </span>
-                ) : cancelFeedback ? (
-                  <span className="live-cancelled-feedback" role="status">
-                    <span aria-hidden="true">■</span>
-                    <span>revisión detenida</span>
-                    <kbd>Esc</kbd>
-                  </span>
-                ) : shortcutFeedback.triggered ? (
-                  <ShortcutFlash shortcutState={shortcutFeedback} />
-                ) : null}
-                <span className={`paraphrase-review__count ${!isViewingCoachHistory && tooShort ? "is-warn" : ""}`}>
-                  {visibleCoachCharCount} caracteres{!isViewingCoachHistory && tooShort ? " · un poco corta" : ""}
-                </span>
-              </>
-            )}
-            coverageNode={node}
-            onIncorporateFocus={isViewingCoachHistory ? undefined : handleIncorporateFocus}
-            isIncorporatingFocus={isGeneratingParaphrase && paraphraseMode === "improve"}
-          />
-          {visibleCoachReview?.hint && (() => {
-            const currentReconcileHash = hashReconcileInput(draft, activeChatIteration?.messages || []);
-            const isAlreadyReconciled = Boolean(
-              activeChatIteration?.reconciledHash
-              && activeChatIteration.reconciledHash === currentReconcileHash
-            );
-            return (
-              <LiveHint
-                key={`${selectedCoachIteration?.id ?? "draft"}:${visibleCoachReview.hint.id ?? visibleCoachReview.hint.text}`}
-                chatProps={{
-                  iteration: activeChatIteration,
-                  status: chatState.iterationId === activeChatIteration?.id ? chatState.status : "idle",
-                  streamingText: chatState.iterationId === activeChatIteration?.id ? chatState.streamingText : "",
-                  progress: chatState.iterationId === activeChatIteration?.id ? chatState.progress : null,
-                  error: chatState.iterationId === activeChatIteration?.id ? chatState.error : null,
-                  onSend: sendCoachQuestion,
-                  onStop: stopCoachResponse,
-                  onReconcile: isViewingCoachHistory ? undefined : handleReconcileChatWithDraft,
-                  isReconciling: isGeneratingParaphrase && paraphraseMode === "reconcile",
-                  isAlreadyReconciled,
-                }}
-              />
-            );
-          })()}
-          <CoachIterationHistory
-            iterations={coachIterations}
-            attempts={attempts}
-            viewIndex={isViewingCoachHistory ? coachActiveIndex : null}
-            onSelect={selectCoachIteration}
-            onSelectAttempt={(index) => {
-              selectAttempt(index);
-              onRequestEvaluate?.();
-            }}
-            onReturnCurrent={returnToCurrentCoach}
-          />
-      </div>
-      </>}
+      {viewMode !== "evaluate" && (
+        <LearningThreadView
+          graphId={graphId}
+          node={node}
+          draftRecord={draftRecord}
+          currentTask={currentTask}
+          onStartHarness={() => handlePedagogicalHarness()}
+          onCancelHarness={cancelParaphraseGeneration}
+          onSendUserMessage={async (userText, nextMessages) => {
+            const updatedRecord = {
+              ...(draftRecord || {}),
+              key: `${graphId}:${node.id}`,
+              text: draftRef.current || draft,
+              messages: nextMessages,
+              updatedAt: new Date().toISOString(),
+            };
+            setDraftRecord(updatedRecord);
+            await setDraft(graphId, node.id, draftRef.current || draft, {
+              ...updatedRecord,
+              isAiGenerated: true,
+            });
+            bgStartHarness(draftRef.current || draft);
+          }}
+          onRequestEvaluate={onRequestEvaluate}
+        />
+      )}
 
       {viewMode !== "coach" && <section className="canonical-review" aria-labelledby="canonical-review-title">
         <header className="canonical-review__header">

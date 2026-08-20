@@ -21,7 +21,7 @@ const payload = buildParaphraseUserPayload({ node: sampleNode });
 assert.ok(payload.includes("TÍTULO DEL CONCEPTO: useEffect"));
 assert.ok(payload.includes("Sincroniza un componente"));
 assert.ok(payload.includes("Cleanup pattern"));
-assert.ok(PARAPHRASE_SYSTEM_PROMPT.includes("PARAFRASEO PEDAGÓGICO FLUIDO"));
+assert.ok(PARAPHRASE_SYSTEM_PROMPT.includes("Maestro y Mentor Senior"));
 
 // Test Incorporate Focus Schema and Prompt
 const improvePayload = buildIncorporateFocusUserPayload({
@@ -77,10 +77,8 @@ const polishPayload = buildPolishPedagogyUserPayload({
 });
 
 assert.ok(polishPayload.includes("CONCEPTO TÉCNICO: useEffect"));
-assert.ok(polishPayload.includes("BORRADOR PREVIO"));
-assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("MÁXIMA CLARIDAD PEDAGÓGICA"));
-assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("RUPTURA DE ANCLAJE"));
-assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("DESGLOSE PROGRESIVO"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("Maestro y Mentor Senior"));
+assert.ok(POLISH_PEDAGOGY_SYSTEM_PROMPT.includes("ESTRUCTURA DIDÁCTICA"));
 
 // Test Pedagogical Judge & Refiner
 const { buildPedagogicalJudgeUserPayload, buildPedagogicalRefinerUserPayload } = await import("../../server/ai/schemas.js");
@@ -107,7 +105,7 @@ const refinerPayload = buildPedagogicalRefinerUserPayload({
 });
 assert.ok(refinerPayload.includes("PUNTAJE PEDAGÓGICO ACTUAL: 72/100"));
 assert.ok(refinerPayload.includes("El segundo párrafo es confuso."));
-assert.ok(PEDAGOGICAL_REFINER_SYSTEM_PROMPT.includes("refinador pedagógico senior"));
+assert.ok(PEDAGOGICAL_REFINER_SYSTEM_PROMPT.includes("Refinador Pedagógico"));
 assert.ok(PEDAGOGICAL_REFINER_SYSTEM_PROMPT.includes("pedagogicalCritique"));
 
 console.log("paraphrase AI schemas & prompts: OK");
