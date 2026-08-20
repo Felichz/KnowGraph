@@ -5,17 +5,38 @@
 import { getScoreView } from "../../ai/types.js";
 
 export function getNodeVisual(node, context) {
-  const { graph, checked, latestAttemptsByNode, activeCats, guidance, activeTaskNodeIds } = context;
+  const { graph, checked, latestAttemptsByNode, latestDraftsByNode, activeCats, guidance, activeTaskNodeIds } = context;
   const category = graph.categories[node.cat];
-  const attempt = latestAttemptsByNode.get(node.id);
-  const score = attempt ? getScoreView(attempt.evaluation) : null;
-  const hasActiveTask = activeTaskNodeIds?.has(node.id) ?? false;
+  const attempt = latestAttemptsByNode?.get(node.id);
+  const draft = latestDraftsByNode?.get(node.id);
+  
+  let score = attempt ? getScoreView(attempt.evaluation) : null;
+  const isChecked = checked.has(node.id);
+
+  if (!score && draft && (draft.harnessScore || draft.harnessPassedThreshold)) {
+    const rawScore = Number(draft.harnessScore) || (draft.harnessPassedThreshold ? 100 : 0);
+    score = {
+      rawScore,
+      coveragePercent: Math.min(100, rawScore),
+      displayScore: rawScore,
+      displayMax: 100,
+      status: rawScore >= 95 ? "exceptional" : "strong",
+      isMastery: rawScore >= 95 || Boolean(draft.harnessPassedThreshold),
+      isExtra: rawScore > 100,
+      extraPoints: Math.max(0, rawScore - 100),
+      baseProgress: Math.min(100, rawScore),
+      thresholdProgress: 95,
+    };
+  }
+
+  const coverage = score ? Math.min(100, score.coveragePercent) : (isChecked ? 100 : 0);
+
   return {
     category,
     color: category?.color ?? "#8f96a5",
-    isChecked: checked.has(node.id),
+    isChecked,
     score,
-    coverage: score ? Math.min(100, score.coveragePercent) : 0,
+    coverage,
     extra: score ? Math.max(0, score.extraPoints) : 0,
     guideLevel: guidance.levelById.get(node.id) ?? 0,
     dimmed: !activeCats.has(node.cat),

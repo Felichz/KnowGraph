@@ -14,7 +14,7 @@ import { ViewModeToggle } from "./components/ViewModeToggle.jsx";
 import { ProviderSettingsPanel } from "./components/ProviderSettingsPanel.jsx";
 import GraphTopologyView from "./components/graphViews/GraphTopologyView.jsx";
 import { ReadingChunks } from "./components/ReadingChunks.jsx";
-import { listAllAttempts } from "./ai/learningStore.js";
+import { listAllAttempts, listAllDrafts } from "./ai/learningStore.js";
 import { applyBackup, createBackup, downloadBackup, parseBackup } from "./ai/backup.js";
 import { getCompletionView, getScoreView, isEvaluationSurfaceComplete } from "./ai/types.js";
 import { CommandPalette } from "./components/CommandPalette.jsx";
@@ -1184,6 +1184,7 @@ const backupInputRef = useRef(null);
   const graph = GRAPH_CONFIGS[graphKey];
   const [checked, setChecked] = useState(() => new Set());
   const [latestAttemptsByNode, setLatestAttemptsByNode] = useState(() => new Map());
+  const [latestDraftsByNode, setLatestDraftsByNode] = useState(() => new Map());
   const [activeCats, setActiveCats] = useState(() => new Set(Object.keys(GRAPH_CONFIGS.react.categories)));
   const [selected, setSelected] = useState(() => getRouteNode(initialRoute));
   const [mobileFocusedNode, setMobileFocusedNode] = useState(null);
@@ -1522,29 +1523,54 @@ const backupInputRef = useRef(null);
     setActiveDeepDive(null);
     setChecked(new Set());
     setLatestAttemptsByNode(new Map());
+    setLatestDraftsByNode(new Map());
     setActiveCats(new Set(Object.keys(graph.categories)));
     let cancelled = false;
-    listAllAttempts().then((all) => {
+
+    Promise.all([listAllAttempts(), listAllDrafts()]).then(([allAttempts, allDrafts]) => {
       if (cancelled) return;
       const currentNodes = new Map(graph.nodes.map((node) => [node.id, node]));
-      const latest = new Map();
+      const latestAttempts = new Map();
+      const latestDrafts = new Map();
       const completed = new Set();
-      for (const attempt of all) {
+
+      // 1. Process evaluation attempts
+      for (const attempt of allAttempts) {
         if (attempt.graphId !== graphKey) continue;
         const node = currentNodes.get(attempt.nodeId);
-        if (!node || attempt.contentHash !== hashCardContent(node)) continue;
-        const current = latest.get(attempt.nodeId);
-        if (!current || attempt.createdAt >= current.createdAt) latest.set(attempt.nodeId, attempt);
-        if (isEvaluationSurfaceComplete(attempt.evaluation)) completed.add(attempt.nodeId);
+        if (!node) continue;
+        const current = latestAttempts.get(attempt.nodeId);
+        if (!current || attempt.createdAt >= current.createdAt) {
+          latestAttempts.set(attempt.nodeId, attempt);
+        }
+        if (isEvaluationSurfaceComplete(attempt.evaluation) || (attempt.evaluation?.score >= 80)) {
+          completed.add(attempt.nodeId);
+        }
       }
-      setLatestAttemptsByNode(latest);
+
+      // 2. Process drafts (including cards perfected with Pedagogical Harness)
+      for (const draft of allDrafts) {
+        if (!draft || !draft.key) continue;
+        const [gId, nodeId] = draft.key.split(":");
+        if (gId !== graphKey || !nodeId) continue;
+        latestDrafts.set(nodeId, draft);
+        if (draft.harnessPassedThreshold || (draft.harnessScore && draft.harnessScore >= 95)) {
+          completed.add(nodeId);
+        }
+      }
+
+      setLatestAttemptsByNode(latestAttempts);
+      setLatestDraftsByNode(latestDrafts);
       setChecked(completed);
-    }).catch(() => {
+    }).catch((err) => {
+      console.error("[App] error loading attempts and drafts:", err);
       if (!cancelled) {
         setLatestAttemptsByNode(new Map());
+        setLatestDraftsByNode(new Map());
         setChecked(new Set());
       }
     });
+
     return () => { cancelled = true; };
   }, [graphKey, graph]);
 
@@ -1553,12 +1579,20 @@ const backupInputRef = useRef(null);
 
   const handleEvaluationSaved = useCallback((attempt) => {
     const node = graph.nodes.find((candidate) => candidate.id === attempt.nodeId);
-    if (!node || attempt.graphId !== graphKey || attempt.contentHash !== hashCardContent(node)) return;
+    if (!node || attempt.graphId !== graphKey) return;
     setLatestAttemptsByNode((previous) => new Map(previous).set(attempt.nodeId, attempt));
-    if (isEvaluationSurfaceComplete(attempt.evaluation)) {
+    if (isEvaluationSurfaceComplete(attempt.evaluation) || (attempt.evaluation?.score >= 80)) {
       setChecked((previous) => new Set(previous).add(attempt.nodeId));
     }
   }, [graph, graphKey]);
+
+  const handleDraftSaved = useCallback((nodeId, draft) => {
+    if (!nodeId || !draft) return;
+    setLatestDraftsByNode((previous) => new Map(previous).set(nodeId, draft));
+    if (draft.harnessPassedThreshold || (draft.harnessScore && draft.harnessScore >= 95)) {
+      setChecked((previous) => new Set(previous).add(nodeId));
+    }
+  }, []);
 
   const switchGraph = (nextGraphKey) => {
     if (nextGraphKey === graphKey) return;
@@ -1646,6 +1680,7 @@ const backupInputRef = useRef(null);
     graph,
     checked,
     latestAttemptsByNode,
+    latestDraftsByNode,
     activeCats,
     guidance,
     milestoneProgress,
@@ -2239,6 +2274,7 @@ const backupInputRef = useRef(null);
                 providerProfile={providerProfile}
                 viewMode={lessonView === "coach" ? "coach" : lessonView === "evaluate" ? "evaluate" : "hidden"}
                 onEvaluationSaved={handleEvaluationSaved}
+                onDraftSaved={handleDraftSaved}
                 onRequestCoach={() => setLessonView("coach")}
                 onRequestEvaluate={() => setLessonView("evaluate")}
                 onNavigateBack={goBack}

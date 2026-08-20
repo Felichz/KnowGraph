@@ -110,7 +110,7 @@ function PedagogicalSparkline({ history = [], threshold = 95 }) {
   );
 }
 
-export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "all", onRequestCoach, onRequestEvaluate, onEvaluationSaved, onNavigateBack, onNavigateNext, hasPrevious, hasNext }) {
+export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "all", onRequestCoach, onRequestEvaluate, onEvaluationSaved, onDraftSaved, onNavigateBack, onNavigateNext, hasPrevious, hasNext }) {
   const contentHash = hashCardContent(node);
   const {
     currentTask,
@@ -530,6 +530,14 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
 
       if (currentTask.status === "completed" && currentTask.draft) {
         startLiveReview(currentTask.draft);
+        onDraftSaved?.(node?.id, {
+          key: `${graphId}:${node?.id}`,
+          text: currentTask.draft,
+          harnessScore: currentTask.score,
+          harnessPassedThreshold: currentTask.passedThreshold,
+          harnessRubric: currentTask.rubric,
+          harnessHistory: currentTask.history,
+        });
       }
     } else if (currentTask.type === "evaluation") {
       if (currentTask.status === "running") {
@@ -551,7 +559,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
         }
       }
     }
-  }, [currentTask, isDraftAiGenerated, onEvaluationSaved, startLiveReview]);
+  }, [currentTask, graphId, isDraftAiGenerated, node?.id, onDraftSaved, onEvaluationSaved, startLiveReview]);
 
   const cancelLiveReview = useCallback(() => {
     const hasDebounce = Boolean(liveDebounceRef.current || liveDebounceClockRef.current || debounceStartedAt);
