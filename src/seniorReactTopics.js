@@ -323,14 +323,14 @@ export const SENIOR_TOPIC_DETAILS = {
   ),
   technical_direction: details(
     "Liderazgo",
-    "Dirección técnica define pocos principios y límites que permiten a varios equipos tomar decisiones compatibles sin esperar permiso constante.",
-    "El liderazgo escala mediante contexto y mecanismos, no convirtiéndose en cuello de botella.",
-    "Principios:\\n1. URL posee estado navegable\\n2. API autoriza; UI no duplica policy\\n3. Features importan contratos públicos\\n4. Cambios críticos son observables y reversibles",
-    "Principios accionables",
-    ["Conectá dirección con objetivos de producto.", "Definí invariantes y decisiones delegables.", "Creá ejemplos, tooling y feedback loops.", "Revisá principios cuando la evidencia cambia."],
-    ["Un documento aspiracional sin mecanismos no cambia el sistema.", "Estandarizar cada detalle reduce autonomía.", "El lead que aprueba todo impide que el equipo crezca."],
-    "Dale al equipo contexto suficiente para decidir sin vos.",
-    "La dirección útil reduce decisiones repetidas y hace visibles las excepciones. Se sostiene con arquitectura, docs, revisión, métricas y ownership distribuido.",
+    "La dirección técnica establece principios arquitectónicos, invariantes y mecanismos automáticos para que múltiples equipos tomen decisiones coherentes con velocidad y autonomía, sin depender de la aprobación constante de un líder.",
+    "El liderazgo técnico escala mediante contexto y mecanismos en el sistema, no convirtiéndose en un cuello de botella humano.",
+    "A medida que una organización crece, surgen dos trampas opuestas: la anarquía técnica (cada equipo inventa su propia arquitectura creando fragmentación y deuda técnica) o la burocracia centralizada (el Tech Lead debe aprobar cada PR o decisión, frenando el delivery). La dirección técnica senior resuelve esta tensión definiendo 'invariantes' innegociables a nivel de sistema y 'guardarraíles' automáticos (linters, tooling de contratos y CI gates) mientras delega la libertad de implementación local.",
+    "Pilares de dirección técnica",
+    ["Definí invariantes globales claros (contratos de API, seguridad, observabilidad) y delimitá qué decisiones son delegables al equipo.", "Traducí principios en mecanismos automáticos en CI y tooling en lugar de documentos teóricos que nadie lee.", "Comunica el contexto de producto y trade-offs para que los desarrolladores tomen decisiones correctas de forma autónoma.", "Revisá y adaptá los principios periódicamente cuando cambien las restricciones del negocio o la escala."],
+    ["Un documento de arquitectura sin mecanismos automáticos se vuelve papel mojado.", "Querer estandarizar cada detalle menor ahoga la autonomía y desmotiva al equipo.", "El líder que centraliza todas las decisiones impide el crecimiento del equipo y bloquea el avance."],
+    "Dale al equipo contexto y guardarraíles claros para que puedan decidir y avanzar sin vos.",
+    "La dirección técnica efectiva reduce la fatiga de decisiones repetidas, previene la fragmentación caótica y sostiene la evolución del producto mediante arquitectura viva, tooling compartido y ownership distribuido.",
     ["frontend_system_design", "incident_debugging"]
   ),
   adr_rfc_decisions: details(

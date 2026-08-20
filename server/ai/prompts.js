@@ -364,8 +364,9 @@ Tu misión es auditar con rigor si una explicación técnica alcanza la verdader
 CRITERIO DE RIGOR, ANCLAJE, NARRATIVA Y CAUSALIDAD FÍSICA:
 1. Anclaje Visceral: El primer párrafo debe situar un escenario concreto en producción con una tensión o dilema humano/técnico específico (un síntoma visible de rotura o dolor de equipo) SIN nombrar herramientas avanzadas ni hacer enumeraciones abstractas de tres temas a la vez. Si abre con definiciones secas o un listado genérico, DEBES penalizar.
 2. Hilo Narrativo Evolutivo (Anti-Catálogo): Si el texto se siente como una lista de diccionario o enciclopedia yuxtapuesta ("Un X es...", "Un Y es...") en lugar de construir un hilo conductor progresivo (por qué surgió una técnica, qué dolor físico causó en producción y cómo la siguiente solución resuelve esa falla), DEBES penalizar severamente 'cognitivePacing' y 'causalityAndTradeoffs' (máx 15/20).
-3. Causalidad Mecánica Interna: Todo trade-off debe explicar la física del runtime (por qué el reconciliador de React destruye el DOM por identidad de referencia, por qué una closure no comparte estado entre llamadas, dónde reside físicamente la memoria).
-4. Código Contrastivo y Didáctico: El código debe mostrar la resolución limpia (y si aplica, contrastar con la trampa o patrón legado) con comentarios didácticos claros.
+3. Cohesión y Foco Conceptual Central: El texto DEBE explicar y construir el modelo mental del concepto nuclear del título de la card (por ejemplo, si el tema es Dirección Técnica, debe explicar qué es el liderazgo técnico, cómo escalar decisiones, cómo balancear guardarraíles vs autonomía y cómo evitar cuellos de botella). PROHIBIDO dispersarse en un frankenstein de 4 tips técnicos no relacionados sin explicar el concepto paraguas.
+4. Causalidad Mecánica Interna: Todo trade-off debe explicar la física del runtime (por qué el reconciliador de React destruye el DOM por identidad de referencia, por qué una closure no comparte estado entre llamadas, dónde reside físicamente la memoria).
+5. Código Contrastivo y Didáctico: El código debe mostrar la resolución limpia (y si aplica, contrastar con la trampa o patrón legado) con comentarios didácticos claros.
 
 DIMENSIONES DE AUDITORÍA (Todas de 0 a 20 puntos, total 0 a 100):
 
@@ -376,10 +377,10 @@ DIMENSIONES DE AUDITORÍA (Todas de 0 a 20 puntos, total 0 a 100):
    - 0-13: Cero anclaje; empieza con definiciones frías, listas secas o salto directo a soluciones.
 
 2. selfContainedScope (0-20):
-   - ¿Es autocontenido en los motivos clave del tema? Si menciona una amenaza, fenómeno, trampa o decisión técnica, ¿explica en 1 o 2 frases cotidianas en qué consiste el problema físico antes de dar su solución?
-   - 19-20: Alcance 100% autocontenido; todo motivo clave está desarmado con palabras llanas, cero siglas o conceptos huérfanos.
-   - 14-18: Nombra un motivo o fenómeno de pasada sin aterrizar brevemente en qué consiste la trampa o fricción.
-   - 0-13: Asume conocimiento previo de las trampas o fenómenos centrales, dejando al lector sin entender el porqué real.
+   - ¿Es autocontenido en los motivos clave del tema y mantiene foco en el concepto central del título de la card? Si menciona una amenaza, fenómeno, trampa o decisión técnica, ¿explica en 1 o 2 frases cotidianas en qué consiste el problema físico antes de dar su solución, sin dispersarse en subtópicos ajenos?
+   - 19-20: Alcance 100% autocontenido y cohesionado; el concepto central queda perfectamente claro y explicado, cero siglas o conceptos huérfanos.
+   - 14-18: Nombra un motivo o fenómeno de pasada sin aterrizar brevemente en qué consiste la trampa o fricción, o incluye ejemplos tangenciales sin articular su relación con el tema principal.
+   - 0-13: Asume conocimiento previo de las trampas centrales, o se desvía del tema central convirtiéndose en una colección de tips aislados.
 
 3. cognitivePacing (0-20):
    - ¿Aplica progresión narrativa fluida con ritmo respirable y párrafos cortos bien delimitados (máx 3-4 líneas), evitando el formato de catálogo o enciclopedia?
