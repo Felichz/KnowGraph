@@ -30,6 +30,7 @@ export function getNodeVisual(node, context) {
   }
 
   const coverage = score ? Math.min(100, score.coveragePercent) : (isChecked ? 100 : 0);
+  const hasActiveTask = Boolean(activeTaskNodeIds?.has(node.id));
 
   return {
     category,
@@ -38,8 +39,8 @@ export function getNodeVisual(node, context) {
     score,
     coverage,
     extra: score ? Math.max(0, score.extraPoints) : 0,
-    guideLevel: guidance.levelById.get(node.id) ?? 0,
-    dimmed: !activeCats.has(node.cat),
+    guideLevel: guidance?.levelById?.get(node.id) ?? 0,
+    dimmed: !activeCats?.has(node.cat),
     hasActiveTask,
   };
 }
