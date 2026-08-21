@@ -111,7 +111,7 @@ function PedagogicalSparkline({ history = [], threshold = 95 }) {
   );
 }
 
-export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "all", onRequestCoach, onRequestEvaluate, onEvaluationSaved, onDraftSaved, onNavigateBack, onNavigateNext, hasPrevious, hasNext }) {
+export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "all", onRequestLearn, onRequestCoach, onRequestEvaluate, onEvaluationSaved, onDraftSaved, onNavigateBack, onNavigateNext, hasPrevious, hasNext }) {
   const contentHash = hashCardContent(node);
   const {
     currentTask,
@@ -1046,7 +1046,7 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
 
   return (
     <section className={`paraphrase-review paraphrase-review--${viewMode}`} aria-labelledby="paraphrase-review-title">
-      {viewMode !== "evaluate" && (
+      {viewMode === "learn" && (
         <LearningThreadView
           graphId={graphId}
           node={node}
@@ -1078,7 +1078,179 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
         />
       )}
 
-      {viewMode !== "coach" && <section className="canonical-review" aria-labelledby="canonical-review-title">
+      {viewMode === "coach" && (
+        <div className="paraphrase-coach-workspace">
+          <div className="paraphrase-review__head">
+            <div>
+              <span className="lesson-section-label">PARAFRASEAR CON TUS PROPIAS PALABRAS</span>
+              <h3 id="paraphrase-review-title">Escribí tu respuesta y recibí coaching en tiempo real</h3>
+            </div>
+            <span className="paraphrase-review__auto-badge">COACHING PROGRESIVO</span>
+          </div>
+          <p className="paraphrase-review__intro">
+            Escribí como si respondieras en una entrevista técnica. El asistente detecta en vivo qué conceptos esenciales ya cubriste y mantiene visible el próximo gap mientras redactás, sin alterar tus palabras.
+          </p>
+
+          <div className="mastery-workspace">
+            <div className="mastery-workspace__editor">
+              <div className="paraphrase-review__editor">
+                <div className="paraphrase-review__editor-tools">
+                  <div className="paraphrase-review__tool-buttons">
+                    <button
+                      type="button"
+                      className={`voice-dictate-button ${isListening ? "is-recording" : ""}`}
+                      onClick={toggleSpeechRecognition}
+                      aria-label={isListening ? "Detener dictado por voz" : "Dictar respuesta por voz"}
+                      title={isListening ? "Detener dictado" : "Dictar respuesta con tu voz"}
+                    >
+                      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" fill="currentColor"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      <span>{isListening ? "Grabando voz..." : "Dictar por voz"}</span>
+                    </button>
+
+                    <div className="paraphrase-review__view-toggle" role="group" aria-label="Modo de visualización del borrador">
+                      <button
+                        type="button"
+                        className={`paraphrase-review__view-btn ${draftViewMode === "editor" ? "is-active" : ""}`}
+                        onClick={() => {
+                          setDraftViewMode("editor");
+                          setTimeout(() => textareaRef.current?.focus(), 50);
+                        }}
+                        title="Editar texto directamente"
+                      >
+                        ✏️ Editor
+                      </button>
+                      <button
+                        type="button"
+                        className={`paraphrase-review__view-btn ${draftViewMode === "chunks" ? "is-active" : ""}`}
+                        onClick={() => setDraftViewMode("chunks")}
+                        title="Ver análisis por chunks de lectura interactivos"
+                      >
+                        📖 Chunks de Lectura
+                      </button>
+                    </div>
+                  </div>
+
+                  {isDraftAiGenerated && (
+                    <span className="ai-generated-tag" title="Este borrador proviene de una sesión previa. Podés editarlo o reescribirlo con tus palabras.">
+                      <span>Borrador en edición</span>
+                    </span>
+                  )}
+                </div>
+
+                {draftViewMode === "chunks" ? (
+                  <ChunkedDraftView
+                    text={visibleCoachText}
+                    isReadonly={isViewingCoachHistory}
+                    onEdit={() => {
+                      setDraftViewMode("editor");
+                      setTimeout(() => textareaRef.current?.focus(), 50);
+                    }}
+                  />
+                ) : (
+                  <textarea
+                    ref={textareaRef}
+                    className={`paraphrase-review__textarea ${isViewingCoachHistory ? "is-readonly" : ""}`}
+                    value={visibleCoachText}
+                    onChange={isViewingCoachHistory ? undefined : handleDraftChange}
+                    readOnly={isViewingCoachHistory}
+                    onKeyDown={(event) => {
+                      if (isViewingCoachHistory) return;
+                      if (event.key === "Escape" && (debounceStartedAt || liveStatus === "running")) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        cancelLiveReview();
+                        return;
+                      }
+                      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+                        event.preventDefault();
+                        onRequestEvaluate?.();
+                      }
+                    }}
+                    placeholder="Explicá qué es, cómo funciona en el runtime, por qué importa y qué trade-offs tiene..."
+                    rows={12}
+                    aria-label="Tu explicación con tus palabras"
+                  />
+                )}
+
+                <div className="paraphrase-review__editor-footer">
+                  <div className="paraphrase-review__shortcuts-hint">
+                    <span className={`shortcut-key ${shortcutFeedback.modifier ? "is-pressed" : ""}`}>{modifierLabel}</span>
+                    <span>+</span>
+                    <span className={`shortcut-key ${shortcutFeedback.enter ? "is-pressed" : ""}`}>Enter</span>
+                    <span className="shortcut-desc">para ir a Evaluar</span>
+                  </div>
+                  <div className="paraphrase-review__footer-actions">
+                    {onRequestEvaluate && (
+                      <button
+                        type="button"
+                        className="paraphrase-review__switch-tab-btn"
+                        onClick={onRequestEvaluate}
+                        title="Ir a la pestaña de evaluación para verificar tu dominio"
+                      >
+                        Ir a Evaluación Formal ➔
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Coaching Panel */}
+            <LiveReviewPanel
+              status={visibleCoachStatus}
+              review={visibleCoachReview}
+              hint={visibleCoachReview?.hint}
+              error={isViewingCoachHistory ? null : liveError}
+              progress={isViewingCoachHistory ? null : { ...liveProgress, now: liveStatus === "running" ? Date.now() : liveProgress.now }}
+              footerMeta={(
+                <>
+                  {isViewingCoachHistory ? (
+                    <span className="paraphrase-review__readonly-badge">SOLO LECTURA · ITERACIÓN {coachActiveIndex + 1}</span>
+                  ) : !isViewingCoachHistory && (debounceStartedAt || liveStatus === "running") ? (
+                    <span className="live-coach-controls">
+                      {debounceStartedAt && (
+                        <DebounceRing progress={debounceProgress} onTrigger={triggerLiveReviewNow} shortcutState={shortcutFeedback} />
+                      )}
+                      <LiveCancelButton onCancel={cancelLiveReview} />
+                    </span>
+                  ) : cancelFeedback ? (
+                    <span className="live-cancelled-feedback" role="status">
+                      <span aria-hidden="true">■</span>
+                      <span>revisión detenida</span>
+                      <kbd>Esc</kbd>
+                    </span>
+                  ) : shortcutFeedback.triggered ? (
+                    <ShortcutFlash shortcutState={shortcutFeedback} />
+                  ) : null}
+                  <span className={`paraphrase-review__count ${!isViewingCoachHistory && tooShort ? "is-warn" : ""}`}>
+                    {visibleCoachCharCount} caracteres{!isViewingCoachHistory && tooShort ? " · un poco corta" : ""}
+                  </span>
+                </>
+              )}
+              coverageNode={node}
+              onIncorporateFocus={undefined}
+              isIncorporatingFocus={false}
+            />
+
+            <CoachIterationHistory
+              iterations={coachIterations}
+              attempts={attempts}
+              viewIndex={isViewingCoachHistory ? coachActiveIndex : null}
+              onSelect={selectCoachIteration}
+              onSelectAttempt={(index) => {
+                selectAttempt(index);
+                onRequestEvaluate?.();
+              }}
+              onReturnCurrent={returnToCurrentCoach}
+            />
+          </div>
+        </div>
+      )}
+
+      {viewMode === "evaluate" && <section className="canonical-review" aria-labelledby="canonical-review-title">
         <header className="canonical-review__header">
           <div>
             <span className="lesson-section-label">EVALUACIÓN COMPLETA</span>

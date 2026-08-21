@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { LiveRequestFeedback } from "./LiveRequestFeedback.jsx";
 import { ReadingChunks, splitReadingChunks } from "./ReadingChunks.jsx";
+import { CodeBlock } from "./CodeBlock.jsx";
 
 export function CoachChat({
   iteration,
@@ -160,12 +161,15 @@ export function ChatMarkdown({ text, chunked = false, className = "coach-chat__m
     <div className={className}>
       {markdownBlocks.map((block, blockIndex) => {
         if (blockIndex % 2 === 1) {
+          const langMatch = block.match(/^([a-zA-Z0-9_#-]+)\n/);
+          const lang = langMatch ? langMatch[1] : "";
+          const code = langMatch ? block.slice(langMatch[0].length) : block;
           return (
-            <pre
+            <CodeBlock
               key={blockIndex}
-            >
-              <code>{block.replace(/^\w+\n/, "")}</code>
-            </pre>
+              code={code.trimEnd()}
+              language={lang}
+            />
           );
         }
 

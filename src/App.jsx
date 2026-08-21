@@ -2138,22 +2138,29 @@ const backupInputRef = useRef(null);
             </div>
             <button type="button" role="tab" className={lessonView === "read" ? "is-active" : ""} aria-selected={lessonView === "read"} onClick={() => { setActiveDeepDive(null); setLessonView("read"); }}>
               <span className="lesson-view-tabs__index">01</span>
-              <span className="lesson-view-tabs__copy"><strong>Lectura</strong><small>Entender el concepto</small></span>
+              <span className="lesson-view-tabs__copy"><strong>Lectura</strong><small>Concepto y flashcard</small></span>
             </button>
-            <button type="button" role="tab" className={`${lessonView === "coach" ? "is-active" : ""} ${currentCardTask?.status === "running" && currentCardTask?.type === "pedagogical_harness" ? "has-active-task" : ""}`} aria-selected={lessonView === "coach"} onClick={() => { setActiveDeepDive(null); setLessonView("coach"); }}>
+            <button type="button" role="tab" className={`${lessonView === "learn" ? "is-active" : ""} ${currentCardTask?.status === "running" && currentCardTask?.type === "pedagogical_harness" ? "has-active-task" : ""}`} aria-selected={lessonView === "learn"} onClick={() => { setActiveDeepDive(null); setLessonView("learn"); }}>
               <span className="lesson-view-tabs__index">02</span>
               <span className="lesson-view-tabs__copy">
                 <strong>
-                  Coaching
+                  Mentor IA
                   {currentCardTask?.status === "running" && currentCardTask?.type === "pedagogical_harness" && (
-                    <span className="tab-task-pulse-dot" title="Perfeccionamiento con IA en progreso" />
+                    <span className="tab-task-pulse-dot" title="Mentor y Juez IA en progreso" />
                   )}
                 </strong>
-                <small>Ensayar tu respuesta</small>
+                <small>Masterclass y Socrática</small>
+              </span>
+            </button>
+            <button type="button" role="tab" className={lessonView === "coach" ? "is-active" : ""} aria-selected={lessonView === "coach"} onClick={() => { setActiveDeepDive(null); setLessonView("coach"); }}>
+              <span className="lesson-view-tabs__index">03</span>
+              <span className="lesson-view-tabs__copy">
+                <strong>Parafrasear</strong>
+                <small>Escribir con tus palabras</small>
               </span>
             </button>
             <button type="button" role="tab" className={`${lessonView === "evaluate" ? "is-active" : ""} ${currentCardTask?.status === "running" && currentCardTask?.type === "evaluation" ? "has-active-task" : ""}`} aria-selected={lessonView === "evaluate"} onClick={() => { setActiveDeepDive(null); setLessonView("evaluate"); }}>
-              <span className="lesson-view-tabs__index">03</span>
+              <span className="lesson-view-tabs__index">04</span>
               <span className="lesson-view-tabs__copy">
                 <strong>
                   Evaluar
@@ -2173,11 +2180,11 @@ const backupInputRef = useRef(null);
                 {currentCardTask.stage === "judging" ? "⚖️" : currentCardTask.stage === "evaluating" ? "🧠" : "🪄"}
               </span>
               <span className="card-active-bg-task-banner__msg">{currentCardTask.message}</span>
-              {lessonView === "read" && (
+              {(lessonView === "read" || lessonView === "coach") && (
                 <button
                   type="button"
                   className="card-active-bg-task-banner__btn"
-                  onClick={() => setLessonView(currentCardTask.type === "evaluation" ? "evaluate" : "coach")}
+                  onClick={() => setLessonView(currentCardTask.type === "evaluation" ? "evaluate" : "learn")}
                 >
                   Ver en vivo →
                 </button>
@@ -2272,9 +2279,18 @@ const backupInputRef = useRef(null);
                 graphId={graphKey}
                 node={selected}
                 providerProfile={providerProfile}
-                viewMode={lessonView === "coach" ? "coach" : lessonView === "evaluate" ? "evaluate" : "hidden"}
+                viewMode={
+                  lessonView === "learn"
+                    ? "learn"
+                    : lessonView === "coach"
+                    ? "coach"
+                    : lessonView === "evaluate"
+                    ? "evaluate"
+                    : "hidden"
+                }
                 onEvaluationSaved={handleEvaluationSaved}
                 onDraftSaved={handleDraftSaved}
+                onRequestLearn={() => setLessonView("learn")}
                 onRequestCoach={() => setLessonView("coach")}
                 onRequestEvaluate={() => setLessonView("evaluate")}
                 onNavigateBack={goBack}
