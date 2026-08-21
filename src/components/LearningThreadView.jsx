@@ -225,29 +225,200 @@ export function LearningThreadView({
       {/* Main Conversation & Masterclass Thread */}
       <div className="learning-thread-container">
         <div className="learning-thread-messages" role="log" aria-live="polite">
-          {/* 1. Masterclass Message (Initial Teacher Lesson) */}
-          {masterclassText ? (
-            <article className="learning-thread-bubble learning-thread-bubble--mentor is-masterclass">
+          {/* 1. Masterclass Message (Initial Teacher Lesson or Live Running Stream) */}
+          {masterclassText || isTaskRunning ? (
+            <article
+              className={`learning-thread-bubble learning-thread-bubble--mentor is-masterclass ${
+                isTaskRunning ? "is-running-stream" : ""
+              }`}
+            >
               <div className="learning-thread-bubble__header">
                 <div className="learning-thread-bubble__author">
-                  <span className="learning-thread-bubble__avatar" aria-hidden="true">🧠</span>
+                  <span
+                    className={`learning-thread-bubble__avatar ${
+                      isTaskRunning ? "is-pulsing" : ""
+                    }`}
+                    aria-hidden="true"
+                  >
+                    🧠
+                  </span>
                   <div className="learning-thread-bubble__author-info">
                     <strong>Mentor Senior</strong>
-                    <small>Lección Magistral</small>
+                    <small>
+                      {isTaskRunning
+                        ? currentTask.stage === "judging"
+                          ? "⚖️ Juez Pedagógico auditando calidad..."
+                          : currentTask.stage === "generating_initial"
+                          ? "🪄 Redactando explicación base..."
+                          : `🪄 Refinando explicación (Iteración ${currentTask.iteration || 1})...`
+                        : "Lección Magistral de Apertura"}
+                    </small>
                   </div>
                 </div>
-                {isMastery && (
-                  <span className="learning-thread-bubble__badge is-mastery">
-                    ✨ 100/100 MAESTRÍA PEDAGÓGICA
-                  </span>
-                )}
+
+                <div className="learning-thread-bubble__header-right">
+                  {score !== null && !isTaskRunning && (
+                    <button
+                      type="button"
+                      className={`learning-thread-bubble__judge-pill ${isMastery ? "is-mastery" : ""}`}
+                      onClick={() => setJudgePanelOpen((v) => !v)}
+                      title="Click para ver/ocultar el desglose de 5 dimensiones del Juez"
+                    >
+                      <span>{isMastery ? "🏆 100/100 Maestría" : `⚖️ Juez: ${score}/100`}</span>
+                      <span className="judge-pill-arrow">{judgePanelOpen ? "▲" : "▼"}</span>
+                    </button>
+                  )}
+
+                  {isTaskRunning && (
+                    <button
+                      type="button"
+                      className="learning-thread-bubble__cancel-btn"
+                      onClick={onCancelHarness}
+                      title="Cancelar proceso en segundo plano"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="learning-thread-bubble__content coach-hint__markdown">
-                <ChatMarkdown text={masterclassText} />
+              {/* Live Stage Stepper Bar */}
+              <div className="learning-thread-stepper-bar" aria-label="Fases del proceso pedagógico">
+                <div
+                  className={`stepper-step ${
+                    isTaskRunning && currentTask.stage === "generating_initial"
+                      ? "is-active"
+                      : masterclassText
+                      ? "is-done"
+                      : ""
+                  }`}
+                >
+                  <span className="stepper-step__num">1</span>
+                  <span className="stepper-step__label">Redacción Magistral</span>
+                </div>
+                <div className="stepper-divider" />
+                <div
+                  className={`stepper-step ${
+                    isTaskRunning && currentTask.stage === "judging"
+                      ? "is-active"
+                      : score !== null
+                      ? "is-done"
+                      : ""
+                  }`}
+                >
+                  <span className="stepper-step__num">2</span>
+                  <span className="stepper-step__label">
+                    {isTaskRunning && currentTask.stage === "judging"
+                      ? "Auditoría del Juez (Evaluando...)"
+                      : score !== null
+                      ? `Juez Pedagógico (${score}/100)`
+                      : "Auditoría del Juez"}
+                  </span>
+                </div>
+                <div className="stepper-divider" />
+                <div
+                  className={`stepper-step ${
+                    isMastery ? "is-done is-mastery" : isTaskRunning && currentTask.stage === "refining" ? "is-active" : ""
+                  }`}
+                >
+                  <span className="stepper-step__num">3</span>
+                  <span className="stepper-step__label">
+                    {isTaskRunning && currentTask.stage === "refining"
+                      ? `Refinamiento (Iter ${currentTask.iteration})`
+                      : isMastery
+                      ? "Maestría Aprobada"
+                      : "Publicación"}
+                  </span>
+                </div>
               </div>
+
+              {/* Inline Collapsible Judge Breakdown */}
+              {judgePanelOpen && (score !== null || rubric !== null) && (
+                <div className="learning-thread-inline-judge" aria-label="Desglose de evaluación del Juez">
+                  <div className="inline-judge-header">
+                    <strong>⚖️ Auditoría del Juez Pedagógico (5 Dimensiones):</strong>
+                    <span className="inline-judge-total">Puntaje Final: <strong>{score}/100</strong></span>
+                  </div>
+                  {rubric && (
+                    <div className="inline-judge-rubric-grid">
+                      <div className="inline-rubric-item">
+                        <span className="rubric-dim-title">🪝 Anclaje Didáctico</span>
+                        <div className="rubric-dim-bar-wrap">
+                          <div
+                            className="rubric-dim-bar-fill"
+                            style={{ width: `${Math.min(100, ((rubric.foundationalContext ?? 20) / 20) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="rubric-dim-score">{rubric.foundationalContext ?? 20}/20</span>
+                      </div>
+                      <div className="inline-rubric-item">
+                        <span className="rubric-dim-title">🔭 Alcance y Foco</span>
+                        <div className="rubric-dim-bar-wrap">
+                          <div
+                            className="rubric-dim-bar-fill"
+                            style={{ width: `${Math.min(100, ((rubric.selfContainedScope ?? 20) / 20) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="rubric-dim-score">{rubric.selfContainedScope ?? 20}/20</span>
+                      </div>
+                      <div className="inline-rubric-item">
+                        <span className="rubric-dim-title">⏳ Ritmo y Markdown</span>
+                        <div className="rubric-dim-bar-wrap">
+                          <div
+                            className="rubric-dim-bar-fill"
+                            style={{ width: `${Math.min(100, ((rubric.cognitivePacing ?? 20) / 20) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="rubric-dim-score">{rubric.cognitivePacing ?? 20}/20</span>
+                      </div>
+                      <div className="inline-rubric-item">
+                        <span className="rubric-dim-title">⚖️ Causalidad Física</span>
+                        <div className="rubric-dim-bar-wrap">
+                          <div
+                            className="rubric-dim-bar-fill"
+                            style={{ width: `${Math.min(100, ((rubric.causalityAndTradeoffs ?? 20) / 20) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="rubric-dim-score">{rubric.causalityAndTradeoffs ?? 20}/20</span>
+                      </div>
+                      <div className="inline-rubric-item">
+                        <span className="rubric-dim-title">🎯 Código y Socrática</span>
+                        <div className="rubric-dim-bar-wrap">
+                          <div
+                            className="rubric-dim-bar-fill"
+                            style={{ width: `${Math.min(100, ((rubric.applicationAndFailureModes ?? 20) / 20) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="rubric-dim-score">{rubric.applicationAndFailureModes ?? 20}/20</span>
+                      </div>
+                    </div>
+                  )}
+                  {Array.isArray(draftRecord?.harnessCritique) && draftRecord.harnessCritique.length > 0 && (
+                    <div className="inline-judge-critique">
+                      <strong>Observaciones del Juez:</strong>
+                      <ul>
+                        {draftRecord.harnessCritique.map((c, i) => (
+                          <li key={i}>{c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Message Content */}
+              {masterclassText ? (
+                <div className="learning-thread-bubble__content coach-hint__markdown">
+                  <ChatMarkdown text={masterclassText} />
+                </div>
+              ) : isTaskRunning ? (
+                <div className="learning-thread-bubble__thinking">
+                  <div className="learning-thread-spinner" aria-hidden="true" />
+                  <span>{currentTask.message || "Preparando lección pedagógica de clase mundial..."}</span>
+                </div>
+              ) : null}
             </article>
-          ) : !isTaskRunning ? (
+          ) : (
             <div className="learning-thread-empty">
               <div className="learning-thread-empty__icon">🧠</div>
               <h3>Comenzá tu sesión de aprendizaje</h3>
@@ -262,7 +433,7 @@ export function LearningThreadView({
                 🪄 Iniciar Lección con el Mentor (100/100)
               </button>
             </div>
-          ) : null}
+          )}
 
           {/* 2. Follow-up Socratic Messages Thread */}
           {threadMessages.map((msg) => (
@@ -291,49 +462,6 @@ export function LearningThreadView({
               </div>
             </article>
           ))}
-
-          {/* 3. Live Active Task / Refinement Running Bubble */}
-          {isTaskRunning && (
-            <article className="learning-thread-bubble learning-thread-bubble--mentor is-running-stream">
-              <div className="learning-thread-bubble__header">
-                <div className="learning-thread-bubble__author">
-                  <span className="learning-thread-bubble__avatar is-pulsing" aria-hidden="true">🧠</span>
-                  <div className="learning-thread-bubble__author-info">
-                    <strong>Mentor Senior</strong>
-                    <small>
-                      {currentTask.stage === "judging"
-                        ? "⚖️ Juez Pedagógico auditando calidad..."
-                        : currentTask.stage === "generating_initial"
-                        ? "🪄 Redactando explicación base..."
-                        : `🪄 Refinando explicación (Iteración ${currentTask.iteration || 1})...`}
-                    </small>
-                  </div>
-                </div>
-
-                <div className="learning-thread-bubble__running-controls">
-                  <button
-                    type="button"
-                    className="learning-thread-bubble__cancel-btn"
-                    onClick={onCancelHarness}
-                    title="Cancelar proceso en segundo plano"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-
-              {currentTask.draft ? (
-                <div className="learning-thread-bubble__content coach-hint__markdown">
-                  <ChatMarkdown text={currentTask.draft} />
-                </div>
-              ) : (
-                <div className="learning-thread-bubble__thinking">
-                  <div className="learning-thread-spinner" aria-hidden="true" />
-                  <span>{currentTask.message || "Preparando lección pedagógica de clase mundial..."}</span>
-                </div>
-              )}
-            </article>
-          )}
 
           <div ref={messagesEndRef} />
         </div>

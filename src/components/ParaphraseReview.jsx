@@ -528,6 +528,18 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
         setIsDraftAiGenerated(true);
       }
 
+      setDraftRecord((prev) => ({
+        ...(prev || {}),
+        key: `${graphId}:${node?.id}`,
+        text: currentTask.draft || prev?.text,
+        harnessScore: currentTask.score ?? prev?.harnessScore ?? null,
+        harnessPassedThreshold: currentTask.passedThreshold ?? prev?.harnessPassedThreshold ?? false,
+        harnessRubric: currentTask.rubric ?? prev?.harnessRubric ?? null,
+        harnessCritique: currentTask.critique || prev?.harnessCritique || [],
+        harnessHistory: currentTask.history || prev?.harnessHistory || [],
+        isAiGenerated: true,
+      }));
+
       setIsGeneratingParaphrase(currentTask.status === "running");
       setParaphraseMode(currentTask.status === "running" ? "polish_judge" : null);
 
@@ -1055,7 +1067,12 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
               ...updatedRecord,
               isAiGenerated: true,
             });
-            bgStartHarness(draftRef.current || draft);
+            bgStartHarness({
+              node,
+              initialDraft: draftRef.current || draft,
+              providerProfile,
+              maxIterations: 6,
+            });
           }}
           onRequestEvaluate={onRequestEvaluate}
         />
