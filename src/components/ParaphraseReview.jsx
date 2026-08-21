@@ -123,6 +123,8 @@ export function ParaphraseReview({ graphId, node, providerProfile, viewMode = "a
 
   const [draft, setDraftState] = useState("");
   const [draftRecord, setDraftRecord] = useState(null);
+  const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(`${navigator.platform} ${navigator.userAgent}`);
+  const modifierLabel = isMac ? "⌘" : "Ctrl";
   const [attempts, setAttempts] = useState([]);
   const [view, setView] = useState({ mode: "draft" });
   const [pending, setPending] = useState(null);
