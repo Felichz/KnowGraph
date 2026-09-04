@@ -2,6 +2,9 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Workspace Navigation & Visual Views (User Story 1)", () => {
   test.beforeEach(async ({ page }) => {
+    page.on("pageerror", (err) => {
+      throw new Error(`Uncaught browser exception: ${err.message}\n${err.stack}`);
+    });
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
   });
@@ -132,4 +135,65 @@ test.describe("Workspace Navigation & Visual Views (User Story 1)", () => {
     await closeBtn.click();
     await expect(panel).not.toBeVisible();
   });
+
+  test("renderiza nodos con puntajes de maestría y calcula progreso en seniority con estado hidratado (Universal State 2)", async ({ page }) => {
+    // 1. Sembrar fixture hidratada directamente en IndexedDB
+    const fs = await import("node:fs");
+    const hydratedFixture = JSON.parse(
+      fs.readFileSync(new URL("../fixtures/hydrated-state.json", import.meta.url), "utf8")
+    );
+
+    await page.evaluate((backup) => {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open("learning-graph-ai", 3);
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => {
+          const db = req.result;
+          const tx = db.transaction(["attempts", "drafts"], "readwrite");
+          const attemptsStore = tx.objectStore("attempts");
+          const draftsStore = tx.objectStore("drafts");
+          attemptsStore.clear();
+          draftsStore.clear();
+          for (const item of backup.learning.attempts || []) {
+            attemptsStore.put(item);
+          }
+          for (const item of backup.learning.drafts || []) {
+            draftsStore.put(item);
+          }
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        };
+      });
+    }, hydratedFixture);
+
+    await page.reload();
+    await page.waitForLoadState("domcontentloaded");
+
+    // 2. Verificar que el contador de maestría en cabecera se actualizó (2 dominados >= 100 de 101 totales)
+    await expect(page.locator("header")).toContainText("2/101");
+    await expect(page.locator("header")).toContainText("2%");
+
+    // 3. Verificar que los nodos renderizan sus puntajes numéricos formateados
+    // js_basics (score 105 > 100) debe tener la estrella ★ 105/120
+    const starNode = page.locator("article").filter({ hasText: /★ 105\/120/ });
+    await expect(starNode).toBeVisible();
+
+    // react_mental_model (score 85 < 100) debe tener 85/120 sin estrella
+    const normalNode = page.locator("article").filter({ hasText: /85\/120/ });
+    await expect(normalNode).toBeVisible();
+
+    // 4. Abrir drawer de Seniority & Milestones y validar cálculo
+    const seniorityBtn = page.locator("header button[aria-label='Ver Mapa de Seniority y Milestones']");
+    await seniorityBtn.click();
+    const seniorityDrawer = page.locator('div[aria-label="Panel de Seniority y Milestones"]');
+    await expect(seniorityDrawer).toBeVisible();
+    await expect(seniorityDrawer).toContainText("NIVELES DE SENIORITY");
+    await expect(seniorityDrawer).toContainText("React profesional");
+
+    // Cerrar drawer
+    const closeBtn = seniorityDrawer.locator("button").filter({ hasText: "×" });
+    await closeBtn.click();
+    await expect(seniorityDrawer).not.toBeVisible();
+  });
 });
+

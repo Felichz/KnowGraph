@@ -1,41 +1,41 @@
-# ADR 0007 — Calibración de la Rúbrica: Causalidad y Trade-offs como Factor Principal
+# ADR 0007 — Calibrated Senior/Staff Rubric: Causality and Trade-offs as Primary Factor
 
-- Estado: **Aceptado**
-- Fecha: 2026-09-04
-- Decisores: Learning Workspace Core
+- Status: **Accepted**
+- Date: 2026-09-04
+- Deciders: Learning Workspace Core
 
-## Contexto
+## Context
 
-En los prototipos iniciales de evaluación con IA, los pesos de la rúbrica analítica estaban distribuidos tradicionalmente con el mayor peso en la precisión de la definición:
-* `accuracy`: 40 puntos
-* `causalityAndTradeoffs`: 25 puntos
-* `application`: 20 puntos
-* `completeness`: 15 puntos
+In early evaluation prototypes, rubric weights followed a traditional distribution assigning the heaviest weight to textbook definition accuracy:
+* `accuracy`: 40 points
+* `causalityAndTradeoffs`: 25 points
+* `application`: 20 points
+* `completeness`: 15 points
 
-Al someter este esquema a la realidad de las entrevistas técnicas de la industria (FAANG, unicornios y empresas tecnológicas globales), se identificó un desfase con los criterios de contratación:
-* En niveles Junior y Mid-Level, el entrevistador comprueba si el candidato conoce la terminología y la sintaxis (`accuracy`).
-* En niveles **Senior, Staff y Principal**, la barra de contratación se traslada casi por completo a la **causalidad y los trade-offs**: entender por qué una solución falla a gran escala, qué condiciones de carrera (*race conditions*) pueden ocurrir bajo concurrencia, qué costo de memoria se asume y por qué se descartan enfoques alternativos.
+Calibrating this weighting against actual industry hiring bars (FAANG, tier-1 tech firms, and top-tier startups) revealed a fundamental disconnect:
+* For Junior and Mid-Level engineering roles, interviewers verify whether a candidate knows definitions and syntax (`accuracy`).
+* For **Senior, Staff, and Principal** levels, hiring decisions hinge on **causality and trade-offs**: understanding failure modes at scale, concurrency race conditions, memory footprint, GC pressure, and the rationale behind rejecting alternative approaches.
 
-Un candidato que recita la documentación de memoria pero no sabe explicar las desventajas operativas en producción no supera una ronda técnica Senior.
+A candidate reciting documentation definitions from memory without articulating operational trade-offs will not pass a Senior technical committee.
 
-## Decisión
+## Decision
 
-Se decidió rebalancear formalmente los pesos de la rúbrica analítica en la especificación y en los esquemas Zod del backend (`server/ai/schemas.js`), otorgando la máxima prioridad evaluativa a la dimensión de causalidad:
+We formally rebalanced the weights of the analytical evaluation rubric in specifications and backend Zod schemas (`server/ai/schemas.js`), positioning causality and architectural trade-offs as the primary factor:
 
-| Dimensión | Puntos Máximos | Ponderación | Criterio Pedagógico |
+| Dimension | Max Points | Weight | Pedagogical Criteria |
 | :--- | :---: | :---: | :--- |
-| **`causalityAndTradeoffs`** | **35 pts** | **35%** | **Factor Decisivo Senior/Staff**. Razonamiento causal: por qué funciona internamente, qué trade-offs de rendimiento/memoria se aceptan y cómo falla en producción. |
-| **`accuracy`** | **30 pts** | **30%** | Corrección técnica estricta, ausencia de conceptos erróneos (*misconceptions*) y uso preciso del vocabulario del dominio. |
-| **`application`** | **20 pts** | **20%** | Capacidad de plasmar el concepto en código idiomático, patrones resilientes y manejo de errores. |
-| **`completeness`** | **15 pts** | **15%** | Cobertura de edge cases, fases del ciclo de vida y consideraciones de limpieza de recursos. |
+| **`causalityAndTradeoffs`** | **35 pts** | **35%** | **Primary Senior/Staff Deciding Factor**. Causal mechanics: how the engine works internally, accepted performance/memory trade-offs, and catastrophic failure modes under production load. |
+| **`accuracy`** | **30 pts** | **30%** | Strict technical correctness, absence of misconceptions, and precise domain vocabulary. |
+| **`application`** | **20 pts** | **20%** | Translating concepts into idiomatic, resilient code patterns and defensible error handling. |
+| **`completeness`** | **15 pts** | **15%** | Edge-case coverage, lifecycle phases, and resource cleanup. |
 
-Total base: **100 puntos** (a los que se suman hasta 20 puntos de excelencia dorada por *internals* del motor).
+Base total: **100 points** (with up to 20 optional golden excellence bonus points awarded for deep runtime internals).
 
-## Consecuencias
+## Consequences
 
-### Positivas
-* **Alineación con Estándares Reales de Entrevista**: El evaluador de IA penaliza respuestas teóricas impecables que omitan explicar los problemas de concurrencia o escalabilidad, forzando al estudiante a razonar como un ingeniero de producción.
-* **Feedback Accionable más Valioso**: En los reportes de evaluación (`EvaluateStage.jsx`), el alumno recibe señalamientos concretos sobre trade-offs no considerados en lugar de correcciones gramaticales.
+### Positive
+* **Alignment with Real Senior Interview Bars**: The AI evaluator penalizes book-definition answers that omit concurrency or scale challenges, conditioning candidates to reason like production systems engineers.
+* **Higher-Signal Actionable Feedback**: Evaluation summaries focus on omitted operational trade-offs rather than trivial stylistic corrections.
 
-### Negativas / Trade-offs
-* **Mayor Exigencia al Estudiante**: Los estudiantes habituados a respuestas breves o puramente sintácticas pueden sentir frustración inicial al ver puntuaciones bajas en lecciones que creían "conocer". Para mitigar esto, el sistema provee los chips de preguntas socráticas en la etapa *02 Aprender* orientados a trade-offs.
+### Accepted Costs and Limitations
+* **Stricter Candidate Standards**: Candidates accustomed to brief, syntax-heavy answers may experience initial friction seeing lower scores on topics they believed they understood. The Socratic tutor stage (*02 Learn*) provides dedicated prompts targeting trade-offs to scaffold this transition.

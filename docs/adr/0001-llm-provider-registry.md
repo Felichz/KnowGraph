@@ -1,181 +1,108 @@
-# ADR 0001 — Registry de providers LLM y configuración BYOK
+# ADR 0001 — LLM Provider Registry and BYOK Configuration
 
-- Estado: **Aceptado**
-- Fecha: 2026-08-11
-- Decisores: Learning Workspace
+- Status: **Accepted**
+- Date: 2026-08-11
+- Deciders: Learning Workspace Core
 
-## Contexto
+## Context
 
-Learning Workspace usa modelos para coaching en vivo, evaluación canónica y
-chat de profundización. Es una app web desplegable y una app Electron, por lo
-que debe aceptar credenciales del usuario sin convertir el gateway en un
-almacén de secretos ni acoplar la UI a un vendor.
+Learning Workspace uses LLM models for live coaching, canonical evaluation, and deep-dive conceptual chat. It is deployed as both a web application and an Electron desktop app, requiring user credential acceptance without turning the gateway into a centralized secrets store or coupling the UI to a specific vendor.
 
-La primera versión tenía dos adapters (`openai` y `minimax`) y trataba
-`GET /models` como prueba de conexión. Eso no es una premisa válida: algunos
-providers compatibles con Chat Completions no publican ese endpoint, o lo
-protegen/implementan de otra forma. MiniMax es un ejemplo relevante.
+The initial prototype had two adapters (`openai` and `minimax`) and treated `GET /models` as a connection test. That was an invalid assumption: some Chat Completions-compatible providers do not expose that endpoint, or protect/implement it differently (MiniMax being a key example).
 
-También necesitamos dar un selector de modelos útil sin mantener a mano un
-catálogo global que inevitablemente quedará desactualizado.
+We also needed to provide a useful model selector without manually maintaining an internal global catalog that would inevitably become outdated.
 
-## Decisión
+## Decision
 
-### 1. Registry controlado, no código arbitrario
+### 1. Controlled Registry, Not Arbitrary Runtime Code
 
-El servidor define los presets, el transporte y las peculiaridades de request
-en `server/ai/providerRegistry.js`.
+The server defines presets, transport, and request nuances in `server/ai/providerRegistry.js`.
 
-Los adapters iniciales son:
+Initial adapters are:
 
-| Adapter | Uso |
+| Adapter | Purpose |
 |---|---|
-| `openai` | Escape hatch para cualquier endpoint Chat Completions compatible. |
-| `openrouter` | Preset con endpoint y catálogo de OpenRouter. Sigue usando el transporte compatible. |
-| `minimax` | Adapter nativo para `thinking`, `reasoning_split` y el fallback de structured output. |
+| `openai` | Escape hatch for any Chat Completions-compatible endpoint. |
+| `openrouter` | Preset with endpoint and OpenRouter catalog, retaining compatible transport. |
+| `minimax` | Native adapter handling `thinking`, `reasoning_split`, and structured output fallback. |
 
-Un perfil no puede declarar un paquete npm, ejecutar código ni transformar
-requests arbitrariamente. Es importante tanto para Electron como para una
-instancia web pública: la configuración es datos, no una superficie de
-ejecución.
+A profile cannot declare npm packages, execute arbitrary code, or transform requests unpredictably. This boundary is critical for both Electron and public web instances: configuration represents data, not an execution surface.
 
 ```ts
 type ProviderProfile = {
-  id: string
-  label: string
-  adapter: "openai" | "openrouter" | "minimax"
-  baseUrl: string
-  apiKey: string
-  model: string
-}
+  id: string;
+  label: string;
+  adapter: "openai" | "openrouter" | "minimax";
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+};
 ```
 
-El registry deriva capacidades y comportamiento de request. La UI no pide que
-el usuario determine si su provider acepta `response_format`: el gateway lo
-intenta cuando corresponde y vuelve al parser de bloques si el provider lo
-rechaza.
+The registry derives capabilities and request behavior. The UI does not force the user to determine whether their provider accepts `response_format`: the gateway attempts it when appropriate and falls back to block parsing if rejected by the provider.
 
-### 2. Separar inferencia de descubrimiento de modelos
+### 2. Separation of Inference Verification from Model Discovery
 
-Hay dos operaciones distintas:
+Two distinct operations are established:
 
-| Operación | Endpoint | Qué valida |
+| Operation | Endpoint | Validation Target |
 |---|---|---|
-| Prueba de modelo | `POST /api/ai/providers/test` | Hace una completion mínima contra el modelo elegido. Valida URL, credencial, ruta y slug reales. |
-| Descubrir catálogo | `POST /api/ai/providers/models` | Une `/models` del upstream con el catálogo local/remoto. Nunca determina si la conexión funciona. |
+| Model Test | `POST /api/ai/providers/test` | Executes a minimal completion against the selected model. Validates real URL, credentials, routing, and model slug. |
+| Catalog Discovery | `POST /api/ai/providers/models` | Merges upstream `/models` with local/remote catalogs. Never determines if inference works. |
 
-La prueba no contiene contenido de la card ni texto del estudiante; solicita
-solamente una respuesta `OK`. Es billable por el provider y se ejecuta solo por
-una acción explícita del usuario.
+The test completion contains no user study notes or lesson text; it requests a simple `OK` response. It is billable by the provider and runs solely upon explicit user request.
 
-Un provider sin `/models` sigue siendo válido: el usuario puede seleccionar un
-modelo de catálogo o escribir el slug manualmente.
+Providers without `/models` remain fully valid: users can pick from presets or write the slug manually.
 
-### 3. Models.dev es enriquecimiento, no autoridad de runtime
+### 3. Models.dev as Enrichment, Not Runtime Authority
 
-`server/ai/modelCatalog.js` consulta `https://models.dev/api.json` desde el
-servidor, sin enviar URL de usuario, API key, prompt ni perfil. El resultado se
-mantiene en memoria por seis horas y solo enriquece el selector con nombres,
-límites y capacidades.
+`server/ai/modelCatalog.js` queries `https://models.dev/api.json` from the server, without transmitting user URLs, API keys, prompts, or profiles. Results are cached in memory for six hours and enrich the selector with names, context limits, and capabilities.
 
-La precedencia al construir la lista es:
+Precedence for catalog resolution:
 
-1. Respuesta del endpoint configurado (`/models`), cuando existe.
-2. Modelo explícito del perfil y modelos conocidos del preset.
-3. Metadata de Models.dev.
-4. Entrada manual del usuario.
+1. Configured endpoint response (`/models`), when present.
+2. Explicit profile model and known preset models.
+3. Models.dev metadata.
+4. Manual user text input.
 
-La lista remota nunca modifica base URLs, headers, credenciales ni el
-comportamiento de request. Si Models.dev falla, el preset y la entrada manual
-siguen funcionando.
+Remote lists never override base URLs, headers, credentials, or request behavior. If Models.dev is unreachable, presets and manual entries remain fully functional.
 
-### 4. Configuración y secretos tienen ciclos de vida distintos
+### 4. Separate Lifecycles for Configuration and Secrets
 
-El estado de settings es versión 3 y guarda un borrador independiente por
-preset. Cambiar de MiniMax a OpenRouter no pisa los campos que el usuario había
-escrito para el otro provider.
+Settings state is version 3 and retains an independent draft per preset. Switching from MiniMax to OpenRouter preserves field values written for the other provider.
 
-- **Electron:** el perfil se cifra mediante `safeStorage` del sistema.
-- **Web desplegada:** se conserva en `sessionStorage`; se pierde al cerrar la
-  pestaña.
-- **Gateway:** recibe la key por request para ejecutar la inferencia, pero no
-  la escribe a disco ni la incluye en responses o logs.
+- **Electron:** Profiles are encrypted using OS native `safeStorage`.
+- **Deployed Web:** Stored in `sessionStorage`; discarded upon closing the tab.
+- **Gateway:** Receives keys per request to perform inference; never writes keys to disk or includes them in responses or logs.
 
-El gateway acepta automáticamente el mismo origen que lo está sirviendo; una
-SPA desplegada junto a `api/ai/**` en Vercel no requiere configuración CORS
-adicional. Los frontends hospedados por separado sí deben figurar de forma
-explícita en `CORS_ALLOWED_ORIGINS`; nunca se usa `*` en un gateway BYOK.
+The gateway automatically accepts its serving origin; an SPA deployed alongside `api/ai/**` on Vercel requires no extra CORS setup. Separately hosted frontends must be listed explicitly in `CORS_ALLOWED_ORIGINS`; wildcard `*` is never permitted on a BYOK gateway.
 
-En una futura versión con cuentas se reemplazará `apiKey` por un `credentialRef`
-resuelto desde un vault, sin cambiar el contrato que consume el coaching.
+### 5. Preserved Product Data Contract
 
-### 5. El contrato de producto sigue siendo propio
+Providers emit vendor-specific text or SSE streams. The gateway retains sole responsibility for parsing, validating, and emitting standardized events consumed by the app: progress, subscores, coverage, hints, and final evaluation results. The UI never consumes vendor-specific chunk formats.
 
-Los providers emiten texto o SSE de proveedor. El gateway conserva la
-responsabilidad de parsearlo, validarlo y emitir los eventos estables que usa
-la aplicación: progreso, subscores, cobertura, hint y resultado final. La UI
-no consume chunks específicos de OpenRouter, MiniMax o cualquier otro vendor.
+## Consequences
 
-## Consecuencias
+### Positive
+- Compatible providers can be added without introducing new adapters.
+- Specialized providers remain isolated and testable.
+- Model selectors no longer fail by falsely conflating `/models` with inference readiness.
+- Models.dev metadata reduces manual maintenance without exposing secrets.
+- Future migration to Vercel AI SDK can be scoped to transport internals behind the registry without altering the SSE gateway or UI.
 
-### Positivas
+### Accepted Costs and Limitations
+- In-memory catalog caching is not shared across serverless instances (an optimization, not a correctness requirement).
+- Community catalogs may lag; manual slugs and endpoint catalogs retain priority.
+- Only Chat Completions is implemented initially; native `Anthropic Messages` or alternative transports will require dedicated adapters when needed.
+- Inference probes consume minimal user tokens.
 
-- Se puede sumar un provider compatible sin crear un adapter nuevo.
-- Los providers especiales quedan aislados y testeables.
-- El selector deja de fallar por asumir que `/models` equivale a inferencia.
-- Models.dev reduce mantenimiento manual sin pasarle secretos.
-- La migración posterior a Vercel AI SDK puede limitarse a la implementación
-  del transporte detrás del registry, sin cambiar el gateway SSE ni la UI.
+## Alternatives Considered
 
-### Costos y límites aceptados
+### Embedded LiteLLM
+Discarded. Would introduce a Python/proxy daemon and operational complexity for use cases already satisfied by an OpenAI-compatible adapter. Users can still point to an external LiteLLM instance as an endpoint.
 
-- Un catálogo en memoria no es persistente entre instancias serverless; es una
-  optimización, no un requisito de corrección.
-- Un catálogo de comunidad puede estar desactualizado; por eso el slug manual
-  y el catálogo real del endpoint conservan prioridad.
-- Solo Chat Completions está implementado hoy. `Responses` y
-  `Anthropic Messages` requerirán adapters explícitos cuando el producto los
-  necesite.
-- La prueba de inferencia consume pocos tokens del usuario.
+### OpenRouter as Sole Abstraction
+Discarded. OpenRouter is a valuable preset, but making it mandatory would eliminate direct BYOK and introduce an unnecessary third-party dependency.
 
-## Alternativas consideradas
-
-### LiteLLM embebido
-
-Se descarta como dependencia de esta app. Añadiría un proceso Python/proxy y
-otro límite operativo para un caso que ya cubre el adapter OpenAI-compatible.
-Un usuario puede conectar una instancia de LiteLLM como endpoint compatible.
-
-### OpenRouter como abstracción central
-
-Se descarta. Es un provider/preset útil, pero convertirlo en la única ruta
-eliminaría BYOK directo y dependencia de servicios externos innecesaria.
-
-### Vercel AI SDK ahora
-
-Se posterga, no se rechaza. Es un buen candidato para sustituir la
-implementación interna de transportes TypeScript, pero esta decisión primero
-define la frontera estable: registry controlado → gateway propio → SSE propio.
-
-### Permitir paquetes runtime desde settings
-
-Se descarta por seguridad. Open source no requiere ejecutar código de terceros
-desde una configuración de provider; los nuevos adapters entran por revisión y
-tests del proyecto.
-
-## Implementación inicial
-
-- `server/ai/providerRegistry.js`: presets y opciones de runtime.
-- `server/ai/modelCatalog.js`: caché de Models.dev y merge seguro de metadata.
-- `server/ai/llmClient.js`: `probeProvider()` contra Chat Completions.
-- `server/index.js`: endpoints separados para inferencia y discovery.
-- `src/ai/providerSettings.js`: estado v3, presets y migración v1/v2.
-- `electron/main.cjs`: persistencia cifrada compatible con el estado v3.
-- `server/tests/test-providers.mjs`: contratos de perfiles, catálogo y probe.
-
-## Seguimiento
-
-La siguiente decisión relacionada deberá cubrir `credentialRef` y vault para
-una versión con cuentas. Otra ADR será necesaria al agregar transportes nativos
-`Responses` o `Anthropic Messages`, tools de browser/web y políticas de
-fallback configurables por tarea.
+### Immediate Vercel AI SDK Adoption
+Postponed, not rejected. It remains a strong candidate for replacing internal transport implementations, but establishing stable application boundaries (controlled registry → own gateway → own SSE) was prioritized first.

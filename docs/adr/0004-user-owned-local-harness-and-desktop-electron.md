@@ -1,48 +1,48 @@
-# ADR 0004 — Software Tipo Harness Local-First, Soberanía de Datos y Desktop Electron
+# ADR 0004 — Local-First User-Owned Harness Philosophy and Desktop Electron
 
-- Estado: **Aceptado**
-- Fecha: 2026-09-04
-- Decisores: Learning Workspace Core
+- Status: **Accepted**
+- Date: 2026-09-04
+- Deciders: Learning Workspace Core
 
-## Contexto
+## Context
 
-Muchas herramientas de preparación técnica y evaluación con IA operan bajo el modelo SaaS tradicional:
-1. Las respuestas orales, borradores, notas personales y métricas de desempeño se almacenan en bases de datos centralizadas de un tercero.
-2. El usuario paga suscripciones recurrentes con márgenes arbitrarios sobre los tokens de inferencia.
-3. Si el servicio cierra o cambia sus políticas, el desarrollador pierde su historial acumulado de estudio.
-4. Las credenciales de API (API keys) suelen almacenarse en la nube del proveedor o transmitirse a través de servidores intermediarios.
+Many AI evaluation and interview preparation tools operate under the traditional SaaS paradigm:
+1. Candidate oral transcriptions, study notes, and evaluation history are stored in centralized vendor databases.
+2. Users pay recurring subscriptions with arbitrary markups over underlying LLM inference tokens.
+3. If the SaaS service shuts down or changes its terms, developers lose their accumulated study history.
+4. API credentials are often routed through or stored on third-party cloud servers.
 
-Para Learning Workspace, el objetivo es radicalmente diferente: concebir el software como un **harness de entrenamiento personal owned por el usuario**, similar a un compilador, un linter o una suite de testing local que corre en su propia máquina. El desarrollador debe ser el dueño absoluto de su entorno de preparación, su base de conocimientos y sus conexiones de inferencia, de forma análoga a cómo funcionan los CLIs modernos de agentes de IA (como Claude Code, Cursor, OpenCode o Aider).
+For Learning Workspace, the goal is fundamentally different: to engineer the product as a **personal, user-owned technical training harness**, analogous to a compiler, a test runner, or a local linter executing on the developer's machine. The developer must have complete sovereignty over their training data, knowledge graph, and model connections—mirroring the architectural ethos of modern developer AI agent CLIs (such as Claude Code, Cursor, OpenCode, or Aider).
 
-## Decisión
+## Decision
 
-### 1. Filosofía de "Personal Training Harness" Owned por el Usuario
+### 1. "Personal Training Harness" Philosophy (User-Owned)
 
-El producto se define como un *harness* de evaluación y estudio técnico que pertenece íntegramente al desarrollador:
-* **Almacenamiento Local-First**: Todos los borradores, intentos de evaluación, transcripciones de voz e historiales de tutoría residen en el disco del usuario (IndexedDB en el navegador, archivos y base local en Electron). Costo de hosting para el usuario: **$0**.
-* **Zero-Telemetry de Contenido**: Las explicaciones técnicas redactadas o grabadas por el estudiante nunca se envían a un servidor central de telemetría ni se utilizan para entrenar modelos de terceros.
-* **Portabilidad Absoluta**: Exportación e importación completa en JSON (`learning-workspace-backup-[fecha].json`) validada por esquema, permitiendo migrar libremente entre computadoras o respaldar en un repositorio Git privado.
+The product is defined as an evaluation and active learning harness owned entirely by the developer:
+* **Local-First Persistence**: All drafts, evaluation attempts, voice recordings, and tutoring sessions reside on the user's local disk (IndexedDB in the browser, local files and SQLite/OPFS in Electron). Hosting cost for the user: **$0**.
+* **Zero Content Telemetry**: User answers, study notes, and candidate explanations are never transmitted to centralized telemetry servers or utilized for model training.
+* **Complete Data Portability**: Full schema-validated JSON export and import (`learning-workspace-backup-[date].json`), allowing developers to freely migrate between machines or commit their learning trajectory to private Git repositories.
 
-### 2. Ciudadano de Primer Nivel en Desktop con Electron
+### 2. First-Class Desktop Citizen via Electron
 
-Para consolidar la naturaleza de software local de escritorio, la aplicación se empaqueta y distribuye nativamente en **Electron**:
-* **Aislamiento de Secretos vía `safeStorage`**: En el entorno Electron, las API keys no se guardan en texto plano en `localStorage`, sino cifradas mediante las APIs criptográficas nativas del sistema operativo (`DPAPI` en Windows, `Keychain` en macOS, `libsecret` en Linux) con permisos restringidos `0o600`.
-* **Capacidad Offline**: La navegación topológica, las lecciones, los deep-dives, las preguntas FAANG y la revisión de intentos anteriores funcionan 100% offline sin conexión a internet.
-* **Acceso a APIs del Sistema Operativo**: Soporte nativo para diálogos de archivos del SO para respaldos y atajos de teclado globales.
+To anchor its nature as desktop software, the application is packaged and distributed natively using **Electron**:
+* **Hardware-Secured Secrets via `safeStorage`**: Under Electron, API keys are not stored in plaintext `localStorage`, but encrypted using native operating system cryptographic vaults (`DPAPI` on Windows, `Keychain` on macOS, `libsecret` on Linux) with restricted `0o600` file permissions.
+* **100% Offline Capability**: Topological navigation, curriculum lessons, deep dives, FAANG interview banks, and past attempt reviews function completely offline without internet connectivity.
+* **Native OS Integration**: Direct integration with system file dialogs for seamless JSON backup workflows and global keyboard shortcuts.
 
-### 3. Configuración de Inferencia Desacoplada (Estilo CLI de Agentes de IA)
+### 3. Decoupled Inference Configuration (Developer Agent CLI Paradigm)
 
-Al igual que en los CLIs de agentes de desarrollo:
-* El usuario **trae su propio proveedor (BYOK)**: puede usar OpenAI, Anthropic, Google Gemini, Groq, OpenRouter, MiniMax, o servidores locales de inferencia sin conexión a internet como **Ollama, LM Studio o vLLM**.
-* La inferencia se realiza directamente o a través de un gateway local sin recargos sobre el consumo de tokens.
-* Soporta perfiles múltiples y conmutación de modelos en caliente según la tarea (ej. un modelo ultrarrápido para autocompletado/live review y un modelo con pensamiento profundo para la evaluación canónica).
+Mirroring developer agent tools:
+* Users **Bring Their Own Keys (BYOK)**: Connect commercial APIs (OpenAI, Anthropic, Google Gemini, Groq, OpenRouter) or offline local inference runtimes (**Ollama, LM Studio, vLLM**).
+* Inference is direct or through a local zero-markup proxy gateway.
+* Supports multiple profiles and hot model-switching depending on the task (e.g., lightweight fast models for autocompletion/live review vs. reasoning models for canonical evaluation).
 
-## Consecuencias
+## Consequences
 
-### Positivas
-* **Soberanía y Privacidad**: El estudiante tiene la tranquilidad de que sus notas de estudio, errores y reflexiones para entrevistas confidenciales no salen de su máquina.
-* **Sin Vendor Lock-in ni Suscripciones**: El costo de uso es exactamente el costo de inferencia de la API que elija el usuario (o $0 si usa Ollama en local).
-* **Longevidad del Software**: La aplicación continuará funcionando indefinidamente en la máquina del desarrollador aunque no haya conexión externa.
+### Positive
+* **Sovereignty and Privacy**: Developers prepare for confidential technical interviews knowing their private notes and practice answers never leave their machine.
+* **Zero Lock-In & Subscriptions**: Usage costs reflect exact raw inference API rates (or $0 when using local Ollama).
+* **Software Longevity**: The application remains operational indefinitely on the developer's hardware regardless of external service lifecycles.
 
-### Negativas / Trade-offs
-* **Sincronización Multi-Dispositivo Manual**: Al no contar con una base de datos centralizada en la nube, pasar datos entre una laptop de trabajo y una PC de escritorio requiere exportar/importar el archivo de respaldo JSON o sincronizar la carpeta con herramientas tipo Syncthing / Git.
+### Accepted Costs and Limitations
+* **Manual Multi-Device Sync**: In the absence of a centralized cloud database, transferring history between a laptop and desktop requires exporting/importing JSON backups or syncing directories using Git or Syncthing.

@@ -9,13 +9,14 @@ export function getLatestAttempt(attemptsByNode, nodeId) {
 export function getNodeProgress(attemptsByNode, nodeId) {
   const latestAttempt = getLatestAttempt(attemptsByNode, nodeId);
   const evaluation = latestAttempt?.evaluation ?? null;
-  const score = getScoreView(evaluation);
+  const scoreView = getScoreView(evaluation);
   const completion = getCompletionView(evaluation);
   return {
     nodeId,
     latestAttempt,
     attemptCount: (attemptsByNode?.[nodeId] ?? []).length,
-    score,
+    score: scoreView?.displayScore ?? null,
+    scoreView,
     completion,
     isComplete: isEvaluationSurfaceComplete(evaluation),
   };

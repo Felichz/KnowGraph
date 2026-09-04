@@ -14,6 +14,8 @@ export function GraphNode({
   const isMastery = score >= 100;
   const isExtra = score > 100;
 
+  const borderColor = isSelected ? "var(--accent-cyan)" : isExtra ? "var(--accent-gold)" : "var(--border-line)";
+
   return (
     <article
       onClick={onClick}
@@ -24,7 +26,9 @@ export function GraphNode({
         justifyContent: "space-between",
         padding: "12px 14px",
         background: isSelected ? "var(--bg-surface-emphasis)" : "var(--bg-surface)",
-        border: `1px solid ${isSelected ? "var(--accent-cyan)" : isExtra ? "var(--accent-gold)" : "var(--border-line)"}`,
+        borderTop: `1px solid ${borderColor}`,
+        borderRight: `1px solid ${borderColor}`,
+        borderBottom: `1px solid ${borderColor}`,
         borderLeft: `3px solid ${isExtra ? "var(--accent-gold)" : categoryColor}`,
         boxShadow: isExtra ? "0 0 12px rgba(232, 163, 61, 0.2)" : "none",
         borderRadius: "var(--radius-control)",

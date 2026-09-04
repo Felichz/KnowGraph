@@ -2,6 +2,9 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Flashcards View & Active Recall (User Story 6)", () => {
   test.beforeEach(async ({ page }) => {
+    page.on("pageerror", (err) => {
+      throw new Error(`Uncaught browser exception: ${err.message}\n${err.stack}`);
+    });
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
 
@@ -92,4 +95,65 @@ test.describe("Flashcards View & Active Recall (User Story 6)", () => {
     // Verificar que ahora estamos en la vista de Flashcards
     await expect(page.locator("div").filter({ hasText: /Tocar para ver respuesta/ }).first()).toBeVisible();
   });
+
+  test("renderiza tarjetas con puntajes numéricos y filtra por maestría con estado hidratado (Universal State 2)", async ({ page }) => {
+    // 1. Sembrar fixture hidratada directamente en IndexedDB
+    const fs = await import("node:fs");
+    const hydratedFixture = JSON.parse(
+      fs.readFileSync(new URL("../fixtures/hydrated-state.json", import.meta.url), "utf8")
+    );
+
+    await page.evaluate((backup) => {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open("learning-graph-ai", 3);
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => {
+          const db = req.result;
+          const tx = db.transaction(["attempts", "drafts"], "readwrite");
+          const attemptsStore = tx.objectStore("attempts");
+          const draftsStore = tx.objectStore("drafts");
+          attemptsStore.clear();
+          draftsStore.clear();
+          for (const item of backup.learning.attempts || []) {
+            attemptsStore.put(item);
+          }
+          for (const item of backup.learning.drafts || []) {
+            draftsStore.put(item);
+          }
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        };
+      });
+    }, hydratedFixture);
+
+    await page.reload();
+    await page.waitForLoadState("domcontentloaded");
+
+    // Conmutar a la vista de Flashcards tras reload
+    const flashcardsBtn = page.locator("header button").filter({ hasText: /^Flashcards$/ });
+    await flashcardsBtn.click();
+
+    // 2. Verificar que las tarjetas con score renderizan texto numérico (105/120 o 85/120) sin lanzar error
+    const scoreBadge = page.locator("span").filter({ hasText: /105\/120/ });
+    await expect(scoreBadge).toBeVisible();
+
+    // 3. Probar filtro "Base dominada (100+)"
+    await page.getByRole("button", { name: "Base dominada (100+)" }).click();
+    const showingMastery = page.locator("span").filter({ hasText: /Mostrando 2 de/ });
+    await expect(showingMastery).toBeVisible();
+    await expect(page.locator("span").filter({ hasText: /105\/120/ })).toBeVisible();
+    await expect(page.locator("span").filter({ hasText: /115\/120/ })).toBeVisible();
+
+    // 4. Probar filtro "Base < 100"
+    await page.getByRole("button", { name: "Base < 100" }).click();
+    const showingDeveloping = page.locator("span").filter({ hasText: /Mostrando 1 de/ });
+    await expect(showingDeveloping).toBeVisible();
+    await expect(page.locator("span").filter({ hasText: /85\/120/ })).toBeVisible();
+
+    // 5. Probar filtro "Sin intento"
+    await page.getByRole("button", { name: "Sin intento" }).click();
+    const showingUnattempted = page.locator("span").filter({ hasText: /Mostrando 98 de/ });
+    await expect(showingUnattempted).toBeVisible();
+  });
 });
+

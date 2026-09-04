@@ -1,0 +1,93 @@
+{
+  "app": "learning-workspace",
+  "kind": "state-backup",
+  "version": 1,
+  "exportedAt": "2026-09-04T20:00:00.000Z",
+  "secretsIncluded": false,
+  "learning": {
+    "attempts": [
+      {
+        "id": "attempt_js_basics",
+        "graphId": "react",
+        "nodeId": "js_basics",
+        "createdAt": "2026-09-04T12:00:00.000Z",
+        "evaluation": {
+          "score": 105,
+          "scoreScaleVersion": 3,
+          "coveragePercent": 100,
+          "rawScore": 85,
+          "conciseVerdict": "Exemplary understanding of JavaScript core runtime dynamics and event loop.",
+          "nextAttemptPrompt": "Consider exploring V8 hidden classes and microtask queue mechanics.",
+          "rubric": {
+            "accuracy": { "score": 38, "max": 40, "note": "Accurate model of event loop." },
+            "causalityAndTradeoffs": { "score": 24, "max": 25, "note": "Strong trade-off analysis between microtasks and macrotasks." },
+            "application": { "score": 19, "max": 20, "note": "Clear real-world application." },
+            "completeness": { "score": 15, "max": 15, "note": "Full coverage of all prompt requirements." }
+          },
+          "strengths": ["Clear causality", "Senior terminology"],
+          "gaps": [],
+          "misconceptions": []
+        }
+      },
+      {
+        "id": "attempt_react_mental_model",
+        "graphId": "react",
+        "nodeId": "react_mental_model",
+        "createdAt": "2026-09-04T13:00:00.000Z",
+        "evaluation": {
+          "score": 85,
+          "scoreScaleVersion": 3,
+          "coveragePercent": 85,
+          "rawScore": 68,
+          "conciseVerdict": "Solid understanding of UI as a function of state; needs deeper exploration of concurrency.",
+          "nextAttemptPrompt": "Contrast reconciliation in React 18 concurrent mode versus legacy synchronous rendering.",
+          "rubric": {
+            "accuracy": { "score": 32, "max": 40, "note": "Solid conceptual explanation." },
+            "causalityAndTradeoffs": { "score": 18, "max": 25, "note": "Could emphasize scheduling trade-offs." },
+            "application": { "score": 15, "max": 20, "note": "Practical example provided." },
+            "completeness": { "score": 12, "max": 15, "note": "Minor omission on interruptible renders." }
+          },
+          "strengths": ["Purity principle"],
+          "gaps": ["Concurrent mode scheduling"],
+          "misconceptions": []
+        }
+      },
+      {
+        "id": "attempt_components_props",
+        "graphId": "react",
+        "nodeId": "components_props",
+        "createdAt": "2026-09-04T14:00:00.000Z",
+        "evaluation": {
+          "score": 115,
+          "scoreScaleVersion": 3,
+          "coveragePercent": 100,
+          "rawScore": 95,
+          "conciseVerdict": "Mastery level analysis of component composition and prop contracts.",
+          "nextAttemptPrompt": "Ready for advanced compound component design patterns.",
+          "rubric": {
+            "accuracy": { "score": 40, "max": 40, "note": "Flawless technical precision." },
+            "causalityAndTradeoffs": { "score": 25, "max": 25, "note": "Comprehensive trade-off discussion." },
+            "application": { "score": 20, "max": 20, "note": "Clean, resilient code patterns." },
+            "completeness": { "score": 15, "max": 15, "note": "Exhaustive coverage." }
+          },
+          "strengths": ["Composition over inheritance", "Prop drilling trade-offs"],
+          "gaps": [],
+          "misconceptions": []
+        }
+      }
+    ],
+    "drafts": [
+      {
+        "key": "react:state_updates",
+        "text": "State updates in React are batched to optimize DOM reconciliation passes."
+      }
+    ],
+    "liveReviews": [],
+    "coachIterations": []
+  },
+  "providers": {
+    "version": 4,
+    "activeProfileId": null,
+    "profiles": []
+  }
+}

@@ -1,144 +1,90 @@
-# ADR 0002 — Biblioteca curada y conexiones LLM múltiples
+# ADR 0002 — Curated Library and Multiple LLM Connections
 
-- Estado: **Aceptado**
-- Fecha: 2026-08-11
-- Decisores: Learning Workspace
-- Complementa: [ADR 0001](./0001-llm-provider-registry.md)
+- Status: **Accepted**
+- Date: 2026-08-11
+- Deciders: Learning Workspace Core
+- Complements: [ADR 0001](./0001-llm-provider-registry.md)
 
-## Contexto
+## Context
 
-El primer panel BYOK presentaba tres presets dentro de un único formulario y
-guardaba un borrador por `adapter`. Era suficiente para probar un provider,
-pero no representa cómo una herramienta de trabajo maneja cuentas reales: una
-persona puede tener un OpenRouter personal, una cuenta de trabajo y un endpoint
-compatible, y debe poder conservarlos sin que uno reemplace a otro.
+The initial BYOK panel presented three presets inside a single form and retained one draft per `adapter`. While sufficient for trying a single provider, it failed to reflect how developers manage real accounts: a user may hold a personal OpenRouter account, a corporate OpenAI account, and a local compatible endpoint, requiring them to coexist without overwriting each other.
 
-El producto necesita dos cosas distintas:
+The product requires two distinct capabilities:
+1. A small, dependable curated library of providers that the current gateway can execute via `POST /chat/completions`.
+2. Named, user-defined connections, where exactly one can be designated active for coaching, chat, and evaluation.
 
-1. una biblioteca pequeña y fiable de providers que el gateway actual puede
-   ejecutar por `POST /chat/completions`;
-2. conexiones nombradas por el usuario, de las cuales exactamente una puede
-   quedar activa para coaching, chat y evaluación.
+The goal is not to present an exhaustive vendor marketplace or promise unsupported transports. For example, Anthropic Messages and OpenAI Responses require distinct protocols and are omitted from presets until natively supported by the gateway.
 
-No intentamos que el selector sea un directorio exhaustivo de vendors ni
-prometemos transportes que no implementamos. Por ejemplo, Anthropic Messages y
-OpenAI Responses requieren contracts distintos y no aparecen como presets
-nativos hasta que el gateway los soporte de verdad.
+## Decision
 
-## Decisión
+### Shared and Explicit Provider Catalog
 
-### Catálogo compartido y explícito
-
-`shared/providerCatalog.js` es la fuente de verdad para la biblioteca visible
-y el registry del gateway. Cada entrada declara:
+`shared/providerCatalog.js` is the single source of truth for the visible library and gateway registry:
 
 ```ts
 type ProviderPreset = {
-  id: string
-  group: "APIs directas" | "Routers" | "Personalizado"
-  label: string
-  description: string
-  defaultBaseUrl: string
-  catalogProvider: string | null
-  transport: "chat-completions"
-  discovery: string
-}
+  id: string;
+  group: "Direct APIs" | "Routers" | "Custom";
+  label: string;
+  description: string;
+  defaultBaseUrl: string;
+  catalogProvider: string | null;
+  transport: "chat-completions";
+  discovery: string;
+};
 ```
 
-Los presets iniciales son OpenAI, OpenRouter, MiniMax, Groq, Mistral AI y
-Cerebras, más **Endpoint compatible** como escape hatch. Todos usan el mismo
-transporte Chat Completions; MiniMax conserva su comportamiento especial de
-reasoning en el gateway. Las URLs prefijadas se verifican contra la
-documentación de cada provider: [Groq](https://console.groq.com/docs/openai),
-[Mistral](https://docs.mistral.ai/resources/migration-guides) y
-[Cerebras](https://inference-docs.cerebras.ai/resources/openai).
+Initial presets include OpenAI, OpenRouter, MiniMax, Groq, Mistral AI, and Cerebras, alongside **Custom Compatible Endpoint** as an escape hatch. All share the Chat Completions transport; MiniMax retains its custom reasoning gateway handling. Base URLs are verified against official provider documentation.
 
-Models.dev sigue siendo enriquecimiento de **modelos**, no una fuente de
-providers ejecutables ni una dependencia de runtime.
+Models.dev remains an enrichment source for **model metadata**, not an execution dependency or list of executable providers.
 
-### Conexiones, no borradores por adapter
+### Named Connections, Not Per-Adapter Drafts
 
-El estado persistido pasa a v4:
+Persisted configuration advances to schema version 4:
 
 ```ts
 type ProviderConnection = {
-  id: string
-  label: string
-  adapter: ProviderPreset["id"]
-  baseUrl: string
-  apiKey: string
-  model: string
-}
+  id: string;
+  label: string;
+  adapter: ProviderPreset["id"];
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+};
 
 type ProviderSettings = {
-  version: 4
-  activeProfileId: string | null
-  profiles: ProviderConnection[]
-}
+  version: 4;
+  activeProfileId: string | null;
+  profiles: ProviderConnection[];
+};
 ```
 
-- `profiles` puede contener varias conexiones del mismo provider.
-- `activeProfileId` es la única selección utilizada en requests de IA.
-- `null` significa usar el provider por defecto del gateway, sin borrar las
-  conexiones personales.
-- Guardar una conexión puede hacerse sin activarla.
-- La migración preserva los perfiles v1-v3. El antiguo preset genérico
-  `OpenAI compatible` se convierte en `custom`, porque esa era su semántica.
+- `profiles` can store multiple connections targeting the same provider preset.
+- `activeProfileId` is the sole selection applied to outgoing AI requests.
+- `null` active ID indicates fallback to the operator default gateway, without clearing personal profiles.
+- Saving a connection can be performed without activating it immediately.
+- Migrations preserve v1–v3 profiles cleanly.
 
-El navegador mantiene las conexiones en `sessionStorage`; Electron usa su
-almacenamiento cifrado. El gateway recibe una conexión solo por la request que
-la necesita y no persiste API keys.
+Web deployments store connections in `sessionStorage`; Electron uses OS native encrypted storage. The gateway receives credentials per request and never persists API keys.
 
-### Flujo de interfaz
+### UI Flow Separation
 
-El panel tiene tres vistas con responsabilidades separadas:
+The settings panel separates concerns across three views:
+1. **Connections List**: Displays active connection, saved profiles, and explicit actions to activate, edit, or delete.
+2. **Add Connection**: Lists curated providers by category, including the custom escape hatch.
+3. **Configure Connection**: Captures endpoint, credential, and model. Discovery and minimal inference probes remain separate operations.
 
-1. **Conexiones**: muestra la conexión en uso, las guardadas y acciones
-   explícitas para usar, editar o eliminar.
-2. **Agregar conexión**: lista providers por categoría, incluyendo el escape
-   hatch compatible.
-3. **Configurar conexión**: recoge endpoint, credencial y modelo. Descubrir
-   modelos y probar una inferencia son operaciones separadas.
+The probe transmits a simple `OK` completion request; student responses or study card content are never included. Empty upstream catalogs do not block connection: manual model slugs remain valid.
 
-La prueba envía solo una inferencia `OK`; no envía la card ni la respuesta del
-estudiante. Un catálogo vacío no invalida una conexión: el slug manual sigue
-siendo una ruta válida.
+## Consequences
 
-## Consecuencias
+### Positive
+- UI represents real entity hierarchies: Provider → Connection → Model → Active.
+- Seamless switching between personal and corporate accounts without re-entering credentials.
+- Adding compatible endpoints is a controlled data contract update, not an ambiguous user prompt.
+- Custom endpoint flexibility remains preserved without fabricating unsupported native transports.
 
-### Positivas
-
-- La UI representa relaciones reales: proveedor → conexión → modelo → activo.
-- Se puede alternar entre cuentas sin reingresar credenciales.
-- Agregar otro provider Chat Completions es un cambio revisable de datos y
-  contratos, no una instrucción ambigua para el usuario.
-- El custom endpoint sigue disponible sin fabricar soporte nativo inexistente.
-
-### Costos y límites
-
-- La biblioteca es curada, no un marketplace dinámico.
-- Cada nuevo transporte nativo necesita un ADR, validación y pruebas propias.
-- En el deployment público se rechazan endpoints no HTTPS o privados. Un
-  gateway local puede habilitarlos deliberadamente con
-  `ALLOW_PRIVATE_PROVIDER_URLS=true`.
-
-## Alternativas consideradas
-
-### Un dropdown con todos los providers de Models.dev
-
-Se descarta. Un catálogo de marketing no demuestra que el gateway pueda hablar
-el transporte requerido ni que sus peculiaridades estén testeadas. Models.dev
-queda para metadata de modelos.
-
-### LiteLLM o Vercel AI SDK como requisito inmediato
-
-Se posterga. Ambas son opciones razonables cuando haya varios transportes
-nativos; hoy el límite real es el contrato del gateway propio y sus eventos
-SSE. Mantener esa frontera permite sustituir el cliente interno sin cambiar la
-configuración ni la UI.
-
-### Una API key global del deployment
-
-Se descarta para el modo público. BYOK evita que la app comparta una key de
-proveedor; una key global solo puede existir como provider por defecto
-administrado por el operador.
+### Accepted Costs and Limitations
+- The library is curated rather than a dynamic marketplace.
+- Each new native protocol requires dedicated ADRs, validation, and test suites.
+- Public deployments reject non-HTTPS or private IP endpoints unless `ALLOW_PRIVATE_PROVIDER_URLS=true` is explicitly enabled for local gateways.

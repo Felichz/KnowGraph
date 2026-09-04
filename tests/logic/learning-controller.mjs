@@ -69,8 +69,16 @@ await controller.submitParaphrase(nodeId);
 state = controller.getSnapshot();
 assert.equal(state.activeEvaluation, null);
 assert.equal(state.attemptsByNode[nodeId].length, 1);
-assert.equal(state.draftsByNode[nodeId], "");
-assert.equal(state.selectedNode.progress.score.displayScore, 104);
+assert.equal(state.selectedNode.progress.score, 104);
+assert.equal(typeof state.selectedNode.progress.score, "number");
+assert.equal(state.selectedNode.progress.scoreView.displayScore, 104);
+assert.equal(typeof state.selectedNode.progress.attemptCount, "number");
+assert.equal(typeof state.selectedNode.progress.isComplete, "boolean");
+
+// Boundary check for unattempted node: score must be null, not undefined or object
+const unattemptedProgress = state.progressMap[state.graph.nodes[1].id];
+assert.equal(unattemptedProgress.score, null);
+assert.equal(unattemptedProgress.scoreView, null);
 assert.ok(notifications > 3);
 
 unsubscribe();

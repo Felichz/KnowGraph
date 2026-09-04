@@ -1,41 +1,41 @@
-# ADR 0006 — Escala Canónica de Evaluación 0–120 con Zona de Excelencia Dorada
+# ADR 0006 — Dual-Tier Canonical Evaluation Scale (0–120) with Golden Excellence Tier
 
-- Estado: **Aceptado**
-- Fecha: 2026-09-04
-- Decisores: Learning Workspace Core
+- Status: **Accepted**
+- Date: 2026-09-04
+- Deciders: Learning Workspace Core
 
-## Contexto
+## Context
 
-La mayoría de las plataformas de estudio y herramientas que integran LLMs para evaluar respuestas de alumnos utilizan la escala porcentual tradicional de 0 a 100 puntos. En la práctica de entrevistas técnicas para roles de ingeniería, esto presenta dos problemas estructurales graves:
+Most learning platforms and LLM evaluation tools employ a standard 0–100 percentage scale. In technical engineering interview preparation, this introduces two structural failures:
 
-1. **"Grade Inflation" de los LLMs**: Los modelos de lenguaje tienden a otorgar calificaciones de 90 a 100 puntos a cualquier respuesta pasable o superficialmente correcta que repita la definición de un concepto.
-2. **Falta de Diferenciación entre "Suficiente" y "Maestría Senior/Staff"**:
-   - Para aprobar una entrevista técnica, explicar correctamente qué es un Hook o cómo funciona una migración en Rails es la base mínima esperada (suficiente).
-   - Sin embargo, para calificar como *Senior*, *Lead* o *Staff*, el entrevistador busca que el candidato demuestre comprensión de los *internals* del runtime (ej. cómo el Fiber Reconciler gestiona prioridades concurrentes, qué impacto tiene el Garbage Collector en la memoria, o cómo el motor de bases de datos calcula el costo de un plan de consulta).
+1. **LLM Grade Inflation**: Language models routinely award 90–100 scores to passable or superficially correct answers that merely parrot standard concept definitions.
+2. **Lack of Differentiation between "Sufficient" and "Senior/Staff Mastery"**:
+   - In technical interviews, accurately explaining what a Hook is or how a Rails migration runs represents table stakes baseline knowledge (sufficient).
+   - However, to qualify for *Senior*, *Lead*, or *Staff* levels, interviewers look for deep runtime comprehension (e.g., how the Fiber Reconciler schedules concurrent priority lanes, GC allocation pressures, or query planner execution costs).
 
-Si 100 puntos representa la perfección, el estudiante se conforma con alcanzar la definición básica y el sistema pierde su capacidad de empujarlo hacia la excelencia técnica.
+If 100 points represents the ceiling, candidates settle for the textbook definition, and the platform loses its capacity to coach candidates toward true technical depth.
 
-## Decisión
+## Decision
 
-Se estableció una **Escala Canónica de 0 a 120 Puntos** dividida en dos zonas conceptuales bien diferenciadas:
+We established a **Canonical 0–120 Scale** partitioned into two distinct conceptual tiers:
 
-### 1. Zona Base de Suficiencia Técnica (0 a 100 Puntos)
-* **100 Puntos**: Representa la cobertura conceptual completa y rigurosa de la lección estándar.
-* Si el estudiante cubre los 4 pilares de la rúbrica (precisión técnica, causalidad/trade-offs, aplicación práctica y completitud de edge cases), alcanza la condición de **Maestría Base (`isMastery = true`)**.
-* En la interfaz, esta zona se representa con colores institucionales sobrios (cian de la categoría y verde esmeralda de éxito).
+### 1. Base Technical Sufficiency Tier (0 to 100 Points)
+* **100 Points**: Represents thorough, accurate coverage of the standard lesson curriculum.
+* Satisfying all four core rubric dimensions (technical accuracy, causality/trade-offs, practical code application, and edge-case completeness) unlocks **Base Mastery (`isMastery = true`)**.
+* Rendered in the UI with standard clean palette tokens (category cyan and success emerald).
 
-### 2. Zona de Bonus de Excelencia Opcional (101 a 120 Puntos)
-* Los puntos del 101 al 120 están estrictamente reservados para respuestas que demuestren dominio de bajo nivel, arquitectura interna del motor o consideraciones avanzadas de rendimiento no requeridas en el temario general.
-* Para reflejar este logro en la psicología del aprendizaje:
-  - **Aura Dorada de Excelencia (`boxShadow` ámbar dorado)** en la tarjeta del grafo y en el modal de evaluación.
-  - **Identificador de Estrella (`★ 108/120`)** en el Canvas y en los badges.
-  - **Anillos Concéntricos Duales (`CoverageRings`)**: El anillo interior mide el progreso base 0–100 en el color temático, y un segundo anillo exterior concéntrico dorado se dibuja exclusivamente para los puntos 101 a 120.
+### 2. Optional Golden Excellence Bonus Tier (101 to 120 Points)
+* Points 101 to 120 are strictly reserved for answers demonstrating low-level runtime engine architecture, memory allocation trade-offs, or advanced concurrency considerations beyond the basic lesson scope.
+* Visualized via specialized UI affordances:
+  - **Golden Excellence Aura (`boxShadow` in warm amber/gold)** on graph nodes and evaluation headers.
+  - **Star Designation (`★ 108/120`)** across canvases, cards, and badges.
+  - **Dual Concentric Progress Rings (`CoverageRings`)**: Inner ring represents 0–100 baseline in category colors; outer concentric gold ring draws exclusively for points 101 through 120.
 
-## Consecuencias
+## Consequences
 
-### Positivas
-* **Combate la complacencia**: Alumno que obtiene un 95 sabe que tiene una base sólida pero que aún no ha explorado los *internals* profundos que marcan la diferencia en un comité de contratación.
-* **Recompensa visual no intrusiva**: El aura dorada actúa como un motivador visual claro (*gamification* sofisticada) sin degradar la estética técnica y minimalista de la plataforma.
+### Positive
+* **Counters Complacency**: Candidates achieving 95 recognize they have a solid foundation while remaining aware of deeper runtime internals that distinguish top-tier candidates before hiring bars.
+* **Non-Intrusive Affirmation**: The golden aura delivers meaningful visual reward without corrupting the technical, clean aesthetic of the workspace.
 
-### Negativas / Trade-offs
-* **Desvío de la convención estándar**: Requiere que la interfaz explique claramente que 100 es la meta de suficiencia completa y que 120 es excelencia opcional, para evitar que un estudiante perciba un 98/120 como un fracaso.
+### Accepted Costs and Limitations
+* **Deviation from Familiar 100-Point Convention**: Requires the UI to clarify that 100 represents full curricular mastery and 101–120 is bonus depth, ensuring candidates do not perceive a 95/120 as a deficient score.

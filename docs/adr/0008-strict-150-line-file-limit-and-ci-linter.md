@@ -1,38 +1,38 @@
-# ADR 0008 — Límite Constitucional de 150 Líneas por Archivo y Linter en CI
+# ADR 0008 — Constitutional 150-Line File Limit and CI Linter
 
-- Estado: **Aceptado**
-- Fecha: 2026-09-04
-- Decisores: Learning Workspace Core
+- Status: **Accepted**
+- Date: 2026-09-04
+- Deciders: Learning Workspace Core
 
-## Contexto
+## Context
 
-En el desarrollo asistido por agentes de inteligencia artificial y programación ágil (*vibe-coding*), existe una entropía natural documentada: los modelos de IA tienden a resolver nuevos requerimientos añadiendo funciones, hooks, estilos inline y estados locales directamente dentro del archivo existente más cercano, en lugar de descomponer el problema en módulos nuevos.
+In software development assisted by AI agents (*vibe-coding*), there is a documented natural entropy: language models solve incremental requirements by appending functions, hooks, inline styles, and local state directly onto whichever file is open in context, rather than decomposing systems into clean, modular subcomponents.
 
-Este patrón degeneró el prototipo original hasta convertir `legacy/App.jsx` en un archivo inmanejable de 2.643 líneas. Sin un mecanismo de contención automático y no negociable, cualquier refactorización limpia volvería a degradarse rápidamente a medida que se agregaran nuevas funcionalidades.
+Over time, this pattern degraded the original prototype until `legacy/App.jsx` expanded into an unmaintainable 2,643-line monolith. Without an automated, non-negotiable enforcement mechanism, clean refactors inevitably succumb to entropy as new features accumulate.
 
-## Decisión
+## Decision
 
-Se consagró el **Artículo III en la Constitución del Proyecto** (`.specify/memory/constitution.md`):
+We enshrined **Article III in the Project Constitution** (`.specify/memory/constitution.md`):
 
-> **Artículo III: Límite Estricto de 150 Líneas por Archivo.**  
-> Ningún archivo de componente o hook en `src/` podrá superar bajo ninguna circunstancia las 150 líneas de código.
+> **Article III: Strict 150-Line File Limit.**  
+> Under no circumstances may any component or hook file in `src/` exceed 150 physical lines of code.
 
-Para garantizar su cumplimiento continuo e impedir excepciones:
-1. **Linter Automatizado en Node (`scripts/audit-lines.mjs`)**:
-   - Analiza recursivamente todos los archivos `.js` y `.jsx` en `src/components/` y `src/hooks/`.
-   - Si un solo archivo supera las 150 líneas, el script emite un error explícito y finaliza con código de salida 1.
-2. **Gate de Integración Continua (CI)**:
-   - El script forma parte del pipeline de verificación obligatoria (`npm run check` y pre-commit).
-   - No se permite fusionar ningún PR o rama de feature que reporte violaciones.
-3. **Estrategia de Descomposición Forzada**:
-   - Si una vista compleja (como el modal de estudio o el panel de proveedores) crece, se obliga arquitectónicamente a descomponerla en subcomponentes atómicos con responsabilidad única (ej. `AttemptHistoryBar`, `EvaluationLoader`, `BackupActions`, `DeepDivePopover`).
+To guarantee continuous enforcement and prevent exceptions:
+1. **Automated Node Linter (`scripts/audit-lines.mjs`)**:
+   - Recursively scans all `.js` and `.jsx` files across `src/components/`, `src/hooks/`, and root UI coordinators.
+   - If even a single file reaches 151 lines, the linter outputs an explicit violation report and terminates with exit code 1.
+2. **Continuous Integration (CI) Quality Gate**:
+   - The script is embedded in the mandatory verification pipeline (`npm run check`).
+   - Merging feature branches reporting line limit violations is blocked.
+3. **Forced Component Decomposition**:
+   - When complex views (such as the study modal or provider panel) expand, architectural discipline forces decomposition into single-responsibility subcomponents (e.g., `AttemptHistoryBar`, `EvaluationLoader`, `BackupActions`, `DeepDivePopover`).
 
-## Consecuencias
+## Consequences
 
-### Positivas
-* **Cero Degeneración Monolítica**: La aplicación se mantiene permanentemente modular. En la auditoría actual, los 38 componentes miden entre 2 y 135 líneas ([`App.jsx`](file:///C:/Users/felix/dev/learning/src/App.jsx) mide solo 118 líneas).
-* **Baja Carga Cognitiva**: Cualquier ingeniero o agente puede leer, entender y modificar cualquier componente completo en una sola pantalla sin necesidad de hacer scroll vertical excesivo.
-* **Trazabilidad y Refactorización Aislada**: Los bugs y mejoras quedan contenidos en archivos pequeños de dominio específico.
+### Positive
+* **Zero Monolithic Decay**: The codebase remains strictly modular. Across all 42 source files, component lengths range cleanly between 2 and 142 lines (`App.jsx` stands at only 119 lines).
+* **Low Cognitive Overhead**: Any human engineer or AI agent can read, understand, and reason about an entire component within a single screen view.
+* **Isolated Refactoring and Debugging**: Edge cases and styling tweaks remain contained inside small, single-purpose files.
 
-### Negativas / Trade-offs
-* **Mayor Número de Archivos**: Requiere administrar más archivos en el árbol del proyecto y pasar props o callbacks explícitos entre el contenedor y sus piezas hijas.
+### Accepted Costs and Limitations
+* **Increased File Count**: Managing smaller atomic components requires clean prop drilling or composition patterns across parent containers and child components.
