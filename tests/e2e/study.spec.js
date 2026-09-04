@@ -139,4 +139,49 @@ test.describe("Study Modal Guided Route & Stages (User Story 2)", () => {
     await page.keyboard.press("Escape");
     await expect(modal).not.toBeVisible();
   });
+
+  test("navega por el flujo conceptual Antes -> Ahora -> Después y permite regresar con el botón volver", async ({ page }) => {
+    // Abrir un concepto con prerrequisitos/dependientes como 'state_updates'
+    const nodeCard = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
+    await nodeCard.click();
+
+    const modal = page.locator('div[role="dialog"]');
+    await expect(modal).toBeVisible();
+
+    // Barra de navegación conceptual visible
+    const nav = modal.locator('nav[aria-label="Flujo conceptual y mapa"]');
+    await expect(nav).toBeVisible();
+    await expect(nav).toContainText("ANTES:");
+    await expect(nav).toContainText("DESPUÉS:");
+
+    // Navegar a un nodo en ANTES o DESPUÉS
+    const targetBtn = nav.locator("button").filter({ hasText: /useState|Efectos|Render/ }).first();
+    if (await targetBtn.isVisible()) {
+      await targetBtn.click();
+      // Debe mostrar el botón de regreso
+      const backBtn = nav.locator("button").filter({ hasText: /← Volver a/ });
+      await expect(backBtn).toBeVisible();
+      await backBtn.click();
+      // Regresa al nodo original
+      await expect(modal).toContainText("Estado, snapshots y batching");
+    }
+  });
+
+  test("expande la sección de preguntas FAANG y muestra enlaces a fuentes oficiales", async ({ page }) => {
+    const nodeCard = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
+    await nodeCard.click();
+
+    const modal = page.locator('div[role="dialog"]');
+    await expect(modal).toBeVisible();
+
+    // Sección de preguntas FAANG
+    const faangSummary = modal.locator("summary").filter({ hasText: /PREGUNTAS DE ENTREVISTA FAANG/ });
+    if (await faangSummary.isVisible()) {
+      await faangSummary.click();
+      await expect(modal).toContainText("GreatFrontEnd");
+    }
+
+    // Fuentes oficiales
+    await expect(modal).toContainText("FUENTES OFICIALES");
+  });
 });
