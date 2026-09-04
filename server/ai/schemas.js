@@ -4,7 +4,7 @@ import { z } from "zod";
 // Constantes de rúbrica (compartidas por Zod y JSON Schema)
 // ────────────────────────────────────────────────────────────────────────────
 
-export const RUBRIC_MAX = Object.freeze({ accuracy: 40, causalityAndTradeoffs: 25, application: 20, completeness: 15 });
+export const RUBRIC_MAX = Object.freeze({ accuracy: 30, causalityAndTradeoffs: 35, application: 20, completeness: 15 });
 export const RUBRIC_TOTAL_MAX = 100;
 export const DISPLAY_SCORE_MAX = 120;
 export const MASTERY_RAW_SCORE = 80;

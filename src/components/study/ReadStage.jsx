@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CodeSnippet } from "../common/CodeSnippet.jsx";
+import { CodeComparisonSection } from "./CodeComparisonSection.jsx";
 import { MermaidChart } from "../common/MermaidChart.jsx";
 import { useAudioNarrator } from "../../hooks/useAudioNarrator.js";
 import { DeepDiveText } from "./DeepDiveText.jsx";
@@ -60,7 +60,7 @@ export function ReadStage({ node, graph, onNavigateNode, onGoToLearn, onGoToPara
 
       {activeDeepDive && <DeepDivePopover diveId={activeDeepDive.id} position={activeDeepDive.position} onClose={() => setActiveDeepDive(null)} />}
       {lesson.mermaid && <section><h4 style={{ margin: "0 0 8px", fontSize: "12px", color: "var(--text-muted)" }}>DIAGRAMA</h4><MermaidChart chart={lesson.mermaid} /></section>}
-      {lesson.code && <section><CodeSnippet code={lesson.code} language={lesson.codeLang || "javascript"} narration={lesson.takeaway} label={lesson.codeLabel || "Ejemplo"} /></section>}
+      <CodeComparisonSection lesson={lesson} />
 
       {/* Pasos y Trade-offs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px" }}>

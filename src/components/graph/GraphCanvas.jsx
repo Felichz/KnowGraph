@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { GraphNode } from "./GraphNode.jsx";
+import { GraphTopologyCanvas } from "./GraphTopologyCanvas.jsx";
 
 export function GraphCanvas({
+  graph = null,
   nodes = [],
   categories = {},
   progressMap = {},
@@ -10,6 +12,8 @@ export function GraphCanvas({
   onSelectNode,
   onOpenNode,
 }) {
+  const [viewStyle, setViewStyle] = useState("grid");
+
   if (!nodes || nodes.length === 0) {
     return (
       <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
@@ -17,6 +21,8 @@ export function GraphCanvas({
       </div>
     );
   }
+
+  const activeGraph = graph || { nodes, categories, edges: [] };
 
   // Agrupamos los nodos visibles por categoría
   const nodesByCategory = {};
@@ -30,12 +36,52 @@ export function GraphCanvas({
     <main
       style={{
         flex: 1,
-        overflowY: "auto",
-        padding: "24px 20px 60px",
+        overflowY: viewStyle === "topology" ? "hidden" : "auto",
+        padding: viewStyle === "topology" ? "12px 16px" : "24px 20px 60px",
         background: "var(--bg-canvas)",
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "28px", maxWidth: "1280px", margin: "0 auto" }}>
+      <div style={{ maxWidth: "1280px", margin: "0 auto 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{nodes.length} conceptos</span>
+        <div style={{ display: "flex", gap: "4px", background: "var(--bg-surface)", padding: "3px", borderRadius: "var(--radius-control)", border: "1px solid var(--border-line)" }}>
+          <button
+            type="button"
+            onClick={() => setViewStyle("grid")}
+            style={{
+              padding: "4px 10px", fontSize: "11px", border: "none", borderRadius: "4px", cursor: "pointer",
+              background: viewStyle === "grid" ? "var(--bg-surface-raised)" : "transparent",
+              color: viewStyle === "grid" ? "var(--accent-cyan)" : "var(--text-secondary)",
+              fontWeight: viewStyle === "grid" ? 700 : 500,
+            }}
+          >
+            ⊞ Cuadrícula
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewStyle("topology")}
+            style={{
+              padding: "4px 10px", fontSize: "11px", border: "none", borderRadius: "4px", cursor: "pointer",
+              background: viewStyle === "topology" ? "var(--bg-surface-raised)" : "transparent",
+              color: viewStyle === "topology" ? "var(--accent-cyan)" : "var(--text-secondary)",
+              fontWeight: viewStyle === "topology" ? 700 : 500,
+            }}
+          >
+            ☊ Topología SVG
+          </button>
+        </div>
+      </div>
+
+      {viewStyle === "topology" ? (
+        <GraphTopologyCanvas
+          graph={activeGraph}
+          progressMap={progressMap}
+          selectedNodeId={selectedNodeId}
+          activeTaskNodeIds={activeTaskNodeIds}
+          onSelectNode={onSelectNode}
+          onOpenNode={onOpenNode}
+        />
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "28px", maxWidth: "1280px", margin: "0 auto" }}>
         {Object.entries(nodesByCategory).map(([catKey, catNodes]) => {
           const cat = categories[catKey] || { label: catKey, color: "#70ddd4" };
 
@@ -89,6 +135,7 @@ export function GraphCanvas({
           );
         })}
       </div>
+      )}
     </main>
   );
 }

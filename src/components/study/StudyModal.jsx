@@ -118,7 +118,14 @@ export function StudyModal({
 
         <div ref={scrollContainerRef} style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
           {stage === "read" && <ReadStage node={node} graph={graph} onNavigateNode={onNavigateNode} onGoToLearn={() => setStage("learn")} onGoToParaphrase={() => setStage("paraphrase")} />}
-          {stage === "learn" && <LearnStage node={node} onGoToParaphrase={() => setStage("paraphrase")} />}
+          {stage === "learn" && (
+            <LearnStage
+              node={node}
+              draft={draft}
+              onUpdateDraft={updateDraft}
+              onGoToParaphrase={() => setStage("paraphrase")}
+            />
+          )}
           {stage === "paraphrase" && <ParaphraseStage draft={draft} onUpdateDraft={updateDraft} onEvaluate={handleEvaluate} isEvaluating={evaluating} node={node} />}
           {stage === "evaluate" && (
             <EvaluateStage

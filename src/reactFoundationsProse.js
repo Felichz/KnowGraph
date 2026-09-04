@@ -55,6 +55,39 @@ export const REACT_FOUNDATIONS_PROSE = {
   },
   state_updates: {
     explanation: "El state de React no es una variable que cambia: es un snapshot del render, una foto fija de los valores con los que se calculó esa pasada. Cuando escribís `setCount(count + 1)` no estás modificando `count`; estás agendando un render nuevo con otro valor. Dentro del handler actual, `count` sigue siendo el de la foto.\n\nEsto explica el bug favorito de las entrevistas: dos `setCount(count + 1)` seguidos no suman dos, porque ambos leen el mismo snapshot. La forma funcional `setCount(c => c + 1)` sí acumula, porque cada updater recibe el valor más reciente de la cola de actualizaciones.\n\nEl batching completa el cuadro: React agrupa las actualizaciones de un mismo evento en un solo render, así que tres setters seguidos no son tres renders. La conclusión práctica tiene tres patas: si el próximo valor depende del anterior, usá updater; si trabajás con objetos o arrays, creá referencias nuevas; y nunca leas el state esperando que el setter recién llamado ya hizo efecto.",
+    codeComparison: {
+      naive: {
+        label: "Enfoque ingenuo (Stale Snapshot)",
+        code: `function Counter() {
+  const [count, setCount] = useState(0);
+
+  function handleClick() {
+    // ⚠️ Bug: ambos setters leen el snapshot inicial (count = 0)
+    setCount(count + 1);
+    setCount(count + 1);
+    console.log("Count actual:", count); // Imprime 0, no 2
+  }
+
+  return <button onClick={handleClick}>+2 ({count})</button>;
+}`,
+        whyItFails: "Dentro del closure del handler, 'count' es constante para el render actual. Las llamadas subsecuentes con valor directo pisan la anterior en vez de componerse.",
+      },
+      production: {
+        label: "Patrón Senior (Cola Funcional & Batching)",
+        code: `function Counter() {
+  const [count, setCount] = useState(0);
+
+  function handleClick() {
+    // 🛡️ Las actualizaciones funcionales se encolan secuencialmente en Fiber
+    setCount(prev => prev + 1);
+    setCount(prev => prev + 1);
+  }
+
+  return <button onClick={handleClick}>+2 ({count})</button>;
+}`,
+        tradeOff: "Exige funciones puras sin efectos secundarios dentro del updater (React puede re-ejecutarlas en StrictMode o render concurrente).",
+      },
+    },
     pitfalls: [
       "Leer el state inmediatamente después del setter para validar o loguear usa el valor anterior: la foto todavía no se renovó.",
       "Mutar un objeto y volver a guardar la misma referencia puede dejar la UI sin cambios: React compara referencias para decidir.",

@@ -19,8 +19,8 @@ Reglas estrictas:
 - Devolvé ÚNICAMENTE un objeto JSON válido que cumpla el schema. Ningún texto fuera del JSON.
 
 Esquema de evaluación (dimensiones, todas obligatorias):
-- accuracy (0..40): identifica correctamente qué es el concepto y su mecanismo.
-- causalityAndTradeoffs (0..25): explica por qué importa, consecuencias, límites y errores frecuentes.
+- causalityAndTradeoffs (0..35): explica por qué importa, consecuencias, límites y errores frecuentes. Factor principal en nivel Senior/Staff.
+- accuracy (0..30): identifica correctamente qué es el concepto y su mecanismo.
 - application (0..20): conecta el concepto con un caso, decisión o ejemplo realista.
 - completeness (0..15): mide SOLO cobertura de superficie conceptual. Primero construí un checklist mental con las ideas esenciales explicitadas en todos los campos conceptuales de la card: summary, why, explanation, steps, pitfalls, takeaway, docNotes, audit, prompt, tablas y texto explicativo de diagramas. Asigná 15/15 cuando la respuesta menciona correctamente todas esas ideas esenciales, aunque las exprese con palabras propias y de forma breve. No exijas ejemplos explícitos, repetir código, dibujar diagramas, longitud, profundidad adicional ni lenguaje idéntico al de la card para dar 15/15. Los snippets, tablas o diagramas son formatos de apoyo: no exijas reproducirlos; alcanza con explicar verbalmente las ideas que comunican. Un ejemplo o detalle extra puede mejorar otras dimensiones, pero no es requisito de completitud. Bajá completeness únicamente si falta una idea esencial, hay un gap conceptual o se contradice un punto de la card.
 
@@ -34,15 +34,15 @@ Evalua EXCLUSIVAMENTE contra el contenido de la card proporcionada. No recompens
 jerga ni tono seguro. Distingui omision, imprecision y error conceptual.
 
 Puntua estas cuatro dimensiones:
-- accuracy (0..40): que es el concepto y como funciona.
-- causalityAndTradeoffs (0..25): por que importa, consecuencias, limites y errores.
+- causalityAndTradeoffs (0..35): por que importa, consecuencias, limites y errores en produccion.
+- accuracy (0..30): que es el concepto y como funciona.
 - application (0..20): caso, decision o ejemplo realista.
 - completeness (0..15): cobertura de todas las ideas esenciales de la card. Da 15/15 si las
   ideas estan cubiertas correctamente con palabras propias; no exijas longitud, codigo ni ejemplos
   explicitos solo para completar la superficie.
 
 Devolve UNICAMENTE este JSON valido, sin markdown ni texto adicional:
-{"scoreSummary":{"rubric":{"accuracy":{"score":0,"max":40},"causalityAndTradeoffs":{"score":0,"max":25},"application":{"score":0,"max":20},"completeness":{"score":0,"max":15}}}}
+{"scoreSummary":{"rubric":{"accuracy":{"score":0,"max":30},"causalityAndTradeoffs":{"score":0,"max":35},"application":{"score":0,"max":20},"completeness":{"score":0,"max":15}}}}
 
 No incluyas feedback, explicaciones ni score total. El orden de las claves debe ser el mostrado.
 `.trim();

@@ -78,6 +78,7 @@ export default function App() {
         <>
           <SuggestedNext node={suggestedNext} onOpenNode={openNode} />
           <GraphCanvas
+            graph={graph}
             nodes={visibleNodes} categories={graph.categories} progressMap={progressMap}
             selectedNodeId={suggestedNext?.id} activeTaskNodeIds={new Set(activeTaskNodeIds)}
             onSelectNode={selectNode} onOpenNode={(id) => { setHistoryStack([]); openNode(id); }}
