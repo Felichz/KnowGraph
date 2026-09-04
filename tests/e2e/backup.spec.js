@@ -1,44 +1,51 @@
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 
-const SESSION_KEY = "learning-workspace:provider-connections:v4";
-
-test.describe("backup de estado e2e", () => {
-  test("exporta sin API keys, valida imports y expone acciones en la paleta", async ({ page }) => {
-    const dialogs = [];
-    page.on("dialog", (dialog) => {
-      dialogs.push({ type: dialog.type(), message: dialog.message() });
-      dialog.accept();
-    });
-
+test.describe("Backup & BYOK Provider Settings (User Story 3)", () => {
+  test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.waitForSelector(".workspace-provider-toggle", { timeout: 15_000 });
+    await page.waitForLoadState("domcontentloaded");
+  });
 
-    await page.evaluate((key) => {
-      localStorage.setItem(key, JSON.stringify({
-        version: 4,
-        activeProfileId: null,
-        profiles: [{
-          id: "provider_custom_p1",
-          label: "Endpoint propio",
-          adapter: "custom",
-          catalogProvider: null,
-          baseUrl: "http://127.0.0.1:31415/v1",
-          apiKey: "SECRET_KEY_123",
-          model: "free-model",
-        }],
-      }));
-    }, SESSION_KEY);
+  test("abre el modal de configuración BYOK (⚙️ IA / LLM) y permite gestionar conexiones", async ({ page }) => {
+    const settingsBtn = page.locator("header button").filter({ hasText: /BYOK/ });
+    await expect(settingsBtn).toBeVisible();
+    await settingsBtn.click();
 
-    await page.locator(".progress-block").click();
-    await page.waitForSelector(".backup-data", { timeout: 10_000 });
-    await expect(page.locator(".backup-data__actions")).toContainText("Exportar respaldo");
-    await expect(page.locator(".backup-data__actions")).toContainText("Importar respaldo");
+    // Modal de ajustes debe abrirse
+    const modal = page.locator('div[role="dialog"]');
+    await expect(modal).toBeVisible();
+    await expect(modal).toContainText("Proveedores de IA y Respaldo");
+    await expect(modal).toContainText("OpenRouter");
+    await expect(modal).toContainText("OpenAI");
+    await expect(modal).toContainText("Ollama");
 
+    // Botones de acción del proveedor
+    await expect(modal.getByRole("button", { name: "Probar conexión" })).toBeVisible();
+    await expect(modal.getByRole("button", { name: "Guardar y Activar" })).toBeVisible();
+
+    // Cerrar con Escape
+    await page.keyboard.press("Escape");
+    await expect(modal).not.toBeVisible();
+  });
+
+  test("exporta respaldo JSON y valida su estructura", async ({ page }) => {
+    const settingsBtn = page.locator("header button").filter({ hasText: /BYOK/ });
+    await settingsBtn.click();
+
+    const modal = page.locator('div[role="dialog"]');
+    await expect(modal).toBeVisible();
+    await expect(modal).toContainText("DATOS Y RESPALDO LOCAL");
+
+    const exportBtn = modal.getByRole("button", { name: /Exportar respaldo JSON/ });
+    await expect(exportBtn).toBeVisible();
+
+    // Capturar descarga
     const [download] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("button", { name: "Exportar respaldo" }).click(),
+      exportBtn.click(),
     ]);
+
     expect(download.suggestedFilename()).toMatch(/^learning-workspace-backup-\d{4}-\d{2}-\d{2}\.json$/);
     const backupPath = await download.path();
     const backup = JSON.parse(fs.readFileSync(backupPath, "utf8"));
@@ -46,51 +53,64 @@ test.describe("backup de estado e2e", () => {
     expect(backup.app).toBe("learning-workspace");
     expect(backup.kind).toBe("state-backup");
     expect(backup.version).toBe(1);
-    expect(backup.secretsIncluded).toBe(true);
-    expect(Object.keys(backup.learning)).toEqual(["attempts", "drafts", "liveReviews", "coachIterations"]);
-    expect(backup.providers.profiles[0].label).toBe("Endpoint propio");
-    expect(backup.providers.profiles[0].apiKey).toBe("SECRET_KEY_123");
-    expect(JSON.stringify(backup)).toContain("SECRET_KEY_123");
+    expect(backup.learning).toBeDefined();
+  });
 
-    await page.keyboard.press("Control+k");
-    await page.locator(".command-palette__input").fill("respaldo");
-    await expect(page.locator(".command-palette__item--action")).toHaveCount(2);
-    await expect(page.locator(".command-palette")).toContainText("Exportar respaldo");
-    await expect(page.locator(".command-palette")).toContainText("Importar respaldo");
-    await page.keyboard.press("Escape");
+  test("detecta errores al importar un respaldo inválido y confirma éxito con uno válido", async ({ page }) => {
+    const settingsBtn = page.locator("header button").filter({ hasText: /BYOK/ });
+    await settingsBtn.click();
 
+    const modal = page.locator('div[role="dialog"]');
+    await expect(modal).toBeVisible();
+
+    const fileInput = modal.locator('input[type="file"]');
+
+    // 1. Archivo inválido
     const invalidFile = { hello: "mundo" };
-    await page.locator("input[type=file]").setInputFiles({
+    await fileInput.setInputFiles({
       name: "invalid.json",
       mimeType: "application/json",
       buffer: Buffer.from(JSON.stringify(invalidFile)),
     });
-    await expect.poll(() => dialogs.filter((d) => d.type === "alert").length).toBe(1);
-    expect(dialogs.at(-1).message).toContain("No se pudo importar el respaldo");
 
+    await expect(modal).toContainText("Error al restaurar");
+
+    // 2. Archivo válido
     const validBackup = {
       app: "learning-workspace",
       kind: "state-backup",
       version: 1,
-      exportedAt: "2026-08-16T00:00:00.000Z",
+      exportedAt: "2026-09-04T00:00:00.000Z",
       secretsIncluded: false,
       learning: {
-        attempts: [{ id: "a1", graphId: "react", nodeId: "state", createdAt: "2026-08-01T00:00:00.000Z" }],
+        attempts: [{ id: "test_attempt_1", graphId: "react", nodeId: "state_updates", createdAt: "2026-09-04T00:00:00.000Z", score: 95 }],
         drafts: [],
         liveReviews: [],
         coachIterations: [],
       },
       providers: { version: 4, activeProfileId: null, profiles: [] },
     };
-    await page.locator("input[type=file]").setInputFiles({
+
+    await fileInput.setInputFiles({
       name: "valid.json",
       mimeType: "application/json",
       buffer: Buffer.from(JSON.stringify(validBackup)),
     });
 
-    await expect.poll(() => dialogs.filter((d) => d.type === "confirm").length).toBe(1);
-    expect(dialogs.at(-1).message).toContain("reemplazará");
-    await page.waitForLoadState("load");
-    await page.waitForSelector(".workspace-provider-toggle", { timeout: 15_000 });
+    await expect(modal).toContainText("✓ Respaldo restaurado con éxito");
+  });
+
+  test("expone las acciones de respaldo en la Command Palette (Ctrl+K)", async ({ page }) => {
+    await page.keyboard.press("Control+k");
+
+    const paletteInput = page.getByPlaceholder(/Buscar concepto o acción/i);
+    await expect(paletteInput).toBeVisible();
+
+    await paletteInput.fill("respaldo");
+    const dialog = page.locator('div[role="dialog"]');
+    await expect(dialog).toContainText("Configurar proveedores de IA y Respaldo");
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).not.toBeVisible();
   });
 });

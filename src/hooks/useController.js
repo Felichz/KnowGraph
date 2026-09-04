@@ -41,9 +41,9 @@ export function useController(initialGraphId = "react") {
     selectNode: (nodeId, options) => controller.selectNode(nodeId, options),
     openNode: (nodeId) => controller.selectNode(nodeId, { openModal: true }),
     closeModal: () => controller.closeNode(),
-    filterCategories: (categoryIds) => controller.setSelectedGroups(categoryIds),
-    saveAttempt: (attempt) => controller.saveAttempt(attempt),
-    saveDraft: (nodeId, text) => controller.saveDraft(nodeId, text),
-    deleteDraft: (nodeId) => controller.deleteDraft(nodeId),
+    filterCategories: (categoryIds) => controller.setGroups(categoryIds),
+    saveAttempt: (attempt) => controller.saveAttempt?.(attempt),
+    saveDraft: (nodeId, text) => controller.updateDraft(nodeId, text),
+    deleteDraft: (nodeId) => controller.updateDraft(nodeId, ""),
   };
 }

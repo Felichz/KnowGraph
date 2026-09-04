@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export function parseAppPath(pathname = "/") {
   const match = pathname.match(/^\/(react|rails)(?:\/card\/([a-zA-Z0-9_-]+))?/);
@@ -15,22 +15,25 @@ export function buildAppPath(graphId = "react", nodeId = null) {
 }
 
 export function useUrlRouting({ activeGraphId, modalNodeId, onApplyRoute }) {
+  const onApplyRouteRef = useRef(onApplyRoute);
+  onApplyRouteRef.current = onApplyRoute;
+
   // Sincronizar ruta inicial en mount
   useEffect(() => {
     if (typeof window === "undefined") return;
     const initial = parseAppPath(window.location.pathname);
     if (initial.graphId || initial.nodeId) {
-      onApplyRoute?.(initial);
+      onApplyRouteRef.current?.(initial);
     }
 
     const handlePopState = () => {
       const current = parseAppPath(window.location.pathname);
-      onApplyRoute?.(current);
+      onApplyRouteRef.current?.(current);
     };
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [onApplyRoute]);
+  }, []);
 
   // Sincronizar cambios de estado hacia la URL (pushState)
   useEffect(() => {

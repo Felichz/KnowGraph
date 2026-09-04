@@ -59,10 +59,12 @@ export function AppHeader({
 
       <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
         {/* Progreso y Seniority clickeable */}
-        <div
+        <button
+          type="button"
           onClick={onOpenProgress}
           title="Ver Mapa de Seniority y Milestones"
-          style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "var(--text-secondary)", cursor: "pointer", padding: "4px 8px", borderRadius: "6px", background: "var(--bg-workspace)" }}
+          aria-label="Ver Mapa de Seniority y Milestones"
+          style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "var(--text-secondary)", cursor: "pointer", padding: "4px 8px", borderRadius: "6px", background: "var(--bg-workspace)", border: "1px solid var(--border-line)" }}
         >
           <span style={{ fontFamily: "var(--font-mono)", color: "var(--text-primary)", fontWeight: 700 }}>
             {completedNodes}/{totalNodes}
@@ -71,7 +73,7 @@ export function AppHeader({
             <div style={{ width: `${percent}%`, height: "100%", background: "var(--accent-green)" }} />
           </div>
           <span style={{ fontSize: "11px" }}>{percent}%</span>
-        </div>
+        </button>
 
         <button
           type="button"

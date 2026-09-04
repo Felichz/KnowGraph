@@ -44,7 +44,9 @@ export function createLearningController({ graphId = "react", storage = null, ai
     activeEvaluation: null,
   };
 
-  function snapshot() {
+  let cachedSnapshot = null;
+
+  function buildSnapshot() {
     const progressMap = getProgressMap(graph, state.attemptsByNode);
     const selectedNode = state.selectedNodeId
       ? getNodeView(graph, state.attemptsByNode, state.draftsByNode, state.selectedNodeId)
@@ -61,10 +63,16 @@ export function createLearningController({ graphId = "react", storage = null, ai
     });
   }
 
+  cachedSnapshot = buildSnapshot();
+
+  function snapshot() {
+    return cachedSnapshot;
+  }
+
   function emit() {
-    const next = snapshot();
-    listeners.forEach((listener) => listener(next));
-    return next;
+    cachedSnapshot = buildSnapshot();
+    listeners.forEach((listener) => listener(cachedSnapshot));
+    return cachedSnapshot;
   }
 
   function patch(next) {
