@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { collectTopologyFocus, createTopologicalLayout } from "../../src/components/graphViews/topologicalLayout.js";
+import { collectTopologyFocus, createTopologicalLayout } from "../../src/logic/topologicalLayout.js";
 
 const nodes = [
   { id: "a", label: "A", cat: "base", priority: 1 },

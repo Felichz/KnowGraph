@@ -15,8 +15,14 @@ tts-server*.log
 tts-*.wav
 first-react-card-segment*.wav
 __pycache__/
-
+.vercel/
+/.vercel/
 .vercel
 .env
 .env.local
 scratch/
+*.bak
+*.tmp
+*.tmp.*
+tmp-*.png
+*.log

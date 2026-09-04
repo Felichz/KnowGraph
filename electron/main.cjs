@@ -57,7 +57,7 @@ function normalizeProviderAdapter(value) {
 function normalizeProviderProfile(profile) {
   const adapter = normalizeProviderAdapter(profile?.adapter);
   const preset = PROVIDER_PRESETS[adapter] || PROVIDER_PRESETS.custom;
-  if (!profile || typeof profile !== "object") throw new Error("Perfil de provider invÃ¡lido");
+  if (!profile || typeof profile !== "object") throw new Error("Perfil de provider inválido");
   const normalized = {
     id: String(profile.id || "provider_default").slice(0, 80),
     label: String(profile.label || preset.label).slice(0, 80),
@@ -69,7 +69,7 @@ function normalizeProviderProfile(profile) {
     apiKey: String(profile.apiKey || "").slice(0, 4096),
     model: String(profile.model || preset.model).slice(0, 200),
   };
-  if (!normalized.baseUrl || !normalized.apiKey || !normalized.model) throw new Error("El perfil estÃ¡ incompleto");
+  if (!normalized.baseUrl || !normalized.apiKey || !normalized.model) throw new Error("El perfil está incompleto");
   return normalized;
 }
 

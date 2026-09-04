@@ -20,7 +20,7 @@ export function normalizeLiveReview(data) {
     coverage: normalizeCoverage(data.coverage),
     hint,
     additionalGaps: data.additionalGaps ?? [],
-    // Compatibilidad con la UI/cache anterior durante la migraciÃ³n.
+    // Compatibilidad con la UI/cache anterior durante la migración.
     coveragePercent: Math.min(100, displayScore),
     allEssentialCovered,
     nextGapId: hint?.kind === "gap" ? hint.id : null,

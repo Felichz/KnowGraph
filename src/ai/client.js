@@ -195,7 +195,7 @@ export async function liveReviewStream({
         if (!event.data) continue;
         let payload;
         try { payload = JSON.parse(event.data); } catch {
-          throw new AiError("upstream", "El gateway enviÃ³ un evento invÃ¡lido", null);
+          throw new AiError("upstream", "El gateway envió un evento inválido", null);
         }
         if (event.name === "progress") onProgress?.(payload.length ?? 0, payload.stage ?? "live_review");
         else if (event.name === "section") onSection?.(payload.field, payload.value);

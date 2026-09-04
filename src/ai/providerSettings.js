@@ -107,7 +107,7 @@ export async function setActiveProviderProfile(profileId) {
   }
   const profile = stored.profiles.find((candidate) => candidate.id === id);
   const ready = normalizeProviderProfile(profile);
-  if (!ready) throw new Error("La conexiÃ³n debe tener endpoint, API key y modelo antes de usarse.");
+  if (!ready) throw new Error("La conexión debe tener endpoint, API key y modelo antes de usarse.");
   stored.activeProfileId = ready.id;
   await writeStoredState(stored);
   return ready;
@@ -171,8 +171,8 @@ async function upsertProvider(value, { activate, requireModel }) {
   const normalized = normalizeProviderProfile(value, { requireModel });
   if (!normalized) {
     throw new Error(requireModel
-      ? "CompletÃ¡ endpoint, API key y modelo."
-      : "CompletÃ¡ endpoint y API key.");
+      ? "Completá endpoint, API key y modelo."
+      : "Completá endpoint y API key.");
   }
   const stored = await readStoredState();
   const index = stored.profiles.findIndex((profile) => profile.id === normalized.id);

@@ -278,7 +278,7 @@ export const EvaluationJsonSchema = {
   required: ["scoreSummary", "feedback"],
   properties: {
     // Este objeto debe completarse entero antes de comenzar feedback. El
-    // orden de properties acompaÃ±a el orden pedido en el prompt.
+    // orden de properties acompaña el orden pedido en el prompt.
     scoreSummary: {
       type: "object",
       additionalProperties: false,

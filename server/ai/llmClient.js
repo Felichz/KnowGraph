@@ -78,7 +78,7 @@ export async function chatCompletionWithFallback({
   let primaryEmitted = false;
 
   if (!primary?.apiKey && !fallback?.apiKey) {
-    throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "ConfigurÃ¡ un provider de IA antes de evaluar");
+    throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "Configurá un provider de IA antes de evaluar");
   }
 
   if (primary?.apiKey) {
@@ -147,7 +147,7 @@ export async function structuredCompletionWithFallback({
 }) {
   if (typeof parse !== "function") throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "Falta parser estructurado");
   if (!primary?.apiKey && !fallback?.apiKey) {
-    throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "ConfigurÃ¡ un provider de IA antes de evaluar");
+    throw new GatewayError(ErrorCodes.NOT_CONFIGURED, "Configurá un provider de IA antes de evaluar");
   }
   let primaryEmitted = false;
 

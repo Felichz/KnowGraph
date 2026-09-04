@@ -22,6 +22,10 @@ export const taskSyncChannel =
     ? new BroadcastChannel("knowgraph_tasks_sync")
     : null;
 
+if (taskSyncChannel?.unref) {
+  taskSyncChannel.unref();
+}
+
 function sanitizeTaskForBroadcast(task) {
   if (!task) return null;
   return {

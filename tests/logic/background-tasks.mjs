@@ -84,4 +84,5 @@ if (typeof BroadcastChannel !== "undefined") {
 }
 
 unsubscribe();
+taskSyncChannel?.close();
 console.log("background task manager + useSyncExternalStore + multi-tab tests: OK");

@@ -11,8 +11,8 @@ import { MAX_LEARNER_ANSWER_CHARS } from "./ai/schemas.js";
 import { GatewayError, ErrorCodes, jsonErrorResponse } from "./ai/errors.js";
 
 export async function gatewayHandler(req, res) {
-  // El gateway acepta orÃ­genes locales en desarrollo y orÃ­genes explÃ­citos
-  // en producciÃ³n. Reflejar cualquier Origin convertirÃ­a un proxy BYOK en un
+  // El gateway acepta orígenes locales en desarrollo y orígenes explícitos
+  // en producción. Reflejar cualquier Origin convertiría un proxy BYOK en un
   // endpoint reutilizable por terceros.
   const origin = req.headers.origin;
   if (origin && !isAllowedOrigin(origin, req)) {
