@@ -248,3 +248,178 @@ para tener una experiencia ergonómica en pantallas táctiles sin sacrificar esp
    - Si una petición SSE de evaluación excede el tiempo esperado, el loader ofrece abortar de forma limpia con `AbortController`.
 5. **Invariante de Integridad de Respaldo**:
    - Todo archivo de importación debe validar `app === "learning-workspace"` y coincidir con el schema de versión esperado antes de mutar el almacenamiento local.
+
+---
+
+## Appendix: Domain Data Contracts & Clean-Room Reference Schemas
+
+Este apéndice formaliza los esquemas de datos exactos para que cualquier ingeniero o agente de IA pueda reconstruir la UI y la capa de datos al 100% en un entorno *Clean-Room* sin acceso al código anterior.
+
+### 1. Esquema Canónico del Nodo y Lección Pedagógica (`node.lesson`)
+
+```typescript
+interface LearningNode {
+  id: string;                      // ej: "use-state", "fiber-reconciler"
+  label: string;                   // ej: "useState & Batching Automático"
+  cat: string;                     // ej: "state", "rendering", "architecture"
+  priority: number;                // 1..N (orden sugerido en el plan de estudios)
+  prerequisites: string[];         // IDs de nodos previos requeridos
+  lesson: PedagogicalLesson;
+}
+
+interface PedagogicalLesson {
+  level: "mid" | "senior" | "staff";
+  summary: string;                 // Modelo mental en 1-2 oraciones claras
+  why: string;                     // Justificación arquitectónica (por qué no el enfoque trivial)
+  
+  // Comparativa pedagógica Senior: Ingenuo vs Producción
+  codeComparison: {
+    naive: {
+      label: string;               // ej: "Enfoque ingenuo / Junior"
+      code: string;                // Código con antipatrón común
+      whyItFails: string;          // Causa exacta de fallo en escala o concurrencia
+    };
+    production: {
+      label: string;               // ej: "Patrón Senior Resiliente"
+      code: string;                // Implementación idiomática y tipada
+      tradeOff: string;            // Compromiso de memoria, latencia o complejidad aceptado
+    };
+  };
+
+  steps: string[];                 // Fases de ejecución secuencial del concepto
+  pitfalls: string[];              // Modos de falla silenciosos en producción
+  takeaway: string;                // Regla nemotécnica de una línea para entrevistas orales
+
+  // Glosario flotante de bajo nivel (Deep Dives)
+  deepDives?: Array<{
+    term: string;                  // Término clave en el texto
+    trigger: string;               // Palabra que activa el badge '?'
+    definition: string;            // Explicación técnica rigurosa
+    mentalModel: string;           // Analogía o regla práctica
+  }>;
+
+  // Banco de preguntas de entrevista FAANG / GreatFrontEnd
+  interviewQuestions?: Array<{
+    id: string;
+    source: string;                // ej: "GreatFrontEnd", "Meta Senior Interview"
+    question: string;
+    sampleAnswer: string;
+    requiredPrereqs: string[];     // Prerrequisitos que deben dominarse para desbloquearla
+  }>;
+
+  // Enlaces a documentación y especificaciones oficiales
+  sources?: Array<{
+    title: string;
+    url: string;
+    type: "official" | "spec" | "w3c" | "blog";
+  }>;
+}
+```
+
+### 2. Esquema Calibrado de Rúbrica Senior / Staff (0–120 Puntos)
+
+La evaluación oral y escrita calibra al candidato frente a estándares de comités de contratación Staff/Lead:
+
+```typescript
+interface EvaluationResult {
+  score: number;                   // 0..120 (displayScore canónico)
+  isMastery: boolean;              // true si score >= 100
+  isExtra: boolean;                // true si score > 100 (Bonus de Excelencia)
+  extraPoints: number;             // 0..20 (puntos excedentes de 100)
+  conciseVerdict: string;          // Veredicto ejecutivo en 1 oración
+
+  rubric: {
+    // 1. Causas, trade-offs y fallo a escala (35% - Factor #1 para Staff/Senior)
+    causalityAndTradeoffs: {
+      score: number;               // 0..35
+      max: 35;
+      label: "Causas y trade-offs";
+      note: string;                // Explicación cualitativa del feedback
+    };
+
+    // 2. Precisión conceptual y vocabulario técnico (30%)
+    accuracy: {
+      score: number;               // 0..30
+      max: 30;
+      label: "Precisión técnica";
+      note: string;
+    };
+
+    // 3. Aplicación práctica y patrones de producción (20%)
+    application: {
+      score: number;               // 0..20
+      max: 20;
+      label: "Aplicación en código";
+      note: string;
+    };
+
+    // 4. Completitud de la superficie y edge cases (15%)
+    completeness: {
+      score: number;               // 0..15
+      max: 15;
+      label: "Completitud";
+      note: string;
+    };
+  };
+
+  feedback: {
+    strengths: string[];           // Puntos fuertes demostrados
+    gaps: string[];                // Omisiones conceptuales
+    misconceptions: string[];      // Errores conceptuales graves detectados
+    nextAttemptPrompt: string;     // Pauta socrática para el siguiente intento
+  };
+}
+```
+
+### 3. Esquema de Persistencia Local-First (IndexedDB & SQLite OPFS)
+
+```typescript
+// Base de datos IndexedDB: "learning-graph-ai" (v3)
+interface IDBSchema {
+  // Historial de evaluaciones formales
+  attempts: {
+    key: string;                   // id: "attempt_[timestamp]_[hash]"
+    value: {
+      id: string;
+      graphId: "react" | "rails";
+      nodeId: string;
+      createdAt: string;           // ISO 8601
+      score: number;               // 0..120
+      evaluation: EvaluationResult;
+      answerHash: string;
+    };
+    indexes: {
+      byNode: [string, string, string]; // [graphId, nodeId, createdAt] (Poda FIFO: máx 12)
+    };
+  };
+
+  // Borradores activos con guardado debounced (600ms)
+  drafts: {
+    key: string;                   // "${graphId}:${nodeId}"
+    value: {
+      key: string;
+      text: string;
+      isAiGenerated: boolean;
+      source: "user" | "ai" | "voice";
+      updatedAt: string;
+    };
+  };
+
+  // Sesiones de tutoría socrática en vivo
+  coachIterations: {
+    key: string;                   // id: "coach_[timestamp]_[hash]"
+    value: {
+      id: string;
+      graphId: string;
+      nodeId: string;
+      createdAt: string;
+      messages: Array<{ role: "user" | "assistant"; content: string }>;
+      reconciledHash?: string;
+    };
+    indexes: {
+      byNode: [string, string, string]; // Poda FIFO: máx 24
+    };
+  };
+}
+```
+
