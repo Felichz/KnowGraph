@@ -19,9 +19,10 @@ export function FlashcardGrid({
   const filteredNodes = nodes.filter((n) => {
     const p = progressMap[n.id];
     const score = p?.score ?? 0;
-    if (activeFilter === "unattempted") return !p || p.status === "unseen";
-    if (activeFilter === "below-mastery") return p && p.status !== "unseen" && score < 100;
-    if (activeFilter === "mastery") return score >= 100;
+    const isAttempted = p && (p.attemptCount > 0 || Boolean(p.latestAttempt));
+    if (activeFilter === "unattempted") return !isAttempted;
+    if (activeFilter === "below-mastery") return isAttempted && score < 100;
+    if (activeFilter === "mastery") return isAttempted && score >= 100;
     return true;
   });
 

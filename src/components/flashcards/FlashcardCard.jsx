@@ -13,6 +13,7 @@ export function FlashcardCard({
 
   return (
     <div
+      data-testid="flashcard-card"
       style={{ perspective: "1000px", minHeight: "220px", cursor: "pointer" }}
       onClick={() => setIsFlipped((v) => !v)}
     >
@@ -33,6 +34,8 @@ export function FlashcardCard({
             position: "absolute",
             inset: 0,
             backfaceVisibility: "hidden",
+            pointerEvents: isFlipped ? "none" : "auto",
+            opacity: isFlipped ? 0 : 1,
             background: "var(--bg-surface)",
             border: "1px solid var(--border-line)",
             borderTop: `4px solid ${color}`,
@@ -74,6 +77,8 @@ export function FlashcardCard({
             inset: 0,
             backfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
+            pointerEvents: isFlipped ? "auto" : "none",
+            opacity: isFlipped ? 1 : 0,
             background: "var(--bg-surface-emphasis)",
             border: `1px solid ${color}`,
             borderRadius: "var(--radius-panel)",
