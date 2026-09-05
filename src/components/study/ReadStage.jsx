@@ -34,13 +34,15 @@ export function ReadStage({ node, graph, onNavigateNode, onGoToLearn, onGoToPara
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px", color: "var(--text-primary)" }}>
       {/* Resumen */}
-      <section style={{ padding: "16px", background: "var(--bg-surface)", border: "1px solid var(--border-line)", borderRadius: "var(--radius-panel)" }}>
+      <section style={{ padding: "18px 20px", background: "linear-gradient(135deg, rgba(94, 234, 212, 0.08) 0%, rgba(18, 24, 36, 0.85) 100%)", border: "1px solid rgba(94, 234, 212, 0.25)", borderRadius: "var(--radius-panel)", boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.3)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--accent-cyan)", letterSpacing: "0.08em" }}>EN UNA FRASE</span>
+          <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--accent-cyan)", letterSpacing: "0.08em", display: "inline-flex", alignItems: "center", gap: "5px" }}>
+            <span>📌</span> EN UNA FRASE
+          </span>
           {renderAudioBtn("summary", `${lesson.summary}. Por qué importa: ${lesson.why}`)}
         </div>
-        <p style={{ margin: "8px 0 12px", fontSize: "15px", fontWeight: 600, lineHeight: 1.5 }}>{lesson.summary}</p>
-        <div style={{ borderTop: "1px solid var(--border-line)", paddingTop: "10px", fontSize: "13px", color: "var(--text-secondary)" }}>
+        <p style={{ margin: "10px 0 12px", fontSize: "15px", fontWeight: 600, lineHeight: 1.55, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{lesson.summary}</p>
+        <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "10px", fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
           <strong style={{ color: "var(--accent-gold)" }}>Por qué importa: </strong>{lesson.why}
         </div>
       </section>

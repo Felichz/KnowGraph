@@ -32,10 +32,10 @@ export function BackupActions() {
   };
 
   return (
-    <section style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "14px", background: "var(--bg-surface-raised)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line)" }}>
+    <section style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "16px", background: "rgba(12, 16, 23, 0.7)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line-strong)" }}>
       <div>
-        <h4 style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>DATOS Y RESPALDO LOCAL</h4>
-        <p style={{ margin: "2px 0 0", fontSize: "11px", color: "var(--text-secondary)" }}>
+        <h4 style={{ margin: 0, fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.06em", fontFamily: "var(--font-mono)" }}>DATOS Y RESPALDO LOCAL</h4>
+        <p style={{ margin: "4px 0 0", fontSize: "11.5px", color: "var(--text-secondary)", lineHeight: 1.45 }}>
           Exportá todas tus notas, borradores e historial a un archivo JSON para migrar o hacer backup.
         </p>
       </div>
@@ -44,7 +44,7 @@ export function BackupActions() {
         <button
           type="button"
           onClick={handleExport}
-          style={{ padding: "6px 12px", background: "var(--bg-surface)", border: "1px solid var(--accent-cyan)", borderRadius: "var(--radius-control)", color: "var(--accent-cyan)", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
+          style={{ padding: "8px 14px", background: "rgba(94, 234, 212, 0.12)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-control)", color: "var(--accent-cyan)", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
         >
           Exportar respaldo JSON
         </button>
@@ -52,14 +52,14 @@ export function BackupActions() {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          style={{ padding: "6px 12px", background: "var(--bg-surface)", border: "1px solid var(--border-line)", borderRadius: "var(--radius-control)", color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
+          style={{ padding: "8px 14px", background: "var(--bg-surface-raised)", border: "1px solid var(--border-line-strong)", borderRadius: "var(--radius-control)", color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
         >
           Importar respaldo...
         </button>
         <input ref={fileInputRef} type="file" accept=".json,application/json" hidden onChange={handleFileChange} />
       </div>
 
-      {status && <span style={{ fontSize: "11px", color: status.startsWith("✓") ? "var(--accent-green)" : "var(--accent-red)" }}>{status}</span>}
+      {status && <span style={{ fontSize: "11px", fontWeight: 500, color: status.startsWith("✓") ? "var(--accent-green)" : "var(--accent-red)" }}>{status}</span>}
     </section>
   );
 }

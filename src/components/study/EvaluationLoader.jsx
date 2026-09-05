@@ -21,14 +21,17 @@ export function EvaluationLoader({
   const isSlow = elapsed > 12;
 
   return (
-    <div style={{ padding: "40px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", textAlign: "center" }} role="status">
-      <span className="pulse-dot" style={{ width: "16px", height: "16px" }} />
+    <div style={{ padding: "48px 24px", display: "flex", flexDirection: "column", alignItems: "center", gap: "20px", textAlign: "center", background: "rgba(18, 22, 31, 0.4)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line)" }} role="status">
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ position: "absolute", width: "36px", height: "36px", borderRadius: "50%", background: isSlow ? "rgba(245, 158, 11, 0.2)" : "rgba(94, 234, 212, 0.2)", filter: "blur(8px)" }} />
+        <span className="pulse-dot" style={{ width: "16px", height: "16px", background: isSlow ? "var(--accent-gold)" : "var(--accent-cyan)", boxShadow: isSlow ? "0 0 16px var(--accent-gold)" : "0 0 16px var(--accent-cyan)" }} />
+      </div>
 
       <div>
-        <h3 style={{ margin: "0 0 6px", fontSize: "16px", color: "var(--text-primary)" }}>
+        <h3 style={{ margin: "0 0 6px", fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>
           {streamingChars > 0 ? `Recibiendo rúbrica… (${streamingChars} caracteres)` : "Analizando precisión técnica y trade-offs…"}
         </h3>
-        <p style={{ margin: 0, fontSize: "12px", color: "var(--text-muted)", maxWidth: "440px" }}>
+        <p style={{ margin: 0, fontSize: "12.5px", color: "var(--text-secondary)", maxWidth: "460px", lineHeight: 1.5 }}>
           {isSlow
             ? "Los modelos con pensamiento profundo (thinking models) demoran 15-30s en verificar causalidad."
             : "Calibrando rúbrica analítica en 4 dimensiones frente a estándares de entrevista."}
@@ -36,11 +39,11 @@ export function EvaluationLoader({
       </div>
 
       {/* Barra de progreso de latencia */}
-      <div style={{ width: "100%", maxWidth: "320px", display: "flex", flexDirection: "column", gap: "6px" }}>
-        <div style={{ width: "100%", height: "6px", background: "var(--bg-canvas)", borderRadius: "3px", overflow: "hidden" }}>
-          <div style={{ width: `${pct}%`, height: "100%", background: isSlow ? "var(--accent-gold)" : "var(--accent-cyan)", transition: "width 0.5s ease" }} />
+      <div style={{ width: "100%", maxWidth: "340px", display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ width: "100%", height: "6px", background: "rgba(10, 13, 18, 0.8)", borderRadius: "9999px", overflow: "hidden", border: "1px solid var(--border-line)" }}>
+          <div style={{ width: `${pct}%`, height: "100%", background: isSlow ? "linear-gradient(90deg, #d97706, var(--accent-gold))" : "linear-gradient(90deg, #0284c7, var(--accent-cyan))", borderRadius: "9999px", transition: "width 0.5s ease", boxShadow: isSlow ? "0 0 10px rgba(245, 158, 11, 0.5)" : "0 0 10px rgba(94, 234, 212, 0.5)" }} />
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--text-muted)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
           <span>{elapsed}s transcurridos</span>
           <span>~{expectedSeconds}s esperado</span>
         </div>
@@ -51,13 +54,14 @@ export function EvaluationLoader({
           type="button"
           onClick={onCancel}
           style={{
-            marginTop: "8px",
-            padding: "6px 14px",
-            background: "rgba(239, 118, 104, 0.12)",
-            border: "1px solid var(--accent-red)",
+            marginTop: "6px",
+            padding: "7px 16px",
+            background: "rgba(248, 113, 113, 0.1)",
+            border: "1px solid rgba(248, 113, 113, 0.35)",
             borderRadius: "var(--radius-control)",
             color: "var(--accent-red)",
             fontSize: "12px",
+            fontWeight: 600,
             cursor: "pointer",
           }}
         >

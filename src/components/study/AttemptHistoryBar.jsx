@@ -18,28 +18,28 @@ export function AttemptHistoryBar({
   const attemptScore = currentAttempt?.score ?? currentAttempt?.evaluation?.score;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px", fontSize: "12px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--bg-surface)", borderRadius: "var(--radius-control)", border: "1px solid var(--border-line)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "8px", fontSize: "12px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(18, 22, 31, 0.75)", borderRadius: "var(--radius-control)", border: "1px solid var(--border-line-strong)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <button
             type="button"
             onClick={() => onSelectIndex?.(activeIdx - 1)}
             disabled={!canPrev}
-            style={{ padding: "2px 6px", borderRadius: "4px", background: "var(--bg-surface-raised)", border: "1px solid var(--border-line)", cursor: canPrev ? "pointer" : "not-allowed", opacity: canPrev ? 1 : 0.4 }}
+            style={{ width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "5px", background: "var(--bg-surface-raised)", border: "1px solid var(--border-line)", cursor: canPrev ? "pointer" : "not-allowed", opacity: canPrev ? 1 : 0.35, color: "var(--text-primary)" }}
           >
             ←
           </button>
-          <strong>Intento {activeIdx + 1} de {total}</strong>
+          <strong style={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>Intento {activeIdx + 1} de {total}</strong>
           <button
             type="button"
             onClick={() => (activeIdx >= total - 1 ? onReturnCurrent?.() : onSelectIndex?.(activeIdx + 1))}
             disabled={!isPast}
-            style={{ padding: "2px 6px", borderRadius: "4px", background: "var(--bg-surface-raised)", border: "1px solid var(--border-line)", cursor: isPast ? "pointer" : "not-allowed", opacity: isPast ? 1 : 0.4 }}
+            style={{ width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "5px", background: "var(--bg-surface-raised)", border: "1px solid var(--border-line)", cursor: isPast ? "pointer" : "not-allowed", opacity: isPast ? 1 : 0.35, color: "var(--text-primary)" }}
           >
             →
           </button>
           {attemptScore != null && (
-            <span style={{ padding: "2px 6px", borderRadius: "4px", background: "rgba(112, 221, 212, 0.15)", color: "var(--accent-cyan)", fontWeight: 700 }}>
+            <span style={{ padding: "3px 8px", borderRadius: "6px", background: "rgba(94, 234, 212, 0.14)", border: "1px solid var(--border-accent)", color: "var(--accent-cyan)", fontWeight: 700, fontFamily: "var(--font-mono)" }}>
               {attemptScore}/120
             </span>
           )}
@@ -49,17 +49,20 @@ export function AttemptHistoryBar({
           <button
             type="button"
             onClick={onReturnCurrent}
-            style={{ padding: "3px 8px", background: "var(--accent-cyan)", color: "var(--bg-workspace)", borderRadius: "4px", border: "none", fontWeight: 600, cursor: "pointer" }}
+            style={{ padding: "4px 12px", background: "linear-gradient(135deg, var(--accent-cyan), #38bdf8)", color: "#08090d", borderRadius: "6px", border: "none", fontWeight: 700, fontSize: "11.5px", cursor: "pointer", boxShadow: "0 0 10px rgba(94, 234, 212, 0.25)" }}
           >
             Volver a la versión actual
           </button>
         ) : (
-          <span style={{ fontSize: "11px", color: "var(--accent-green)" }}>Último resultado</span>
+          <span style={{ fontSize: "11px", color: "var(--accent-green)", display: "inline-flex", alignItems: "center", gap: "5px", fontWeight: 600 }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--accent-green)" }} />
+            Último resultado
+          </span>
         )}
       </div>
 
       {isStale && (
-        <div style={{ padding: "6px 10px", background: "rgba(239, 118, 104, 0.1)", borderRadius: "4px", borderLeft: "2px solid var(--accent-red)", fontSize: "11px", color: "var(--text-secondary)" }}>
+        <div style={{ padding: "8px 12px", background: "rgba(248, 113, 113, 0.08)", borderRadius: "6px", border: "1px solid rgba(248, 113, 113, 0.25)", borderLeft: "3px solid var(--accent-red)", fontSize: "11.5px", color: "var(--text-secondary)" }}>
           ⚠️ Esta evaluación corresponde a una versión anterior del temario. Reevaluá para actualizar tu rúbrica.
         </div>
       )}
