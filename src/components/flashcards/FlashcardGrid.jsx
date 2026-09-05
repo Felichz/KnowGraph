@@ -28,9 +28,9 @@ export function FlashcardGrid({
 
   return (
     <div style={{ flex: 1, overflowY: "auto", padding: "20px", background: "var(--bg-canvas)" }}>
-      <div style={{ maxWidth: "1280px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ maxWidth: "1340px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px" }}>
         {/* Barra de filtros de flashcards */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", background: "rgba(18, 24, 38, 0.65)", border: "1px solid var(--border-line)", borderRadius: "var(--radius-panel)", padding: "10px 14px", backdropFilter: "blur(8px)" }}>
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
             {FILTERS.map((f) => {
               const isSel = activeFilter === f.id;
@@ -47,6 +47,7 @@ export function FlashcardGrid({
                     background: isSel ? "var(--bg-surface-emphasis)" : "var(--bg-surface)",
                     color: isSel ? "var(--accent-cyan)" : "var(--text-secondary)",
                     border: `1px solid ${isSel ? "var(--accent-cyan)" : "var(--border-line)"}`,
+                    cursor: "pointer",
                   }}
                 >
                   {f.label}

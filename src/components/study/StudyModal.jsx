@@ -87,28 +87,28 @@ export function StudyModal({
   const activeEvaluation = currentEval || latestAttempt?.evaluation || null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, backgroundColor: zenMode ? "var(--bg-workspace)" : "rgba(4, 6, 10, 0.82)", backdropFilter: zenMode ? "none" : "blur(14px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: zenMode ? 0 : "20px" }} onClick={onClose}>
+    <div className={zenMode ? "study-modal-backdrop zen" : "study-modal-backdrop"} style={{ position: "fixed", inset: 0, backgroundColor: zenMode ? "var(--bg-workspace)" : "rgba(4, 6, 10, 0.82)", backdropFilter: zenMode ? "none" : "blur(14px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: zenMode ? 0 : undefined }} onClick={onClose}>
       <div style={{ width: "100%", maxWidth: zenMode ? "100vw" : "940px", height: zenMode ? "100vh" : "auto", maxHeight: zenMode ? "100vh" : "90vh", background: "linear-gradient(180deg, #111520 0%, #0c0e15 100%)", border: zenMode ? "none" : "1px solid rgba(255, 255, 255, 0.12)", borderRadius: zenMode ? 0 : "16px", boxShadow: zenMode ? "none" : "var(--shadow-modal)", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={node.label}>
-        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderBottom: "1px solid var(--border-line)", background: "rgba(17, 21, 31, 0.8)" }}>
-          <div>
+        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderBottom: "1px solid var(--border-line)", background: "rgba(17, 21, 31, 0.8)", gap: "12px" }}>
+          <div style={{ minWidth: 0 }}>
             <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--accent-cyan)", letterSpacing: "0.08em" }}>MODAL DE ESTUDIO</span>
-            <h2 style={{ margin: 0, fontSize: "17px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.015em" }}>{node.label}</h2>
+            <h2 style={{ margin: 0, fontSize: "17px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.015em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{node.label}</h2>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <button type="button" onClick={() => setZenMode((v) => !v)} title={zenMode ? "Salir de modo Zen" : "Modo Zen pantalla completa"} style={{ padding: "4px 10px", background: "rgba(255, 255, 255, 0.05)", border: "1px solid var(--border-line)", borderRadius: "6px", fontSize: "11px", color: "var(--text-secondary)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+            <button type="button" onClick={() => setZenMode((v) => !v)} title={zenMode ? "Salir de modo Zen" : "Modo Zen pantalla completa"} style={{ padding: "4px 10px", background: "rgba(255, 255, 255, 0.05)", border: "1px solid var(--border-line)", borderRadius: "6px", fontSize: "11px", color: "var(--text-secondary)", flexShrink: 0, whiteSpace: "nowrap" }}>
               {zenMode ? "Salir de Zen" : "🧘 Modo Zen"}
             </button>
-            <button type="button" onClick={onClose} style={{ fontSize: "18px", color: "var(--text-muted)", padding: "2px 8px", borderRadius: "4px" }} aria-label="Cerrar">✕</button>
+            <button type="button" onClick={onClose} style={{ fontSize: "18px", color: "var(--text-muted)", padding: "2px 8px", borderRadius: "4px", flexShrink: 0 }} aria-label="Cerrar">✕</button>
           </div>
         </header>
 
         <ConceptMapNav node={node} graph={graph} historyStack={historyStack} onNavigateNode={onNavigateNode} onGoBack={onGoBack} />
 
-        <nav style={{ display: "flex", borderBottom: "1px solid var(--border-line)", background: "rgba(10, 13, 19, 0.85)" }}>
+        <nav style={{ display: "flex", borderBottom: "1px solid var(--border-line)", background: "rgba(10, 13, 19, 0.85)", overflowX: "auto" }}>
           {STAGES.map((tab) => {
             const active = stage === tab.id;
             return (
-              <button key={tab.id} type="button" onClick={() => setStage(tab.id)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "11px 14px", fontSize: "12px", fontWeight: active ? 700 : 500, color: active ? "var(--accent-cyan)" : "var(--text-secondary)", borderBottom: `2px solid ${active ? "var(--accent-cyan)" : "transparent"}`, background: active ? "rgba(94, 234, 212, 0.05)" : "transparent", transition: "all var(--transition-fast)" }}>
+              <button key={tab.id} type="button" onClick={() => setStage(tab.id)} style={{ flex: 1, minWidth: "75px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "11px 14px", fontSize: "12px", fontWeight: active ? 700 : 500, color: active ? "var(--accent-cyan)" : "var(--text-secondary)", borderBottom: `2px solid ${active ? "var(--accent-cyan)" : "transparent"}`, background: active ? "rgba(94, 234, 212, 0.05)" : "transparent", whiteSpace: "nowrap", transition: "all var(--transition-fast)" }}>
                 <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", opacity: active ? 1 : 0.6, color: active ? "var(--accent-cyan)" : "inherit" }}>{tab.num}</span>
                 <span>{tab.label}</span>
               </button>

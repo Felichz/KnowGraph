@@ -59,7 +59,7 @@ export function ParaphraseStage({ draft = "", onUpdateDraft, onEvaluate, isEvalu
         <textarea
           value={draft} onChange={(e) => onUpdateDraft?.(e.target.value)} onKeyDown={handleKeyDown}
           placeholder="Escribí o dictá acá tu explicación técnica… (Ctrl+Enter para evaluar)" rows={9}
-          style={{ width: "100%", padding: "14px", background: "rgba(10, 13, 18, 0.75)", border: `1px solid ${isListening ? "var(--accent-red)" : "var(--border-line-strong)"}`, borderRadius: "var(--radius-panel)", color: "var(--text-primary)", fontSize: "13.5px", lineHeight: 1.6, outline: "none", boxShadow: "inset 0 2px 6px rgba(0, 0, 0, 0.35)", resize: "vertical" }}
+          style={{ width: "100%", padding: "14px", background: "rgba(10, 13, 18, 0.75)", border: `1px solid ${isListening ? "var(--accent-red)" : "var(--border-line-strong)"}`, borderRadius: "var(--radius-panel)", color: "var(--text-primary)", fontSize: "13.5px", lineHeight: 1.6, outline: "none", boxShadow: "inset 0 2px 6px rgba(0, 0, 0, 0.35)", resize: "vertical", transition: "border-color 0.2s, box-shadow 0.2s" }}
         />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "240px", overflowY: "auto", padding: "10px", background: "rgba(10, 13, 18, 0.75)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line-strong)" }}>

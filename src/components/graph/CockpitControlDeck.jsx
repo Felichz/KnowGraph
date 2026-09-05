@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { CategoryNav } from "../layout/CategoryNav.jsx";
 
 export function CockpitControlDeck({
@@ -16,27 +16,30 @@ export function CockpitControlDeck({
     <div
       style={{
         display: "flex",
+        flexWrap: "wrap",
         alignItems: "center",
         justifyContent: "space-between",
-        gap: "12px",
-        padding: "8px 16px",
+        gap: "10px",
+        padding: "8px 14px",
         background: "rgba(15, 20, 30, 0.7)",
         backdropFilter: "blur(12px)",
         borderRadius: "var(--radius-panel)",
         border: "1px solid var(--border-line)",
       }}
     >
-      <CategoryNav
-        categories={categories}
-        nodes={nodes}
-        progressMap={progressMap}
-        selectedCategories={selectedCategories}
-        onSelectCategory={onSelectCategory}
-        onShowAll={onShowAllCategories}
-      />
+      <div style={{ flex: "1 1 300px", minWidth: 0, overflow: "hidden" }}>
+        <CategoryNav
+          categories={categories}
+          nodes={nodes}
+          progressMap={progressMap}
+          selectedCategories={selectedCategories}
+          onSelectCategory={onSelectCategory}
+          onShowAll={onShowAllCategories}
+        />
+      </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, borderLeft: "1px solid var(--border-line)", paddingLeft: "12px" }}>
-        <span style={{ fontSize: "11.5px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", whiteSpace: "nowrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, marginLeft: "auto" }}>
+        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", whiteSpace: "nowrap" }}>
           {totalVisibleCount} conceptos
         </span>
         <div style={{ display: "flex", gap: "3px", background: "rgba(0, 0, 0, 0.3)", padding: "2px", borderRadius: "var(--radius-control)", border: "1px solid var(--border-line)" }}>

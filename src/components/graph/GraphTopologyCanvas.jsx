@@ -27,7 +27,7 @@ export function GraphTopologyCanvas({
   const activeFocusId = hoveredNodeId || selectedNodeId;
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "calc(100vh - 180px)", minHeight: "500px", overflow: "hidden", background: "var(--bg-canvas)" }}>
+    <div style={{ position: "relative", width: "100%", height: "calc(100vh - 250px)", minHeight: "460px", overflow: "hidden", background: "var(--bg-canvas)" }}>
       {/* Controles de Zoom Flotantes */}
       <div style={{ position: "absolute", bottom: "16px", right: "16px", zIndex: 10, display: "flex", gap: "6px", background: "var(--bg-surface-raised)", padding: "4px", borderRadius: "var(--radius-control)", border: "1px solid var(--border-line)" }}>
         <button type="button" onClick={zoomIn} title="Acercar" style={{ padding: "4px 8px", background: "transparent", border: "none", color: "var(--text-primary)", cursor: "pointer", fontWeight: 700 }}>+</button>

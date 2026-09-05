@@ -32,9 +32,10 @@ export function AppHeader({
         justifyContent: "space-between",
         alignItems: "center",
         padding: "10px 24px",
-        background: "rgba(10, 13, 19, 0.85)",
+        background: "rgba(10, 13, 19, 0.88)",
         backdropFilter: "blur(20px)",
         borderBottom: "1px solid var(--border-line)",
+        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.45)",
         gap: "16px",
       }}
     >
@@ -60,7 +61,7 @@ export function AppHeader({
         </div>
 
         {/* Toggle Vista: Grafo / Flashcards */}
-        <div style={{ display: "flex", background: "rgba(0, 0, 0, 0.45)", padding: "3px", borderRadius: "8px", border: "1px solid var(--border-line)" }}>
+        <div className="hide-on-mobile" style={{ display: "flex", background: "rgba(0, 0, 0, 0.45)", padding: "3px", borderRadius: "8px", border: "1px solid var(--border-line)" }}>
           <button type="button" onClick={() => onViewModeChange?.("graph")} style={btnStyle(viewMode === "graph")}>Grafo</button>
           <button type="button" onClick={() => onViewModeChange?.("flashcards")} style={btnStyle(viewMode === "flashcards")}>Flashcards</button>
         </div>
@@ -86,6 +87,7 @@ export function AppHeader({
 
         <button
           type="button"
+          className="hide-on-mobile"
           onClick={onOpenCommandPalette}
           title="Buscar concepto (Ctrl+K)"
           style={{
@@ -102,6 +104,7 @@ export function AppHeader({
 
         <button
           type="button"
+          className="hide-on-mobile"
           onClick={onOpenSettings}
           title="Configurar proveedores de IA y Respaldo"
           style={{

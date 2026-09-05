@@ -41,7 +41,7 @@ export function GraphCanvas({
     <main
       style={{
         flex: 1,
-        overflowY: viewStyle === "topology" ? "hidden" : "auto",
+        overflowY: "auto",
         padding: "20px 24px 60px",
         background: "var(--bg-canvas)",
       }}
