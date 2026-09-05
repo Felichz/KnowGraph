@@ -6,11 +6,9 @@ import { useUrlRouting } from "./hooks/useUrlRouting.js";
 
 import { AppHeader } from "./components/layout/AppHeader.jsx";
 import { TaskBanner } from "./components/layout/TaskBanner.jsx";
-import { CategoryNav } from "./components/layout/CategoryNav.jsx";
 import { SeniorityProgressPanel } from "./components/layout/SeniorityProgressPanel.jsx";
 import { GlobalTasksHud } from "./components/layout/GlobalTasksHud.jsx";
 import { MobileBottomNav } from "./components/layout/MobileBottomNav.jsx";
-import { SuggestedNext } from "./components/graph/SuggestedNext.jsx";
 import { GraphCanvas } from "./components/graph/GraphCanvas.jsx";
 import { FlashcardGrid } from "./components/flashcards/FlashcardGrid.jsx";
 import { CommandPalette } from "./components/common/CommandPalette.jsx";
@@ -68,25 +66,26 @@ export default function App() {
 
       <TaskBanner task={activeTasks?.[0]} onNavigateToTask={openNode} />
 
-      <CategoryNav
-        categories={graph.categories} nodes={graph.nodes} progressMap={progressMap}
-        selectedCategories={selectedCats} onSelectCategory={handleSelectCat}
-        onShowAll={() => { setSelectedCats([]); filterCategories([]); }}
-      />
-
       {viewMode === "graph" ? (
-        <>
-          <SuggestedNext node={suggestedNext} onOpenNode={openNode} />
-          <GraphCanvas
-            graph={graph}
-            nodes={visibleNodes} categories={graph.categories} progressMap={progressMap}
-            selectedNodeId={suggestedNext?.id} activeTaskNodeIds={new Set(activeTaskNodeIds)}
-            onSelectNode={selectNode} onOpenNode={(id) => { setHistoryStack([]); openNode(id); }}
-          />
-        </>
+        <GraphCanvas
+          graph={graph}
+          nodes={visibleNodes}
+          categories={graph.categories}
+          progressMap={progressMap}
+          suggestedNext={suggestedNext}
+          selectedNodeId={suggestedNext?.id}
+          activeTaskNodeIds={new Set(activeTaskNodeIds)}
+          selectedCategories={selectedCats}
+          onSelectCategory={handleSelectCat}
+          onShowAllCategories={() => { setSelectedCats([]); filterCategories([]); }}
+          onSelectNode={selectNode}
+          onOpenNode={(id) => { setHistoryStack([]); openNode(id); }}
+        />
       ) : (
         <FlashcardGrid
-          nodes={visibleNodes} categories={graph.categories} progressMap={progressMap}
+          nodes={visibleNodes}
+          categories={graph.categories}
+          progressMap={progressMap}
           onOpenStudy={(id) => { setHistoryStack([]); openNode(id); }}
         />
       )}

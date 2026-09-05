@@ -34,7 +34,8 @@ export function GraphNode({
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        padding: "14px 16px 12px 18px",
+        gap: "10px",
+        padding: "12px 14px 12px 16px",
         background: isSelected
           ? "linear-gradient(180deg, rgba(28, 36, 52, 0.85) 0%, rgba(18, 23, 34, 0.95) 100%)"
           : "linear-gradient(180deg, rgba(20, 25, 36, 0.7) 0%, rgba(14, 17, 25, 0.85) 100%)",
@@ -43,7 +44,7 @@ export function GraphNode({
         boxShadow: shadow,
         borderRadius: "var(--radius-card)",
         cursor: "pointer",
-        minHeight: "82px",
+        minHeight: "72px",
         transition: "all var(--transition-fast)",
       }}
       tabIndex={0}
@@ -55,8 +56,8 @@ export function GraphNode({
         style={{
           position: "absolute",
           left: 0,
-          top: "14px",
-          bottom: "14px",
+          top: "10px",
+          bottom: "10px",
           width: "3px",
           borderRadius: "0 3px 3px 0",
           background: isExtra ? "var(--accent-gold)" : categoryColor,
@@ -71,7 +72,7 @@ export function GraphNode({
         {hasActiveTask && <span className="pulse-dot" title="Evaluación con IA en progreso" />}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", fontSize: "11px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px" }}>
         {/* Score o estado */}
         {score != null ? (
           <span
@@ -97,15 +98,19 @@ export function GraphNode({
           </span>
         )}
 
-        {/* Alerta de prerrequisitos si faltan */}
-        {missingPrereqCount > 0 && !isCompleted && (
+        {/* Alerta de prerrequisitos si faltan, o prioridad */}
+        {missingPrereqCount > 0 && !isCompleted ? (
           <span
             title={`${missingPrereqCount} conceptos previos recomendados`}
             style={{ fontSize: "10px", color: "var(--accent-gold)", background: "rgba(245, 158, 11, 0.1)", padding: "2px 6px", borderRadius: "4px", border: "1px solid rgba(245, 158, 11, 0.2)" }}
           >
             ⚠️ {missingPrereqCount} prereqs
           </span>
-        )}
+        ) : node.priority ? (
+          <span style={{ fontSize: "10.5px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", opacity: 0.75 }}>
+            p#{node.priority}
+          </span>
+        ) : null}
       </div>
     </article>
   );
