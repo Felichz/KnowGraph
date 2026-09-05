@@ -56,6 +56,18 @@ Every conditional UI construct (`if/else`, ternary `? :`, logical `&&`) in a com
 
 All browser E2E test runs (Playwright) must register active listeners on `pageerror` and unhandled rejections. Any uncaught runtime exception or conflicting CSS shorthand warning (`border` vs `borderLeft`) aborts the test run immediately with non-zero exit code.
 
+### 6. Realistic Fixture Engineering Protocol & Automated Drift Guard
+
+Testing against synthetic "toy" mocks (e.g. `{ id: "test_1", score: 10 }` or single-word strings) produces false confidence and masks real-world rendering regressions.
+
+Whenever a User Story touches persistence, aggregated metric dashboards, domain status filters, or threshold formatting, a realistic fixture in `tests/fixtures/` is mandatory and must satisfy the 4 Core Principles:
+1. **Domain Alignment**: Must use authentic domain identifiers from system registries (e.g., `js_basics`, `state_updates`), never synthetic placeholders.
+2. **Distribution Variance**: Must span heterogeneous status quadrants (developing, mastery, bonus extra).
+3. **Lexical & Structural Realism**: Must contain realistic technical prose with realistic character lengths to validate overflow and layout bounds.
+4. **Strict Schema Conformance**: Must parse cleanly via the production backup parser (`parseBackup`).
+
+To prevent fixture drift across schema evolutions, all fixtures are guarded by an automated unit test (`tests/logic/fixtures-contract.test.mjs`) executed on every `npm run test:logic`.
+
 ## Consequences
 
 ### Positive

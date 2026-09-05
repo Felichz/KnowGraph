@@ -1,6 +1,6 @@
 ---
 name: spec-driven-testing
-description: Autonomous, stateless verification and testing workflow skill for Spec-Driven Development. Inspects filesystem artifacts in specs/<feature>/ to deterministically infer lifecycle phase, enforces the Universal 4-State Matrix (Empty, Populated, Boundary, Error), validates boundary contracts, exercises branch completeness, and drives self-healing repair loops without conversational memory dependencies.
+description: Autonomous, stateless verification and testing workflow skill for Spec-Driven Development. Inspects filesystem artifacts in specs/<feature>/ to deterministically infer lifecycle phase, enforces the Universal 4-State Matrix (Empty, Populated, Boundary, Error), mandates the Realistic Fixture Protocol, validates boundary contracts, exercises branch completeness, and drives self-healing repair loops without conversational memory dependencies.
 ---
 
 # Spec-Driven Testing & Stateless Verification Workflow
@@ -37,7 +37,7 @@ Inspect `specs/<feature-id>/` and execute the step corresponding to the first ma
 - **Verdict**: The testing strategy is defined, but tests or fixtures remain unwritten.
 - **Action**:
   1. Identify the first unchecked requirement in `test-plan.md`.
-  2. If it requires a populated or boundary state, check if a matching fixture exists in `tests/fixtures/`. If missing, author the JSON fixture.
+  2. If it requires a populated or boundary state, check if a matching fixture exists in `tests/fixtures/`. If missing, author the JSON fixture strictly following the **Realistic Fixture Engineering Protocol** (Section 4).
   3. Implement the corresponding unit test (in `tests/logic/`) or E2E test (in `tests/e2e/`).
   4. Check the box (`- [x]`) **only after the code is written on disk**.
 
@@ -121,7 +121,39 @@ When generating `specs/<feature-id>/test-plan.md`, you must structure each User 
 
 ---
 
-## 4. Strict Anti-Fraud Rule (Proof of Execution)
+## 4. Realistic Fixture Engineering Protocol
+
+Never test against synthetic "toy" mocks (e.g. `{ id: "test_1", score: 10 }`, `"foo"`, or `"lorem ipsum"`). Synthetic toy mocks produce false confidence and mask real rendering regressions.
+
+### 4.1 Trigger Criteria (When a Fixture is Mandatory)
+A populated or boundary test fixture in `tests/fixtures/` is **mandatory** whenever a User Story involves:
+1. **Persistence & Hydration**: Consumes records from IndexedDB or `localStorage`.
+2. **Aggregated Dashboards**: Calculates progress percentages, seniority bands, or summary counters (e.g., `2/101 dominados`).
+3. **Domain Filtering**: Renders toggleable sub-views based on domain status (e.g., "Sin intento", "Base < 100", "Base dominada (100+)").
+4. **Threshold-Based Formatting**: Renders different visual representations depending on numerical or enum boundaries (e.g., `< 100` vs `>= 100` vs `> 100`).
+
+### 4.2 The 4 Core Principles of Realistic Fixtures
+Every JSON fixture authored in `tests/fixtures/` must strictly comply with:
+1. **Domain Alignment**: Use real domain entity IDs from the system's registries (e.g., `js_basics`, `state_updates`, `fiber_reconciliation`), never arbitrary identifiers.
+2. **Distribution Variance**: Never provide homogeneous data. Fixtures must contain items across all semantic status bands:
+   - At least 1 developing attempt (e.g., score < 80).
+   - At least 1 strong attempt (e.g., score = 100).
+   - At least 1 extra/mastery attempt (e.g., score > 100 with bonus points).
+3. **Lexical & Structural Realism**: Use realistic technical prose, real code snippets, and representative character lengths to exercise wrapping, CSS line-clamp, and min-length validations.
+4. **Schema Conformance**: Every fixture must pass the application's runtime validation parser (e.g., `parseBackup` or domain Zod schemas).
+
+### 4.3 Deterministic Naming & Location
+Store all fixtures in `tests/fixtures/`:
+- `tests/fixtures/<domain>-populated.json` (or `hydrated-state.json` for global app state).
+- `tests/fixtures/<domain>-boundary.json` (max values, 100% completion, long lists).
+- `tests/fixtures/<domain>-degraded.json` (malformed, deprecated schema version, or corrupted keys).
+
+### 4.4 Automated Drift Guard (Fixture Contract Test)
+All fixtures in `tests/fixtures/` must be defended against schema drift by an automated unit test in `tests/logic/fixtures-contract.test.mjs` that runs with `npm run test:logic`. If a domain refactor breaks a fixture, the test suite must fail immediately.
+
+---
+
+## 5. Strict Anti-Fraud Rule (Proof of Execution)
 
 **You are strictly forbidden from checking a box (`- [x]`) in `test-plan.md` based on theoretical reasoning.**
 - Every checkmark requires verifiable proof: the corresponding file must exist in the repository, and terminal execution must report a passing status.

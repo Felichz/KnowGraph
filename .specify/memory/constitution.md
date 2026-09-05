@@ -88,6 +88,7 @@ Clean refactoring must never compromise or simplify validated pedagogical intera
    - *State 4: Degraded / Error* (malformed inputs, graceful fallbacks).
 3. **Branch Completeness**: Every conditional rendering branch (`if/else`, `? :`, `&&`) in a component must be exercised in both true and false paths.
 4. **Fail-Fast Runtime Guard**: E2E browser test runs must fail immediately upon any uncaught exception (`pageerror`) or style collision warning.
+5. **Realistic Fixture Integrity**: All test fixtures in `tests/fixtures/` must adhere to the 4 Principles of Realistic Fixtures (Domain Alignment, Distribution Variance, Lexical Realism, Strict Schema Conformance) and pass automated drift validation.
 
 ---
 
@@ -95,7 +96,8 @@ Clean refactoring must never compromise or simplify validated pedagogical intera
 
 A Pull Request, feature branch, or implementation is considered complete only when:
 1. `npm run check` passes cleanly (linter audit confirming 0 files > 150 lines + clean production build).
-2. `npm run test:logic` passes 100% in Node.js.
+2. `npm run test:logic` passes 100% in Node.js, including automated fixture contract validation.
 3. `npm run test:e2e` passes 100% in Playwright with 0 uncaught exceptions or pageerrors.
 4. The corresponding `test-plan.md` has all state matrix checkboxes verified with verifiable execution proof.
-5. Conforms strictly to all articles of this Constitution.
+5. All test fixtures in `tests/fixtures/` pass schema and domain contract validation via `tests/logic/fixtures-contract.test.mjs`.
+6. Conforms strictly to all articles of this Constitution.
