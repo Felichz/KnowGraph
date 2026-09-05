@@ -11,11 +11,21 @@ const FIXTURES_DIR = path.resolve(__dirname, "../fixtures");
 
 assert.ok(fs.existsSync(FIXTURES_DIR), "tests/fixtures directory must exist");
 const fixtureFiles = fs.readdirSync(FIXTURES_DIR).filter((file) => file.endsWith(".json"));
-assert.ok(fixtureFiles.length > 0, "At least one fixture file must exist in tests/fixtures/");
+assert.ok(fixtureFiles.length >= 3, "At least 3 fixtures (populated, boundary, degraded) must exist");
 
 for (const file of fixtureFiles) {
   const filePath = path.join(FIXTURES_DIR, file);
   const rawText = fs.readFileSync(filePath, "utf8");
+
+  // Degraded state fixtures must be rejected by runtime parser
+  if (file.includes("degraded")) {
+    assert.throws(
+      () => parseBackup(rawText),
+      /no es un respaldo válido/,
+      `${file}: degraded fixture must be rejected by runtime parser`
+    );
+    continue;
+  }
   
   // 1. Strict Schema Conformance via runtime backup parser
   const backup = parseBackup(rawText);
@@ -48,14 +58,14 @@ for (const file of fixtureFiles) {
       }
     }
 
-    // 3. Distribution Variance (for populated/hydrated states)
-    if (file.includes("hydrated") || file.includes("populated")) {
+    // 3. Distribution Variance (for populated/hydrated/boundary states)
+    if (file.includes("hydrated") || file.includes("populated") || file.includes("boundary")) {
       const scores = attempts.map((a) => a.evaluation?.score ?? a.score ?? 0);
       const hasDeveloping = scores.some((s) => s < 100);
       const hasMastery = scores.some((s) => s >= 100);
       assert.ok(
         hasDeveloping && hasMastery,
-        `${file}: realistic populated fixtures must include both developing (< 100) and mastery (>= 100) items`
+        `${file}: realistic populated/boundary fixtures must include both developing (< 100) and mastery (>= 100) items`
       );
     }
   }

@@ -15,6 +15,7 @@ export function AttemptHistoryBar({
   const canPrev = activeIdx > 0;
   const canNext = isPast && activeIdx < total - 1;
   const currentAttempt = attempts[activeIdx];
+  const attemptScore = currentAttempt?.score ?? currentAttempt?.evaluation?.score;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px", fontSize: "12px" }}>
@@ -37,9 +38,9 @@ export function AttemptHistoryBar({
           >
             →
           </button>
-          {currentAttempt?.score != null && (
+          {attemptScore != null && (
             <span style={{ padding: "2px 6px", borderRadius: "4px", background: "rgba(112, 221, 212, 0.15)", color: "var(--accent-cyan)", fontWeight: 700 }}>
-              {currentAttempt.score}/120
+              {attemptScore}/120
             </span>
           )}
         </div>

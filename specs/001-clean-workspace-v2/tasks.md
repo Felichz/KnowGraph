@@ -157,3 +157,17 @@ description: "Task list for Clean Learning Workspace V2 implementation"
 - [x] T064 Create `tests/fixtures/hydrated-state.json` and author E2E tests in `flashcards.spec.js` and `workspace.spec.js` with global `pageerror` fail-fast listeners.
 - [x] T065 Certify compliance: 100% logic tests passing (7/7 suites), 100% E2E tests passing (28/28 tests), and 0 line limit violations across all 42 source files.
 
+---
+
+## Phase 15: Full Autonomous Spec-Driven Verification (Realistic Fixtures, HUD, Audio & Time-Travel)
+
+**Goal**: Complete the entire Spec-Driven Testing workflow across all remaining User Stories (US2 Boundary, US3 HUD & Cancellation, US4 Voice TTS) with realistic fixture engineering and automated drift defense.
+
+- [x] T066 Engineer realistic boundary fixture `tests/fixtures/workspace-boundary.json` (3 historical attempts, developing to mastery progression, realistic long draft text) and degraded fixture `tests/fixtures/workspace-degraded.json`.
+- [x] T067 Implement automated fixture contract drift guard `tests/logic/fixtures-contract.test.mjs` verifying schema conformance, variance, and graceful rejection of corrupt payloads. Added to `npm run test:logic`.
+- [x] T068 [US3] Author Playwright E2E suite `tests/e2e/hud.spec.js` asserting Empty state (HUD hidden), Populated state (active streaming task and modal open), and Cancellation state (`AbortController`).
+- [x] T069 [US4] Author E2E test in `tests/e2e/study.spec.js` asserting synchronized TTS audio speech synthesis playback and stop toggle.
+- [x] T070 [US2] Author State 3 Boundary E2E test in `tests/e2e/study.spec.js` exercising historical time-travel pagination (`← Intento 2 de 3` and `Volver a la versión actual`).
+- [x] T071 Re-run full automated verification: 8/8 logic suites OK, 33/33 Playwright E2E tests passing (100%), and 42/42 source files under 150 lines.
+
+

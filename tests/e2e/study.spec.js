@@ -2,6 +2,9 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Study Modal Guided Route & Stages (User Story 2)", () => {
   test.beforeEach(async ({ page }) => {
+    page.on("pageerror", (err) => {
+      throw new Error(`Uncaught browser exception: ${err.message}\n${err.stack}`);
+    });
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
   });
@@ -183,5 +186,87 @@ test.describe("Study Modal Guided Route & Stages (User Story 2)", () => {
 
     // Fuentes oficiales
     await expect(modal).toContainText("FUENTES OFICIALES");
+  });
+
+  test("activa lectura asistida por voz TTS y conmuta entre reproducir y detener (User Story 4)", async ({ page }) => {
+    const nodeCard = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
+    await nodeCard.click();
+
+    const modal = page.locator('div[role="dialog"]');
+    await expect(modal).toBeVisible();
+
+    // Botón de audio en la sección 'EN UNA FRASE'
+    const audioBtn = modal.locator("button").filter({ hasText: /🔊 Escuchar/ }).first();
+    await expect(audioBtn).toBeVisible();
+
+    // Iniciar lectura
+    await audioBtn.click();
+    await expect(modal.locator("button").filter({ hasText: /⏹ Detener/ }).first()).toBeVisible();
+
+    // Detener lectura
+    const stopBtn = modal.locator("button").filter({ hasText: /⏹ Detener/ }).first();
+    await stopBtn.click();
+    await expect(modal.locator("button").filter({ hasText: /🔊 Escuchar/ }).first()).toBeVisible();
+  });
+
+  test("permite navegar por el historial de evaluaciones con paginación de tiempo (User Story 2 State 3: Boundary)", async ({ page }) => {
+    // 1. Sembrar fixture con múltiples intentos históricos para js_basics
+    const fs = await import("node:fs");
+    const boundaryFixture = JSON.parse(
+      fs.readFileSync(new URL("../fixtures/workspace-boundary.json", import.meta.url), "utf8")
+    );
+
+    await page.evaluate((backup) => {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open("learning-graph-ai", 3);
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => {
+          const db = req.result;
+          const tx = db.transaction(["attempts", "drafts"], "readwrite");
+          const attemptsStore = tx.objectStore("attempts");
+          attemptsStore.clear();
+          for (const item of backup.learning.attempts || []) {
+            attemptsStore.put(item);
+          }
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        };
+      });
+    }, boundaryFixture);
+
+    await page.reload();
+    await page.waitForLoadState("domcontentloaded");
+
+    // 2. Abrir card js_basics
+    const jsNode = page.locator("main article").first();
+    await jsNode.click();
+
+    const modal = page.locator('div[role="dialog"]');
+    await expect(modal).toBeVisible();
+
+    // 3. Ir a la etapa 04 Evaluar
+    await modal.getByRole("button", { name: /04.*Evaluar/i }).click();
+
+    // 4. Verificar que muestra el intento más reciente (Intento 3 de 3 con score 120/120)
+    await expect(modal).toContainText("Intento 3 de 3");
+    await expect(modal).toContainText(/120\s*\/\s*120/);
+    await expect(modal).toContainText("Último resultado");
+
+    // 5. Navegar hacia atrás en el tiempo (Intento 2 de 3)
+    const prevBtn = modal.locator("button").filter({ hasText: "←" }).first();
+    await expect(prevBtn).toBeVisible();
+    await prevBtn.click();
+
+    await expect(modal).toContainText("Intento 2 de 3");
+    await expect(modal).toContainText(/90\s*\/\s*120/);
+
+    // Debe aparecer el botón para volver a la versión actual
+    const returnBtn = modal.getByRole("button", { name: "Volver a la versión actual" });
+    await expect(returnBtn).toBeVisible();
+    await returnBtn.click();
+
+    // Regresa al intento 3
+    await expect(modal).toContainText("Intento 3 de 3");
+    await expect(modal).toContainText(/120\s*\/\s*120/);
   });
 });

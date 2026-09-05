@@ -1,0 +1,119 @@
+{
+  "app": "learning-workspace",
+  "kind": "state-backup",
+  "version": 1,
+  "exportedAt": "2026-09-04T22:00:00.000Z",
+  "secretsIncluded": false,
+  "learning": {
+    "attempts": [
+      {
+        "id": "attempt_js_basics_1",
+        "graphId": "react",
+        "nodeId": "js_basics",
+        "createdAt": "2026-09-01T10:00:00.000Z",
+        "score": 65,
+        "evaluation": {
+          "score": 65,
+          "scoreScaleVersion": 3,
+          "coveragePercent": 70,
+          "rawScore": 55,
+          "conciseVerdict": "Initial understanding of JS event loop; confused microtasks and macrotasks.",
+          "nextAttemptPrompt": "Clarify execution order of Promise.then vs setTimeout.",
+          "rubric": {
+            "accuracy": { "score": 25, "max": 40, "note": "Basic model of execution." },
+            "causalityAndTradeoffs": { "score": 14, "max": 25, "note": "Weak causality." },
+            "application": { "score": 14, "max": 20, "note": "Limited examples." },
+            "completeness": { "score": 12, "max": 15, "note": "Missed microtask phase." }
+          },
+          "strengths": ["Basic awareness"],
+          "gaps": ["Microtask vs Macrotask order"],
+          "misconceptions": []
+        }
+      },
+      {
+        "id": "attempt_js_basics_2",
+        "graphId": "react",
+        "nodeId": "js_basics",
+        "createdAt": "2026-09-02T10:00:00.000Z",
+        "score": 90,
+        "evaluation": {
+          "score": 90,
+          "scoreScaleVersion": 3,
+          "coveragePercent": 95,
+          "rawScore": 75,
+          "conciseVerdict": "Solid grasp of event loop and job queue.",
+          "nextAttemptPrompt": "Deep dive into V8 engine call stacks.",
+          "rubric": {
+            "accuracy": { "score": 35, "max": 40, "note": "Accurate." },
+            "causalityAndTradeoffs": { "score": 20, "max": 25, "note": "Good trade-offs." },
+            "application": { "score": 18, "max": 20, "note": "Concrete examples." },
+            "completeness": { "score": 15, "max": 15, "note": "Complete." }
+          },
+          "strengths": ["Clear explanation"],
+          "gaps": [],
+          "misconceptions": []
+        }
+      },
+      {
+        "id": "attempt_js_basics_3",
+        "graphId": "react",
+        "nodeId": "js_basics",
+        "createdAt": "2026-09-03T10:00:00.000Z",
+        "score": 120,
+        "evaluation": {
+          "score": 120,
+          "scoreScaleVersion": 3,
+          "coveragePercent": 100,
+          "rawScore": 100,
+          "conciseVerdict": "Maximum architectural depth achieved. Staff-level command of JS concurrency model, V8 engine optimizations, and microtask starvation mitigations.",
+          "nextAttemptPrompt": "Ready for high-throughput concurrency interview loops.",
+          "rubric": {
+            "accuracy": { "score": 40, "max": 40, "note": "Flawless precision." },
+            "causalityAndTradeoffs": { "score": 25, "max": 25, "note": "Comprehensive trade-offs analyzed." },
+            "application": { "score": 20, "max": 20, "note": "Exemplary production code patterns." },
+            "completeness": { "score": 15, "max": 15, "note": "Exhaustive coverage across all edge cases." }
+          },
+          "strengths": ["Staff-level depth", "V8 optimizations", "Starvation mitigations"],
+          "gaps": [],
+          "misconceptions": []
+        }
+      },
+      {
+        "id": "attempt_state_updates_1",
+        "graphId": "react",
+        "nodeId": "state_updates",
+        "createdAt": "2026-09-04T10:00:00.000Z",
+        "evaluation": {
+          "score": 120,
+          "scoreScaleVersion": 3,
+          "coveragePercent": 100,
+          "rawScore": 100,
+          "conciseVerdict": "Flawless technical command of automatic batching in React 18, execution context queues, and flushSync trade-offs.",
+          "nextAttemptPrompt": "Proceed to concurrent scheduling and transitions.",
+          "rubric": {
+            "accuracy": { "score": 40, "max": 40, "note": "Perfect model." },
+            "causalityAndTradeoffs": { "score": 25, "max": 25, "note": "Exemplary trade-off discussion." },
+            "application": { "score": 20, "max": 20, "note": "Production-grade resilience." },
+            "completeness": { "score": 15, "max": 15, "note": "Complete." }
+          },
+          "strengths": ["Automatic batching", "flushSync trade-offs"],
+          "gaps": [],
+          "misconceptions": []
+        }
+      }
+    ],
+    "drafts": [
+      {
+        "key": "react:js_basics",
+        "text": "JavaScript executes code in a single-threaded runtime model using a call stack, a heap, and an event loop coordinating macrotask and microtask queues. When asynchronous APIs like Promise callbacks or MutationObservers resolve, their jobs are enqueued onto the microtask queue. The microtask queue is processed completely after the current execution context empties and before the browser yields control back to rendering or the macrotask queue. This architecture prevents UI re-renders during microtask flushes, ensuring consistent intermediate state observation, but can cause main thread starvation if microtasks recursively enqueue additional microtasks without returning control."
+      }
+    ],
+    "liveReviews": [],
+    "coachIterations": []
+  },
+  "providers": {
+    "version": 4,
+    "activeProfileId": null,
+    "profiles": []
+  }
+}

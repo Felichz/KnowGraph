@@ -1,0 +1,19 @@
+{
+  "app": "learning-workspace",
+  "kind": "state-backup",
+  "version": 999,
+  "exportedAt": "2026-09-04T22:00:00.000Z",
+  "secretsIncluded": false,
+  "learning": {
+    "attempts": [
+      {
+        "id": "corrupted_attempt",
+        "graphId": "react",
+        "nodeId": "nonexistent_node",
+        "score": "not-a-number"
+      }
+    ],
+    "drafts": []
+  },
+  "providers": {}
+}
