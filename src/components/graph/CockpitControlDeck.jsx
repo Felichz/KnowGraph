@@ -12,6 +12,19 @@ export function CockpitControlDeck({
   viewStyle = "grid",
   onViewStyleChange,
 }) {
+  const switchBtn = (active) => ({
+    padding: "5px 12px",
+    fontSize: "11.5px",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    background: active ? "rgba(255, 255, 255, 0.12)" : "transparent",
+    color: active ? "var(--text-primary)" : "var(--text-secondary)",
+    fontWeight: active ? 600 : 500,
+    boxShadow: active ? "0 1px 3px rgba(0, 0, 0, 0.3)" : "none",
+    transition: "all var(--transition-fast)",
+  });
+
   return (
     <div
       style={{
@@ -19,15 +32,16 @@ export function CockpitControlDeck({
         flexWrap: "wrap",
         alignItems: "center",
         justifyContent: "space-between",
-        gap: "10px",
+        gap: "12px",
         padding: "8px 14px",
-        background: "rgba(15, 20, 30, 0.7)",
-        backdropFilter: "blur(12px)",
+        background: "rgba(13, 18, 30, 0.72)",
+        backdropFilter: "blur(16px)",
         borderRadius: "var(--radius-panel)",
         border: "1px solid var(--border-line)",
+        boxShadow: "0 4px 18px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.05)",
       }}
     >
-      <div style={{ flex: "1 1 300px", minWidth: 0, overflow: "hidden" }}>
+      <div style={{ flex: "1 1 320px", minWidth: 0, overflow: "hidden" }}>
         <CategoryNav
           categories={categories}
           nodes={nodes}
@@ -39,31 +53,33 @@ export function CockpitControlDeck({
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, marginLeft: "auto" }}>
-        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", whiteSpace: "nowrap" }}>
+        <span
+          style={{
+            fontSize: "11px",
+            color: "var(--text-muted)",
+            fontFamily: "var(--font-mono)",
+            background: "rgba(0, 0, 0, 0.3)",
+            padding: "3px 8px",
+            borderRadius: "var(--radius-pill)",
+            border: "1px solid var(--border-line)",
+            whiteSpace: "nowrap",
+          }}
+        >
           {totalVisibleCount} conceptos
         </span>
-        <div style={{ display: "flex", gap: "3px", background: "rgba(0, 0, 0, 0.3)", padding: "2px", borderRadius: "var(--radius-control)", border: "1px solid var(--border-line)" }}>
+
+        <div style={{ display: "flex", gap: "2px", background: "rgba(0, 0, 0, 0.4)", padding: "3px", borderRadius: "8px", border: "1px solid var(--border-line)" }}>
           <button
             type="button"
             onClick={() => onViewStyleChange?.("grid")}
-            style={{
-              padding: "4px 10px", fontSize: "11px", border: "none", borderRadius: "4px", cursor: "pointer",
-              background: viewStyle === "grid" ? "var(--bg-surface-raised)" : "transparent",
-              color: viewStyle === "grid" ? "var(--accent-cyan)" : "var(--text-secondary)",
-              fontWeight: viewStyle === "grid" ? 700 : 500,
-            }}
+            style={switchBtn(viewStyle === "grid")}
           >
             ⊞ Cuadrícula
           </button>
           <button
             type="button"
             onClick={() => onViewStyleChange?.("topology")}
-            style={{
-              padding: "4px 10px", fontSize: "11px", border: "none", borderRadius: "4px", cursor: "pointer",
-              background: viewStyle === "topology" ? "var(--bg-surface-raised)" : "transparent",
-              color: viewStyle === "topology" ? "var(--accent-cyan)" : "var(--text-secondary)",
-              fontWeight: viewStyle === "topology" ? 700 : 500,
-            }}
+            style={switchBtn(viewStyle === "topology")}
           >
             ☊ Topología SVG
           </button>

@@ -77,16 +77,16 @@ export function GraphCanvas({
               return (
                 <section key={catKey} aria-labelledby={`category-heading-${catKey}`}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: cat.color, boxShadow: `0 0 8px ${cat.color}60` }} />
-                    <h2 id={`category-heading-${catKey}`} style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, letterSpacing: "0.02em", color: "var(--text-primary)" }}>
+                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: cat.color, boxShadow: `0 0 10px ${cat.color}70` }} />
+                    <h2 id={`category-heading-${catKey}`} style={{ margin: 0, fontSize: "14px", fontWeight: 700, letterSpacing: "-0.01em", color: "var(--text-primary)" }}>
                       {cat.label}
                     </h2>
-                    <span style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>
-                      ({catNodes.length})
+                    <span style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-muted)", background: "rgba(0, 0, 0, 0.3)", padding: "1px 6px", borderRadius: "var(--radius-pill)" }}>
+                      {catNodes.length}
                     </span>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "10px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "12px" }}>
                     {catNodes.map((node) => {
                       const progress = progressMap[node.id];
                       const hasActiveTask = activeTaskNodeIds.has?.(node.id) || (Array.isArray(activeTaskNodeIds) && activeTaskNodeIds.includes(node.id));

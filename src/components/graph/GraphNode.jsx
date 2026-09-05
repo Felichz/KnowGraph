@@ -2,7 +2,7 @@ import React from "react";
 
 export function GraphNode({
   node,
-  categoryColor = "#5eead4",
+  categoryColor = "#38bdf8",
   status = "unseen",
   score = null,
   isSelected = false,
@@ -15,16 +15,22 @@ export function GraphNode({
   const isExtra = score > 100;
 
   const borderColor = isSelected
-    ? "var(--accent-cyan)"
+    ? "rgba(56, 189, 248, 0.65)"
     : isExtra
       ? "rgba(245, 158, 11, 0.45)"
       : "rgba(255, 255, 255, 0.08)";
 
   const shadow = isSelected
-    ? "0 0 20px -2px rgba(94, 234, 212, 0.25), 0 6px 16px rgba(0, 0, 0, 0.5)"
+    ? "0 0 24px -2px rgba(56, 189, 248, 0.3), 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.15)"
     : isExtra
-      ? "0 0 16px -2px rgba(245, 158, 11, 0.2), 0 6px 16px rgba(0, 0, 0, 0.45)"
-      : "0 2px 8px rgba(0, 0, 0, 0.3)";
+      ? "0 0 20px -2px rgba(245, 158, 11, 0.22), 0 6px 20px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(251, 191, 36, 0.18)"
+      : "0 4px 16px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)";
+
+  const background = isSelected
+    ? "linear-gradient(180deg, rgba(28, 38, 62, 0.88) 0%, rgba(16, 22, 36, 0.98) 100%)"
+    : isExtra
+      ? "linear-gradient(180deg, rgba(32, 34, 44, 0.8) 0%, rgba(14, 18, 28, 0.94) 100%)"
+      : "linear-gradient(180deg, rgba(20, 27, 44, 0.75) 0%, rgba(12, 16, 26, 0.92) 100%)";
 
   return (
     <article
@@ -35,45 +41,43 @@ export function GraphNode({
         flexDirection: "column",
         justifyContent: "space-between",
         gap: "10px",
-        padding: "12px 14px 12px 16px",
-        background: isSelected
-          ? "linear-gradient(180deg, rgba(28, 36, 52, 0.85) 0%, rgba(18, 23, 34, 0.95) 100%)"
-          : "linear-gradient(180deg, rgba(20, 25, 36, 0.7) 0%, rgba(14, 17, 25, 0.85) 100%)",
-        backdropFilter: "blur(10px)",
+        padding: "14px 16px 12px 18px",
+        background,
+        backdropFilter: "blur(12px)",
         border: `1px solid ${borderColor}`,
         boxShadow: shadow,
         borderRadius: "var(--radius-card)",
         cursor: "pointer",
-        minHeight: "72px",
+        minHeight: "82px",
         transition: "all var(--transition-fast)",
       }}
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick?.(); }}
       aria-selected={isSelected}
     >
-      {/* Indicador lateral sutil de categoría */}
+      {/* Category Left Accent Indicator */}
       <div
         style={{
           position: "absolute",
           left: 0,
-          top: "10px",
-          bottom: "10px",
+          top: "12px",
+          bottom: "12px",
           width: "3px",
-          borderRadius: "0 3px 3px 0",
+          borderRadius: "0 2px 2px 0",
           background: isExtra ? "var(--accent-gold)" : categoryColor,
-          boxShadow: `0 0 8px ${isExtra ? "var(--accent-gold)" : categoryColor}40`,
+          boxShadow: `0 0 10px ${isExtra ? "var(--accent-gold)" : categoryColor}50`,
         }}
       />
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
-        <h3 style={{ margin: 0, fontSize: "13.5px", fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.35, letterSpacing: "-0.01em" }}>
+        <h3 style={{ margin: 0, fontSize: "13.5px", fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.4, letterSpacing: "-0.015em" }}>
           {node.label}
         </h3>
         {hasActiveTask && <span className="pulse-dot" title="Evaluación con IA en progreso" />}
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px" }}>
-        {/* Score o estado */}
+        {/* Score or Status Pill */}
         {score != null ? (
           <span
             style={{
@@ -81,33 +85,43 @@ export function GraphNode({
               fontWeight: 700,
               fontSize: "11px",
               color: isExtra ? "var(--accent-gold)" : isMastery ? "var(--accent-green)" : "var(--accent-cyan)",
-              background: isExtra ? "rgba(245, 158, 11, 0.12)" : isMastery ? "rgba(74, 222, 128, 0.1)" : "rgba(94, 234, 212, 0.1)",
-              padding: "2px 7px",
-              borderRadius: "5px",
-              border: `1px solid ${isExtra ? "rgba(245, 158, 11, 0.3)" : isMastery ? "rgba(74, 222, 128, 0.25)" : "rgba(94, 234, 212, 0.25)"}`,
+              background: isExtra ? "rgba(245, 158, 11, 0.14)" : isMastery ? "rgba(16, 185, 129, 0.12)" : "rgba(56, 189, 248, 0.12)",
+              padding: "2px 8px",
+              borderRadius: "6px",
+              border: `1px solid ${isExtra ? "rgba(245, 158, 11, 0.35)" : isMastery ? "rgba(16, 185, 129, 0.3)" : "rgba(56, 189, 248, 0.3)"}`,
             }}
           >
             {isExtra ? `★ ${score}/120` : `${score}/120`}
           </span>
         ) : isCompleted ? (
-          <span style={{ color: "var(--accent-green)", fontWeight: 600, background: "rgba(74, 222, 128, 0.1)", padding: "2px 6px", borderRadius: "4px" }}>✓ Listo</span>
+          <span style={{ color: "var(--accent-green)", fontWeight: 600, background: "rgba(16, 185, 129, 0.1)", padding: "2px 8px", borderRadius: "6px", border: "1px solid rgba(16, 185, 129, 0.25)" }}>
+            ✓ Listo
+          </span>
         ) : (
-          <span style={{ color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: "5px" }}>
+          <span style={{ color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
             <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "var(--text-muted)", opacity: 0.5 }} />
             Pendiente
           </span>
         )}
 
-        {/* Alerta de prerrequisitos si faltan, o prioridad */}
+        {/* Missing Prerequisites Alert or Priority Tag */}
         {missingPrereqCount > 0 && !isCompleted ? (
           <span
             title={`${missingPrereqCount} conceptos previos recomendados`}
-            style={{ fontSize: "10px", color: "var(--accent-gold)", background: "rgba(245, 158, 11, 0.1)", padding: "2px 6px", borderRadius: "4px", border: "1px solid rgba(245, 158, 11, 0.2)" }}
+            style={{
+              fontSize: "10.5px",
+              color: "var(--accent-gold)",
+              background: "rgba(245, 158, 11, 0.1)",
+              padding: "2px 7px",
+              borderRadius: "6px",
+              border: "1px solid rgba(245, 158, 11, 0.25)",
+              fontWeight: 500,
+            }}
           >
             ⚠️ {missingPrereqCount} prereqs
           </span>
         ) : node.priority ? (
-          <span style={{ fontSize: "10.5px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", opacity: 0.75 }}>
+          <span style={{ fontSize: "10.5px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", opacity: 0.8 }}>
             p#{node.priority}
           </span>
         ) : null}

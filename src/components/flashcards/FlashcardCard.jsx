@@ -7,7 +7,7 @@ export function FlashcardCard({
   onOpenStudy = null,
 }) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const color = category?.color || "#70ddd4";
+  const color = category?.color || "#38bdf8";
   const lesson = node?.lesson || {};
   const score = progress?.score;
 
@@ -36,12 +36,12 @@ export function FlashcardCard({
             backfaceVisibility: "hidden",
             pointerEvents: isFlipped ? "none" : "auto",
             opacity: isFlipped ? 0 : 1,
-            background: "linear-gradient(180deg, rgba(22, 28, 40, 0.85) 0%, rgba(15, 19, 28, 0.95) 100%)",
+            background: "linear-gradient(180deg, rgba(20, 27, 44, 0.8) 0%, rgba(12, 16, 26, 0.94) 100%)",
             backdropFilter: "blur(12px)",
             border: "1px solid rgba(255, 255, 255, 0.08)",
             borderRadius: "var(--radius-panel)",
-            boxShadow: "var(--shadow-card)",
-            padding: "18px",
+            boxShadow: "0 4px 18px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)",
+            padding: "20px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
@@ -54,7 +54,7 @@ export function FlashcardCard({
                 {category?.label || "CONCEPTO"}
               </span>
               {score != null && (
-                <span style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: score >= 100 ? "var(--accent-green)" : "var(--accent-gold)", fontWeight: 700, background: score >= 100 ? "rgba(74, 222, 128, 0.1)" : "rgba(245, 158, 11, 0.1)", padding: "2px 7px", borderRadius: "5px", border: `1px solid ${score >= 100 ? "rgba(74, 222, 128, 0.25)" : "rgba(245, 158, 11, 0.25)"}` }}>
+                <span style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: score >= 100 ? "var(--accent-green)" : "var(--accent-gold)", fontWeight: 700, background: score >= 100 ? "rgba(16, 185, 129, 0.12)" : "rgba(245, 158, 11, 0.12)", padding: "2px 7px", borderRadius: "5px", border: `1px solid ${score >= 100 ? "rgba(16, 185, 129, 0.25)" : "rgba(245, 158, 11, 0.25)"}` }}>
                   {score}/120
                 </span>
               )}
@@ -81,12 +81,12 @@ export function FlashcardCard({
             transform: "rotateY(180deg)",
             pointerEvents: isFlipped ? "auto" : "none",
             opacity: isFlipped ? 1 : 0,
-            background: "linear-gradient(180deg, rgba(28, 36, 52, 0.95) 0%, rgba(18, 23, 34, 0.98) 100%)",
+            background: "linear-gradient(180deg, rgba(26, 35, 56, 0.95) 0%, rgba(14, 18, 30, 0.98) 100%)",
             backdropFilter: "blur(12px)",
-            border: `1px solid ${color}40`,
+            border: `1px solid ${color}45`,
             borderRadius: "var(--radius-panel)",
-            boxShadow: `0 0 24px -4px ${color}20, var(--shadow-card)`,
-            padding: "18px",
+            boxShadow: `0 0 24px -4px ${color}20, 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)`,
+            padding: "20px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
@@ -110,14 +110,14 @@ export function FlashcardCard({
                 onOpenStudy?.(node.id);
               }}
               style={{
-                padding: "5px 12px",
-                background: "rgba(94, 234, 212, 0.12)",
-                border: "1px solid var(--accent-cyan)",
-                borderRadius: "6px",
-                color: "var(--accent-cyan)",
+                padding: "6px 14px",
+                background: "linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-indigo) 100%)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                borderRadius: "var(--radius-control)",
+                color: "#ffffff",
                 fontSize: "11px",
                 fontWeight: 600,
-                boxShadow: "0 0 10px rgba(94, 234, 212, 0.15)",
+                boxShadow: "0 0 12px rgba(56, 189, 248, 0.25)",
                 cursor: "pointer",
               }}
             >
