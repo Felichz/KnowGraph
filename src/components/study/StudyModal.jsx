@@ -89,7 +89,7 @@ export function StudyModal({
         onClick={(e) => e.stopPropagation()}
         role="dialog" aria-modal="true" aria-label={node.label}
       >
-        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderBottom: "1px solid var(--border-line)", background: "rgba(16, 22, 36, 0.85)", backdropFilter: "blur(12px)", gap: "12px" }}>
+        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderBottom: "1px solid var(--border-line)", background: "rgba(16, 22, 36, 0.85)", backdropFilter: "blur(12px)", gap: "12px", flexShrink: 0 }}>
           <div style={{ minWidth: 0 }}>
             <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--accent-cyan)", letterSpacing: "0.08em" }}>MODAL DE ESTUDIO</span>
             <h2 style={{ margin: 0, fontSize: "17px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.015em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{node.label}</h2>
@@ -104,7 +104,7 @@ export function StudyModal({
 
         <ConceptMapNav node={node} graph={graph} historyStack={historyStack} onNavigateNode={onNavigateNode} onGoBack={onGoBack} />
 
-        <nav style={{ display: "flex", borderBottom: "1px solid var(--border-line)", background: "rgba(9, 13, 22, 0.95)", overflowX: "auto" }}>
+        <nav style={{ display: "flex", borderBottom: "1px solid var(--border-line)", background: "rgba(9, 13, 22, 0.95)", overflowX: "auto", flexShrink: 0 }}>
           {STAGES.map((tab) => {
             const active = stage === tab.id;
             return (
@@ -116,7 +116,7 @@ export function StudyModal({
           })}
         </nav>
 
-        <div ref={scrollContainerRef} style={{ flex: 1, overflowY: "auto", padding: "22px" }}>
+        <div ref={scrollContainerRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "22px" }}>
           {stage === "read" && <ReadStage node={node} graph={graph} onNavigateNode={onNavigateNode} onGoToLearn={() => setStage("learn")} onGoToParaphrase={() => setStage("paraphrase")} />}
           {stage === "learn" && <LearnStage node={node} draft={draft} onUpdateDraft={updateDraft} onGoToParaphrase={() => setStage("paraphrase")} />}
           {stage === "paraphrase" && <ParaphraseStage draft={draft} onUpdateDraft={updateDraft} onEvaluate={handleEvaluate} isEvaluating={evaluating} node={node} />}

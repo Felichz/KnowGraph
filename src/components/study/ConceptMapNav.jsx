@@ -45,6 +45,7 @@ export function ConceptMapNav({
         overflowX: "auto",
         whiteSpace: "nowrap",
         scrollbarWidth: "none",
+        flexShrink: 0,
       }}
       aria-label="Flujo conceptual y mapa"
     >

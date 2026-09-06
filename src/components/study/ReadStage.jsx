@@ -35,38 +35,30 @@ export function ReadStage({ node, graph, onNavigateNode, onGoToLearn, onGoToPara
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px", color: "var(--text-primary)" }}>
       {/* Resumen Editorial "EN UNA FRASE" */}
-      <section
-        style={{
-          padding: "18px 22px",
-          background: "linear-gradient(135deg, rgba(28, 38, 62, 0.45) 0%, rgba(15, 22, 36, 0.65) 100%)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          borderLeft: "3px solid var(--accent-cyan)",
-          borderRadius: "var(--radius-panel)",
-          boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--accent-cyan)", letterSpacing: "0.08em", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+      <section style={{ padding: "2px 2px 14px", borderBottom: "1px solid var(--border-line)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+          <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--accent-cyan)", letterSpacing: "0.08em", display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "var(--font-mono)" }}>
             <span>📌</span> EN UNA FRASE
           </span>
-          {renderAudioBtn("summary", `${lesson.summary}. Por qué importa: ${lesson.why}`)}
+          {renderAudioBtn("lesson", `${lesson.summary}. Por qué importa: ${lesson.why}. ${lesson.explanation || ""}`)}
         </div>
-        <p style={{ margin: "10px 0 12px", fontSize: "15px", fontWeight: 600, lineHeight: 1.55, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+        <p style={{ margin: "0 0 8px", fontSize: "15px", fontWeight: 600, lineHeight: 1.5, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
           {lesson.summary}
         </p>
-        <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.07)", paddingTop: "10px", fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+        <div style={{ fontSize: "12.5px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
           <strong style={{ color: "var(--accent-gold)" }}>Por qué importa: </strong>{lesson.why}
         </div>
       </section>
 
       {/* Explicación Clara */}
       {lesson.explanation && (
-        <section style={{ padding: "0 4px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-            <h4 style={{ margin: 0, fontSize: "11px", letterSpacing: "0.07em", color: "var(--text-muted)", fontWeight: 700 }}>EXPLICACIÓN CLARA</h4>
-            {renderAudioBtn("explanation", lesson.explanation)}
+        <section style={{ padding: "0 2px" }}>
+          <div style={{ marginBottom: "8px" }}>
+            <h4 style={{ margin: 0, fontSize: "10.5px", letterSpacing: "0.08em", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", fontFamily: "var(--font-mono)" }}>
+              EXPLICACIÓN CLARA
+            </h4>
           </div>
-          <p style={{ margin: 0, fontSize: "14px", lineHeight: 1.65, color: "var(--text-secondary)", whiteSpace: "pre-line" }}>
+          <p style={{ margin: 0, fontSize: "13.5px", lineHeight: 1.65, color: "var(--text-secondary)", whiteSpace: "pre-line" }}>
             <DeepDiveText text={lesson.explanation} nodeId={node?.id} onOpenDeepDive={(id, pos) => setActiveDeepDive({ id, position: pos })} />
           </p>
         </section>
