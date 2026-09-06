@@ -115,20 +115,25 @@ input, textarea, select {
   animation: pulseGlow 2s infinite ease-in-out;
 }
 
-/* Custom Sleek Scrollbar */
+/* Universal Sleek Scrollbars (Cross-browser thin/transparent) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.12);
-  border-radius: 3px;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* Mobile Bottom Navigation Bar Ergonomics */

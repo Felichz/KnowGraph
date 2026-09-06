@@ -27,13 +27,13 @@ export function ParaphraseStage({ draft = "", onUpdateDraft, onEvaluate, isEvalu
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px", color: "var(--text-primary)" }}>
-      {/* Consigna */}
-      <div style={{ padding: "14px 18px", background: "rgba(56, 189, 248, 0.05)", border: "1px solid rgba(56, 189, 248, 0.25)", borderLeft: "3px solid var(--accent-cyan)", borderRadius: "var(--radius-panel)", boxShadow: "0 2px 10px rgba(0, 0, 0, 0.3)" }}>
-        <strong style={{ fontSize: "12px", color: "var(--accent-cyan)", display: "flex", alignItems: "center", gap: "6px" }}>
-          💡 Consigna de parafraseo senior:
-        </strong>
-        <p style={{ margin: "5px 0 0", fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-          Explicá <strong>{node?.label}</strong> con tus palabras como en una entrevista técnica. Podés tipear o dictar por voz.
+      {/* Consigna editorial integrada */}
+      <div style={{ padding: "2px 2px 12px", borderBottom: "1px solid var(--border-line)" }}>
+        <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--accent-cyan)", letterSpacing: "0.08em", textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: "5px" }}>
+          <span>💡</span> Consigna de parafraseo senior:
+        </span>
+        <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+          Explicá <strong style={{ color: "var(--text-primary)" }}>{node?.label}</strong> con tus palabras como en una entrevista técnica. Podés tipear o dictar por voz.
         </p>
       </div>
 

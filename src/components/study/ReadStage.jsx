@@ -79,18 +79,18 @@ export function ReadStage({ node, graph, onNavigateNode, onGoToLearn, onGoToPara
       {/* Pasos y Trade-offs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px" }}>
         {lesson.steps?.length > 0 && (
-          <div style={{ padding: "16px", background: "rgba(18, 25, 40, 0.6)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line)", boxShadow: "0 2px 10px rgba(0,0,0,0.3)" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--accent-cyan)", letterSpacing: "0.06em" }}>PASO A PASO</span>
-            <ol style={{ margin: "10px 0 0", paddingLeft: "18px", fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-              {lesson.steps.map((step, idx) => (<li key={idx} style={{ marginBottom: "6px" }}>{step}</li>))}
+          <div style={{ padding: "14px 16px", background: "rgba(255, 255, 255, 0.02)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line)" }}>
+            <span style={{ fontSize: "10.5px", fontWeight: 700, color: "var(--accent-cyan)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "var(--font-mono)" }}>PASO A PASO</span>
+            <ol style={{ margin: "8px 0 0", paddingLeft: "16px", fontSize: "12.5px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
+              {lesson.steps.map((step, idx) => (<li key={idx} style={{ marginBottom: "4px" }}>{step}</li>))}
             </ol>
           </div>
         )}
         {lesson.pitfalls?.length > 0 && (
-          <div style={{ padding: "16px", background: "rgba(18, 25, 40, 0.6)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line)", boxShadow: "0 2px 10px rgba(0,0,0,0.3)" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--accent-red)", letterSpacing: "0.06em" }}>TRADE-OFFS Y RIESGOS</span>
-            <ul style={{ margin: "10px 0 0", paddingLeft: "18px", fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-              {lesson.pitfalls.map((pitfall, idx) => (<li key={idx} style={{ marginBottom: "6px" }}>{pitfall}</li>))}
+          <div style={{ padding: "14px 16px", background: "rgba(255, 255, 255, 0.02)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line)" }}>
+            <span style={{ fontSize: "10.5px", fontWeight: 700, color: "var(--accent-red)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "var(--font-mono)" }}>TRADE-OFFS Y RIESGOS</span>
+            <ul style={{ margin: "8px 0 0", paddingLeft: "16px", fontSize: "12.5px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
+              {lesson.pitfalls.map((pitfall, idx) => (<li key={idx} style={{ marginBottom: "4px" }}>{pitfall}</li>))}
             </ul>
           </div>
         )}
