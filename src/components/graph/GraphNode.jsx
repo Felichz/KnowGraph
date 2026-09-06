@@ -55,28 +55,35 @@ export function GraphNode({
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick?.(); }}
       aria-selected={isSelected}
     >
-      {/* Category Left Accent Indicator */}
+      {/* Category Left Accent Indicator (Always preserve category identity) */}
       <div
         style={{
           position: "absolute",
           left: 0,
-          top: "12px",
-          bottom: "12px",
+          top: "10px",
+          bottom: "10px",
           width: "3px",
           borderRadius: "0 2px 2px 0",
-          background: isExtra ? "var(--accent-gold)" : categoryColor,
-          boxShadow: `0 0 10px ${isExtra ? "var(--accent-gold)" : categoryColor}50`,
+          background: categoryColor,
+          boxShadow: `0 0 8px ${categoryColor}60`,
         }}
       />
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
-        <h3 style={{ margin: 0, fontSize: "13.5px", fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.4, letterSpacing: "-0.015em" }}>
-          {node.label}
-        </h3>
-        {hasActiveTask && <span className="pulse-dot" title="Evaluación con IA en progreso" />}
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+          <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.35, letterSpacing: "-0.015em" }}>
+            {node.label}
+          </h3>
+          {hasActiveTask && <span className="pulse-dot" title="Evaluación con IA en progreso" />}
+        </div>
+        {node.lesson?.summary && (
+          <p style={{ margin: 0, fontSize: "11px", color: "var(--text-secondary)", lineHeight: 1.35, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", opacity: 0.8 }}>
+            {node.lesson.summary}
+          </p>
+        )}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", marginTop: "4px" }}>
         {/* Score or Status Pill */}
         {score != null ? (
           <span

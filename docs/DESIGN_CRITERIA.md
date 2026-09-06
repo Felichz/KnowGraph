@@ -60,4 +60,30 @@ Cada vista se califica de 0 a 10 evaluando la suma ponderada de 5 dimensiones cr
 
 ## 3. Meta Obligatoria del Goal
 
-**Todas las 26 vistas** de la suite de captura deben auditarse y obtener **una calificación individual $\ge 9.0$** bajo este criterio estricto. Si una vista tiene $< 9.0$, debe refactorizarse inmediatamente hasta alcanzar el estándar antes de finalizar.
+**Todas las vistas mapeadas de las Specs** deben auditarse y obtener **una calificación individual $\ge 9.0$** bajo este criterio estricto. Si una sola vista tiene $< 9.0$, debe refactorizarse inmediatamente hasta alcanzar el estándar antes de finalizar.
+
+---
+
+## 4. Los 5 Invariantes Negativos Eliminatorios (Reglas Anti-AI-Slop)
+
+Siguiendo el estándar oficial de *Frontend Design (Anthropic)*, se establecen 5 fallos que **descalifican automáticamente cualquier vista a menos de 8.0**:
+
+1. **Invariante 1: Truncamiento Duro / Amputación de Texto**  
+   Cero chips o textos cortados por `overflow: hidden` o solapamientos duros. Si una lista horizontal desborda, debe usar una máscara de degradado suave (`mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%)`) y permitir desplazamiento horizontal. *(Violación: Cap máximo 7.0 / 10)*.
+2. **Invariante 2: Colapso Estructural por Flexbox**  
+   Cero barras de navegación, encabezados o botones comprimidos o mutilados por falta de `flex-shrink: 0`. Toda barra de tabs debe mantener su altura íntegra y sus indicadores activos en cualquier resolución. *(Violación: Cap máximo 5.0 / 10)*.
+3. **Invariante 3: Carditis / Cajas Flotantes Redundantes**  
+   Cero cajas decorativas con borde flotante encerrando textos dentro de contenedores que ya tienen borde propio. Los textos se estructuran con jerarquía editorial y líneas divisorias sutiles (`border-bottom: 1px solid var(--border-line)`). *(Violación: Cap máximo 6.5 / 10)*.
+4. **Invariante 4: Cajas Huecas y Aire Muerto (> 40px)**  
+   Prohibido tener tarjetas o banners con más de $40\,\text{px}$ de vacío negro injustificado. Las interfaces para ingenieros senior exigen **densidad controlada** (*Controlled Density*): cada tarjeta debe contener sustancia conceptual (título, micro-resumen de 2 líneas, badges y prioridad) eliminando el aspecto de wireframe vacío. *(Violación: Cap máximo 7.0 / 10)*.
+5. **Invariante 5: Pérdida de Identidad Semántica del Color**  
+   El color de la categoría curricular (cian, ámbar, violeta, esmeralda) es un ancla visual inmutable. Está prohibido que un estado de maestría (ej: puntaje > 100) sobreescriba toda la tarjeta en amarillo y borre el color de la categoría. Los acentos de excelencia deben ser afilados (ej: badge `★ 120/120`), manteniendo el indicador de categoría intacto. *(Violación: Cap máximo 7.5 / 10)*.
+
+---
+
+## 5. Pulido Invisible de "Design Engineering" (Emil Kowalski)
+
+1. **Interacción de Rueda en Filtros**: Todo carrusel o barra de chips horizontal debe responder al evento de rueda de ratón (`onWheel`) desplazando el contenedor lateralmente.
+2. **Scrollbars Ultrafinas**: En todos los navegadores, las barras de desplazamiento deben ser sutiles (`scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.14) transparent;`), evitando las barras grises toscas del sistema operativo.
+3. **Números Tabulares en Métricas**: Uso obligatorio de `font-variant-numeric: tabular-nums` o tipografía monoespaciada para todos los puntajes, conteos y ratios.
+

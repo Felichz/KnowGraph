@@ -1,13 +1,14 @@
-﻿import { chromium } from "playwright";
+import { chromium } from "playwright";
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { setTimeout as wait } from "node:timers/promises";
 
 const outDir = path.resolve("tmp", "showcase");
-if (!fs.existsSync(outDir)) {
-  fs.mkdirSync(outDir, { recursive: true });
+if (fs.existsSync(outDir)) {
+  fs.rmSync(outDir, { recursive: true, force: true });
 }
+fs.mkdirSync(outDir, { recursive: true });
 
 function isUp(url) {
   return fetch(url, { method: "GET" }).then(() => true).catch(() => false);
@@ -29,7 +30,7 @@ async function capture() {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
 
-  // Seed boundary fixture into IndexedDB so Stage 4, nodes, and progress have full realistic data
+  // Seed boundary fixture into IndexedDB
   const boundaryFixture = JSON.parse(
     fs.readFileSync(path.resolve("tests", "fixtures", "workspace-boundary.json"), "utf8")
   );
@@ -59,70 +60,80 @@ async function capture() {
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(500);
 
-  // 1. Workspace Cockpit (Top view)
-  await page.screenshot({ path: path.join(outDir, "01-workspace-cockpit-top.png") });
+  // US1-Scen01: Workspace Cockpit Grid (Top)
+  await page.screenshot({ path: path.join(outDir, "US1-Scen01-Desktop-CockpitGrid.png") });
 
-  // 2. Workspace Cockpit (Scrolled down)
-  await page.evaluate(() => window.scrollTo(0, 500));
+  // US1-Scen01: Workspace Cockpit Grid (Scrolled)
+  await page.evaluate(() => window.scrollTo(0, 450));
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(outDir, "02-workspace-cockpit-scrolled.png") });
+  await page.screenshot({ path: path.join(outDir, "US1-Scen01-Desktop-CockpitScrolled.png") });
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(200);
 
-  // 3. Workspace Cockpit with Category Filter active
+  // US1-Scen02: Rails Graph Switcher
+  const railsBtn = page.locator("header button").filter({ hasText: /^Rails$/ });
+  if (await railsBtn.isVisible()) {
+    await railsBtn.click();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: path.join(outDir, "US1-Scen02-Desktop-RailsGraph.png") });
+    // Switch back to React
+    await page.locator("header button").filter({ hasText: /^React$/ }).click();
+    await page.waitForTimeout(300);
+  }
+
+  // US1-Scen03: Category Filter Active
   const stateCatBtn = page.getByRole("button", { name: /Estado & datos/i });
   if (await stateCatBtn.isVisible()) {
     await stateCatBtn.click();
     await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(outDir, "03-workspace-filtered-category.png") });
-    // Reset back to Todos
+    await page.screenshot({ path: path.join(outDir, "US1-Scen03-Desktop-CategoryFilter.png") });
     await page.getByRole("button", { name: /Todos/i }).click();
     await page.waitForTimeout(200);
   }
 
-  // 4. SVG Topology View (Initial)
+  // US1-Scen09: SVG Topology View (Initial)
   const topologyBtn = page.getByRole("button", { name: /Topología SVG/i });
   await topologyBtn.click();
   await page.waitForTimeout(500);
-  await page.screenshot({ path: path.join(outDir, "04-topology-svg-initial.png") });
+  await page.screenshot({ path: path.join(outDir, "US1-Scen09-Desktop-TopologySVG.png") });
 
-  // 5. SVG Topology View (Zoomed in)
+  // US1-Scen09: SVG Topology View (Zoomed)
   const zoomInBtn = page.getByRole("button", { name: "+" });
   if (await zoomInBtn.isVisible()) {
     await zoomInBtn.click();
     await page.waitForTimeout(150);
     await zoomInBtn.click();
     await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(outDir, "05-topology-svg-zoomed.png") });
+    await page.screenshot({ path: path.join(outDir, "US1-Scen09-Desktop-TopologySVGZoomed.png") });
   }
 
-  // Back to Grid view
+  // Return to Grid view
   await page.getByRole("button", { name: /Cuadrícula/i }).click();
   await page.waitForTimeout(300);
 
-  // 6. Flashcards Grid
+  // US6-Scen01: Flashcards Grid
   await page.getByRole("button", { name: "Flashcards" }).click();
   await page.waitForTimeout(400);
-  await page.screenshot({ path: path.join(outDir, "06-flashcards-grid.png") });
+  await page.screenshot({ path: path.join(outDir, "US6-Scen01-Desktop-FlashcardsGrid.png") });
 
-  // 7. Flashcard Flipped (3D recall)
+  // US6-Scen02: Flashcard Flipped (3D recall)
   const firstFlashcard = page.getByTestId("flashcard-card").first();
   await firstFlashcard.click();
   await page.waitForTimeout(600);
-  await page.screenshot({ path: path.join(outDir, "07-flashcard-flipped.png") });
+  await page.screenshot({ path: path.join(outDir, "US6-Scen02-Desktop-FlashcardFlipped.png") });
 
   // Return to Grafo view
   await page.locator("header button").filter({ hasText: /^Grafo$/ }).click();
   await page.waitForTimeout(300);
 
-  // 8. Study Modal Stage 1 (Leer - Top)
+  // US2-Scen01: Study Modal Stage 1 (Leer - Top)
   const node = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
   await node.click();
   await page.waitForSelector('div[role="dialog"]');
   await page.waitForTimeout(400);
-  await page.screenshot({ path: path.join(outDir, "08-study-read-top.png") });
+  await page.screenshot({ path: path.join(outDir, "US2-Scen01-Desktop-StudyReadTop.png") });
 
-  // 9. Study Modal Stage 1 (Scrolled to Code Comparison)
+  // US2-Scen01: Study Modal Stage 1 (Scrolled to Code Comparison)
   await page.evaluate(() => {
     const scrollers = document.querySelectorAll('div[role="dialog"] div');
     for (const el of scrollers) {
@@ -132,9 +143,9 @@ async function capture() {
     }
   });
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(outDir, "09-study-read-scroll-code.png") });
+  await page.screenshot({ path: path.join(outDir, "US2-Scen01-Desktop-StudyReadCode.png") });
 
-  // 10. Study Modal Stage 1 (Scrolled to FAANG questions & expanded)
+  // US2-Scen03: Study Modal Stage 1 (Scrolled to FAANG questions)
   const modalDialog = page.locator('div[role="dialog"]');
   const faangSummary = modalDialog.locator("summary").filter({ hasText: /Preguntas de Entrevista FAANG/i });
   if (await faangSummary.isVisible()) {
@@ -150,14 +161,13 @@ async function capture() {
     }
   });
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(outDir, "10-study-read-scroll-faang.png") });
+  await page.screenshot({ path: path.join(outDir, "US2-Scen03-Desktop-StudyReadFAANG.png") });
 
-  // 11. Study Modal Zen Mode (Top)
+  // US2-Scen07: Study Modal Zen Mode
   const zenBtn = modalDialog.getByRole("button", { name: /Modo Zen/i });
   if (await zenBtn.isVisible()) {
     await zenBtn.click();
     await page.waitForTimeout(400);
-    // Scroll to top of zen
     await page.evaluate(() => {
       const scrollers = document.querySelectorAll('div[role="dialog"] div');
       for (const el of scrollers) {
@@ -167,21 +177,8 @@ async function capture() {
       }
     });
     await page.waitForTimeout(200);
-    await page.screenshot({ path: path.join(outDir, "11-study-zen-mode-top.png") });
+    await page.screenshot({ path: path.join(outDir, "US2-Scen07-Desktop-StudyZenMode.png") });
 
-    // 12. Study Modal Zen Mode (Scrolled)
-    await page.evaluate(() => {
-      const scrollers = document.querySelectorAll('div[role="dialog"] div');
-      for (const el of scrollers) {
-        if (el.scrollHeight > el.clientHeight && el.clientHeight > 200) {
-          el.scrollTop = 500;
-        }
-      }
-    });
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(outDir, "12-study-zen-mode-scroll.png") });
-
-    // Exit Zen Mode with "Salir de Zen"
     const exitZenBtn = page.getByRole("button", { name: /Salir de Zen/i });
     if (await exitZenBtn.isVisible()) {
       await exitZenBtn.click();
@@ -189,30 +186,30 @@ async function capture() {
     }
   }
 
-  // 13. Study Modal Stage 2 (Aprender)
+  // US2-Scen08: Study Modal Stage 2 (Aprender)
   await modalDialog.getByRole("button", { name: /Aprender/ }).click();
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(outDir, "13-study-learn-tab.png") });
+  await page.screenshot({ path: path.join(outDir, "US2-Scen08-Desktop-StudyLearnStage.png") });
 
-  // 14. Study Modal Stage 3 (Parafrasear)
+  // US2-Scen11: Study Modal Stage 3 (Parafrasear)
   await modalDialog.getByRole("button", { name: /Parafrasear/ }).click();
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(outDir, "14-study-paraphrase-tab.png") });
+  await page.screenshot({ path: path.join(outDir, "US2-Scen11-Desktop-StudyParaphrase.png") });
 
   // Close modal
   await page.keyboard.press("Escape");
   await page.waitForTimeout(300);
 
-  // 15. Study Modal Stage 4 (Evaluar) on evaluated node
+  // US2-Scen14: Study Modal Stage 4 (Evaluar - Scorecard)
   const jsNode = page.locator("main article").first();
   await jsNode.click();
   await page.waitForSelector('div[role="dialog"]');
   const jsModal = page.locator('div[role="dialog"]');
   await jsModal.getByRole("button", { name: "04 Evaluar", exact: true }).click();
   await page.waitForTimeout(400);
-  await page.screenshot({ path: path.join(outDir, "15-study-evaluate-tab-score.png") });
+  await page.screenshot({ path: path.join(outDir, "US2-Scen14-Desktop-StudyEvaluateScore.png") });
 
-  // 16. Study Modal Stage 4 Scrolled to attempts history
+  // US2-Scen15: Study Modal Stage 4 (Evaluar - History)
   await page.evaluate(() => {
     const scrollers = document.querySelectorAll('div[role="dialog"] div');
     for (const el of scrollers) {
@@ -222,32 +219,32 @@ async function capture() {
     }
   });
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(outDir, "16-study-evaluate-tab-history.png") });
+  await page.screenshot({ path: path.join(outDir, "US2-Scen15-Desktop-StudyEvaluateHistory.png") });
 
   await page.keyboard.press("Escape");
   await page.waitForTimeout(300);
 
-  // 17. Command Palette Empty
+  // US1-Scen04: Command Palette Empty
   await page.keyboard.press("Control+k");
   await page.waitForTimeout(400);
-  await page.screenshot({ path: path.join(outDir, "17-command-palette-empty.png") });
+  await page.screenshot({ path: path.join(outDir, "US1-Scen04-Desktop-CommandPalette.png") });
 
-  // 18. Command Palette Search
+  // US1-Scen04: Command Palette Search
   const paletteInput = page.getByPlaceholder(/Buscar concepto o acción/i);
   await paletteInput.fill("batching");
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(outDir, "18-command-palette-search.png") });
+  await page.screenshot({ path: path.join(outDir, "US1-Scen04-Desktop-CommandPaletteSearch.png") });
   await page.keyboard.press("Escape");
   await page.waitForTimeout(300);
 
-  // 19. Seniority Panel Top
+  // US1-Scen06: Seniority Panel Top
   const seniorityBtn = page.locator("header button[aria-label='Ver Mapa de Seniority y Milestones']");
   await seniorityBtn.click();
   await page.waitForSelector('div[aria-label="Panel de Seniority y Milestones"]');
   await page.waitForTimeout(400);
-  await page.screenshot({ path: path.join(outDir, "19-seniority-panel-top.png") });
+  await page.screenshot({ path: path.join(outDir, "US1-Scen06-Desktop-SeniorityTop.png") });
 
-  // 20. Seniority Panel Scrolled
+  // US1-Scen06: Seniority Panel Scrolled
   await page.evaluate(() => {
     const panel = document.querySelector('div[aria-label="Panel de Seniority y Milestones"]');
     if (panel) {
@@ -256,54 +253,54 @@ async function capture() {
     }
   });
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(outDir, "20-seniority-panel-scroll.png") });
+  await page.screenshot({ path: path.join(outDir, "US1-Scen06-Desktop-SeniorityScroll.png") });
   const closeSeniorityBtn = page.locator('div[aria-label="Panel de Seniority y Milestones"] button').filter({ hasText: "×" });
   await closeSeniorityBtn.click();
   await page.waitForTimeout(300);
 
-  // 21. BYOK Settings Modal
+  // US3-Scen01: BYOK Settings Modal
   const settingsBtn = page.locator("header button").filter({ hasText: /BYOK/ });
   await settingsBtn.click();
   await page.waitForSelector('div[role="dialog"]');
   await page.waitForTimeout(400);
-  await page.screenshot({ path: path.join(outDir, "21-byok-settings-modal.png") });
+  await page.screenshot({ path: path.join(outDir, "US3-Scen01-Desktop-BYOKSettings.png") });
   await page.keyboard.press("Escape");
   await page.waitForTimeout(300);
 
-  // 22. Mobile Viewport (Workspace Top)
+  // US7-Scen01: Mobile Viewport (Workspace Top)
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(400);
-  await page.screenshot({ path: path.join(outDir, "22-mobile-workspace-top.png") });
+  await page.screenshot({ path: path.join(outDir, "US7-Scen01-Mobile-WorkspaceTop.png") });
 
-  // 23. Mobile Workspace Scrolled
+  // US7-Scen01: Mobile Workspace Scrolled
   await page.evaluate(() => window.scrollTo(0, 450));
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(outDir, "23-mobile-workspace-scrolled.png") });
+  await page.screenshot({ path: path.join(outDir, "US7-Scen01-Mobile-WorkspaceScrolled.png") });
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(200);
 
-  // 24. Mobile Flashcards
+  // US7-Scen02: Mobile Flashcards
   const mobileNav = page.locator("nav.mobile-bottom-nav");
   await mobileNav.getByRole("button", { name: "Flashcards" }).click();
   await page.waitForTimeout(400);
-  await page.screenshot({ path: path.join(outDir, "24-mobile-flashcards.png") });
+  await page.screenshot({ path: path.join(outDir, "US7-Scen02-Mobile-Flashcards.png") });
 
-  // 25. Mobile Study Modal
+  // US7-Scen02: Mobile Study Modal
   await mobileNav.getByRole("button", { name: "Grafo" }).click();
   await page.waitForTimeout(300);
   const mobileNode = page.locator("main article").first();
   await mobileNode.click();
   await page.waitForSelector('div[role="dialog"]');
   await page.waitForTimeout(400);
-  await page.screenshot({ path: path.join(outDir, "25-mobile-study-modal.png") });
+  await page.screenshot({ path: path.join(outDir, "US7-Scen02-Mobile-StudyModal.png") });
   await page.keyboard.press("Escape");
   await page.waitForTimeout(300);
 
-  // 26. Mobile Bottom Navigation Active
-  await page.screenshot({ path: path.join(outDir, "26-mobile-bottom-nav-active.png") });
+  // US7-Scen01: Mobile Bottom Navigation Active
+  await page.screenshot({ path: path.join(outDir, "US7-Scen01-Mobile-BottomNavActive.png") });
 
   await browser.close();
-  console.log("Full 26-view visual coverage suite captured in tmp/showcase/!");
+  console.log("Spec-mapped visual coverage suite captured successfully in tmp/showcase/!");
 }
 
 capture().catch((err) => {

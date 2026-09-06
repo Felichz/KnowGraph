@@ -41,7 +41,15 @@ export function CockpitControlDeck({
         boxShadow: "0 4px 18px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.05)",
       }}
     >
-      <div style={{ flex: "1 1 320px", minWidth: 0, overflow: "hidden" }}>
+      <div
+        style={{
+          flex: "1 1 320px",
+          minWidth: 0,
+          position: "relative",
+          maskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
+          WebkitMaskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
+        }}
+      >
         <CategoryNav
           categories={categories}
           nodes={nodes}

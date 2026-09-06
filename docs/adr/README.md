@@ -17,3 +17,4 @@ This directory preserves architectural decisions that affect contracts, security
 - [0007 — Calibrated Senior/Staff Rubric: Causality and Trade-offs as Primary Factor](./0007-calibrated-senior-staff-rubric-tradeoffs-over-accuracy.md)
 - [0008 — Constitutional 150-Line File Limit and CI Linter](./0008-strict-150-line-file-limit-and-ci-linter.md)
 - [0009 — Spec-Driven Testing, Universal State Matrix, and Stateless Verification Workflow](./0009-spec-driven-testing-and-stateless-verification-workflow.md)
+- [0010 — Spec-Driven Visual Design Engineering, Anti-AI-Slop Standards, and Continuous Review Loop](./0010-spec-driven-visual-design-and-continuous-review-workflow.md)

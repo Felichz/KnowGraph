@@ -13,6 +13,11 @@ export function CategoryNav({
 
   return (
     <nav
+      onWheel={(e) => {
+        if (e.deltaY !== 0) {
+          e.currentTarget.scrollLeft += e.deltaY;
+        }
+      }}
       style={{
         display: "flex",
         alignItems: "center",
