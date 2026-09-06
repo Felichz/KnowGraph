@@ -40,7 +40,7 @@ export function EvaluateStage({
   const verdict = activeEval.conciseVerdict || feedback.conciseVerdict;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px", color: "var(--text-primary)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "18px", color: "var(--text-primary)" }}>
       <AttemptHistoryBar
         attempts={attempts}
         currentIndex={selectedAttemptIndex}
@@ -48,81 +48,85 @@ export function EvaluateStage({
         onReturnCurrent={() => setSelectedAttemptIndex(null)}
       />
 
-      {/* Score Hero Card */}
-      <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px",
-        background: isExtra ? "linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(20, 26, 40, 0.85) 100%)" : isMastery ? "linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(20, 26, 40, 0.85) 100%)" : "rgba(18, 24, 38, 0.7)",
-        borderRadius: "var(--radius-panel)",
-        border: `1px solid ${isExtra ? "rgba(245, 158, 11, 0.45)" : isMastery ? "rgba(16, 185, 129, 0.35)" : "var(--border-line)"}`,
-        boxShadow: isExtra ? "0 8px 30px -4px rgba(245, 158, 11, 0.2), inset 0 1px 0 0 rgba(251, 191, 36, 0.2)" : "var(--shadow-card)",
-      }}>
-        <div>
-          <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", color: isExtra ? "var(--accent-gold)" : isMastery ? "var(--accent-green)" : "var(--text-muted)" }}>
+      {/* Unified Executive Score & Verdict */}
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "stretch", gap: "20px", paddingBottom: "16px", borderBottom: "1px solid var(--border-line)" }}>
+        {/* Score Column */}
+        <div style={{ minWidth: "180px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", color: isExtra ? "var(--accent-gold)" : isMastery ? "var(--accent-green)" : "var(--text-muted)", marginBottom: "4px" }}>
             {isExtra ? "★ EXCELENCIA (BONUS DORADO)" : isMastery ? "✓ BASE CUBIERTA (100 PTS)" : "EN PROGRESO"}
           </span>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginTop: "4px" }}>
-            <span style={{ fontSize: "38px", fontWeight: 800, fontFamily: "var(--font-mono)", color: isExtra ? "var(--accent-gold)" : isMastery ? "var(--accent-green)" : "var(--accent-cyan)", textShadow: isExtra ? "0 0 24px rgba(245, 158, 11, 0.4)" : "none" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+            <span style={{ fontSize: "36px", fontWeight: 800, fontFamily: "var(--font-mono)", color: isExtra ? "var(--accent-gold)" : isMastery ? "var(--accent-green)" : "var(--accent-cyan)", lineHeight: 1 }}>
               {score}
             </span>
             <span style={{ fontSize: "14px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>/ 120</span>
           </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
+            <Sparkline attempts={attempts} width={90} height={20} />
+            <span style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{attempts.length} intentos</span>
+          </div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "block", marginBottom: "6px", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.05em" }}>EVOLUCIÓN ({attempts.length} intentos)</span>
-          <Sparkline attempts={attempts} width={130} height={36} />
-        </div>
+
+        {/* Verdict Editorial Column */}
+        {verdict && (
+          <div style={{ flex: "1 1 300px", padding: "10px 16px", background: "rgba(56, 189, 248, 0.04)", borderLeft: "2px solid var(--accent-cyan)", borderRadius: "0 8px 8px 0", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <span style={{ fontSize: "9.5px", fontWeight: 700, color: "var(--accent-cyan)", letterSpacing: "0.08em", marginBottom: "3px" }}>VEREDICTO</span>
+            <p style={{ margin: 0, fontSize: "12.5px", lineHeight: 1.5, color: "var(--text-secondary)" }}>{verdict}</p>
+          </div>
+        )}
       </div>
 
-      {verdict && (
-        <div style={{ padding: "14px 18px", background: "rgba(56, 189, 248, 0.05)", border: "1px solid rgba(56, 189, 248, 0.25)", borderLeft: "3px solid var(--accent-cyan)", borderRadius: "var(--radius-panel)", fontSize: "13px", lineHeight: 1.55, boxShadow: "0 2px 10px rgba(0,0,0,0.3)" }}>
-          <strong style={{ color: "var(--accent-cyan)" }}>Veredicto: </strong>{verdict}
+      {/* Rúbrica Detallada (Compact 2x2 Grid) */}
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+          <span style={{ fontSize: "10.5px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", fontFamily: "var(--font-mono)" }}>RÚBRICA DE EVALUACIÓN (0–120)</span>
+          <span style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>Meta: 100 base + 20 bonus</span>
         </div>
-      )}
-
-      {/* Rúbrica */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "18px", background: "rgba(16, 22, 35, 0.65)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line)", boxShadow: "var(--shadow-card)" }}>
-        <span style={{ fontSize: "10.5px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", fontFamily: "var(--font-mono)" }}>RÚBRICA DE EVALUACIÓN (0–120)</span>
-        {Object.entries(rubric).map(([key, dim]) => {
-          const val = dim?.score ?? 0;
-          const max = dim?.max ?? 100;
-          const pct = Math.min(100, Math.round((val / max) * 100));
-          return (
-            <div key={key} style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px" }}>
-                <span>{dim?.label || key}</span>
-                <strong style={{ fontFamily: "var(--font-mono)", color: pct >= 100 ? "var(--accent-green)" : "var(--accent-cyan)" }}>{val}/{max}</strong>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))", gap: "10px 20px" }}>
+          {Object.entries(rubric).map(([key, dim]) => {
+            const val = dim?.score ?? 0;
+            const max = dim?.max ?? 100;
+            const pct = Math.min(100, Math.round((val / max) * 100));
+            return (
+              <div key={key} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                  <span style={{ color: "var(--text-secondary)", fontWeight: 500 }}>{dim?.label || key}</span>
+                  <strong style={{ fontFamily: "var(--font-mono)", color: pct >= 100 ? "var(--accent-green)" : "var(--accent-cyan)" }}>{val}/{max}</strong>
+                </div>
+                <div style={{ width: "100%", height: "5px", background: "rgba(255, 255, 255, 0.06)", borderRadius: "9999px", overflow: "hidden" }}>
+                  <div style={{ width: `${pct}%`, height: "100%", background: pct >= 100 ? "linear-gradient(90deg, #10b981, #34d399)" : "linear-gradient(90deg, #0284c7, var(--accent-cyan))", borderRadius: "9999px" }} />
+                </div>
+                {dim?.note && <p style={{ margin: 0, fontSize: "11px", color: "var(--text-muted)", lineHeight: 1.4 }}>{dim.note}</p>}
               </div>
-              <div style={{ width: "100%", height: "6px", background: "rgba(0, 0, 0, 0.4)", borderRadius: "9999px", overflow: "hidden", border: "1px solid var(--border-line)" }}>
-                <div style={{ width: `${pct}%`, height: "100%", background: pct >= 100 ? "linear-gradient(90deg, #10b981, #34d399)" : "linear-gradient(90deg, #0284c7, var(--accent-cyan))", borderRadius: "9999px" }} />
-              </div>
-              {dim?.note && <p style={{ margin: "2px 0 0", fontSize: "11px", color: "var(--text-muted)" }}>{dim.note}</p>}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* Fortalezas y Gaps */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px" }}>
-        {feedback.strengths?.length > 0 && (
-          <div style={{ padding: "16px", background: "rgba(16, 185, 129, 0.05)", borderRadius: "var(--radius-panel)", border: "1px solid rgba(16, 185, 129, 0.2)", boxShadow: "0 2px 10px rgba(0,0,0,0.3)" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--accent-green)", letterSpacing: "0.06em" }}>✓ PUNTOS FUERTES</span>
-            <ul style={{ margin: "10px 0 0", paddingLeft: "18px", fontSize: "12.5px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-              {feedback.strengths.map((s, i) => (<li key={i}>{s}</li>))}
-            </ul>
-          </div>
-        )}
-        {feedback.gaps?.length > 0 && (
-          <div style={{ padding: "16px", background: "rgba(244, 63, 94, 0.05)", borderRadius: "var(--radius-panel)", border: "1px solid rgba(244, 63, 94, 0.2)", boxShadow: "0 2px 10px rgba(0,0,0,0.3)" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--accent-red)", letterSpacing: "0.06em" }}>✕ IDEAS QUE FALTARON</span>
-            <ul style={{ margin: "10px 0 0", paddingLeft: "18px", fontSize: "12.5px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-              {feedback.gaps.map((g, i) => (<li key={i}>{g}</li>))}
-            </ul>
-          </div>
-        )}
-      </div>
+      {(feedback.strengths?.length > 0 || feedback.gaps?.length > 0) && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px", borderTop: "1px solid var(--border-line)", paddingTop: "14px" }}>
+          {feedback.strengths?.length > 0 && (
+            <div>
+              <span style={{ fontSize: "10.5px", fontWeight: 700, color: "var(--accent-green)", letterSpacing: "0.06em" }}>✓ PUNTOS FUERTES</span>
+              <ul style={{ margin: "6px 0 0", paddingLeft: "16px", fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
+                {feedback.strengths.map((s, i) => (<li key={i}>{s}</li>))}
+              </ul>
+            </div>
+          )}
+          {feedback.gaps?.length > 0 && (
+            <div>
+              <span style={{ fontSize: "10.5px", fontWeight: 700, color: "var(--accent-red)", letterSpacing: "0.06em" }}>✕ IDEAS QUE FALTARON</span>
+              <ul style={{ margin: "6px 0 0", paddingLeft: "16px", fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
+                {feedback.gaps.map((g, i) => (<li key={i}>{g}</li>))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
-      <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: "10px" }}>
-        <button type="button" onClick={onRetry} style={{ padding: "10px 20px", background: "rgba(255, 255, 255, 0.04)", border: "1px solid var(--border-line)", borderRadius: "var(--radius-control)", color: "var(--text-primary)", fontSize: "12.5px", fontWeight: 600, cursor: "pointer" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--border-line)", paddingTop: "12px" }}>
+        <button type="button" onClick={onRetry} style={{ padding: "8px 18px", background: "rgba(255, 255, 255, 0.04)", border: "1px solid var(--border-line)", borderRadius: "var(--radius-control)", color: "var(--text-primary)", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
           Volver a redactar y mejorar nota →
         </button>
       </div>

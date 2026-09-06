@@ -18,8 +18,8 @@ export function AttemptHistoryBar({
   const attemptScore = currentAttempt?.score ?? currentAttempt?.evaluation?.score;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "8px", fontSize: "12px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(18, 22, 31, 0.75)", borderRadius: "var(--radius-control)", border: "1px solid var(--border-line-strong)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "14px", fontSize: "12px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "2px 2px 10px", borderBottom: "1px solid var(--border-line)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <button
             type="button"
