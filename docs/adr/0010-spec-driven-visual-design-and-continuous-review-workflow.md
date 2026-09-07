@@ -47,14 +47,23 @@ The visual workflow is structured into three mandatory, non-overlapping phases:
   [GOAL COMPLETE]
 ```
 
-### 3. Divergent IA Planning & Anti-Lazy-Default Mandate
-Agents must never adopt unconsidered default layouts (such as defaulting to a single-line horizontal tag strip for an arbitrarily sized list of categories).
-In Phase 1, each major macro-organism (filtering, navigation, study stage controls, dashboard decks) must explicitly evaluate at least 2-3 structural options across:
-1. **Information Density & Viewport Cost** (vertical pixel consumption).
-2. **Scalability with $N$ Items** (behavior when items grow from 4 to 10+).
-3. **Discoverability & Zero Hidden Affordances** (prohibiting horizontal scrolling ribbons on desktop that hide categories).
-4. **Desktop vs. Mobile Ergonomics** (mouse wheel vs. touch swipe).
-5. **Cognitive Load & Visual Calm** (avoiding visual fragmentation).
+### 3. Formalized Design Blueprint & Divergent IA Planning Mandate
+Agents must never jump directly to code or adopt unconsidered default layouts (such as defaulting to a single-line horizontal tag strip for an arbitrarily sized list of categories, or layer-cake stacked slabs).
+In Phase 1, the design blueprint (`specs/<feature>/design-spec.md`) must mandate four formal components:
+1. **Section A: Exhaustive Information Inventory Matrix (Data & Affordance Manifest)**:
+   Itemizes every required data field, numeric metric, state flag (Empty, Populated, Boundary, Error), status indicator, and interactive affordance mandated by `spec.md` for all User Stories.
+2. **Section B: Logical Grouping & Surface Hierarchy Matrix**:
+   Maps inventory items into unified visual surfaces and organisms, preventing "carditis / div soup" and hollow containers ($>40\text{px}$ dead void).
+3. **Section C: Comparative Structural Evaluation & Trade-off Matrix (Landscape/Desktop vs. Portrait/Mobile)**:
+   For every major organism, formulates and compares at least 2–3 layout paradigms across:
+   - *Information Density & Viewport Cost* (vertical pixel consumption).
+   - *Scalability with $N$ Items* (behavior when items grow from 4 to 10+).
+   - *Discoverability & Zero Hidden Affordances* (100% of options visible without forced horizontal scrolling on desktop).
+   - *Ergonomics: Desktop Pointer/Mouse vs. Mobile Touch* (mouse click vs. thumb zone $\ge 44\text{px}$).
+   - *Cognitive Load & Visual Calm* (avoiding visual fragmentation).
+   Declares the winning architecture for both Landscape and Portrait with the explicit rationale ("The Why").
+4. **Section D: Review Traceability Protocol**:
+   Establishes the Phase 1 blueprint as the immutable audit baseline for Phase 3 review passes, verifying 100% inventory presence and empirically validating layout hypotheses.
 
 ### 4. Integration of Anthropic "Frontend Design" (Anti-AI-Slop) Principles
 The workflow incorporates the official Anthropic `frontend-design` standards:

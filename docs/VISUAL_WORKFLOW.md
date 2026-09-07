@@ -65,15 +65,25 @@ Every User Story and Acceptance Scenario defined in `specs/001-clean-workspace-v
 ## 3. Las 3 Fases de Ejecución
 
 ### Fase 1: Arquitectura de Información, Divergencia & Blueprint desde Cero
-- **Objetivo**: Planificar la jerarquía, densidad y estructura visual de cada pantalla antes de implementar, evaluando alternativas como un diseñador experto.
+- **Objetivo**: Planificar con rigor formal la jerarquía, densidad y estructura visual de cada pantalla antes de implementar, evaluando alternativas como un diseñador experto y documentando el "Por Qué" de cada decisión.
 - **Entradas**: `specs/001-clean-workspace-v2/spec.md` + Principios de Anthropic `frontend-design`.
-- **Paso Obligatorio: Matriz de Trade-offs y Evaluación Comparativa de IA**:
-  Para cada organismo estructural clave (filtros taxonómicos, cabeceras, decks de control, modales), formular y comparar explícitamente al menos 2-3 opciones estructurales (ej. cinta de scroll horizontal vs. matriz auto-envolvente vs. menú selector segmentado) analizando:
-  1. *Densidad & Altura Vertical*.
-  2. *Escalabilidad ante $N$ ítems* (qué pasa con 4, 8, 12 elementos).
-  3. *Descubribilidad & Cero Affordances Ocultas* (evitar esconder opciones críticas).
-  4. *Ergonomía de Puntero/Desktop vs. Touch/Mobile*.
-- **Artefacto**: `specs/001-clean-workspace-v2/design-spec.md` (debe contener la matriz comparativa de decisiones).
+- **Estructura Obligatoria del Blueprint (`specs/<feature>/design-spec.md`)**:
+  1. **Sección A: Matriz de Inventario Exhaustivo de Información (Data & Affordance Manifest)**:
+     - Tabla exhaustiva por User Story que enumera cada pieza de información (títulos, métricas tabulares, micro-resúmenes, badges, contadores, alertas), estados de datos (Empty, Populated, Boundary, Error) y affordances/acciones requeridas por `spec.md`. Cero omisiones.
+  2. **Sección B: Matriz de Agrupación, Jerarquía y Superficies (IA Clustering)**:
+     - Mapeo de cada pieza de información a clusters lógicos y organismos visuales (Header, Cockpit Deck, Tarjetas, Modales, Drawers, HUD).
+     - Asignación de jerarquía visual (Primaria, Secundaria, Terciaria) y plano de superficie (superficie unificada vs. divisores sutiles, erradicando cajas anidadas).
+  3. **Sección C: Matriz de Evaluación Comparativa de Layout y Trade-offs (Landscape/Desktop vs. Portrait/Mobile)**:
+     - Para cada organismo clave, formular y comparar explícitamente al menos 2-3 opciones de disposición estructural tanto para **Landscape (Desktop 1440×900)** como para **Portrait (Mobile 390×844)**.
+     - Criterios objetivos de evaluación:
+       - *Densidad Vertical & Viewport Cost* (altura en px vs. contenido visible).
+       - *Escalabilidad ante $N$ Elementos* (comportamiento con 4, 8, 12 o 20 ítems).
+       - *Descubribilidad & Cero Affordances Ocultas* (100% de opciones visibles sin forzar scroll horizontal ciego en escritorio).
+       - *Ergonomía de Interacción* (Puntero/Ratón vs. Zona del Pulgar / Touch Targets $\ge 44\text{px}$).
+       - *Carga Cognitiva & Calma Visual* (evitar fragmentación y saturación).
+     - Veredicto y Razón Explícita ("The Why"): justificación formal de la arquitectura ganadora para Desktop y Mobile.
+  4. **Sección D: Protocolo de Trazabilidad y Verificación para Fase 3 (Review Traceability)**:
+     - Mapeo directo entre la matriz de inventario/trade-offs y las capturas en `tmp/showcase/`. En la Fase 3, la auditoría revisará no solo la estética, sino la presencia estricta de cada dato inventariado y la validez empírica del layout elegido.
 - **Invariante**: Prohibir defaults perezosos (ej. asumir una sola línea horizontal sin evaluar cómo entran los tags), prohibir carditis/layer-cake y definir densidad controlada.
 
 ### Fase 2: Implementación y Barreras de Calidad
@@ -86,11 +96,11 @@ Every User Story and Acceptance Scenario defined in `specs/001-clean-workspace-v
 
 ### Fase 3: Bucle Continuo de Captura & Auditoría de 4 Pasadas Independientes
 - **Paso 3.1: Captura Determinista**: Ejecutar `node scripts/capture-showcase.mjs` con inyección de fixture nominal (`hydrated-state.json`).
-- **Paso 3.2.0: Reconsideración y Confirmación de Hipótesis Arquitectónicas (Design Reality Check)**:
-  Antes de auditar micro-detalles, evaluar la macro-estructura real en las capturas:
-  - *¿Sobrevivió la estructura elegida en Fase 1 al contacto con datos reales?*
-  - *¿Quedaron categorías decapitadas o escondidas detrás de scrolls horizontales incómodos en escritorio?*
-  - Si la hipótesis de diseño demuestra fricción o falta de descubribilidad, se declara **Fallo Estructural de IA** y se bifurca de inmediato a un pivote arquitectónico en Fase 2.
+- **Paso 3.2.0: Verificación de Inventario y Reconsideración Empírica (Design Reality Check)**:
+  Antes de auditar micro-detalles, contrastar la captura real directamente contra la matriz de `specs/<feature>/design-spec.md`:
+  1. *Auditoría de Presencia de Inventario*: ¿Están presentes en pantalla el 100% de los datos, contadores y affordances listados en la Sección A para esta User Story?
+  2. *Validación Empírica del Layout Elegido*: ¿Sobrevivió la estructura elegida en la Sección C al contacto con datos reales? ¿Ocurren recortes, scrollbars inesperados o desbordes en Landscape o Portrait?
+  3. *Reconsideración o Confirmación*: Si la captura valida que la información es legible, densa y descubrible, se confirma la arquitectura. Si la evidencia visual demuestra fricción o affordances ocultas, se declara **Fallo Estructural de IA** y se bifurca de inmediato a un pivote arquitectónico en Fase 2.
 - **Paso 3.2: Protocolo de 4 Pasadas Independientes por Captura**:
   Cada captura se audita secuencialmente con `view_file` a través de 4 perspectivas especializadas:
   1. **Pasada 1: Macro-Arquitectura de Pantalla y Viewport (Telescopio)**:
