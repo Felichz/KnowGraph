@@ -1,16 +1,175 @@
-﻿/* CSS Root Theme Variables for Design from Scratch */
+/* DESIGN SYSTEM TOKENS - Learning Workspace (Linear/Raycast Inspired Dark Cockpit) */
 :root {
+  /* Color Palette - Deep slate atmosphere with crisp accents */
   --bg-workspace: #080b13;
-  --bg-canvas: #060910;
+  --bg-canvas: #06080e;
+  --bg-surface: rgba(17, 24, 39, 0.7);
+  --bg-surface-raised: rgba(26, 36, 56, 0.85);
+  --bg-surface-emphasis: rgba(33, 46, 72, 0.95);
+  --bg-card: rgba(16, 22, 35, 0.75);
+  --bg-card-hover: rgba(23, 32, 51, 0.9);
+
+  /* Refined Borders & Elevation */
+  --border-line: rgba(255, 255, 255, 0.08);
+  --border-line-subtle: rgba(255, 255, 255, 0.04);
+  --border-line-strong: rgba(255, 255, 255, 0.16);
+  --border-accent: rgba(56, 189, 248, 0.35);
+
+  /* Typography & Colors */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
+
+  /* Premium Accents */
+  --accent-cyan: #38bdf8;
+  --accent-cyan-glow: rgba(56, 189, 248, 0.18);
+  --accent-indigo: #6366f1;
+  --accent-blue: #3b82f6;
+  --accent-green: #10b981;
+  --accent-green-glow: rgba(16, 185, 129, 0.18);
+  --accent-gold: #f59e0b;
+  --accent-gold-glow: rgba(245, 158, 11, 0.2);
+  --accent-red: #f43f5e;
+  --accent-purple: #a855f7;
+
+  /* Typography Stacks */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Border Radii */
+  --radius-control: 8px;
+  --radius-panel: 14px;
+  --radius-card: 12px;
+  --radius-pill: 9999px;
+
+  /* Elevation & Inset Highlights */
+  --shadow-inset-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  --shadow-card: 0 4px 18px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-line), var(--shadow-inset-top);
+  --shadow-card-hover: 0 12px 28px -4px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(56, 189, 248, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+  --shadow-modal: 0 30px 70px -15px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.12);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Global Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  padding: 0;
-  background: var(--bg-workspace);
+  background-color: var(--bg-workspace);
+  background-image: 
+    radial-gradient(ellipse 70% 45% at 50% -15%, rgba(99, 102, 241, 0.14), transparent 70%),
+    radial-gradient(circle at 90% 12%, rgba(56, 189, 248, 0.08), transparent 45%),
+    radial-gradient(circle at 10% 40%, rgba(168, 85, 247, 0.05), transparent 40%);
+  background-attachment: fixed;
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  transition: all var(--transition-fast);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Focus Ring Accessibility */
+:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+
+/* Utility Animations */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.08); filter: drop-shadow(0 0 4px var(--accent-green)); }
+}
+
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--accent-green);
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+/* Universal Sleek Scrollbars (Cross-browser thin/transparent) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Mobile Bottom Navigation Bar Ergonomics */
+.mobile-bottom-nav {
+  display: none !important;
+}
+
+.study-modal-backdrop {
+  padding: 20px;
+}
+
+textarea:focus {
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2), inset 0 2px 6px rgba(0, 0, 0, 0.35) !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    background: rgba(11, 15, 25, 0.96) !important;
+    backdrop-filter: blur(16px) !important;
+    border-top: 1px solid var(--border-line) !important;
+    z-index: 1000 !important;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .study-modal-backdrop {
+    padding: 6px !important;
+  }
 }
