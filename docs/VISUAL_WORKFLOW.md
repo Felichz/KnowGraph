@@ -10,26 +10,20 @@
 
 ## 1. Goal Execution Contract
 
-When invoking `/goal` with this workflow, the agent is bound to execute all 4 phases sequentially without stopping or declaring premature completion. The task concludes **ONLY** when Phase 4 produces a certified, clean second pass where **100% of the spec-mapped views score $\ge 9.0 / 10$**.
+When invoking `/goal` with this workflow, the agent is bound to execute all 3 phases sequentially without stopping or declaring premature completion. The task concludes **ONLY** when Phase 3 certifies that **100% of the spec-mapped views score $\ge 9.0 / 10$ across all 4 independent review passes**.
 
 ```
 [Phase 1: Blueprint from Scratch] ──► [Phase 2: Implementation & Tests]
                                                      │
                                                      ▼
-┌───────────────────────────────────► [Phase 3: Capture & Review Loop]
+┌───────────────────────────────────► [Phase 3: Capture & 4-Pass Review Loop]
 │                                                    │
-│                                           ¿Alguna vista < 9.0?
+│                                    ¿Alguna pasada < 9.0 en alguna vista?
 │                                              /            \
-│                                          [SÍ]             [NO]
-│                                           │                 │
-│                                           ▼                 ▼
-└────── [Refactor Atómico + Tests] ◄────────┘     [Phase 4: Segunda Pasada]
-                                                              │
-                                                        ¿Fallo en 2da?
-                                                           /      \
-                                                        [SÍ]      [NO (100% ≥ 9.0)]
-                                                         │              │
-                                                         └──────────────┼──► [GOAL_COMPLETE]
+│                                          [SÍ]             [NO (100% ≥ 9.0)]
+│                                           │                     │
+└────── [Refactor Atómico + Tests] ◄────────┘                     ▼
+                                                          [GOAL_COMPLETE]
 ```
 
 ---
@@ -68,13 +62,13 @@ Every User Story and Acceptance Scenario defined in `specs/001-clean-workspace-v
 
 ---
 
-## 3. Las 4 Fases de Ejecución
+## 3. Las 3 Fases de Ejecución
 
 ### Fase 1: Arquitectura de Información & Blueprint desde Cero
 - **Objetivo**: Planificar la jerarquía, densidad y estructura visual de cada pantalla antes de implementar.
 - **Entradas**: `specs/001-clean-workspace-v2/spec.md` + Principios de Anthropic `frontend-design`.
 - **Artefacto**: `specs/001-clean-workspace-v2/design-spec.md`.
-- **Invariante**: Debe documentar explícitamente el diseño de las 7 User Stories, prohibir carditis/div soup y definir la densidad controlada (cero cajas huecas con $>40\text{px}$ de vacío).
+- **Invariante**: Debe documentar explícitamente el diseño de las 7 User Stories, prohibir carditis/layer-cake y definir la densidad controlada (cero cajas huecas con $>40\text{px}$ de vacío).
 
 ### Fase 2: Implementación y Barreras de Calidad
 - **Objetivo**: Construir el código reflejando fielmente el Blueprint.
@@ -84,25 +78,32 @@ Every User Story and Acceptance Scenario defined in `specs/001-clean-workspace-v
   3. `npm run build`: **Compilación sin errores en `dist/`**.
   4. `npx playwright test`: **33/33 tests E2E passing (0 uncaught exceptions)**.
 
-### Fase 3: Bucle Continuo de Captura, Review & Mejora
+### Fase 3: Bucle Continuo de Captura & Auditoría de 4 Pasadas Independientes
 - **Paso 3.1: Captura Determinista**: Ejecutar `node scripts/capture-showcase.mjs` con inyección de fixture nominal (`hydrated-state.json`).
-- **Paso 3.2: Review Forense con Lista Negativa**: Cada captura debe inspeccionarse con `view_file` contra los 5 Invariantes Negativos:
-  - *Invariante 1*: Cero truncamientos duros de texto o chips (debe haber `mask-image` o scroll).
-  - *Invariante 2*: Cero compresión de flexbox (tabs y headers con `flexShrink: 0`).
-  - *Invariante 3*: Cero cajas flotantes redundantes (anti-carditis).
-  - *Invariante 4*: Cero aire muerto ($>40\text{px}$) o huecos asimétricos.
-  - *Invariante 5*: Colores semánticos de categoría preservados inmutablemente.
-  - *Regla de Puntuación*: Violación de $\ge 1$ invariante $\implies$ calificación máxima $\le 7.0 / 10$ ($\le 5.0$ si es estructural).
+- **Paso 3.2: Protocolo de 4 Pasadas Independientes por Captura**:
+  Cada captura se audita secuencialmente con `view_file` a través de 4 perspectivas especializadas:
+  1. **Pasada 1: Macro-Arquitectura de Pantalla y Viewport (Telescopio)**:
+     - Invariante Anti-Layer-Cake (cero apilamiento de múltiples franjas/cajas horizontales independientes).
+     - Regla del 70% del Viewport (barras/filtros $\le 130\text{px}$ de altura vertical total; al menos 2 filas completas de tarjetas visibles sin scroll).
+     - Prohibición de Cañones Horizontales por `space-between` (>350px de vacío; Ley de Fitts).
+     - *Violación: Cap máximo $\le 6.5 / 10$*.
+  2. **Pasada 2: Micro-Densidad y Anti-Carditis de Componentes (Microscopio)**:
+     - Controlled Density (cero cajas huecas con $>40\text{px}$ de aire muerto).
+     - Anti-Carditis Interna (cero cajas decorativas dentro de modales o paneles).
+     - Protección Flexbox (`flexShrink: 0` en encabezados y tabs).
+     - *Violación: Cap máximo $\le 7.0 / 10$*.
+  3. **Pasada 3: Semántica Cromática y Jerarquía de Iluminación (Colorista)**:
+     - Ancla inmutable de color de categoría.
+     - Acentos afilados vs. Árbol de Navidad (prohibido pintar bordes completos de tarjetas en dorado/verde por puntaje).
+     - *Violación: Cap máximo $\le 8.0 / 10$*.
+  4. **Pasada 4: Ergonomía de Interacción, Móvil y Estados Extremos (Táctil)**:
+     - Touch targets $\ge 44\times 44\text{px}$ y safe area de 70px en móvil.
+     - Cero truncamientos duros (máscaras degradadas suaves calibradas y soporte `onWheel`).
+     - Modos inmersivos (Zen Mode 100vw × 100vh con ancho de lectura contenido).
+     - *Violación: Cap máximo $\le 8.0 / 10$*.
 - **Paso 3.3: Bifurcación**:
-  - Si alguna vista obtiene **$< 9.0$**: Se registra el defecto y se pasa de inmediato al **Refactor Atómico** en la Fase 2, repitiendo el ciclo.
-  - Si el 100% de las vistas obtiene **$\ge 9.0$**: Se avanza a la **Fase 4**.
-
-### Fase 4: Segunda Pasada Exhaustiva de Cierre (Gate Certification)
-- **Activación**: Únicamente cuando la Fase 3 concluyó con todas las vistas puntuadas en $\ge 9.0$.
-- **Protocolo**:
-  - Re-auditar independientemente las 25 capturas desde cero con mirada hipercrítica.
-  - Si se detecta un solo defecto que no merezca $\ge 9.0$, se cancela el cierre y se regresa a la Fase 3.
-  - Si todas ratifican $\ge 9.0$ sin ninguna objeción, se emite la certificación final.
+  - Si alguna vista obtiene **$< 9.0$** en cualquiera de las 4 pasadas: Se registra el defecto y se pasa de inmediato al **Refactor Atómico** en la Fase 2, repitiendo el ciclo.
+  - Si el 100% de las vistas obtiene **$\ge 9.0$** en las 4 pasadas: La suite queda formalmente certificada y se avanza directo al cierre del Goal.
 
 ---
 
@@ -112,5 +113,6 @@ El comando `/goal` finaliza **ÚNICAMENTE** cuando:
 1. `specs/001-clean-workspace-v2/design-spec.md` existe y está completo.
 2. Todas las capturas mapeadas en la Sección 2 están generadas en `tmp/showcase/`.
 3. Todos los tests (`audit-lines`, `test:logic`, Playwright) pasan al 100%.
-4. La **Segunda Pasada Exhaustiva de la Fase 4** ratifica que el **100% de las capturas obtuvieron $\ge 9.0 / 10$**.
+4. La **Auditoría de 4 Pasadas Independientes** ratifica que el **100% de las capturas obtuvieron $\ge 9.0 / 10$** en todas las perspectivas.
 5. Se incluye en el mensaje final la confirmación del sello de cierre: `<!-- GOAL_COMPLETE -->`.
+
