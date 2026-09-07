@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { GraphNode } from "./GraphNode.jsx";
 import { GraphTopologyCanvas } from "./GraphTopologyCanvas.jsx";
-import { SuggestedNext } from "./SuggestedNext.jsx";
 import { CockpitControlDeck } from "./CockpitControlDeck.jsx";
 
 export function GraphCanvas({
@@ -42,17 +41,17 @@ export function GraphCanvas({
       style={{
         flex: 1,
         overflowY: "auto",
-        padding: "20px 24px 60px",
+        padding: "16px 24px 60px",
         background: "var(--bg-canvas)",
       }}
     >
       <div style={{ maxWidth: "1340px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px" }}>
-        <SuggestedNext node={suggestedNext} onOpenNode={onOpenNode} />
-
         <CockpitControlDeck
           categories={categories}
           nodes={graph?.nodes || nodes}
           progressMap={progressMap}
+          suggestedNext={suggestedNext}
+          onOpenNode={onOpenNode}
           selectedCategories={selectedCategories}
           onSelectCategory={onSelectCategory}
           onShowAllCategories={onShowAllCategories}

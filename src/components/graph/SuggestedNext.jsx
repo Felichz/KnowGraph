@@ -5,21 +5,17 @@ export function SuggestedNext({ node = null, onOpenNode = null }) {
     return (
       <aside
         style={{
-          padding: "16px 24px",
-          background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(13, 18, 30, 0.75) 100%)",
-          borderRadius: "var(--radius-panel)",
-          border: "1px solid rgba(16, 185, 129, 0.25)",
-          boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.08)",
-          fontSize: "13px",
-          color: "var(--accent-green)",
-          display: "flex",
+          display: "inline-flex",
           alignItems: "center",
-          gap: "10px",
+          gap: "8px",
+          fontSize: "12px",
+          color: "var(--accent-green)",
+          fontWeight: 600,
         }}
         aria-label="Recomendación de estudio"
       >
-        <span style={{ fontSize: "18px" }}>✨</span>
-        <strong>¡Ruta completada! Has cubierto todos los conceptos recomendados de este temario.</strong>
+        <span style={{ fontSize: "14px" }}>✨</span>
+        <span>¡Ruta completada! Has cubierto todos los conceptos recomendados.</span>
       </aside>
     );
   }
@@ -27,65 +23,68 @@ export function SuggestedNext({ node = null, onOpenNode = null }) {
   return (
     <aside
       style={{
-        position: "relative",
-        overflow: "hidden",
-        display: "flex",
+        display: "inline-flex",
         alignItems: "center",
-        justifyContent: "space-between",
-        gap: "16px",
-        padding: "14px 20px",
-        background: "linear-gradient(135deg, rgba(22, 32, 54, 0.8) 0%, rgba(12, 17, 30, 0.95) 100%)",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-        borderRadius: "var(--radius-panel)",
-        boxShadow: "0 6px 24px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)",
-        backdropFilter: "blur(16px)",
+        flexWrap: "wrap",
+        gap: "8px",
+        minWidth: 0,
+        flex: "1 1 auto",
       }}
       aria-label="Recomendación de estudio"
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: 0, flex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", minWidth: 0, flex: "1 1 auto" }}>
+        <span
+          style={{
+            flexShrink: 0,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "5px",
+            fontSize: "9.5px",
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            color: "var(--accent-cyan)",
+            background: "rgba(56, 189, 248, 0.1)",
+            padding: "2px 8px",
+            borderRadius: "var(--radius-pill)",
+            border: "1px solid rgba(56, 189, 248, 0.25)",
+            fontFamily: "var(--font-mono)",
+          }}
+        >
+          <span>🎯</span> PRÓXIMO DESAFÍO
+        </span>
+
+        {node.priority && (
           <span
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "5px",
-              fontSize: "9.5px",
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              color: "var(--accent-cyan)",
-              background: "rgba(56, 189, 248, 0.1)",
-              padding: "2px 8px",
-              borderRadius: "var(--radius-pill)",
-              border: "1px solid rgba(56, 189, 248, 0.25)",
+              flexShrink: 0,
+              fontSize: "10.5px",
+              color: "var(--text-muted)",
               fontFamily: "var(--font-mono)",
+              background: "rgba(0, 0, 0, 0.35)",
+              padding: "1px 6px",
+              borderRadius: "4px",
+              border: "1px solid var(--border-line)",
             }}
           >
-            <span>🎯</span> PRÓXIMO DESAFÍO EN TU RUTA
+            p#{node.priority}
           </span>
-          {node.priority && (
-            <span
-              style={{
-                fontSize: "10.5px",
-                color: "var(--text-muted)",
-                fontFamily: "var(--font-mono)",
-                background: "rgba(0, 0, 0, 0.3)",
-                padding: "1px 6px",
-                borderRadius: "4px",
-                border: "1px solid var(--border-line)",
-              }}
-            >
-              p#{node.priority}
-            </span>
-          )}
-        </div>
-        <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
-          {node.label}
-        </h2>
-        {node.lesson?.summary && (
-          <p style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "720px" }}>
-            {node.lesson.summary}
-          </p>
         )}
+
+        <span
+          style={{
+            fontSize: "13px",
+            fontWeight: 600,
+            color: "var(--text-primary)",
+            letterSpacing: "-0.015em",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            maxWidth: "460px",
+          }}
+          title={node.label}
+        >
+          {node.label}
+        </span>
       </div>
 
       <button
@@ -95,17 +94,18 @@ export function SuggestedNext({ node = null, onOpenNode = null }) {
           flexShrink: 0,
           display: "inline-flex",
           alignItems: "center",
-          gap: "8px",
-          padding: "8px 18px",
+          gap: "6px",
+          padding: "4px 12px",
           background: "linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-indigo) 100%)",
           border: "1px solid rgba(255, 255, 255, 0.2)",
           borderRadius: "var(--radius-control)",
           color: "#ffffff",
-          fontSize: "12.5px",
+          fontSize: "11.5px",
           fontWeight: 700,
-          boxShadow: "0 0 16px rgba(56, 189, 248, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.25)",
+          boxShadow: "0 0 12px rgba(56, 189, 248, 0.25)",
           cursor: "pointer",
           whiteSpace: "nowrap",
+          transition: "all var(--transition-fast)",
         }}
       >
         <span>Estudiar ahora</span>

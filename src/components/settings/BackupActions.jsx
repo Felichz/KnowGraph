@@ -32,7 +32,7 @@ export function BackupActions() {
   };
 
   return (
-    <section style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "16px", background: "rgba(12, 16, 23, 0.7)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line-strong)" }}>
+    <section style={{ display: "flex", flexDirection: "column", gap: "12px", paddingTop: "18px", borderTop: "1px solid var(--border-line)" }}>
       <div>
         <h4 style={{ margin: 0, fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.06em", fontFamily: "var(--font-mono)" }}>DATOS Y RESPALDO LOCAL</h4>
         <p style={{ margin: "4px 0 0", fontSize: "11.5px", color: "var(--text-secondary)", lineHeight: 1.45 }}>

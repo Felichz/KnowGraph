@@ -59,7 +59,7 @@ export function LearnStage({ node, draft = "", onUpdateDraft, onGoToParaphrase }
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "480px", background: "var(--bg-surface)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line-strong)", boxShadow: "var(--shadow-card)", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "480px", background: "rgba(10, 14, 22, 0.4)", borderRadius: "var(--radius-panel)", border: "1px solid var(--border-line)", overflow: "hidden" }}>
       {/* Header bar con acción de reconciliar */}
       {messages.length > 0 && (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--border-line)", background: "rgba(26, 32, 46, 0.6)" }}>

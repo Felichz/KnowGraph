@@ -16,21 +16,15 @@ export function GraphNode({
 
   const borderColor = isSelected
     ? "rgba(56, 189, 248, 0.65)"
-    : isExtra
-      ? "rgba(245, 158, 11, 0.45)"
-      : "rgba(255, 255, 255, 0.08)";
+    : "rgba(255, 255, 255, 0.08)";
 
   const shadow = isSelected
     ? "0 0 24px -2px rgba(56, 189, 248, 0.3), 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.15)"
-    : isExtra
-      ? "0 0 20px -2px rgba(245, 158, 11, 0.22), 0 6px 20px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(251, 191, 36, 0.18)"
-      : "0 4px 16px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)";
+    : "0 4px 16px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)";
 
   const background = isSelected
     ? "linear-gradient(180deg, rgba(28, 38, 62, 0.88) 0%, rgba(16, 22, 36, 0.98) 100%)"
-    : isExtra
-      ? "linear-gradient(180deg, rgba(32, 34, 44, 0.8) 0%, rgba(14, 18, 28, 0.94) 100%)"
-      : "linear-gradient(180deg, rgba(20, 27, 44, 0.75) 0%, rgba(12, 16, 26, 0.92) 100%)";
+    : "linear-gradient(180deg, rgba(20, 27, 44, 0.75) 0%, rgba(12, 16, 26, 0.92) 100%)";
 
   return (
     <article
