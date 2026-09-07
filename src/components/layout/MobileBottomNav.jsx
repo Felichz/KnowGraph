@@ -32,7 +32,7 @@ export function MobileBottomNav({
         backdropFilter: "blur(18px)",
         borderTop: "1px solid var(--border-line)",
         boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.45)",
-        zIndex: 1000,
+        zIndex: 25,
       }}
       className="mobile-bottom-nav"
       aria-label="Navegación inferior móvil"

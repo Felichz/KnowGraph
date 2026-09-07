@@ -162,7 +162,7 @@ textarea:focus {
     background: rgba(11, 15, 25, 0.96) !important;
     backdrop-filter: blur(16px) !important;
     border-top: 1px solid var(--border-line) !important;
-    z-index: 1000 !important;
+    z-index: 25 !important;
   }
 
   .hide-on-mobile {
