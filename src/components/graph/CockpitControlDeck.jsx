@@ -91,15 +91,8 @@ export function CockpitControlDeck({
 
       <div style={{ height: "1px", background: "rgba(255, 255, 255, 0.06)", margin: "0 -2px" }} />
 
-      {/* Fila 2: Barra de categorías con máscara horizontal */}
-      <div
-        style={{
-          minWidth: 0,
-          position: "relative",
-          maskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
-        }}
-      >
+      {/* Fila 2: Barra de categorías con envoltura completa (cero affordance oculta) */}
+      <div style={{ minWidth: 0 }}>
         <CategoryNav
           categories={categories}
           nodes={nodes}

@@ -1781,3 +1781,24 @@ h1 { font-size: clamp(28px, 3.2vw, 42px); letter-spacing: -.04em; line-height: 1
   .lesson-view-tabs button { font-size: 11px; }
   .category-chip { min-height: 34px; }
 }
+
+/* Responsive Cockpit Category Navigation: Full Wrapping on Desktop, Touch-Carousel on Mobile */
+.cockpit-category-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+@media (max-width: 768px) {
+  .cockpit-category-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+}

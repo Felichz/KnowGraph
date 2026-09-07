@@ -76,6 +76,8 @@ Para erradicar la ceguera por sobrecarga y evitar que los micro-detalles oculten
    En resoluciones de escritorio (1440×900), la suma de barras fijas, cabeceras y filtros no puede superar **130px de altura vertical total**. Al menos el 70% del viewport debe estar dedicado directamente al lienzo de contenido (nodos/grafo), garantizando ver al menos **2 filas completas de tarjetas sin hacer scroll**.
 3. **Invariante 1.3: Prohibición de Cañones Horizontales por `space-between` (Ley de Fitts)**  
    Prohibido el uso de `justify-content: space-between` en contenedores de ancho completo (>800px) que arroje la acción a más de 350px del texto sin contenido central que justifique el espacio. Si una acción pertenece a un contexto, debe estar visualmente acoplada a él.
+4. **Invariante 1.4: Prohibición de Affordances Ocultas en Taxonomía y Filtros (Anti-Hidden-Affordance)**  
+   Prohibido confinar los filtros de categorías a una sola línea horizontal con desborde oculto o scroll en escritorio cuando la cantidad de categorías ($N > 6$) excede el ancho disponible. La descubribilidad de la taxonomía debe ser del 100%: los chips deben envolver naturalmente (`flex-wrap: wrap`) o proveer un selector estructurado donde ninguna categoría quede invisible o dependiente de un scroll horizontal incómodo con ratón de escritorio.
 - **Penalización**: Violación de cualquier invariante de la Pasada 1 $\implies$ **Cap máximo automático $\le 6.5 / 10$**.
 
 ### Pasada 2: Micro-Densidad y Anti-Carditis de Componentes (La mirada del Microscopio)

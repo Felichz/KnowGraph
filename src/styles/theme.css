@@ -173,3 +173,24 @@ textarea:focus {
     padding: 6px !important;
   }
 }
+
+/* Responsive Cockpit Category Navigation: Full Wrapping on Desktop, Touch-Carousel on Mobile */
+.cockpit-category-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+@media (max-width: 768px) {
+  .cockpit-category-nav {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 2px !important;
+  }
+}

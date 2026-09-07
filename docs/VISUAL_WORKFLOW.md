@@ -64,14 +64,20 @@ Every User Story and Acceptance Scenario defined in `specs/001-clean-workspace-v
 
 ## 3. Las 3 Fases de Ejecución
 
-### Fase 1: Arquitectura de Información & Blueprint desde Cero
-- **Objetivo**: Planificar la jerarquía, densidad y estructura visual de cada pantalla antes de implementar.
+### Fase 1: Arquitectura de Información, Divergencia & Blueprint desde Cero
+- **Objetivo**: Planificar la jerarquía, densidad y estructura visual de cada pantalla antes de implementar, evaluando alternativas como un diseñador experto.
 - **Entradas**: `specs/001-clean-workspace-v2/spec.md` + Principios de Anthropic `frontend-design`.
-- **Artefacto**: `specs/001-clean-workspace-v2/design-spec.md`.
-- **Invariante**: Debe documentar explícitamente el diseño de las 7 User Stories, prohibir carditis/layer-cake y definir la densidad controlada (cero cajas huecas con $>40\text{px}$ de vacío).
+- **Paso Obligatorio: Matriz de Trade-offs y Evaluación Comparativa de IA**:
+  Para cada organismo estructural clave (filtros taxonómicos, cabeceras, decks de control, modales), formular y comparar explícitamente al menos 2-3 opciones estructurales (ej. cinta de scroll horizontal vs. matriz auto-envolvente vs. menú selector segmentado) analizando:
+  1. *Densidad & Altura Vertical*.
+  2. *Escalabilidad ante $N$ ítems* (qué pasa con 4, 8, 12 elementos).
+  3. *Descubribilidad & Cero Affordances Ocultas* (evitar esconder opciones críticas).
+  4. *Ergonomía de Puntero/Desktop vs. Touch/Mobile*.
+- **Artefacto**: `specs/001-clean-workspace-v2/design-spec.md` (debe contener la matriz comparativa de decisiones).
+- **Invariante**: Prohibir defaults perezosos (ej. asumir una sola línea horizontal sin evaluar cómo entran los tags), prohibir carditis/layer-cake y definir densidad controlada.
 
 ### Fase 2: Implementación y Barreras de Calidad
-- **Objetivo**: Construir el código reflejando fielmente el Blueprint.
+- **Objetivo**: Construir el código reflejando fielmente el Blueprint validado.
 - **Barreras Obligatorias (Quality Gates)**:
   1. `node scripts/audit-lines.mjs`: **43/43 archivos $\le 150$ líneas (0 violaciones)**.
   2. `npm run test:logic`: **8/8 suites passing**.
@@ -80,12 +86,18 @@ Every User Story and Acceptance Scenario defined in `specs/001-clean-workspace-v
 
 ### Fase 3: Bucle Continuo de Captura & Auditoría de 4 Pasadas Independientes
 - **Paso 3.1: Captura Determinista**: Ejecutar `node scripts/capture-showcase.mjs` con inyección de fixture nominal (`hydrated-state.json`).
+- **Paso 3.2.0: Reconsideración y Confirmación de Hipótesis Arquitectónicas (Design Reality Check)**:
+  Antes de auditar micro-detalles, evaluar la macro-estructura real en las capturas:
+  - *¿Sobrevivió la estructura elegida en Fase 1 al contacto con datos reales?*
+  - *¿Quedaron categorías decapitadas o escondidas detrás de scrolls horizontales incómodos en escritorio?*
+  - Si la hipótesis de diseño demuestra fricción o falta de descubribilidad, se declara **Fallo Estructural de IA** y se bifurca de inmediato a un pivote arquitectónico en Fase 2.
 - **Paso 3.2: Protocolo de 4 Pasadas Independientes por Captura**:
   Cada captura se audita secuencialmente con `view_file` a través de 4 perspectivas especializadas:
   1. **Pasada 1: Macro-Arquitectura de Pantalla y Viewport (Telescopio)**:
      - Invariante Anti-Layer-Cake (cero apilamiento de múltiples franjas/cajas horizontales independientes).
      - Regla del 70% del Viewport (barras/filtros $\le 130\text{px}$ de altura vertical total; al menos 2 filas completas de tarjetas visibles sin scroll).
      - Prohibición de Cañones Horizontales por `space-between` (>350px de vacío; Ley de Fitts).
+     - Invariante Anti-Hidden-Affordance (100% de categorías/filtros visibles sin obligar a scroll horizontal ciego en escritorio).
      - *Violación: Cap máximo $\le 6.5 / 10$*.
   2. **Pasada 2: Micro-Densidad y Anti-Carditis de Componentes (Microscopio)**:
      - Controlled Density (cero cajas huecas con $>40\text{px}$ de aire muerto).
@@ -98,11 +110,11 @@ Every User Story and Acceptance Scenario defined in `specs/001-clean-workspace-v
      - *Violación: Cap máximo $\le 8.0 / 10$*.
   4. **Pasada 4: Ergonomía de Interacción, Móvil y Estados Extremos (Táctil)**:
      - Touch targets $\ge 44\times 44\text{px}$ y safe area de 70px en móvil.
-     - Cero truncamientos duros (máscaras degradadas suaves calibradas y soporte `onWheel`).
+     - Cero truncamientos duros en viewport estrecho (envoltura inteligente y legibilidad de títulos).
      - Modos inmersivos (Zen Mode 100vw × 100vh con ancho de lectura contenido).
      - *Violación: Cap máximo $\le 8.0 / 10$*.
 - **Paso 3.3: Bifurcación**:
-  - Si alguna vista obtiene **$< 9.0$** en cualquiera de las 4 pasadas: Se registra el defecto y se pasa de inmediato al **Refactor Atómico** en la Fase 2, repitiendo el ciclo.
+  - Si alguna vista obtiene **$< 9.0$** en cualquiera de las 4 pasadas o falla la reconsideración arquitectónica: Se registra el defecto y se pasa de inmediato al **Refactor Atómico** en la Fase 2, repitiendo el ciclo.
   - Si el 100% de las vistas obtiene **$\ge 9.0$** en las 4 pasadas: La suite queda formalmente certificada y se avanza directo al cierre del Goal.
 
 ---

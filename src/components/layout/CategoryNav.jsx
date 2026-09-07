@@ -13,22 +13,7 @@ export function CategoryNav({
 
   return (
     <nav
-      onWheel={(e) => {
-        if (e.deltaY !== 0) {
-          e.currentTarget.scrollLeft += e.deltaY;
-        }
-      }}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "5px",
-        overflowX: "auto",
-        whiteSpace: "nowrap",
-        flex: 1,
-        minWidth: 0,
-        scrollbarWidth: "none",
-        padding: "2px 0",
-      }}
+      className="cockpit-category-nav"
       aria-label="Filtro de categorías"
     >
       <span style={{ fontSize: "9.5px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase", marginRight: "2px" }}>

@@ -34,19 +34,30 @@ La interfaz de Learning Workspace V2 adopta una estética **Dark Engineering Edi
   - *Derecha*: Contador total tabular `[2/101 (2%)]` con barra fina de progreso, botón de búsqueda `Buscar Ctrl+K`, acceso a configuración `⚙️ BYOK`.
 - **Regla de Espacio**: Altura fija de 52px con backdrop-blur (`rgba(10, 15, 29, 0.85)`).
 
-#### B. Banner de Desafío Recomendado (`SuggestedNext.jsx`)
-- **Jerarquía**:
-  - *Fila Superior*: Pill `🎯 PRÓXIMO DESAFÍO EN TU RUTA` en cian atenuado + Badge de prioridad `p#N`.
-  - *Fila Central*: Título del concepto en tipografía display bold (`16px`, `var(--text-primary)`).
-  - *Fila Inferior*: Micro-resumen conceptual de una línea (`node.lesson.summary`), eliminando el 75% de vacío negro que existía en versiones previas.
-  - *Acción*: Botón `Estudiar ahora →` con gradiente cian-índigo afilado en el extremo derecho.
-- **Regla de Espacio**: Padding compacto de `14px 20px` (altura total reducida a < 85px).
+#### B. Cockpit Control Deck Unificado (`CockpitControlDeck.jsx` & `SuggestedNext.jsx`)
+- **Evaluación Comparativa de Opciones de Organización de la Información (Matriz de Trade-offs)**:
+  Antes de implementar, se evaluaron tres paradigmas estructurales para la taxonomía curricular y filtros (8 categorías en React, 10 en Rails):
+  1. *Opción A: Cinta Horizontal con Scroll y Máscara de Desvanecimiento (`whiteSpace: nowrap`)*:
+     - *Ventaja*: Ocupa una sola fila fija (~32px).
+     - *Desventaja Crítica*: **Affordance Oculta Severa**. En pantallas estándar de 1080p, solo caben 5 o 6 categorías; el 40% del temario queda invisible a la derecha. El desplazamiento horizontal con rueda de ratón en escritorio es antinatural y produce desuso.
+     - *Veredicto*: **RECHAZADA**.
+  2. *Opción B: Menú Selector Desplegable / Popover (`[ 🏷️ Categoría: Todas ▾ ]`)*:
+     - *Ventaja*: Ocupa ancho mínimo fijo en la barra.
+     - *Desventaja*: Oculta la riqueza visual de las categorías y sus colores detrás de un clic. En un mapa de conocimiento, ver las categorías activas es clave para la orientación espacial.
+     - *Veredicto*: **RECHAZADA**.
+  3. *Opción C: Matriz Auto-Envolvente Compacta (`flexWrap: wrap`)*:
+     - *Ventajas*: **100% de descubribilidad inmediata**. Todas las 8 a 10 categorías son visibles y seleccionables con un solo clic. Cero scroll horizontal.
+     - *Trade-off*: En anchos medios ocupa 2 filas en lugar de 1.
+     - *Mitigación*: Tipografía compacta (`11px`), padding micro (`3px 8px`) y gap de `6px`. La sección de filtros consume solo ~50px, permitiendo que todo el Cockpit unificado (Fila 1: Desafío + Fila 2: Filtros) ocupe **~96px**, muy por debajo del límite de 130px.
+     - *Veredicto*: **SELECCIONADA (Arquitectura Ganadora)**.
 
-#### C. Cockpit Control Deck (`CockpitControlDeck.jsx` & `CategoryNav.jsx`)
-- **Jerarquía**:
-  - *Izquierda*: Etiqueta `FILTRO` + Chip `Todos (N)` + Chips individuales de categoría con dot indicador, nombre y ratio completado `N/Total`.
-  - *Tratamiento de Overflow*: Contenedor con `maskImage: linear-gradient(to right, black calc(100% - 28px), transparent 100%)` y evento `onWheel` para scroll fluido con ratón o trackpad. Cero chips decapitados.
-  - *Derecha*: Badge con total de conceptos visibles + Selector segmentado `[⊞ Cuadrícula | ☊ Topología SVG]`.
+- **Jerarquía del Cockpit Unificado**:
+  - *Fila 1 (Acción Inmediata & Estado)*:
+    - *Izquierda*: Badge `🎯 PRÓXIMO DESAFÍO` + prioridad `p#N` + Título del concepto + botón `Estudiar ahora →` acoplados con gap de 8-10px (cero cañón horizontal de vacío).
+    - *Derecha*: Contador total de conceptos visibles + Selector segmentado `[⊞ Cuadrícula | ☊ Topología SVG]`.
+  - *Divisor*: Regla de 1px sutil (`rgba(255, 255, 255, 0.06)`).
+  - *Fila 2 (Taxonomía Completa & Filtros)*:
+    - Etiqueta `FILTRO` + Chip `Todos (N)` + Chips individuales de categoría con envoltura limpia (`flexWrap: wrap`). 100% del temario visible en escritorio. Cero desbordes, cero scroll horizontal obligatorio.
 
 #### D. Tarjeta de Concepto (`GraphNode.jsx`)
 - **Estructura Interna**:

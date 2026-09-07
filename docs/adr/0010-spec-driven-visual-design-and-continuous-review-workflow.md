@@ -27,15 +27,17 @@ Visual coverage cannot be arbitrary. Every single User Story (US1 through US7) a
 The visual workflow is structured into three mandatory, non-overlapping phases:
 
 ```
-[Phase 1: Design Planning & Blueprint from Scratch]
-       │  Artifact: specs/<feature>/design-spec.md
+[Phase 1: Design Planning, Divergence & Tradeoff Matrix]
+       │  - Explore 2-3 IA structural options per macro-organism
+       │  - Evaluate Density, Scalability, Discoverability, Ergonomics
+       │  - Artifact: specs/<feature>/design-spec.md
        ▼
 [Phase 2: Implementation Guided by Blueprint]
        │  Quality Gates: ≤ 150 lines (audit-lines.mjs), 100% tests
        ▼
 [Phase 3: Continuous Capture & 4-Pass Review Loop] ◄───────────────┐
-       │  - Deterministic capture mapped to specs                 │ (If any pass < 9.0)
-       │  - 4 Sequential Independent Review Passes                │
+       │  - Step 3.2.0: Empirical IA Reconsideration (reality check)│ (If any pass < 9.0
+       │  - 4 Sequential Independent Review Passes                │  or IA flaw found)
        │  - Atomic refactor & quality re-verification             │
        ▼                                                          │
 (Did 100% of views score ≥ 9.0 in ALL 4 passes?) ───[NO]──────────┘
@@ -45,17 +47,31 @@ The visual workflow is structured into three mandatory, non-overlapping phases:
   [GOAL COMPLETE]
 ```
 
-### 3. Integration of Anthropic "Frontend Design" (Anti-AI-Slop) Principles
+### 3. Divergent IA Planning & Anti-Lazy-Default Mandate
+Agents must never adopt unconsidered default layouts (such as defaulting to a single-line horizontal tag strip for an arbitrarily sized list of categories).
+In Phase 1, each major macro-organism (filtering, navigation, study stage controls, dashboard decks) must explicitly evaluate at least 2-3 structural options across:
+1. **Information Density & Viewport Cost** (vertical pixel consumption).
+2. **Scalability with $N$ Items** (behavior when items grow from 4 to 10+).
+3. **Discoverability & Zero Hidden Affordances** (prohibiting horizontal scrolling ribbons on desktop that hide categories).
+4. **Desktop vs. Mobile Ergonomics** (mouse wheel vs. touch swipe).
+5. **Cognitive Load & Visual Calm** (avoiding visual fragmentation).
+
+### 4. Integration of Anthropic "Frontend Design" (Anti-AI-Slop) Principles
 The workflow incorporates the official Anthropic `frontend-design` standards:
 - **Anti-Layer-Cake Layout**: Primary navigation and controls must be an integrated surface or vertical sidebar. Stacking multiple full-width bordered rectangles on the main canvas is strictly prohibited.
 - **Controlled Density**: Interfaces for technical practitioners must balance whitespace with meaningful density. Zero empty voids ($> 40\,\text{px}$) inside cards; cards must convey summary, status, and context without filler divs.
 - **Action-Context Cohesion (Fitts's Law)**: Actions must be grouped with their context, prohibiting `space-between` canyons (>350px dead void across wide desktop viewports).
 - **Dominant Colors with Sharp Accents**: Category identity colors (cyan, amber, violet, emerald) are immutable anchors and must NEVER be overwritten by completion or score states. Excellence scores (100+) use sharp gold badge accents (`★ 120/120`) without repainting the entire card border.
 - **Editorial Typography & Hierarchy**: Contrast achieved through typographic scale, weight, and subtle divider rules, never by boxing paragraphs in separate floating cards.
-- **Invisible Polish (Design Engineering)**: Horizontal scroll with mousewheel (`onWheel`), smooth edge gradient masks (`mask-image: linear-gradient(...)`) instead of hard truncation, and cross-browser slim scrollbars.
+- **Zero Hidden Taxonomy Affordance**: Key navigation and filters must be immediately visible without forcing horizontal dragging or obscure scroll gestures on desktop.
 
-### 4. The 4 Independent Review Passes by Perspective
-To eliminate cognitive bias and review blindness, every capture is audited through 4 sequential, independent perspectives:
+### 5. Empirical Architectural Reconsideration & The 4 Review Passes
+Before and during the 4 review passes, the agent must perform **Step 3.2.0: Empirical IA Reconsideration**:
+- *Did the chosen structure survive contact with real viewports and data?*
+- *Are categories clipped? Is horizontal scrolling masking a design failure?*
+- If the visual evidence reveals that an assumed structure impairs discoverability or ergonomics, the agent must initiate a structural architectural pivot rather than applying cosmetic patches.
+
+Following this reality check, captures are audited through the 4 sequential independent passes:
 1. **Pass 1: Macro-Architecture & Viewport (Telescope)**: Anti-Layer-Cake (zero stacked horizontal slab boxes), 70% Viewport Rule (controls $\le 130\text{px}$ vertical, $\ge 2$ full card rows visible without scroll), Anti-Canyon (`space-between` gap $\le 350\text{px}$). *Cap: $\le 6.5 / 10$*.
 2. **Pass 2: Component Micro-Density & Anti-Carditis (Microscope)**: Controlled Density (zero hollow voids $>40\text{px}$), Anti-Carditis (zero nested decorative cards in modals), Flexbox Protection (`flexShrink: 0`). *Cap: $\le 7.0 / 10$*.
 3. **Pass 3: Color Semantics & Atmosphere (Colorist)**: Category Color Invariance, Sharp Accents vs. Christmas Tree (no full border repainting by score). *Cap: $\le 8.0 / 10$*.
