@@ -3,7 +3,7 @@
 **Master Workflow Entrypoint Document for `/goal`**  
 **Reference**: [ADR 0010 — Spec-Driven Visual Design Engineering](./adr/0010-spec-driven-visual-design-and-continuous-review-workflow.md)  
 **Governing Criteria**: [docs/DESIGN_CRITERIA.md](./DESIGN_CRITERIA.md)  
-**System Foundations**: [DESIGN.md](../DESIGN.md)  
+**System Foundations**: [DESIGN.md](../DESIGN.md) *(Generado en Fase 0)*  
 **Input Specification**: `specs/<feature>/spec.md`  
 **Target Output Artifact**: `specs/<feature>/design-spec.md`  
 
@@ -70,7 +70,7 @@ The workflow fuses 43 specialized visual design skills into 4 authoritative Mast
 ### Phase 0: Design Foundations & System Architecture
 - **Objective**: Establish or verify the project's visual system, creative North Star, token architecture, and brand personality. If `DESIGN.md` does not exist, author it from scratch; if it exists, audit and calibrate it against the feature's requirements.
 - **Governing Skill**: `.agents/skills/ui-design-foundations/SKILL.md`
-- **Constituent Skills**: `brand-visual-language`, `color-mode-and-theme`, `algorithmic-color-palette`, `modular-scale-typography`, `elevation-and-depth`, `sizing-units`, `authentic-product-representation`, `clone-website`, `generate-ui-from-brand`, `extract-design`.
+- **Constituent Skills (10)**: `brand-visual-language`, `color-mode-and-theme`, `algorithmic-color-palette`, `modular-scale-typography`, `elevation-and-depth`, `sizing-units`, `authentic-product-representation`, `clone-website`, `generate-ui-from-brand`, `extract-design`.
 - **Mandatory Output**: `DESIGN.md` in repo root.
 - **Auditor Quality Gate Checklist**:
   - [ ] **Visual Tone Consistency**: Do border-radii, typography, and iconography strictly match the defined brand personality?
@@ -87,7 +87,7 @@ The workflow fuses 43 specialized visual design skills into 4 authoritative Mast
 ### Phase 1: Feature Information Architecture & Spatial Hierarchy
 - **Objective**: Deconstruct `specs/<feature>/spec.md` into an exhaustive data manifest, cluster data into unified surfaces, and conduct comparative structural evaluations (Landscape vs Portrait) documenting "The Why".
 - **Governing Skill**: `.agents/skills/ui-information-architecture/SKILL.md`
-- **Constituent Skills**: `information-architecture`, `gestalt-ui-organisation`, `ui-density`, `layout-paradigms-and-consistency`, `responsive-paradigms`, `visual-emphasis-and-hierarchy`, `ui-context-and-scope`, `user-flows-and-guided-paths`, `dembrandt`.
+- **Constituent Skills (9)**: `information-architecture`, `gestalt-ui-organisation`, `ui-density`, `layout-paradigms-and-consistency`, `responsive-paradigms`, `visual-emphasis-and-hierarchy`, `ui-context-and-scope`, `user-flows-and-guided-paths`, `dembrandt`.
 - **Mandatory Output Sections in `specs/<feature>/design-spec.md`**:
   1. **Section A: Exhaustive Information Inventory Matrix (Data & Affordance Manifest)**:
      - Numbered inventory table (`INF-01` to `INF-N`) covering every single data point, label, counter, status dot, and button required across all User Stories. Cero omissions.
@@ -112,7 +112,7 @@ The workflow fuses 43 specialized visual design skills into 4 authoritative Mast
 ### Phase 2: Component Patterns & Interactive Mechanics
 - **Objective**: Specify the exact component mechanics, app shell layout, overlay z-index hierarchy, button 6-state lifecycles, form inputs, and scroll containment rules.
 - **Governing Skill**: `.agents/skills/ui-component-patterns/SKILL.md`
-- **Constituent Skills**: `app-shell`, `global-toolbar-controls`, `modal-and-overlay-patterns`, `tab-navigation`, `button-states`, `form-design`, `scroll-areas`, `sticky-and-fixed-elements`, `component-family-consistency`, `repeated-component-alignment`, `coordinated-data-views`, `data-display-and-selection`, `domain-expert-configuration`, `operational-expert-tool-ui`, `real-world-metaphors`.
+- **Constituent Skills (15)**: `app-shell`, `global-toolbar-controls`, `modal-and-overlay-patterns`, `tab-navigation`, `button-states`, `form-design`, `scroll-areas`, `sticky-and-fixed-elements`, `component-family-consistency`, `repeated-component-alignment`, `coordinated-data-views`, `data-display-and-selection`, `domain-expert-configuration`, `operational-expert-tool-ui`, `real-world-metaphors`.
 - **Mandatory Output Sections in `specs/<feature>/design-spec.md`**:
   1. **Section D: Component Patterns & Interactive Mechanics**:
      - **App Shell Architecture**: Header height, canvas containment, sticky positioning, drawer sliding mechanics.
@@ -135,7 +135,7 @@ The workflow fuses 43 specialized visual design skills into 4 authoritative Mast
 ### Phase 3: Usability, 5-State Matrix & Verification Gate
 - **Objective**: Define the Universal 5-State Matrix, specify identical geometric skeletons, audit against WCAG 2.2 AA accessibility, Nielsen usability heuristics, notification recovery, and deliver the final signed design certificate.
 - **Governing Skill**: `.agents/skills/ui-quality-and-audit/SKILL.md`
-- **Constituent Skills**: `nielsen-usability-heuristics`, `notifications-and-recovery`, `loading-states-and-perceived-performance`, `wcag-accessibility`, `status-colors-and-errors`, `performance-and-web-vitals`, `micro-interactions`, `motion-and-storytelling`, `semantic-html-and-seo`.
+- **Constituent Skills (9)**: `nielsen-usability-heuristics`, `notifications-and-recovery`, `loading-states-and-perceived-performance`, `wcag-accessibility`, `status-colors-and-errors`, `performance-and-web-vitals`, `micro-interactions`, `motion-and-storytelling`, `semantic-html-and-seo`.
 - **Mandatory Output Sections in `specs/<feature>/design-spec.md`**:
   1. **Section E: Universal 5-State Matrix**:
      - Exact visual geometry and messaging for:
@@ -163,7 +163,63 @@ The workflow fuses 43 specialized visual design skills into 4 authoritative Mast
 
 ---
 
-## 4. Downstream Developer Handoff Contract
+## 4. Standard Gap Report Artifact Schema
+
+Every Auditor Subagent must write its audit findings to disk at `specs/<feature>/design-reviews/phase-<0-3>-audit.md` strictly conforming to this schema:
+
+```markdown
+# Phase <X> Audit & Gap Report: <Phase Name>
+
+- **Feature**: <feature-slug>
+- **Auditor Subagent**: <Auditor Role>
+- **Governing Master Skill**: <Master Skill Name>
+- **Target Artifact Audited**: <Path to Artifact>
+- **Iteration**: <Iteration Number>
+- **Audit Date**: <ISO Timestamp>
+
+## 1. Quantitative Score & Gate Verdict
+
+- **Overall Score**: <X.X> / 10.0
+- **Total Unresolved Gaps**: <N>
+- **Gate Status**: [SEALED | NEEDS_REVISION]
+
+*(Gate Status is SEALED strictly when Score >= 9.5 / 10.0 AND Total Unresolved Gaps == 0)*
+
+## 2. Master Defense Checklist Evaluation
+
+| # | Criterion | Result | Evidence / Finding |
+|:---:|:---|:---:|:---|
+| 1 | <Checklist Item 1> | PASS / FAIL | <Brief justification> |
+| 2 | <Checklist Item 2> | PASS / FAIL | <Brief justification> |
+...
+
+## 3. Itemized Gap Analysis (Required if Gaps > 0)
+
+| Gap ID | Severity | Section / Line | Deficiency Description | Concrete Remediation Required |
+|:---|:---:|:---|:---|:---|
+| GAP-01 | [CRITICAL | MAJOR | MINOR] | <Ref> | <What is missing or non-compliant> | <Exact change or formula required> |
+
+## 4. Auditor Final Remarks & Instructions for Creator
+<Instructions to pass back to the Creator Subagent for targeted patching>
+```
+
+---
+
+## 5. Operational Subagent Invocation Guide
+
+When running this workflow as the Main Orchestrator Agent (e.g. under `/goal docs/VISUAL_WORKFLOW.md`):
+
+### Step-by-Step Subagent Invocation Loop:
+1. **Launch Creator**: Invoke the designated Creator Subagent using `invoke_subagent`, referencing the governing Master Skill path (e.g. `.agents/skills/<skill-name>/SKILL.md`) and directing it to write or patch the target artifact on disk.
+2. **Launch Auditor**: Upon Creator completion, invoke the corresponding Auditor Subagent using `invoke_subagent`. The Auditor must view the artifact on disk, evaluate all checklist criteria, and write the Gap Report to `specs/<feature>/design-reviews/phase-<X>-audit.md`.
+3. **Evaluate Disk State (Stigmergy)**: The Main Agent inspects the generated Gap Report:
+   - If `Gate Status: NEEDS_REVISION` (or Gaps > 0): Send a targeted revision message or re-invoke the Creator with the exact `GAP-XX` items. Repeat review until certified.
+   - If `Gate Status: SEALED` (Score $\ge 9.5$ and Gaps == 0): The phase gate is locked. Advance to the next phase.
+4. **Final Closure**: When Phase 3 is sealed, the Main Agent outputs the final summary with `<!-- DESIGN_WORKFLOW_COMPLETE -->`.
+
+---
+
+## 6. Downstream Developer Handoff Contract
 
 When this workflow completes:
 1. `DESIGN.md` and `specs/<feature>/design-spec.md` constitute the **complete, sealed single source of visual truth**.
