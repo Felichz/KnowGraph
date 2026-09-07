@@ -6,11 +6,13 @@
 
 ## Context
 
-Automated coding agents developing user interfaces frequently suffer from **"AI Visual Slop"**, **"Carditis / Div Soup"**, and **"Premature Exit Bias"**:
+Automated coding agents developing user interfaces frequently suffer from **"AI Visual Slop"**, **"Carditis / Div Soup"**, **"Layer-Cake Stacking"**, and **"Review Blindness via Cognitive Blending"**:
 1. **Generic AI Aesthetics (AI Slop)**: Defaulting to cookie-cutter layouts, hollow cards with empty dark space, uniform borders, repetitive gradient fills, and timid color distribution that destroys semantic meaning.
-2. **Carditis / Div Soup**: Wrapping text elements in independent bordered containers inside an already bordered modal or panel, wasting critical vertical viewport height and forcing premature scrollbars.
-3. **Premature Victory Declarations**: Agents fixing an isolated bug, performing a superficial self-review, assigning inflated ratings (e.g. 9/10 to a wireframe-grade layout with clipped text), and terminating execution before reaching production-grade engineering standards.
-4. **Decoupled Visual Verification**: Screenshots captured randomly without traceability to the formal product specifications (`spec.md`).
+2. **Micro and Macro Carditis (Layer-Cake Anti-Pattern)**: Wrapping elements in independent bordered containers both at the micro level (cajas within modals) and at the macro level (stacking full-width horizontal slab containers: header + banner + control deck), fragmenting space and consuming >250px of vertical viewport height before reaching primary content.
+3. **Widescreen Action Canyons (Fitts's Law Violations)**: Pushing primary CTA buttons to opposite screen edges with `justify-content: space-between` across >1300px containers, leaving hundreds of pixels of unutilized black void and disconnecting actions from context.
+4. **Review Blindness via Cognitive Blending**: Attempting to audit 20 disparate criteria simultaneously in a single review pass causes agents to develop review blindness, awarding 9+ ratings to flawed macro layouts simply because micro-details (e.g. text summaries or monospace numbers) appear refined.
+5. **Premature Victory Declarations**: Agents fixing an isolated symptom, performing a superficial self-review, and terminating execution before reaching production-grade engineering standards.
+6. **Decoupled Visual Verification**: Screenshots captured randomly without traceability to the formal product specifications (`spec.md`).
 
 To elevate visual engineering to the standards of products like Linear, Raycast, and Vercel, visual development must be governed by the same formal rigor as domain logic and testing.
 
