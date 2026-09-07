@@ -1,140 +1,175 @@
-# Visual Design Engineering & Continuous Review Workflow
+# Visual UI/UX Design Engineering & Blueprint Workflow
 
-**Workflow Entrypoint Document for `/goal`**  
+**Master Workflow Entrypoint Document for `/goal`**  
 **Reference**: [ADR 0010 — Spec-Driven Visual Design Engineering](./adr/0010-spec-driven-visual-design-and-continuous-review-workflow.md)  
 **Governing Criteria**: [docs/DESIGN_CRITERIA.md](./DESIGN_CRITERIA.md)  
-**Specification**: [specs/001-clean-workspace-v2/spec.md](../specs/001-clean-workspace-v2/spec.md)  
-**Design Blueprint**: [specs/001-clean-workspace-v2/design-spec.md](../specs/001-clean-workspace-v2/design-spec.md)  
+**System Foundations**: [DESIGN.md](../DESIGN.md)  
+**Input Specification**: `specs/<feature>/spec.md`  
+**Target Output Artifact**: `specs/<feature>/design-spec.md`  
 
 ---
 
-## 1. Goal Execution Contract
+## 1. Goal Execution Contract & Scope Boundary
 
-When invoking `/goal` with this workflow, the agent is bound to execute all 3 phases sequentially without stopping or declaring premature completion. The task concludes **ONLY** when Phase 3 certifies that **100% of the spec-mapped views score $\ge 9.0 / 10$ across all 4 independent review passes**.
+> [!IMPORTANT]
+> **STRICT SCOPE BOUNDARY: EXCLUSIVELY THE DESIGN PHASE**  
+> This workflow governs the **pure visual and interaction design phase** that bridges a product specification (`spec.md`) and software implementation.  
+> **Output Artifacts are EXCLUSIVELY MARKDOWN DOCUMENTS**:
+> 1. `DESIGN.md` (Design System Foundations & Visual Tokens)
+> 2. `specs/<feature>/design-spec.md` (Exhaustive, Unambiguous UI/UX Engineering Blueprint)
+> 3. `specs/<feature>/design-reviews/phase-*.md` (Auditor Gap Analysis & Certification Reports)
+> 
+> **ZERO CODE IMPLEMENTATION**: No files in `src/`, no React components, and no test code are authored in this workflow. Downstream implementation begins only after this design blueprint is 100% sealed.
+
+When invoking `/goal` with this workflow, the orchestrating agent executes the **4-Phase Universal Convergence Loop** sequentially without stopping or declaring premature victory. The goal concludes **ONLY** when all 4 Phase Gates are formally sealed on disk with zero unresolved gaps.
 
 ```
-[Phase 1: Blueprint from Scratch] ──► [Phase 2: Implementation & Tests]
-                                                     │
-                                                     ▼
-┌───────────────────────────────────► [Phase 3: Capture & 4-Pass Review Loop]
-│                                                    │
-│                                    ¿Alguna pasada < 9.0 en alguna vista?
-│                                              /            \
-│                                          [SÍ]             [NO (100% ≥ 9.0)]
-│                                           │                     │
-└────── [Refactor Atómico + Tests] ◄────────┘                     ▼
-                                                          [GOAL_COMPLETE]
+                                  THE UNIVERSAL CONVERGENCE LOOP
+                                  
+    ┌────────────────────────────────────────────────────────────────────────┐
+    │                                                                        │
+    │  [Creator Subagent] ──► Writes/Patches Artifact on Disk               │
+    │                               │                                        │
+    │                               ▼                                        │
+    │  [Auditor Subagent] ──► Runs Adversarial Defense Checklist             │
+    │                               │                                        │
+    │                               ▼                                        │
+    │                 Emits [Gap Report on Disk]                             │
+    │                               │                                        │
+    │                     ¿Existen brechas / Gaps > 0?                       │
+    │                              /        \                                │
+    │                           [SÍ]        [NO (Gaps = 0 & Score ≥ 9.5)]    │
+    │                            │                      │                    │
+    │  [Re-invocar Creator] ◄────┘                      ▼                    │
+    │   (Objetivo: parchear gaps)               [SELLO DE FASE]             │
+    │                                                   │                    │
+    └───────────────────────────────────────────────────┼────────────────────┘
+                                                        │
+                   ┌────────────────────────────────────┴────────────────────┐
+                   ▼                                                         ▼
+              [Avanzar a Siguiente Fase]                    [FASE 3 CERTIFICADA: GOAL_COMPLETE]
 ```
 
 ---
 
-## 2. Mandatory 100% Spec Coverage Matrix
+## 2. The 4 Master Design Domains & Subagent Archetypes
 
-Every User Story and Acceptance Scenario defined in `specs/001-clean-workspace-v2/spec.md` must have an explicit visual capture in `tmp/showcase/` using deterministic naming:
+The workflow fuses 43 specialized visual design skills into 4 authoritative Master Domains located in `.agents/skills/`. Each phase is driven by an adversarial pair of subagents:
 
-| Identifier | User Story Reference | Viewport | Scope / Visual Target |
-|:---|:---|:---:|:---|
-| `US1-Scen01-Populated-Desktop-CockpitGrid` | US1 Acceptance 1 | Desktop (1440x900) | Canvas principal, métricas tabulares, tarjetas temario |
-| `US1-Scen02-Populated-Desktop-RailsGraph` | US1 Acceptance 2 | Desktop (1440x900) | Conmutación instantánea a grafo Rails |
-| `US1-Scen03-Populated-Desktop-CategoryFilter` | US1 Acceptance 3 | Desktop (1440x900) | Filtro por categoría activo y recálculo de ruta |
-| `US1-Scen04-Populated-Desktop-CommandPalette` | US1 Acceptance 4 | Desktop (1440x900) | Modal Ctrl+K con búsqueda y acciones rápidas |
-| `US1-Scen06-Populated-Desktop-SeniorityTop` | US1 Acceptance 6 | Desktop (1440x900) | Drawer de Seniority Bands y métricas de avance |
-| `US1-Scen06-Populated-Desktop-SeniorityScroll` | US1 Acceptance 6 | Desktop (1440x900) | Scroll de Milestones con scrollbar ultrafina |
-| `US1-Scen09-Populated-Desktop-TopologySVG` | US1 Acceptance 9 | Desktop (1440x900) | Visualizador DAG SVG con Pan & Zoom |
-| `US2-Scen01-Populated-Desktop-StudyReadTop` | US2 Acceptance 1 | Desktop (1440x900) | Modal Etapa 01 Leer, tesis editorial y comparativa |
-| `US2-Scen01-Populated-Desktop-StudyReadScroll` | US2 Acceptance 1 | Desktop (1440x900) | Scroll de código comparativo Naive vs Senior |
-| `US2-Scen03-Populated-Desktop-StudyFAANG` | US2 Acceptance 3 | Desktop (1440x900) | Sección preguntas FAANG desbloqueadas/bloqueadas |
-| `US2-Scen07-Populated-Desktop-StudyZenMode` | US2 Acceptance 7 | Desktop (1440x900) | Modo Zen pantalla completa sin distracciones |
-| `US2-Scen08-Populated-Desktop-StudyLearnStage` | US2 Acceptance 8 | Desktop (1440x900) | Etapa 02 Aprender: tutor socrático y quick chips |
-| `US2-Scen11-Populated-Desktop-StudyParaphrase` | US2 Acceptance 11 | Desktop (1440x900) | Etapa 03 Parafrasear: editor de borrador y consigna |
-| `US2-Scen11-Populated-Desktop-StudyChunks` | US2 Acceptance 11 | Desktop (1440x900) | Alternancia a Chunks de lectura con densidad léxica |
-| `US2-Scen14-Boundary-Desktop-StudyEvaluateScore` | US2 Acceptance 14 | Desktop (1440x900) | Etapa 04 Evaluar: Executive Scorecard y rúbrica 2x2 |
-| `US2-Scen15-Populated-Desktop-StudyEvaluateHistory` | US2 Acceptance 15 | Desktop (1440x900) | Switcher histórico de intentos previos |
-| `US3-Scen01-Populated-Desktop-BYOKSettings` | US3 Acceptance 1 | Desktop (1440x900) | Modal configuración proveedores LLM y backup |
-| `US5-Scen02-Populated-Desktop-GlobalHUDStreaming` | US5 Acceptance 2 | Desktop (1440x900) | HUD flotante con streaming de caracteres |
-| `US6-Scen01-Populated-Desktop-FlashcardsGrid` | US6 Acceptance 1 | Desktop (1440x900) | Cuadrícula de flashcards 3D y filtros de dominio |
-| `US6-Scen02-Populated-Desktop-FlashcardFlipped` | US6 Acceptance 2 | Desktop (1440x900) | Reverso de flashcard con respuesta técnica clave |
-| `US7-Scen01-Populated-Mobile-WorkspaceTop` | US7 Acceptance 1 | Mobile (390x844) | Viewport móvil, SuggestedNext compacto y bottom nav |
-| `US7-Scen01-Populated-Mobile-WorkspaceScroll` | US7 Acceptance 1 | Mobile (390x844) | Scroll en móvil con safe padding inferior |
-| `US7-Scen01-Populated-Mobile-BottomNavActive` | US7 Acceptance 1 | Mobile (390x844) | Barra inferior fija con pestaña activa en thumb zone |
-| `US7-Scen02-Populated-Mobile-Flashcards` | US7 Acceptance 2 | Mobile (390x844) | Flashcards en columna única para interacción táctil |
-| `US7-Scen02-Populated-Mobile-StudyModal` | US7 Acceptance 2 | Mobile (390x844) | Modal de estudio en móvil sin desbordes horizontales |
+| Phase | Master Skill | Creator Subagent Role | Auditor Subagent Role | Target Artifact |
+|:---|:---|:---|:---|:---|
+| **Phase 0** | `ui-design-foundations` | `Visual Foundations Architect` | `Visual System Auditor` | `DESIGN.md` |
+| **Phase 1** | `ui-information-architecture` | `Information Architect` | `IA & Spatial Layout Auditor` | `design-spec.md` (Sec A-C) |
+| **Phase 2** | `ui-component-patterns` | `Component Systems Designer` | `Component Mechanics & Overlay Auditor` | `design-spec.md` (Sec D-E) |
+| **Phase 3** | `ui-quality-and-audit` | `Interaction & Usability Specialist` | `Accessibility & 5-State Quality Auditor` | `design-spec.md` (Sec F-H) |
 
 ---
 
-## 3. Las 3 Fases de Ejecución
+## 3. Detailed Phase Specifications
 
-### Fase 1: Arquitectura de Información, Divergencia & Blueprint desde Cero
-- **Objetivo**: Planificar con rigor formal la jerarquía, densidad y estructura visual de cada pantalla antes de implementar, evaluando alternativas como un diseñador experto y documentando el "Por Qué" de cada decisión.
-- **Entradas**: `specs/001-clean-workspace-v2/spec.md` + Principios de Anthropic `frontend-design`.
-- **Estructura Obligatoria del Blueprint (`specs/<feature>/design-spec.md`)**:
-  1. **Sección A: Matriz de Inventario Exhaustivo de Información (Data & Affordance Manifest)**:
-     - Tabla exhaustiva por User Story que enumera cada pieza de información (títulos, métricas tabulares, micro-resúmenes, badges, contadores, alertas), estados de datos (Empty, Populated, Boundary, Error) y affordances/acciones requeridas por `spec.md`. Cero omisiones.
-  2. **Sección B: Matriz de Agrupación, Jerarquía y Superficies (IA Clustering)**:
-     - Mapeo de cada pieza de información a clusters lógicos y organismos visuales (Header, Cockpit Deck, Tarjetas, Modales, Drawers, HUD).
-     - Asignación de jerarquía visual (Primaria, Secundaria, Terciaria) y plano de superficie (superficie unificada vs. divisores sutiles, erradicando cajas anidadas).
-  3. **Sección C: Matriz de Evaluación Comparativa de Layout y Trade-offs (Landscape/Desktop vs. Portrait/Mobile)**:
-     - Para cada organismo clave, formular y comparar explícitamente al menos 2-3 opciones de disposición estructural tanto para **Landscape (Desktop 1440×900)** como para **Portrait (Mobile 390×844)**.
-     - Criterios objetivos de evaluación:
-       - *Densidad Vertical & Viewport Cost* (altura en px vs. contenido visible).
-       - *Escalabilidad ante $N$ Elementos* (comportamiento con 4, 8, 12 o 20 ítems).
-       - *Descubribilidad & Cero Affordances Ocultas* (100% de opciones visibles sin forzar scroll horizontal ciego en escritorio).
-       - *Ergonomía de Interacción* (Puntero/Ratón vs. Zona del Pulgar / Touch Targets $\ge 44\text{px}$).
-       - *Carga Cognitiva & Calma Visual* (evitar fragmentación y saturación).
-     - Veredicto y Razón Explícita ("The Why"): justificación formal de la arquitectura ganadora para Desktop y Mobile.
-  4. **Sección D: Protocolo de Trazabilidad y Verificación para Fase 3 (Review Traceability)**:
-     - Mapeo directo entre la matriz de inventario/trade-offs y las capturas en `tmp/showcase/`. En la Fase 3, la auditoría revisará no solo la estética, sino la presencia estricta de cada dato inventariado y la validez empírica del layout elegido.
-- **Invariante**: Prohibir defaults perezosos (ej. asumir una sola línea horizontal sin evaluar cómo entran los tags), prohibir carditis/layer-cake y definir densidad controlada.
-
-### Fase 2: Implementación y Barreras de Calidad
-- **Objetivo**: Construir el código reflejando fielmente el Blueprint validado.
-- **Barreras Obligatorias (Quality Gates)**:
-  1. `node scripts/audit-lines.mjs`: **43/43 archivos $\le 150$ líneas (0 violaciones)**.
-  2. `npm run test:logic`: **8/8 suites passing**.
-  3. `npm run build`: **Compilación sin errores en `dist/`**.
-  4. `npx playwright test`: **33/33 tests E2E passing (0 uncaught exceptions)**.
-
-### Fase 3: Bucle Continuo de Captura & Auditoría de 4 Pasadas Independientes
-- **Paso 3.1: Captura Determinista**: Ejecutar `node scripts/capture-showcase.mjs` con inyección de fixture nominal (`hydrated-state.json`).
-- **Paso 3.2.0: Verificación de Inventario y Reconsideración Empírica (Design Reality Check)**:
-  Antes de auditar micro-detalles, contrastar la captura real directamente contra la matriz de `specs/<feature>/design-spec.md`:
-  1. *Auditoría de Presencia de Inventario*: ¿Están presentes en pantalla el 100% de los datos, contadores y affordances listados en la Sección A para esta User Story?
-  2. *Validación Empírica del Layout Elegido*: ¿Sobrevivió la estructura elegida en la Sección C al contacto con datos reales? ¿Ocurren recortes, scrollbars inesperados o desbordes en Landscape o Portrait?
-  3. *Reconsideración o Confirmación*: Si la captura valida que la información es legible, densa y descubrible, se confirma la arquitectura. Si la evidencia visual demuestra fricción o affordances ocultas, se declara **Fallo Estructural de IA** y se bifurca de inmediato a un pivote arquitectónico en Fase 2.
-- **Paso 3.2: Protocolo de 4 Pasadas Independientes por Captura**:
-  Cada captura se audita secuencialmente con `view_file` a través de 4 perspectivas especializadas:
-  1. **Pasada 1: Macro-Arquitectura de Pantalla y Viewport (Telescopio)**:
-     - Invariante Anti-Layer-Cake (cero apilamiento de múltiples franjas/cajas horizontales independientes).
-     - Regla del 70% del Viewport (barras/filtros $\le 130\text{px}$ de altura vertical total; al menos 2 filas completas de tarjetas visibles sin scroll).
-     - Prohibición de Cañones Horizontales por `space-between` (>350px de vacío; Ley de Fitts).
-     - Invariante Anti-Hidden-Affordance (100% de categorías/filtros visibles sin obligar a scroll horizontal ciego en escritorio).
-     - *Violación: Cap máximo $\le 6.5 / 10$*.
-  2. **Pasada 2: Micro-Densidad y Anti-Carditis de Componentes (Microscopio)**:
-     - Controlled Density (cero cajas huecas con $>40\text{px}$ de aire muerto).
-     - Anti-Carditis Interna (cero cajas decorativas dentro de modales o paneles).
-     - Protección Flexbox (`flexShrink: 0` en encabezados y tabs).
-     - *Violación: Cap máximo $\le 7.0 / 10$*.
-  3. **Pasada 3: Semántica Cromática y Jerarquía de Iluminación (Colorista)**:
-     - Ancla inmutable de color de categoría.
-     - Acentos afilados vs. Árbol de Navidad (prohibido pintar bordes completos de tarjetas en dorado/verde por puntaje).
-     - *Violación: Cap máximo $\le 8.0 / 10$*.
-  4. **Pasada 4: Ergonomía de Interacción, Móvil y Estados Extremos (Táctil)**:
-     - Touch targets $\ge 44\times 44\text{px}$ y safe area de 70px en móvil.
-     - Cero truncamientos duros en viewport estrecho (envoltura inteligente y legibilidad de títulos).
-     - Modos inmersivos (Zen Mode 100vw × 100vh con ancho de lectura contenido).
-     - *Violación: Cap máximo $\le 8.0 / 10$*.
-- **Paso 3.3: Bifurcación**:
-  - Si alguna vista obtiene **$< 9.0$** en cualquiera de las 4 pasadas o falla la reconsideración arquitectónica: Se registra el defecto y se pasa de inmediato al **Refactor Atómico** en la Fase 2, repitiendo el ciclo.
-  - Si el 100% de las vistas obtiene **$\ge 9.0$** en las 4 pasadas: La suite queda formalmente certificada y se avanza directo al cierre del Goal.
+### Phase 0: Design Foundations & System Architecture
+- **Objective**: Establish or verify the project's visual system, creative North Star, token architecture, and brand personality. If `DESIGN.md` does not exist, author it from scratch; if it exists, audit and calibrate it against the feature's requirements.
+- **Governing Skill**: `.agents/skills/ui-design-foundations/SKILL.md`
+- **Constituent Skills**: `brand-visual-language`, `color-mode-and-theme`, `algorithmic-color-palette`, `modular-scale-typography`, `elevation-and-depth`, `sizing-units`, `authentic-product-representation`, `clone-website`, `generate-ui-from-brand`, `extract-design`.
+- **Mandatory Output**: `DESIGN.md` in repo root.
+- **Auditor Quality Gate Checklist**:
+  - [ ] **Visual Tone Consistency**: Do border-radii, typography, and iconography strictly match the defined brand personality?
+  - [ ] **Concentric Radii Formula**: Is `outerRadius = innerRadius + padding` strictly respected across nested cards and containers?
+  - [ ] **Color Palette Discipline**: Is the functional accent color restricted to < 5% of the visual field?
+  - [ ] **Modular Typography Scale**: Are type sizes adhering to an exact geometric ratio with explicit rem/px tokens and tabular figures for numbers?
+  - [ ] **Elevation & Depth**: Are shadow layers subtle (2-3 layers), directional, with dark mode utilizing surface lightness over drop shadows?
+  - [ ] **Sizing & Spacing Units**: Are all paddings, margins, and gaps pegged to a rigid 4px/8px grid system?
+  - [ ] **Authentic Product Representation**: Are all visuals, placeholders, and mockups grounded in realistic domain fixtures rather than generic placeholder text?
+- **Convergence Condition**: Auditor emits `specs/<feature>/design-reviews/phase-0-audit.md` with Score $\ge 9.5 / 10$ and 0 gaps.
 
 ---
 
-## 4. Condición de Finalización del Goal
+### Phase 1: Feature Information Architecture & Spatial Hierarchy
+- **Objective**: Deconstruct `specs/<feature>/spec.md` into an exhaustive data manifest, cluster data into unified surfaces, and conduct comparative structural evaluations (Landscape vs Portrait) documenting "The Why".
+- **Governing Skill**: `.agents/skills/ui-information-architecture/SKILL.md`
+- **Constituent Skills**: `information-architecture`, `gestalt-ui-organisation`, `ui-density`, `layout-paradigms-and-consistency`, `responsive-paradigms`, `visual-emphasis-and-hierarchy`, `ui-context-and-scope`, `user-flows-and-guided-paths`, `dembrandt`.
+- **Mandatory Output Sections in `specs/<feature>/design-spec.md`**:
+  1. **Section A: Exhaustive Information Inventory Matrix (Data & Affordance Manifest)**:
+     - Numbered inventory table (`INF-01` to `INF-N`) covering every single data point, label, counter, status dot, and button required across all User Stories. Cero omissions.
+  2. **Section B: Grouping, Hierarchy & Surface Architecture Matrix**:
+     - Mapping of inventory items into unified visual organisms.
+     - Enforcement of Gestalt proximity over divider lines; complete eradication of nested carditis (*cajas dentro de cajas*).
+     - Partitioning into 3 Attention Levels: Glanceable (<1s), Operational (1-5s), and On-demand (>5s).
+  3. **Section C: Comparative Layout Evaluations & Trade-offs (Landscape vs Portrait)**:
+     - For every macro organism, formulation and side-by-side comparison of 2–3 structural layout paradigms for both **Landscape (Desktop 1440×900)** and **Portrait (Mobile 390×844)**.
+     - Evaluation against: Viewport Height Cost, Scalability ($N$ items), Discoverability (Anti-Hidden-Affordance), Pointer/Touch Ergonomics, and Cognitive Load.
+     - Explicit documentation of the winning paradigm and "The Why".
+- **Auditor Quality Gate Checklist**:
+  - [ ] **100% Spec Data Coverage**: Does the inventory matrix capture all user stories and acceptance criteria without omission?
+  - [ ] **Anti-Layer-Cake Layout**: Are top controls and bars $\le 130\text{px}$ total, reserving $\ge 70\%$ of the viewport for primary content?
+  - [ ] **Anti-Canyon (Fitts's Law)**: Are actions coupled to their target context, eliminating wide `space-between` voids (>350px)?
+  - [ ] **Anti-Hidden-Affordance**: Are all categories and primary navigation options 100% visible on desktop without forced horizontal mouse dragging?
+  - [ ] **Mobile Thumb Ergonomics**: Does mobile layout adapt to single-column/bottom navigation within the natural thumb zone?
+- **Convergence Condition**: Auditor emits `specs/<feature>/design-reviews/phase-1-audit.md` with Score $\ge 9.5 / 10$ and 0 gaps.
 
-El comando `/goal` finaliza **ÚNICAMENTE** cuando:
-1. `specs/001-clean-workspace-v2/design-spec.md` existe y está completo.
-2. Todas las capturas mapeadas en la Sección 2 están generadas en `tmp/showcase/`.
-3. Todos los tests (`audit-lines`, `test:logic`, Playwright) pasan al 100%.
-4. La **Auditoría de 4 Pasadas Independientes** ratifica que el **100% de las capturas obtuvieron $\ge 9.0 / 10$** en todas las perspectivas.
-5. Se incluye en el mensaje final la confirmación del sello de cierre: `<!-- GOAL_COMPLETE -->`.
+---
 
+### Phase 2: Component Patterns & Interactive Mechanics
+- **Objective**: Specify the exact component mechanics, app shell layout, overlay z-index hierarchy, button 6-state lifecycles, form inputs, and scroll containment rules.
+- **Governing Skill**: `.agents/skills/ui-component-patterns/SKILL.md`
+- **Constituent Skills**: `app-shell`, `global-toolbar-controls`, `modal-and-overlay-patterns`, `tab-navigation`, `button-states`, `form-design`, `scroll-areas`, `sticky-and-fixed-elements`, `component-family-consistency`, `repeated-component-alignment`, `coordinated-data-views`, `data-display-and-selection`, `domain-expert-configuration`, `operational-expert-tool-ui`, `real-world-metaphors`.
+- **Mandatory Output Sections in `specs/<feature>/design-spec.md`**:
+  1. **Section D: Component Patterns & Interactive Mechanics**:
+     - **App Shell Architecture**: Header height, canvas containment, sticky positioning, drawer sliding mechanics.
+     - **Overlay & Z-Index Hierarchy**: Strict z-index ladder (Tooltip $\to$ Popover $\to$ Drawer $\to$ Modal $\to$ Fullscreen) with mandatory background scroll-locking (`overflow: hidden` on body).
+     - **Button 6-State Completeness**: Full specifications for Default, Hover, Active, Focus-visible, Disabled, and Loading states with reserved button width to prevent Cumulative Layout Shift (CLS).
+     - **Scroll Containment**: Single scroll axis per container; elimination of nested scroll traps; custom invisible scrollbar styling.
+     - **Tab Navigation Invariants**: Maximum 2–7 tabs, `flexShrink: 0` on tab strip, scrolling constrained strictly to the content panel.
+     - **Explicit Control Sizing**: Touch targets $\ge 44\text{px}$ on mobile, $\ge 32\text{px}$ on desktop.
+     - **Coordinated Data Views**: Bidirectional state synchronization between complementary representations (e.g. Grid vs SVG Topology vs Flashcards).
+- **Auditor Quality Gate Checklist**:
+  - [ ] **Overlay Hierarchy & Z-Index**: Are overlay levels strictly structured with background scroll-locking?
+  - [ ] **Button 6-State Completeness**: Are all 6 states specified with anti-CLS reserved dimensions?
+  - [ ] **Scroll Containment**: Is there strictly a single scroll axis per container, preventing nested scroll traps?
+  - [ ] **Tab Bar Limits**: Are tab strips limited to 2-7 items with `flexShrink: 0` protection?
+  - [ ] **Explicit Control Heights**: Are all interactive elements assigned explicit min-height tokens?
+- **Convergence Condition**: Auditor emits `specs/<feature>/design-reviews/phase-2-audit.md` with Score $\ge 9.5 / 10$ and 0 gaps.
+
+---
+
+### Phase 3: Usability, 5-State Matrix & Verification Gate
+- **Objective**: Define the Universal 5-State Matrix, specify identical geometric skeletons, audit against WCAG 2.2 AA accessibility, Nielsen usability heuristics, notification recovery, and deliver the final signed design certificate.
+- **Governing Skill**: `.agents/skills/ui-quality-and-audit/SKILL.md`
+- **Constituent Skills**: `nielsen-usability-heuristics`, `notifications-and-recovery`, `loading-states-and-perceived-performance`, `wcag-accessibility`, `status-colors-and-errors`, `performance-and-web-vitals`, `micro-interactions`, `motion-and-storytelling`, `semantic-html-and-seo`.
+- **Mandatory Output Sections in `specs/<feature>/design-spec.md`**:
+  1. **Section E: Universal 5-State Matrix**:
+     - Exact visual geometry and messaging for:
+       * **Empty State**: Pedagogical illustration, contextual explanation, and single clear primary CTA.
+       * **Loading State**: Identical geometric skeleton matching exact dimensions and radii of resolved content (CLS < 0.1).
+       * **Populated State**: Standard high-density data representation.
+       * **Boundary State**: Maximum load, 100% completion (e.g. score `120/120`), long localized strings, narrowest supported viewport.
+       * **Error State**: Non-technical explanation of failure, non-destructive fallback, and actionable one-click recovery button.
+  2. **Section F: Accessibility & Usability Assurance (WCAG 2.2 AA & Nielsen)**:
+     - Color contrast audit table: All text $\ge 4.5:1$ (large text $\ge 3:1$).
+     - Non-color status indicators: Color is never the sole carrier of status (shape, text, icon reinforcement).
+     - Focus-visible specification: 2px high-contrast outline with 2px offset on keyboard navigation.
+     - Notification & Recovery: Destructive actions feature undo toasts in bottom-right with 5-second persistence.
+  3. **Section G: Design Token Reference & Implementation Blueprint**:
+     - Exhaustive CSS custom properties, typography scales, spacing scale, concentric radii mapping, and color variables.
+  4. **Section H: Downstream Implementation & Verification Contract**:
+     - Verification checklist for frontend developers to execute implementation strictly to the letter with zero ambiguities.
+- **Auditor Quality Gate Checklist**:
+  - [ ] **Universal 5-State Matrix**: Are Empty, Loading, Populated, Boundary, and Error states exhaustively visualized?
+  - [ ] **Identical Geometric Skeletons**: Do skeleton loaders match exact container geometry to eliminate layout shift?
+  - [ ] **Notification & Recovery**: Are destructive actions protected by undo patterns or explicit confirmation?
+  - [ ] **WCAG 2.2 AA Compliance**: Do contrast ratios meet $\ge 4.5:1$, with visible focus rings and non-color cues?
+  - [ ] **Actionable Error Recovery**: Does every error state provide an immediate recovery mechanism?
+- **Convergence Condition**: Auditor emits `specs/<feature>/design-reviews/phase-3-audit.md` with Score $\ge 9.5 / 10$ and 0 gaps, certifying `<!-- DESIGN_WORKFLOW_COMPLETE -->`.
+
+---
+
+## 4. Downstream Developer Handoff Contract
+
+When this workflow completes:
+1. `DESIGN.md` and `specs/<feature>/design-spec.md` constitute the **complete, sealed single source of visual truth**.
+2. Any frontend engineer or code-generation agent can take these artifacts and implement the user interface **trivially and mechanically**:
+   - Zero layout guessing.
+   - Zero color improvisation.
+   - Zero omitted states (Loading, Empty, Boundary, Error are already drawn).
+   - Zero ambiguous breakpoints or touch target sizes.
+3. Downstream implementation is verified against the blueprints using standard testing workflows (such as `.agents/skills/spec-driven-testing`).
