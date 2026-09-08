@@ -2,410 +2,152 @@
 
 **Feature Branch**: `001-clean-workspace-v2`  
 **Created**: 2026-09-03  
-**Status**: Ready for Implementation  
-**Input**: User description: "Rebuild the UI and architecture of Learning Workspace cleanly, separating headless domain logic from presentation, following Spec-Driven Development with GitHub Spec Kit, and preserving all interaction and pedagogical gems validated in the prototype."
+**Status**: Ready for Design & Implementation  
+**Mission**: Construir una estación de trabajo de aprendizaje y maestría técnica para ingenieros senior/staff, separando estrictamente la lógica de dominio headless de la capa de presentación, con diseño editorial de alta densidad y verificación automatizada sin sesgo de implementaciones previas.
 
 ---
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Functional Requirements
 
-### User Story 1 - Topological Navigation, Graph, Routing, Seniority Bands & Visual Topologies (Priority: P1) 🎯 MVP
+### User Story 1 - Navegación Topológica, Currículum y Progresión de Madurez (P1 🎯 MVP)
 
-As a software engineer preparing for senior technical interviews,  
-I want to visualize the knowledge graph organized by categories, prerequisites, milestones, seniority bands, and alternative visual layouts (Grid, Topology DAG with Pan & Zoom), with bidirectional URL routing,  
-So that I understand my genuine progression toward Senior/Staff roles and navigate the curriculum efficiently based on my spatial preference.
+Como ingeniero de software preparándome para entrevistas técnicas senior/staff,  
+Quiero explorar el temario técnico estructurado por categorías, prerrequisitos topológicos, bandas de seniority e hitos de aprendizaje, con soporte para rutas directas en URL y alternativas de visualización espacial (cuadrícula de conceptos y grafo topológico interactivo),  
+Para comprender mi nivel real de preparación y avanzar sistemáticamente por la ruta formativa óptima.
 
-**Why this priority**: Core value proposition. Without topological structure, dependency visualization, and URL routing, the application lacks curricular grounding.
-
-**Independent Test**: Mount the app, switch between React and Rails graphs, verify category and node loading, test direct URL routing (`/:graph/card/:id`) and `popstate`, open the Seniority progress drawer, and verify calculated completion percentages.
-
-**Acceptance Scenarios**:
-
-1. **Given** the user launches the application,  
-   **When** the main canvas mounts,  
-   **Then** the active graph renders with nodes, category tokens, total progress counters, and the "Next Challenge" strip.
-2. **Given** the user viewing the React graph,  
-   **When** they click the "Rails" graph switcher button,  
-   **Then** the canvas immediately transitions to the Rails curriculum, updating categories, nodes, and local storage state.
-3. **Given** all categories displayed,  
-   **When** the user clicks a specific category chip,  
-   **Then** the canvas filters nodes to that category and the "Next Challenge" strip recalculates the recommended next node within that focus.
-4. **Given** the user pressing `Ctrl+K`,  
-   **When** the Command Palette opens and queries a concept or action,  
-   **Then** the list filters in real time, allowing direct node navigation and quick global actions (*📇 Flashcards*, *📊 Seniority*, *⚙️ BYOK Settings*).
-5. **Given** direct navigation to `/:graph/card/:nodeId` or browser Back/Forward navigation (`popstate`),  
-   **When** the route updates,  
-   **Then** the target study card opens or closes automatically, synchronizing history without full page reload.
-6. **Given** the user clicking the progress button in the header,  
-   **When** the Seniority & Milestones drawer opens,  
-   **Then** Seniority Bands (*React Professional, Senior Frontend, Staff/Lead, Design Systems*) display completed competencies, and Milestone cards show descriptions, progress bars, and completion badges.
-7. **Given** topological recommendation calculations,  
-   **When** the curriculum is evaluated,  
-   **Then** the orientation engine classifies recommendations across 3 priority levels.
-8. **Given** the graph canvas,  
-   **When** the user drags or scrolls with pointer/mouse wheel,  
-   **Then** the `usePanZoom` hook applies smooth translation and cursor-centered zoom, ignoring drag thresholds under 5px to avoid cancelling node click events.
-9. **Given** the visual layout selector,  
-   **When** the user switches between Grid and SVG Topology,  
-   **Then** the canvas adapts the layout (Sugiyama-style DAG layered columns and directed marker arrows) respecting mastery states.
+**Criterios de Aceptación y Reglas de Negocio**:
+1. **Montaje y Datos Iniciales**: Al iniciar la aplicación, se carga el grafo activo con sus conceptos curriculares, estados de maestría, métricas de avance y la recomendación topológica del siguiente paso según dependencias y prioridades.
+2. **Conmutación de Ecosistema**: El usuario puede alternar instantáneamente entre los currículums de React y Rails, actualizando categorías, nodos y estado local sin recargar la página.
+3. **Filtro Taxonómico**: Al seleccionar una categoría, la vista filtra los conceptos y recalcula la recomendación topológica dentro de dicha área de enfoque.
+4. **Búsqueda Rápida y Acciones Globales (Command Palette)**: Mediante el atajo de teclado (`Ctrl+K` / `Cmd+K`) o affordance accesible, se accede a un buscador omni-canal para filtrar conceptos en tiempo real y ejecutar acciones globales clave (*Flashcards*, *Seniority*, *Ajustes de IA*).
+5. **Enrutamiento Bidireccional y Navegación Histórica**: La selección de un concepto sincroniza la URL canónica (`/:graph/card/:nodeId`) y responde a los eventos de historial del navegador (`popstate` / Atrás y Adelante).
+6. **Inspección de Seniority y Milestones**: El usuario puede consultar el desglose de su nivel de madurez técnica a través de bandas de seniority (*React Profesional*, *Senior Frontend*, *Staff/Lead*, *Design Systems*) e hitos curriculares con porcentajes y competencias dominadas.
+7. **Motor de Orientación Topológica**: El sistema calcula y clasifica la recomendación del siguiente paso en tres niveles de prioridad según el estado de los prerrequisitos.
+8. **Visualización Topológica con Pan & Zoom**: En la visualización de grafo dirigido (DAG), el usuario puede explorar dependencias con manipulación fluida de traslación (pan) y ampliación (zoom), con controles de recentrado y filtros de maestría.
 
 ---
 
-### User Story 2 - 4-Stage Guided Study Route with Rich Interactions (Priority: P2)
+### User Story 2 - Experiencia Guiada de Estudio en 4 Etapas Pedagógicas (P2)
 
-As a technical learner,  
-I want clicking any node to open a 4-stage study modal (*01 Read*, *02 Learn*, *03 Paraphrase*, *04 Evaluate*), featuring oral voice dictation, contextual deep dives, unlockable FAANG interview questions, historical time-travel, Zen mode, Socratic mentor chips, and cognitive chunking breakdown,  
-So that I internalize concepts, test my oral delivery, and calibrate my technical depth against senior industry hiring bars.
+Como estudiante técnico,  
+Quiero acceder a una experiencia de estudio guiada en 4 etapas (*01 Leer*, *02 Aprender*, *03 Parafrasear*, *04 Evaluar*), con comparativa de código Naive vs Senior, preguntas de entrevista FAANG, tutor socrático, formulación activa con dictado por voz y evaluación analítica por IA,  
+Para internalizar modelos mentales profundos, ensayar mi comunicación técnica y calibrar mi nivel contra los estándares de contratación de la industria.
 
-**Why this priority**: Pedagogical heart of the product. Combines active recall, speech-to-text interview rehearsals, and analytical rubrics with historical traceability.
-
-**Independent Test**: Open any node, navigate all 4 tabs, test comparative code view, verify scrollTop resets to 0 across tabs, expand FAANG questions, and browse historical attempts.
-
-**Acceptance Scenarios**:
-
-1. **Given** a selected node in the graph,  
-   **When** the user clicks the node or presses `Enter`,  
-   **Then** the study modal opens on tab *01 Read*, displaying the summary, architectural justification, syntax-highlighted code comparison, and trade-offs.
-2. **Given** tab *01 Read*,  
-   **When** text contains advanced low-level terms defined in the deep-dive glossary,  
-   **Then** discrete `?` badges render, which on click open a floating popover explaining the low-level engine mechanics without leaving the lesson.
-3. **Given** tab *01 Read*,  
-   **When** the "FAANG Interview Coverage" section is expanded,  
-   **Then** reference interview questions appear with clear badges indicating whether each question is unlocked or blocked by uncompleted prerequisites.
-4. **Given** tab *01 Read*,  
-   **When** official documentation sources or related concept nodes exist,  
-   **Then** external reference links with `↗` icons and direct jump buttons to related concepts render cleanly.
-5. **Given** tab switching within the modal (*01* to *04*),  
-   **When** a new tab is selected,  
-   **Then** the scroll container automatically resets scroll position (`scrollTop = 0`).
-6. **Given** navigating inside the study modal,  
-   **When** the user clicks a concept in the Before → Now → After map flow,  
-   **Then** the modal jumps to that prerequisite/dependent node and displays a header button: `← Back to [Previous Concept]`.
-7. **Given** any stage of the study modal,  
-   **When** the user clicks the "Zen Mode" toggle,  
-   **Then** the modal expands to full screen, hiding distraction elements.
-8. **Given** tab *02 Learn*,  
-   **When** the user opens the conversation with the tutor,  
-   **Then** four quick-prompt chips appear (`Why does the naive approach fail?`, `Can you explain with a visual analogy?`, `How do I diagnose this in production?`, `I have a question about the code...`), sending the inquiry on click.
-9. **Given** tab *02 Learn* with an active conversation,  
-   **When** the user clicks "✨ Integrate chat into my answer",  
-   **Then** `reconcileParaphraseStream` synthesizes the key insights into the draft on tab *03 Paraphrase* and computes its reconciliation hash.
-10. **Given** tab *03 Paraphrase*,  
-    **When** the user clicks "Voice Dictation" and speaks into the microphone,  
-    **Then** the native `SpeechRecognition` API transcribes speech into the editor in real time and auto-saves to local storage.
-11. **Given** tab *03 Paraphrase*,  
-    **When** the user toggles between `✏️ Editor` and `📖 Reading Chunks`,  
-    **Then** the view alternates between raw text editing and paragraph-by-paragraph chunk decomposition with lexical density statistics.
-12. **Given** tab *03 Paraphrase*,  
-    **When** the drafted answer contains fewer than 140 characters,  
-    **Then** the character counter displays a subtle advisory notice: *"too short to measure depth"*.
-13. **Given** an answer drafted on tab *03 Paraphrase*,  
-    **When** the user presses `Ctrl+Enter` or clicks "Evaluate with AI",  
-    **Then** tab *04 Evaluate* displays the `EvaluationLoader` with elapsed timer, thinking-model latency indicators, received character stream counter, and cancellation trigger.
-14. **Given** an evaluation completed on tab *04 Evaluate*,  
-    **When** final results render,  
-    **Then** the concise executive verdict displays prominently, followed by the 4-dimension rubric (0–120) with golden bonus zone (101–120), expandable explanatory notes, and golden excellence aura for scores exceeding 100.
-15. **Given** a node with multiple saved attempts,  
-    **When** visiting tab *04 Evaluate*,  
-    **Then** a time-travel pagination bar (`← Evaluation X of Y →`) allows browsing prior evaluations in read-only mode with a "Return to current" action.
-16. **Given** a saved evaluation whose lesson content was modified in a later release,  
-    **When** viewing the evaluation,  
-    **Then** a notice informs: *"This evaluation corresponds to an earlier version of this card. Re-evaluate to measure current content."*
+**Criterios de Aceptación y Reglas de Negocio**:
+1. **Etapa 01 Leer (Comprensión del Modelo Mental)**:
+   - Presenta el concepto en una frase, justificación arquitectónica, comparativa pedagógica interactiva (*Enfoque ingenuo con causa de fallo en producción* vs *Patrón senior con trade-offs asumidos*), paso a paso de ejecución y riesgos.
+   - Enlaces a términos de bajo nivel (glosario deep-dive), fuentes oficiales y preguntas de entrevista desbloqueables según prerrequisitos.
+   - Navegación contextual del flujo conceptual (*Antes → Ahora → Después*).
+2. **Etapa 02 Aprender (Tutor Socrático Interactivo)**:
+   - Espacio de diálogo socrático guiado con preguntas rápidas de diagnóstico y trade-offs.
+   - Posibilidad de sintetizar las conclusiones de la conversación e integrarlas al borrador de estudio.
+3. **Etapa 03 Parafrasear (Formulación Activa)**:
+   - Editor de formulación técnica con opción de dictado por voz mediante `SpeechRecognition` nativo.
+   - Métricas de extensión en tiempo real (caracteres, palabras) y desglose de chunks conceptuales.
+   - Guardado local automático y persistente ante recargas.
+4. **Etapa 04 Evaluar (Calibración con IA y Rúbrica)**:
+   - Streaming en tiempo real del progreso de evaluación con cronómetro y control de cancelación.
+   - Scorecard analítico sobre escala 0–120 (base 100 + 20 de excelencia senior) con veredicto conciso y desglose en rúbrica de 4 dimensiones: `accuracy`, `causalityAndTradeoffs`, `application` y `completeness`.
+   - Navegación histórica entre evaluaciones previas del mismo concepto.
+5. **Modo Zen / Inmersivo**:
+   - Capacidad de conmutar a una vista inmersiva a pantalla completa para eliminar distracciones visuales durante la sesión de estudio.
+6. **Accesibilidad y Cierre**:
+   - Cierre accesible con tecla `Escape`, contención de foco ARIA (`role="dialog"`), y reseteo automático de posición de lectura al cambiar de etapa.
 
 ---
 
-### User Story 3 - Asynchronous Background Tasks, Global HUD & Cancellation (Priority: P3)
+### User Story 3 - Tareas Asíncronas en Segundo Plano y HUD Global (P3)
 
-As a candidate evaluating answers using deep-thinking AI models,  
-I want to close the modal and explore other nodes while the AI processes, see a floating HUD displaying background tasks, and cancel requests anytime,  
-So that my learning flow is never blocked waiting for long inference streams.
+Como usuario que realiza evaluaciones con modelos de lenguaje con razonamiento profundo,  
+Quiero poder continuar explorando el temario mientras la IA procesa la respuesta en segundo plano, disponer de un indicador HUD accesible y poder cancelar la petición en cualquier momento,  
+Para no sufrir tiempos de espera bloqueantes ni interrumpir mi ritmo de estudio.
 
-**Why this priority**: Eliminates waiting friction (5–40s), enables studying multiple concepts concurrently, and provides user agency to abort slow or stalled queries.
-
-**Independent Test**: Initiate an evaluation, close the modal, verify the floating HUD in the bottom corner with live character counts, click "Cancel", and verify clean abort handling.
-
-**Acceptance Scenarios**:
-
-1. **Given** an ongoing evaluation on Card A,  
-   **When** the user closes the modal and navigates the graph,  
-   **Then** a floating HUD in the bottom-right corner displays active node label, streaming status, and received character count.
-2. **Given** the floating HUD with active tasks,  
-   **When** the user clicks the HUD,  
-   **Then** an overlay list reveals active tasks with "Open card →" and "Cancel ✕" actions.
-3. **Given** an evaluation in progress,  
-   **When** the user clicks "Cancel" in the loader or HUD,  
-   **Then** the `AbortController` triggers, cleanly aborting the SSE connection and resetting task state without console errors.
-4. **Given** the evaluation progress loader,  
-   **When** time elapses,  
-   **Then** the component updates elapsed seconds and transitions through latency phases (*Normal* → *Slow* → *Critical*).
-5. **Given** two browser tabs open in the same session,  
-   **When** a task updates or completes in Tab 1,  
-   **Then** Tab 2 receives the event via `BroadcastChannel` and synchronizes task state in real time.
+**Criterios de Aceptación y Reglas de Negocio**:
+1. **Ejecución en Background**: Si el usuario sale de la vista de evaluación mientras el streaming está activo, la tarea continúa procesándose en segundo plano.
+2. **Indicador HUD Global**: Un indicador flotante no bloqueante muestra el estado de la tarea en curso, el concepto evaluado y el conteo de caracteres recibidos.
+3. **Acciones del HUD**: Permite abrir directamente la vista de la tarea en curso o cancelar la evaluación inmediatamente mediante `AbortController`.
+4. **Sincronización Multi-Pestaña**: El estado de las tareas se sincroniza entre pestañas del navegador mediante `BroadcastChannel`.
 
 ---
 
-### User Story 4 - Voice-Assisted Reading (Synchronized TTS) (Priority: P4)
+### User Story 4 - Lectura Asistida por Voz (TTS Sincronizado) (P4)
 
-As a candidate who learns effectively through listening or resting screen fatigue,  
-I want to listen to lesson sections using the browser's native speech synthesis with synchronized visual highlights,  
-So that I absorb complex architectural explanations auditorily.
-
-**Why this priority**: Enhances accessibility and ergonomics for extended study sessions without requiring external paid TTS services.
-
-**Independent Test**: On tab *01 Read*, click the audio button on any section, verify that speech synthesis starts, and confirm that the active paragraph pulses visually.
-
-**Acceptance Scenarios**:
-
-1. **Given** tab *01 Read*,  
-   **When** clicking the audio button on a section,  
-   **Then** browser `SpeechSynthesis` initiates playback and the active text block highlights with an animated pulse.
-2. **Given** audio playing,  
-   **When** the user clicks pause or selects another section,  
-   **Then** previous speech stops cleanly without overlapping audio streams.
+Como usuario que aprende mejor escuchando o busca descansar la fatiga visual,  
+Quiero reproducir la explicación conceptual mediante síntesis de voz nativa (`SpeechSynthesis`),  
+Para asimilar explicaciones complejas de manera auditiva con controles accesibles de pausa y reanudación.
 
 ---
 
-### User Story 5 - Private BYOK Provider Management & JSON Backup Portability (Priority: P5)
+### User Story 5 - Gestión Privada de Proveedores (BYOK) y Respaldo Local (P5)
 
-As a developer who values privacy and personal study history ownership,  
-I want to configure custom API keys privately and export/import full JSON backups of my notes and progress,  
-So that I retain complete sovereignty over my learning data across web and desktop environments.
+Como usuario que valora la privacidad y la soberanía sobre sus datos de estudio,  
+Quiero configurar mis propias credenciales de modelos de IA (OpenRouter, OpenAI, Groq, Ollama) y exportar/importar respaldos completos en formato JSON,  
+Para mantener propiedad absoluta de mis notas, borradores y calificaciones sin dependencia de servidores centrales.
 
-**Why this priority**: Guarantees true local-first ownership and zero vendor lock-in.
-
-**Independent Test**: In settings modal, click "Export backup" to download JSON, modify local data, click "Import backup", and verify 100% restoration of attempts, drafts, and settings.
-
-**Acceptance Scenarios**:
-
-1. **Given** the AI providers modal open,  
-   **When** the user selects a provider and enters credentials,  
-   **Then** they can run a minimal inference probe and persist configuration locally (with `safeStorage` encryption in Electron).
-2. **Given** the settings modal open,  
-   **When** the user clicks "Export backup",  
-   **Then** a schema-validated `learning-workspace-backup-[date].json` file downloads containing all drafts, attempts, historical notes, and settings.
-3. **Given** a valid backup file,  
-   **When** the user clicks "Import backup" and loads the file,  
-   **Then** the application validates signature and version, restores data into IndexedDB and `localStorage`, and refreshes application state.
+**Criterios de Aceptación y Reglas de Negocio**:
+1. **Configuración Local de Claves**: Las API keys se almacenan únicamente en el almacenamiento local del cliente (`localStorage` / cifrado nativo en desktop).
+2. **Prueba de Conexión**: Permite verificar la conectividad con el proveedor configurado antes de activarlo.
+3. **Portabilidad de Respaldo**: Exportación e importación de un archivo JSON validado contra el esquema de datos del workspace, restaurando borradores, historial y configuración.
 
 ---
 
-### User Story 6 - Flashcards View & Active Recall (Priority: P6)
+### User Story 6 - Repaso Activo con Flashcards (P6)
 
-As a candidate doing rapid warm-ups before technical interviews,  
-I want to switch to a 3D flip-card flashcard view with mastery level filters,  
-So that I test my working memory on key architectural concepts quickly.
+Como usuario realizando sesiones de calentamiento antes de entrevistas,  
+Quiero alternar a un modo de flashcards con volteo interactivo y filtros por nivel de maestría,  
+Para ejercitar la memoria de trabajo sobre conceptos clave y preguntas directas de entrevista.
 
-**Why this priority**: Complements topological curriculum exploration with an agile Anki-style active recall drill.
-
-**Independent Test**: Switch view mode from "Graph" to "Flashcards", apply mastery filters (e.g., "Unattempted", "Base < 100"), click cards to flip between interview question and technical answer, and jump to study mode.
-
-**Acceptance Scenarios**:
-
-1. **Given** the main screen,  
-   **When** the user switches view mode to "Flashcards",  
-   **Then** the canvas is replaced by the flashcard grid showing category chips and score status.
-2. **Given** a visible flashcard,  
-   **When** the user clicks the card or presses space,  
-   **Then** the card flips with 3D animation, revealing the key technical answer and architectural rationale.
-3. **Given** a flipped flashcard,  
-   **When** the user clicks "Study card →",  
-   **Then** the 4-stage study modal opens for that concept on tab *01 Read*.
+**Criterios de Aceptación y Reglas de Negocio**:
+1. **Vista de Flashcards**: Presenta los conceptos en formato de tarjetas de repaso con filtros de categoría y dominio.
+2. **Volteo Interactivo**: Muestra en el anverso el desafío o pregunta de entrevista y en el reverso la respuesta técnica clave con razonamiento arquitectónico.
+3. **Acceso a Profundización**: Permite saltar directamente desde cualquier tarjeta a la sesión de estudio completa del concepto.
 
 ---
 
-### User Story 7 - Mobile Ergonomics & Bottom Navigation (Priority: P7)
+### User Story 7 - Ergonomía y Navegación Móvil (P7)
 
-As a candidate studying on mobile or tablet during commute,  
-I want a fixed bottom navigation bar for thumb-driven view switching,  
-So that I have an ergonomic touch experience without losing reading area.
+Como usuario que estudia desde dispositivos móviles o tablets en tránsito,  
+Quiero una navegación táctil fluida orientada a la zona del pulgar con áreas de toque confortables y márgenes de seguridad para la pantalla,  
+Para contar con una experiencia de lectura y estudio cómoda sin controles diminutos ni desbordes.
 
-**Why this priority**: Facilitates studying on touch viewports without cramped top-navigation header controls.
-
-**Independent Test**: Reduce viewport width below 768px, confirm the fixed bottom navigation bar (`mobile-bottom-nav`) appears, and test navigation between Graph, Flashcards, Progress, Search, and Settings.
-
-**Acceptance Scenarios**:
-
-1. **Given** a viewport narrower than 768px,  
-   **When** the screen renders,  
-   **Then** the fixed bottom bar (`mobile-bottom-nav`) displays with `safe-area-inset-bottom` padding and quick shortcuts (Graph, Flashcards, Progress, Search, Settings), remaining hidden on desktop viewports (> 768px).
-2. **Given** the mobile bottom navigation bar,  
-   **When** the user taps "Progress",  
-   **Then** the Seniority & Milestones drawer opens cleanly covering the mobile screen.
+**Criterios de Aceptación y Reglas de Negocio**:
+1. **Adaptación a Pulgar**: En pantallas móviles (<768px), los controles principales y la barra/dock de navegación (`mobile-bottom-nav`) se posicionan al alcance del pulgar, respetando `safe-area-inset-bottom` y objetivos táctiles $\ge 44\times 44\text{px}$.
+2. **Navegación Unificada**: Permite acceder con un toque a las vistas principales: Grafo, Flashcards, Progreso (Seniority), Búsqueda y Ajustes.
+3. **Capas y Modales en Móvil**: Al abrir vistas de detalle o estudio, el contenido se adapta limpiamente sin que los controles de fondo interfieran visualmente.
 
 ---
 
-## Edge Cases & System Invariants
+## Esquemas de Datos del Dominio (Headless)
 
-1. **Zero Draft Loss**: If the user reloads or closes the window while drafting, debounced drafts in local storage restore identically upon re-opening the node.
-2. **Canonical Scoring Invariant (0–120)**:
-   - Full baseline curriculum mastery = exactly 100 points.
-   - Points 101 to 120 = optional golden excellence bonus tier (`isExtra: true`).
-3. **Modularity and Line Limit Invariant**:
-   - No component or hook file in `src/` may exceed 150 lines.
-   - Heavy dependencies (Mermaid, PrismJS) load dynamically (`React.lazy`).
-4. **Web API Graceful Fallbacks**:
-   - If `SpeechRecognition` is unsupported, voice dictation controls hide gracefully without breaking UI.
-   - If `SpeechSynthesis` is unavailable, TTS playback triggers fail silently.
-5. **Backup Integrity Invariant**:
-   - Imported backups must validate `app === "learning-workspace"` and match expected version schemas before mutating local storage.
-
----
-
-## Appendix: Domain Data Contracts & Clean-Room Reference Schemas
-
-### 1. Canonical Node & Pedagogical Lesson Schema (`node.lesson`)
-
+### 1. Modelo de Lección Pedagógica (`node.lesson`)
 ```typescript
-interface LearningNode {
-  id: string;                      // e.g., "state_updates", "fiber_reconciler"
-  label: string;                   // e.g., "State, snapshots and batching"
-  cat: string;                     // e.g., "state", "rendering", "architecture"
-  priority: number;                // 1..N (curriculum order)
-  prerequisites: string[];         // Required prerequisite node IDs
-  lesson: PedagogicalLesson;
-}
-
 interface PedagogicalLesson {
   level: "mid" | "senior" | "staff";
-  summary: string;                 // Mental model in 1-2 clear sentences
-  why: string;                     // Architectural rationale
-  
-  // Senior Pedagogical Comparison: Naive vs Production
+  summary: string;
+  why: string;
   codeComparison: {
-    naive: {
-      label: string;               // e.g., "Naive approach"
-      code: string;                // Code with common anti-pattern
-      whyItFails: string;          // Production failure mode under concurrency/scale
-    };
-    production: {
-      label: string;               // e.g., "Resilient senior pattern"
-      code: string;                // Idiomatic typed implementation
-      tradeOff: string;            // Accepted memory, latency, or complexity trade-off
-    };
+    naive: { label: string; code: string; whyItFails: string };
+    production: { label: string; code: string; tradeOff: string };
   };
-
-  steps: string[];                 // Execution phases of the concept
-  pitfalls: string[];              // Silent production failure modes
-  takeaway: string;                // One-line mnemonic rule for oral interviews
-
-  // Low-level deep dive glossary
-  deepDives?: Array<{
-    term: string;
-    trigger: string;
-    definition: string;
-    mentalModel: string;
-  }>;
-
-  // FAANG / GreatFrontEnd interview question bank
-  interviewQuestions?: Array<{
-    id: string;
-    source: string;
-    title: string;
-    question: string;
-    sampleAnswer: string;
-    requiredPrereqs: string[];
-  }>;
-
-  // Official documentation references
-  sources?: Array<{
-    title: string;
-    url: string;
-    type: "official" | "spec" | "w3c" | "blog";
-  }>;
+  steps: string[];
+  pitfalls: string[];
+  takeaway: string;
+  deepDives?: Array<{ term: string; trigger: string; definition: string; mentalModel: string }>;
+  interviewQuestions?: Array<{ question: string; answerSummary: string; whyAsked: string; isUnlocked: boolean }>;
 }
 ```
 
-### 2. Calibrated Senior/Staff Evaluation Rubric Schema (0–120 Points)
-
+### 2. Rúbrica de Evaluación Canónica (0–120)
 ```typescript
 interface EvaluationResult {
-  score: number;                   // 0..120 canonical score
-  isMastery: boolean;              // true if score >= 100
-  isExtra: boolean;                // true if score > 100 (Excellence Bonus)
-  extraPoints: number;             // 0..20 (points exceeding 100)
-  conciseVerdict: string;          // One-sentence executive summary
-
+  score: number; // 0..120 (base 100 + 20 bonus)
+  verdict: string;
   rubric: {
-    // 1. Causality, trade-offs and failure modes at scale (35% - Primary Senior/Staff Factor)
-    causalityAndTradeoffs: {
-      score: number;               // 0..35
-      max: 35;
-      label: "Causality & Trade-offs";
-      note: string;
-    };
-
-    // 2. Technical precision and domain vocabulary (30%)
-    accuracy: {
-      score: number;               // 0..30
-      max: 30;
-      label: "Technical Accuracy";
-      note: string;
-    };
-
-    // 3. Practical application and production patterns (20%)
-    application: {
-      score: number;               // 0..20
-      max: 20;
-      label: "Code Application";
-      note: string;
-    };
-
-    // 4. Edge-case completeness and resource lifecycles (15%)
-    completeness: {
-      score: number;               // 0..15
-      max: 15;
-      label: "Completeness";
-      note: string;
-    };
+    accuracy: { score: number; max: 40; label: string; note: string };
+    causalityAndTradeoffs: { score: number; max: 25; label: string; note: string };
+    application: { score: number; max: 20; label: string; note: string };
+    completeness: { score: number; max: 15; label: string; note: string };
   };
-
-  feedback: {
-    strengths: string[];
-    gaps: string[];
-    misconceptions: string[];
-    nextAttemptPrompt: string;
-  };
-}
-```
-
-### 3. Local-First Persistence Schema (IndexedDB v3)
-
-```typescript
-interface IDBSchema {
-  attempts: {
-    key: string;                   // id: "attempt_[timestamp]_[hash]"
-    value: {
-      id: string;
-      graphId: "react" | "rails";
-      nodeId: string;
-      createdAt: string;           // ISO 8601
-      score: number;               // 0..120
-      evaluation: EvaluationResult;
-      answerHash: string;
-    };
-  };
-
-  drafts: {
-    key: string;                   // "${graphId}:${nodeId}"
-    value: {
-      key: string;
-      text: string;
-      isAiGenerated: boolean;
-      source: "user" | "ai" | "voice";
-      updatedAt: string;
-    };
-  };
-
-  coachIterations: {
-    key: string;                   // id: "coach_[timestamp]_[hash]"
-    value: {
-      id: string;
-      graphId: string;
-      nodeId: string;
-      createdAt: string;
-      messages: Array<{ role: "user" | "assistant"; content: string }>;
-      reconciledHash?: string;
-    };
-  };
+  feedback: { strengths: string[]; gaps: string[]; misconceptions: string[]; nextAttemptPrompt: string };
 }
 ```
