@@ -1,7 +1,7 @@
 ---
 system:
   name: "Learning Workspace — Design System v3"
-  version: "3.1.2"
+  version: "3.1.3"
   creative_north_star: "Estudio nocturno"
   aesthetic: "Oscuro refinado: grafito cálido, papel, un solo acento"
   platform: "Web + Electron (desktop 1440×900 de referencia) · Mobile web (390×844)"
@@ -52,7 +52,7 @@ Todos los ratios están verificados con WCAG 2.2 (culori) contra el fondo indica
 | `--bg-sidebar` | `#090806` | .135 | Barra lateral, dock móvil |
 | `--bg-app` | `#100E0C` | .165 | Lienzo principal, fondo de la sesión de estudio |
 | `--surface-1` | `#161512` | .195 | Cards del mapa, filas, nodos del grafo, drawer, diálogos |
-| `--surface-2` | `#1D1B19` | .225 | Paleta de comandos, tab activa de la card (los hovers usan `--hover-overlay`, §1.4) |
+| `--surface-2` | `#1D1B19` | .225 | Paleta de comandos, segmento activo de los segmented controls (los hovers usan `--hover-overlay`, §1.4) |
 | `--surface-3` | `#242220` | .255 | Popovers, menús, tooltips, deep dive |
 | `--surface-inset` | `#070604` | .120 | Código, textarea, inputs, pistas de riel, pozos |
 | `--line-subtle` | `rgba(255,248,230,.06)` | — | Divisores internos, hairlines de tabla |
@@ -435,6 +435,7 @@ Superficie `--surface-3`, borde `--line-strong`, `--r-lg` 12, `--shadow-pop`, pa
 | `--dur-flip` | 420ms | Volteo de flashcard |
 | `--ease-out` | `cubic-bezier(.2,0,0,1)` | Entradas |
 | `--ease-in-out` | `cubic-bezier(.4,0,.2,1)` | Transformaciones |
+| `--move-1` / `--move-2` / `--move-3` / `--move-4` | 4 / 8 / 16 / 24px | Distancias de entrada: popover / capa de estudio / drawer / hoja inferior |
 
 Entradas: opacidad 0→1 + `translateY(4px)` o `scale(.98)`. Salidas al 70% de la duración. `prefers-reduced-motion: reduce` → solo opacidad; el volteo 3D se reemplaza por fundido de `--dur-2`; skeleton y pulso quedan estáticos.
 
@@ -504,3 +505,7 @@ Maquetas, fixtures y estados usan contenido real. Set canónico de ejemplos (nod
 | Punto de partida | React | "JavaScript moderno para leer React" | Mejor siguiente |
 
 Prohibido lorem ipsum, "Card title", "User 1".
+
+## Changelog
+- **3.1.3** (Fase 2): `--surface-2` pasa a usarse para el segmento activo de segmented controls (antes "tab activa de la card"; las pestañas de etapa usan indicador, sin fondo). Se agregan los tokens de distancia `--move-1…4` (§7).
+- **3.1.2** — sello de Fase 0.
