@@ -1,4 +1,7 @@
 import LESSONS from "../lessons.js";
+import LEARNING_EXPLANATIONS from "../learningExplanations.js";
+import CLARIFIED_BULLETS from "../clarifiedBullets.js";
+import { CONCEPTUAL_CORRECTIONS, INTERVIEW_LESSON_OVERRIDES, RAILS_CATEGORY_CONTEXT, RAILS_MILESTONES } from "./railsContent.js";
 
 const CATEGORIES = {
   fundamentals: { label: "Rails core & request", color: "#E8A33D" },
@@ -88,8 +91,13 @@ const nodes = NODE_DATA.map(([id, label, cat]) => ({
   id,
   label,
   cat,
-  lesson: LESSONS[id] ?? null,
-  priority: (PRIORITY_ORDER.indexOf(id) + 1) || NODE_DATA.length + 1,
+  lesson: {
+    ...(INTERVIEW_LESSON_OVERRIDES[id] ?? LESSONS[id] ?? {}),
+    ...(LEARNING_EXPLANATIONS[id] ?? {}),
+    ...(CLARIFIED_BULLETS[id] ?? {}),
+    ...(CONCEPTUAL_CORRECTIONS[id] ?? {}),
+  },
+  priority: (PRIORITY_ORDER.indexOf(id) + 1) || 99,
   prerequisites: PREREQUISITES[id] ?? [],
 }));
 
@@ -97,10 +105,11 @@ export const RAILS_GRAPH = {
   id: "rails",
   label: "Rails entrevistas",
   title: "Rails interview map",
-  subtitle: "Request lifecycle, datos, diseño de negocio, API, seguridad y testing.",
+  subtitle: "Core conceptual, diseño de necesidades de negocio, STI, API para React y asset pipeline.",
   categories: CATEGORIES,
+  categoryContext: RAILS_CATEGORY_CONTEXT,
   nodes,
   edges: Object.entries(PREREQUISITES).flatMap(([target, required]) => required.map((source) => [source, target])),
-  milestones: [],
+  milestones: RAILS_MILESTONES,
   seniorityBands: [],
 };

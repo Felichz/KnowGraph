@@ -1,0 +1,14 @@
+/* Punto de entrada de estilos por área (design-spec G.2) */
+@import "./primitives.css";
+@import "./overlays.css";
+@import "./shell.css";
+@import "./map.css";
+@import "./graph.css";
+@import "./study.css";
+@import "./read.css";
+@import "./mentor.css";
+@import "./coach.css";
+@import "./eval.css";
+@import "./flash.css";
+@import "./progress.css";
+@import "./settings.css";

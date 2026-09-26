@@ -1,9 +1,5 @@
-import React from "react";
+import { Workspace } from "./ui/app/Workspace.jsx";
 
 export default function App() {
-  return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-workspace)", color: "var(--text-primary)" }}>
-      {/* Ready for pure Spec-Driven Workflow execution from scratch */}
-    </div>
-  );
+  return <Workspace />;
 }

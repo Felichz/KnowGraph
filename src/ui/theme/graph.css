@@ -1,0 +1,54 @@
+/* Grafo topológico (design-spec D.9 GraphNode) */
+.graph-view { position: relative; height: 100%; min-height: 0; overflow: hidden; background: var(--bg-app); touch-action: none; }
+.graph-svg { display: block; width: 100%; height: 100%; cursor: grab; user-select: none; }
+.graph-svg:active { cursor: grabbing; }
+.gstage__index { font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: .04em; fill: var(--text-3); }
+.gstage__count { font-family: var(--font-ui); font-size: 12px; font-weight: 500; fill: var(--text-3); }
+.gedge { fill: none; stroke-width: 1.5; }
+.gedge--guide { stroke: var(--text-3); }
+.gedge--out { stroke: var(--text-1); }
+.gedge--in { stroke: var(--text-3); stroke-dasharray: 4 4; }
+.garrow--guide, .garrow--in { fill: var(--text-3); } .garrow--out { fill: var(--text-1); }
+.gnode { cursor: pointer; transition: opacity var(--dur-2) var(--ease-out); }
+.gnode:focus { outline: none; }
+.gnode__rect { fill: var(--surface-1); }
+.gnode__border { fill: none; stroke: var(--line); stroke-width: 1; }
+.gnode__focus { fill: none; stroke: none; }
+.gnode:focus-visible .gnode__focus { stroke: var(--accent); stroke-width: 2; }
+@media (hover: hover) { .gnode:hover .gnode__rect { fill: #1b1a17; } .gnode:hover .gnode__border { stroke: var(--line-strong); } }
+.gnode:focus-visible .gnode__rect { fill: #1b1a17; }
+.gnode.is-ancestor .gnode__border, .gnode.is-descendant .gnode__border { stroke: var(--line-strong); }
+.gnode.is-selected .gnode__rect { fill: #272832; } .gnode.is-selected .gnode__border { stroke: var(--accent); }
+.gnode.is-dimmed { opacity: .32; }
+.gnode.is-inactive { pointer-events: none; }
+.gnode__cat { font-family: var(--font-ui); font-size: 12px; font-weight: 500; fill: var(--text-3); }
+.gnode__score { font-family: var(--font-mono); font-size: 12px; font-weight: 500; fill: var(--text-2); }
+.gnode__score.is-gold { fill: var(--gold); } .gnode__score.is-mastery { fill: var(--mastery); }
+.gnode__label { font-family: var(--font-ui); font-size: 14px; font-weight: 500; fill: var(--text-1); }
+.gnode__track { fill: var(--surface-inset); }
+.gnode__base { fill: var(--rail-base); } .gnode__base.is-mastered { fill: var(--mastery); }
+.gnode__extra { fill: var(--gold); }
+.gnode__mark { fill: var(--text-3); }
+.gnode__badge rect { fill: #272832; stroke: var(--accent); stroke-width: 1; }
+.gnode__badge text { font-family: var(--font-ui); font-size: 12px; font-weight: 500; fill: var(--accent-strong); }
+.gnode__level { font-family: var(--font-ui); font-size: 12px; font-weight: 500; fill: var(--text-3); }
+
+.gpanel { position: absolute; z-index: 2; background: var(--surface-3); border: 1px solid var(--line-strong); border-radius: var(--r-lg); box-shadow: var(--shadow-pop); padding: var(--sp-3); }
+.gpanel--read { top: 16px; left: 16px; max-width: 360px; display: grid; gap: var(--sp-1); }
+.gpanel__title { font-size: var(--fs-sm); font-weight: 600; }
+.gpanel__text { font-size: var(--fs-sm); line-height: var(--lh-sm); color: var(--text-2); }
+.gpanel--controls { top: 16px; right: 16px; display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3); border-radius: var(--r-group); }
+.gpanel__stage { font-size: var(--fs-xs); color: var(--text-2); }
+.gpanel__group { display: flex; gap: 0; }
+.gpanel--legend { bottom: 16px; left: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-4); max-width: min(720px, calc(100% - 32px)); font-size: var(--fs-xs); color: var(--text-2); padding: var(--sp-2) var(--sp-3); }
+.gpanel__sub { flex-basis: 100%; font-size: var(--fs-xs); }
+.glegend { display: inline-block; width: 20px; height: 0; border-top: 1.5px solid var(--text-3); vertical-align: middle; margin-right: var(--sp-1); }
+.glegend--dash { border-top-style: dashed; }
+.is-mastery { color: var(--mastery); } .is-gold { color: var(--gold); }
+.gpanel--selected { left: 12px; right: 12px; bottom: 12px; display: grid; gap: var(--sp-3); }
+.gpanel--selected .btn { height: 48px; }
+@media (max-width: 47.99em) {
+  .gpanel--read { left: 12px; right: 12px; top: 12px; max-width: none; }
+  .gpanel--controls { top: auto; right: 12px; bottom: 12px; }
+  .gpanel--selected ~ .gpanel--controls { display: none; }
+}
