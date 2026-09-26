@@ -1,0 +1,27 @@
+/* 03 Parafrasear */
+.stage--paraphrase { align-items: start; }
+.editor-col { display: grid; gap: var(--sp-4); min-width: 0; }
+.editor-col__head { display: grid; gap: var(--sp-1); }
+.editor { width: 100%; min-height: 360px; resize: vertical; padding: var(--sp-5); border: 1px solid var(--line-strong); border-radius: var(--r-lg); background: var(--surface-1); font-family: var(--font-read); font-size: var(--fs-lg); line-height: 1.9rem; color: var(--text-1); outline: none; transition: border-color var(--dur-1) var(--ease-out); }
+.editor::placeholder { color: var(--text-4); }
+.editor:focus { border-color: var(--accent); }
+.editor--loading { min-height: 360px; border-radius: var(--r-lg); background: var(--skeleton); animation: lw-skeleton var(--skeleton-dur) ease-in-out infinite; }
+.editor__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; }
+.editor__actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.coach { display: grid; gap: var(--sp-5); align-content: start; position: sticky; top: var(--sp-8); min-width: 0; }
+.coach__hint { display: grid; gap: var(--sp-2); padding: var(--sp-4); border-radius: var(--r-lg); background: var(--accent-soft); border: 1px solid color-mix(in oklch, var(--accent) 30%, transparent); }
+.coach__hint.is-empty { background: var(--surface-1); border-color: var(--line); }
+.coach__hint.is-stale { opacity: .75; }
+.coach__hint-label { font-weight: 600; }
+.coach__list { display: grid; gap: var(--sp-2); }
+.coach__list ul { list-style: none; display: grid; gap: var(--sp-2); }
+.coach-item { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: var(--sp-2); font-size: var(--fs-sm); line-height: var(--lh-sm); color: var(--text-2); }
+.coach-item svg { margin-top: 3px; color: var(--text-4); }
+.coach-item.is-covered { color: var(--text-1); } .coach-item.is-covered svg { color: var(--mastery); }
+.coach-item.is-partial svg { color: var(--gold); }
+.coach-item.is-missing svg { color: var(--warn); }
+@media (max-width: 68.74em) { .coach { position: static; } }
+@media (max-width: 47.99em) {
+  .editor { min-height: 280px; font-size: var(--fs-md); line-height: var(--lh-md); padding: var(--sp-4); }
+  .editor__actions { width: 100%; } .editor__actions .btn { flex: 1; }
+}

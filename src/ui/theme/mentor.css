@@ -1,0 +1,20 @@
+/* 02 Mentor IA */
+.stage--mentor { align-items: start; }
+.chat { display: grid; grid-template-rows: minmax(0, 1fr) auto auto; gap: var(--sp-3); min-height: min(640px, calc(100dvh - 220px)); min-width: 0; }
+.chat__list { display: flex; flex-direction: column; gap: var(--sp-4); overflow-y: auto; padding-bottom: var(--sp-2); }
+.chat__intro { display: grid; gap: var(--sp-3); padding: var(--sp-6) 0; }
+.chat__intro-title { font-size: var(--fs-2xl); line-height: var(--lh-2xl); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
+.chip { height: var(--ctl-md); padding: 0 var(--sp-3); border-radius: var(--r-full); border: 1px solid var(--line-strong); color: var(--text-2); font-size: var(--fs-sm); }
+@media (hover: hover) { .chip:hover { color: var(--text-1); background: var(--hover-overlay); } }
+.msg { max-width: 88%; font-size: var(--fs-md); line-height: var(--lh-md); }
+.msg--user { align-self: flex-end; padding: var(--sp-2) var(--sp-4); border-radius: var(--r-lg) var(--r-lg) var(--r-xs) var(--r-lg); background: var(--surface-3); }
+.msg--assistant { align-self: flex-start; }
+.msg--assistant .md { font-size: var(--fs-md); gap: var(--sp-3); }
+.msg.is-streaming .md > :last-child::after { content: ""; display: inline-block; width: var(--caret-w); height: 1em; margin-left: 2px; vertical-align: text-bottom; background: var(--caret-color); animation: lw-caret var(--caret-dur) steps(1) infinite; }
+.composer { display: flex; align-items: flex-end; gap: var(--sp-2); padding: var(--sp-2); border: 1px solid var(--line-strong); border-radius: var(--r-lg); background: var(--surface-1); position: sticky; bottom: var(--sp-4); }
+.composer__input { flex: 1; min-width: 0; resize: none; border: 0; background: transparent; padding: var(--sp-2); font-size: var(--fs-md); line-height: var(--lh-md); max-height: 160px; field-sizing: content; outline: none; }
+.composer:focus-within { border-color: var(--accent); }
+.mentor-side { display: grid; gap: var(--sp-4); align-content: start; position: sticky; top: var(--sp-8); }
+.mentor-side > .btn { justify-self: start; }
+@media (max-width: 68.74em) { .mentor-side { position: static; } .chat { min-height: 0; } }
