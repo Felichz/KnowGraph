@@ -1,1072 +1,506 @@
 ---
 system:
-  name: "Learning Workspace Design System"
-  version: "2.0.0"
-  creative_north_star: "El cockpit de dominio técnico"
-  aesthetic: "Dark Engineering Editorial (Linear / Raycast / Vercel / Cursor)"
-  platform: "Desktop Web & Electron Desktop (1440x900 default) + Mobile Web (390x844)"
+  name: "Learning Workspace — Design System v3"
+  version: "3.1.2"
+  creative_north_star: "Estudio nocturno"
+  aesthetic: "Oscuro refinado: grafito cálido, papel, un solo acento"
+  platform: "Web + Electron (desktop 1440×900 de referencia) · Mobile web (390×844)"
   governing_master_skill: "ui-design-foundations"
-  governing_specification: "specs/001-clean-workspace-v2/spec.md"
+  governing_specification: "specs/002-workspace-ui-v3/spec.md"
   quality_standard: "docs/DESIGN_CRITERIA.md"
-
-colors:
-  primitives:
-    slate_950: "#06080d"
-    slate_900: "#080b11"
-    slate_850: "#0d111a"
-    slate_800: "#131824"
-    slate_750: "#1a2130"
-    slate_700: "#222b3e"
-    slate_600: "#334155"
-    slate_500: "#64748b"
-    slate_400: "#94a3b8"
-    slate_300: "#cbd5e1"
-    slate_200: "#e2e8f0"
-    slate_100: "#f1f5f9"
-    slate_50: "#f8fafc"
-    pure_white: "#ffffff"
-    pure_black: "#000000"
-
-  surfaces:
-    canvas: "#06080d"
-    workspace_base: "#080b11"
-    surface_subtle: "#0d111a"
-    surface_card: "#131824"
-    surface_card_hover: "#182030"
-    surface_raised: "#1a2130"
-    surface_overlay: "#222b3e"
-    surface_modal: "#121722"
-    surface_inset: "#090d15"
-    surface_highlight: "rgba(255, 255, 255, 0.04)"
-
-  borders:
-    subtle: "rgba(255, 255, 255, 0.04)"
-    line: "rgba(255, 255, 255, 0.08)"
-    strong: "rgba(255, 255, 255, 0.16)"
-    accent: "rgba(56, 189, 248, 0.35)"
-    focus_ring: "#38bdf8"
-
-  accents:
-    primary: "#38bdf8"
-    primary_hover: "#0ea5e9"
-    primary_active: "#0284c7"
-    primary_subtle: "rgba(56, 189, 248, 0.12)"
-    primary_glow: "rgba(56, 189, 248, 0.22)"
-    primary_text: "#38bdf8"
-    on_primary: "#06080d"
-
-  text:
-    primary: "#f8fafc"
-    secondary: "#94a3b8"  # Mandatory for readable metadata/labels (contrast 7.4:1 AAA on dark base, min font-weight: 500)
-    muted: "#64748b"      # Strictly restricted to non-essential hints & input placeholders (contrast ~4.2:1)
-    subtle: "#475569"     # Strictly restricted to disabled/inactive UI affordances (contrast ~2.2:1, WCAG 1.4.3 exempt)
-    inverse: "#080b11"
-    link: "#38bdf8"
-    link_hover: "#7dd3fc"
-
-  semantics:
-    error:
-      base: "#ef4444"
-      subtle: "rgba(239, 68, 68, 0.12)"
-      border: "rgba(239, 68, 68, 0.3)"
-      text: "#f87171"
-    warning:
-      base: "#f59e0b"
-      subtle: "rgba(245, 158, 11, 0.12)"
-      border: "rgba(245, 158, 11, 0.3)"
-      text: "#fbbf24"
-    success:
-      base: "#10b981"
-      subtle: "rgba(16, 185, 129, 0.12)"
-      border: "rgba(16, 185, 129, 0.3)"
-      text: "#34d399"
-    info:
-      base: "#38bdf8"
-      subtle: "rgba(56, 189, 248, 0.12)"
-      border: "rgba(56, 189, 248, 0.3)"
-      text: "#7dd3fc"
-    excellence:
-      base: "#f5c451"
-      subtle: "rgba(245, 196, 81, 0.14)"
-      border: "rgba(245, 196, 81, 0.35)"
-      text: "#fde68a"
-
-  categories_react:
-    fundamentals:
-      label: "Modelo mental & componentes"
-      hex: "#61DAFB"
-      hsl: "hsl(193, 95%, 68%)"
-      role: "Conceptos fundacionales de render y flujo de datos unidireccional"
-    state:
-      label: "Estado & datos"
-      hex: "#F59E0B"
-      hsl: "hsl(38, 92%, 50%)"
-      role: "Gestión de estado local, global, transaccional y server state"
-    effects:
-      label: "Efectos & asincronía"
-      hex: "#A78BFA"
-      hsl: "hsl(255, 92%, 76%)"
-      role: "Sincronización con sistemas externos, timers y cancelación"
-    rendering:
-      label: "Render & performance"
-      hex: "#4ADE80"
-      hsl: "hsl(142, 71%, 58%)"
-      role: "Fiber reconciler, memoización, batching y render pass scheduling"
-    architecture:
-      label: "Arquitectura web"
-      hex: "#2DD4BF"
-      hsl: "hsl(173, 80%, 40%)"
-      role: "Composición modular, routing, límites y contract design"
-    quality:
-      label: "Testing & calidad"
-      hex: "#F472B6"
-      hsl: "hsl(330, 81%, 70%)"
-      role: "Técnicas de testing de comportamiento, integración y contratos"
-    platform:
-      label: "Web, seguridad & deploy"
-      hex: "#94A3B8"
-      hsl: "hsl(215, 20%, 65%)"
-      role: "APIs del navegador, CSP, accesibilidad ARIA y hardening"
-    designSystem:
-      label: "Design systems & contratos"
-      hex: "#FB7185"
-      hsl: "hsl(351, 95%, 71%)"
-      role: "Componentes públicos, tokens semánticos y resiliencia de interfaz"
-    runtime:
-      label: "Browser & runtime"
-      hex: "#FBBF24"
-      hsl: "hsl(43, 96%, 56%)"
-      role: "Event loop, microtasks, pipeline de renderizado y garbage collection"
-    operations:
-      label: "Producción & reliability"
-      hex: "#F97316"
-      hsl: "hsl(25, 95%, 53%)"
-      role: "Observabilidad, telemetría, CI/CD y mitigación de incidentes"
-    leadership:
-      label: "Producto & liderazgo"
-      hex: "#C084FC"
-      hsl: "hsl(271, 91%, 65%)"
-      role: "Dirección técnica, ADRs/RFCs, mentoría y trade-offs ejecutivos"
-
-  categories_rails:
-    fundamentals:
-      label: "Rails core & request"
-      hex: "#E8A33D"
-      hsl: "hsl(36, 79%, 57%)"
-      role: "Ciclo de vida de la petición HTTP, Rack y convenciones MVC"
-    activerecord:
-      label: "Active Record & DB"
-      hex: "#CC342D"
-      hsl: "hsl(3, 63%, 49%)"
-      role: "ORM, queries perezosas, migraciones, índices y transacciones"
-    patterns:
-      label: "Diseño aplicado"
-      hex: "#5AA9FF"
-      hsl: "hsl(211, 100%, 68%)"
-      role: "Service Objects, Query Objects, Form Objects y patrones de decoupling"
-    sti:
-      label: "STI & polimorfismo"
-      hex: "#A78BFA"
-      hsl: "hsl(255, 92%, 76%)"
-      role: "Single Table Inheritance, asociaciones polimórficas y modelado"
-    infra:
-      label: "API, seguridad & runtime"
-      hex: "#94A3B8"
-      hsl: "hsl(215, 20%, 65%)"
-      role: "Rails API, CORS, JWT/tokens, credenciales y seguridad"
-    assets:
-      label: "Asset pipeline"
-      hex: "#2DD4BF"
-      hsl: "hsl(173, 80%, 40%)"
-      role: "Propshaft, esbuild, fingerprinting y entrega de estáticos"
-    testing:
-      label: "Testing (RSpec)"
-      hex: "#4ADE80"
-      hsl: "hsl(142, 71%, 58%)"
-      role: "RSpec unitario, FactoryBot, mocks e integración de endpoints"
-
-typography:
-  font_families:
-    sans: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
-  modular_scale:
-    base: "16px (1.000rem)"
-    ratio: "1.200 (Minor Third - High Density Cockpit)"
-    steps:
-      caption: { size: "0.694rem", px: "11px", line_height: "1rem", tracking: "0.04em", weight: 500, transform: "uppercase" }
-      small: { size: "0.833rem", px: "13.3px", line_height: "1.25rem", tracking: "0", weight: 450, role: "secondary text / metadata" }
-      body: { size: "1.000rem", px: "16px", line_height: "1.5rem", tracking: "-0.011em", weight: 400, role: "primary reading" }
-      body_medium: { size: "1.000rem", px: "16px", line_height: "1.5rem", tracking: "-0.011em", weight: 500, role: "light-on-dark compensation" }
-      lead: { size: "1.200rem", px: "19.2px", line_height: "1.75rem", tracking: "-0.015em", weight: 500, role: "executive ingress" }
-      h3: { size: "1.440rem", px: "23px", line_height: "2rem", tracking: "-0.018em", weight: 600, role: "section title" }
-      h2: { size: "1.728rem", px: "27.6px", line_height: "2.25rem", tracking: "-0.022em", weight: 600, role: "view header" }
-      h1: { size: "2.074rem", px: "33.2px", line_height: "2.5rem", tracking: "-0.026em", weight: 700, role: "cockpit title" }
-      display: { size: "2.488rem", px: "39.8px", line_height: "2.75rem", tracking: "-0.030em", weight: 700, role: "hero metrics / score 120" }
-  tabular_rule: "font-variant-numeric: tabular-nums mandatory across all numbers, counters, timestamps, rubrics, and scores."
-
-rounded:
-  mathematical_law: "outerRadius = innerRadius + padding"
-  tokens:
-    none: "0px"
-    xs: "2px"
-    sm: "4px"
-    md: "6px"
-    lg: "8px"
-    xl: "12px"
-    "2xl": "16px"
-    pill: "9999px"
-  paired_matrix:
-    app_shell_to_panel:
-      outer_radius: "16px"
-      padding: "8px"
-      inner_radius: "8px"
-      formula: "16px = 8px + 8px"
-    modal_to_content_well:
-      outer_radius: "16px"
-      padding: "12px"
-      inner_radius: "4px"
-      formula: "16px = 4px + 12px"
-    panel_to_card:
-      outer_radius: "14px"
-      padding: "8px"
-      inner_radius: "6px"
-      formula: "14px = 6px + 8px"
-    card_to_code_well:
-      outer_radius: "12px"
-      padding: "8px"
-      inner_radius: "4px"
-      formula: "12px = 4px + 8px"
-    well_to_badge:
-      outer_radius: "6px"
-      padding: "4px"
-      inner_radius: "2px"
-      formula: "6px = 2px + 4px"
-    button_control:
-      uniform_radius: "6px"
-      note: "Strictly uniform across all button variants (primary, outline, ghost, icon)"
-
-spacing:
-  base_grid: "4px / 8px"
-  scale:
-    space_0: "0px"
-    space_0_5: "2px (0.125rem)"
-    space_1: "4px (0.25rem)"
-    space_1_5: "6px (0.375rem)"
-    space_2: "8px (0.5rem)"
-    space_3: "12px (0.75rem)"
-    space_4: "16px (1.0rem)"
-    space_5: "20px (1.25rem)"
-    space_6: "24px (1.5rem)"
-    space_8: "32px (2.0rem)"
-    space_10: "40px (2.5rem)"
-    space_12: "48px (3.0rem)"
-    space_16: "64px (4.0rem)"
-
-elevation:
-  methodology: "Tonal surface lightness progression with specular top-edge micro-highlights (zero heavy muddy drop shadows)"
-  top_edge_highlight: "inset 0 1px 0 0 rgba(255, 255, 255, 0.08)"
-  top_edge_highlight_strong: "inset 0 1px 0 0 rgba(255, 255, 255, 0.14)"
-  levels:
-    level_0:
-      name: "Canvas / Void"
-      background: "#06080d"
-      border: "none"
-      shadow: "none"
-    level_1:
-      name: "Workspace Base / Shell"
-      background: "#080b11"
-      border: "1px solid rgba(255, 255, 255, 0.04)"
-      shadow: "none"
-    level_2:
-      name: "Surface Panel / Dock"
-      background: "#0d111a"
-      border: "1px solid rgba(255, 255, 255, 0.06)"
-      shadow: "0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)"
-    level_3:
-      name: "Interactive Card"
-      background: "#131824"
-      border: "1px solid rgba(255, 255, 255, 0.08)"
-      shadow: "0 4px 12px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.08)"
-    level_4:
-      name: "Card Hover / Raised Element"
-      background: "#182030"
-      border: "1px solid rgba(56, 189, 248, 0.28)"
-      shadow: "0 8px 24px -4px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.14)"
-    level_5:
-      name: "Modal Dialog / Command Palette"
-      background: "#121722"
-      border: "1px solid rgba(255, 255, 255, 0.12)"
-      shadow: "0 24px 60px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.12)"
-
-components:
-  button:
-    height_desktop: "32px"
-    height_mobile: "44px"
-    radius: "6px"
-    font: "Inter, 500, 13px"
-    states: ["default", "hover", "active", "focus-visible", "disabled", "loading"]
-    anti_cls_rule: "Reserved fixed width or min-width during loading state spinner swap"
-  badge:
-    height: "20px"
-    radius: "4px"
-    font: "'JetBrains Mono', 500, 11px"
-    padding: "0 6px"
-  code_block:
-    font: "'JetBrains Mono', 400, 13px"
-    line_height: "1.5"
-    background: "#090d15"
-    border: "1px solid rgba(255, 255, 255, 0.06)"
-    radius: "6px"
-    padding: "12px 16px"
-  modal_dialog:
-    max_width_desktop: "960px"
-    radius: "16px"
-    background: "#121722"
-    border: "1px solid rgba(255, 255, 255, 0.12)"
-    zen_mode: "100vw x 100vh, max-w-4xl reading column, zero backdrop blur distraction"
-
-iconography:
-  library: "lucide-react"
-  tone: "Technical, geometric sharpness with sharp path corners"
-  stroke_width: "1.5px (--icon-stroke, refined engineering editorial standard prohibiting bulky 2px defaults)"
-  tokens:
-    stroke: "1.5px"
-    size_xs: "12px (--icon-xs: status badges, tight tags)"
-    size_sm: "14px (--icon-sm: secondary metadata, inline code labels)"
-    size_md: "16px (--icon-md: standard control buttons, navigation tabs, input affixes)"
-    size_lg: "20px (--icon-lg: dialog headers, hero actions)"
-  optical_alignment: "Centered with text baseline via inline-flex; zero-CLS fixed sizing bounding box"
+  supersedes: "DESIGN.md v2.0.0 (slate + sky, 'cockpit')"
 ---
 
-# DESIGN.md — Visual Foundations & System Architecture
-## Learning Workspace: The Technical Mastery Cockpit
+# Learning Workspace — Design System v3
 
-> **Design Engineering Truth**: This document is the absolute single source of truth for all visual tokens, typographic relationships, mathematical layout laws, and domain fixtures within **Learning Workspace**. It serves as the immutable contract bridging the specification (`specs/001-clean-workspace-v2/spec.md`) and downstream code implementation. **Zero code implementation in `src/` occurs until this foundation is sealed.**
+## 0. Norte creativo: *Estudio nocturno*
+
+Una mesa de estudio de noche: la habitación es grafito cálido y silencioso, el material de estudio es **papel** (texto claro y cálido, nunca blanco puro) y hay **una sola luz de trabajo** —el acento *iris*— que marca dónde está tu atención: foco de teclado, selección, la acción recomendada. El **oro** se reserva para una sola cosa: la excelencia (101–120). El **salvia** para una sola cosa: dominio (≥100).
+
+Tres ideas gobiernan todo:
+
+1. **El mapa es una herramienta, la card es un libro.** Lo operativo (mapa, filtros, métricas, formularios) usa sans técnica y mono tabular. El contenido de estudio usa una serif editorial en sus momentos de lectura (título de la card, *En una frase*, pregunta de flashcard). Esa dualidad es la firma del producto.
+2. **Jerarquía por tipografía y espacio, no por cajas.** Un plano por superficie. Los grupos se forman por proximidad, títulos y hairlines (1px). Nunca bordes de color alrededor de bloques de texto.
+3. **El color significa algo o no aparece.** Neutros para la estructura; iris para interacción; salvia para dominio; oro para excelencia; coral para error; naranja para advertencia. Los colores de categoría existen **solo como puntos y trazos finos** de identidad (ver §1.5, separación por forma).
+
+### Qué cambia respecto de v2
+| v2 (legacy) | v3 |
+|:--|:--|
+| Slate azulado + cian neón, glows | Grafito cálido (OKLCH hue 67–92°, C≈0.005), sin glows |
+| Categorías neón como bordes laterales de cards | Categorías en OKLCH armonizado, solo punto 8px o trazo 2px |
+| Emoji como iconografía (🧠 ⚖️ ✨ 🔥) | Iconos lineales 1.5px (lucide), cero emoji |
+| Una sola fuente sans | Geist (UI) + Geist Mono (métricas/código) + Newsreader (lectura) |
+| Header + filtros + banner apilados (layer cake) | Sidebar persistente + canvas; barra superior única de 52px |
+| Lección como modal flotante con bordes | Sesión de estudio a pantalla completa: columna de lectura + riel de contexto |
+| Barras de progreso en cian (acento) | Riel neutro papel → salvia al dominar → oro en el extra |
+
+### Unidades
+- Tamaños de fuente, line-heights, alturas de control y espaciados se implementan en **rem** (raíz 16px). Las tablas muestran px por legibilidad; `rem = px / 16`.
+- Bordes, hairlines, trazos y radios en **px**.
+- Media queries en **em** (`48em` = 768px, `68.75em` = 1100px, `90em` = 1440px).
 
 ---
 
-## 1. Executive Philosophy & Creative North Star
+## 1. Color
 
-### 1.1 Creative North Star: "El Cockpit de Dominio Técnico"
-The user of Learning Workspace is an ambitious software engineer preparing for senior, staff, and principal engineering interviews at tier-1 tech firms (FAANG / high-bar engineering cultures). They do not want a gamified, cartoonish, or toy learning app. They want a **high-precision flight cockpit** for their technical mind.
+Todos los ratios están verificados con WCAG 2.2 (culori) contra el fondo indicado.
 
-- **Aesthetic Benchmark**: Dark Engineering Editorial. The visual language matches the exacting standards of **Linear**, **Raycast**, **Vercel**, and **Cursor**.
-- **Atmosphere**: Deep, focused slate-black atmosphere (`#080b11`), razor-sharp typography, high data density, micro-relieved surfaces, and surgical, muted accents that never shout.
-- **Mental State**: Immersive cognitive flow. Every pixel serves understanding, trade-off analysis, and retention.
+### 1.1 Neutros (grafito cálido, OKLCH C ≈ 0.005, hue 70–90°)
 
-```
-       ┌────────────────────────────────────────────────────────┐
-       │               DARK ENGINEERING EDITORIAL               │
-       │                                                        │
-       │   Precision Geometry    │   High Data Density          │
-       │   Concentric Radii      │   Zero Carditis              │
-       │   Tabular Metrics       │   Authentic Tech Fixtures    │
-       │   Tonal Lightness Steps │   < 5% Functional Accent     │
-       └────────────────────────────────────────────────────────┘
-```
+| Token | Hex | OKLCH L | Uso |
+|:--|:--|:--:|:--|
+| `--bg-sidebar` | `#090806` | .135 | Barra lateral, dock móvil |
+| `--bg-app` | `#100E0C` | .165 | Lienzo principal, fondo de la sesión de estudio |
+| `--surface-1` | `#161512` | .195 | Cards del mapa, filas, nodos del grafo, drawer, diálogos |
+| `--surface-2` | `#1D1B19` | .225 | Paleta de comandos, tab activa de la card (los hovers usan `--hover-overlay`, §1.4) |
+| `--surface-3` | `#242220` | .255 | Popovers, menús, tooltips, deep dive |
+| `--surface-inset` | `#070604` | .120 | Código, textarea, inputs, pistas de riel, pozos |
+| `--line-subtle` | `rgba(255,248,230,.06)` | — | Divisores internos, hairlines de tabla |
+| `--line` | `rgba(255,248,230,.09)` | — | Borde de cards, sidebar, paneles |
+| `--line-strong` | `rgba(255,248,230,.16)` (≈ `#474440` sobre s3) | — | Hover de borde, borde de overlays |
+| `--line-control` | `#6B6861` (opaco) | — | **Borde de campos de formulario** (input, textarea, select, checkbox): 3.64 vs inset / 3.28 vs s1 / 3.09 vs s2 (WCAG 1.4.11) |
+| `--scrim` | `rgba(4,3,2,.72)` | — | Fondo detrás de diálogos/drawers/paleta |
+| `--bar-glass` | `rgba(16,14,12,.88)` + `backdrop-filter: blur(8px)` | — | Barra superior al hacer scroll |
+| `--selection` | `#2A2E56` | — | `::selection` (texto `--text-1`, 10.9:1) |
 
-### 1.2 Anti-AI-Slop Visual Manifesto
-We reject the generic tropes of modern AI-generated web design:
-1. **Zero "Carditis" / Zero Div Soup**: No nesting cards inside panels inside modals. Content is partitioned through typography, optical proximity, and razor hairlines (`1px solid rgba(255, 255, 255, 0.06)`).
-2. **Controlled Density (No Empty Voids > 40px)**: No hollow black spaces. Every area carries cognitive substance (concept titles, 2-line clamped summaries, dependency badges, rubric counters).
-3. **No Christmas Tree Acentuation**: Progress or high scores (`118/120`) do not paint entire card borders in fluorescent yellow or green. Excellence is expressed through crisp, understated badge typography (`★ 118/120`), keeping container frames neutral.
-4. **No Decorative "Toy Terminals"**: Code is presented in clean, production-grade editor containers, not fake browser chrome with non-functional rainbow dots.
-5. **No Hallucinated Generic Latin (Lorem Ipsum)**: Every fixture, placeholder, comparison, and preview is derived from authentic production React and Rails systems (Fiber reconcile passes, WorkInProgress nodes, Event Loop tick starvation, ActiveRecord N+1 eager loads).
+### 1.2 Texto ("papel")
 
----
+| Token | Hex | Contraste app / s1 / s2 / s3 | Uso |
+|:--|:--|:--|:--|
+| `--text-1` | `#EEECE7` | 16.3 / 15.5 / 14.5 / 13.4 | Títulos, contenido, valores |
+| `--text-2` | `#B7B3AB` | 9.2 / 8.7 / 8.2 / 7.6 | Cuerpo secundario, labels, metadatos |
+| `--text-3` | `#938F87` | 6.0 / 5.7 / 5.3 / 4.9 | Hints, placeholders, eyebrows, denominadores. **Peso ≥ 500.** |
+| `--text-4` | `#5F5C56` | 2.4–2.9 (exento 1.4.3) | Solo controles deshabilitados |
+| `--text-on-paper` | `#100E0C` | 16.3 sobre `--paper` | Texto del botón primario |
 
-## 2. Algorithmic Color Architecture & Tonal Progression
+**Reglas de texto**
+- Nunca `#FFFFFF` ni `#000000`.
+- **Sobre fondos teñidos (`--*-soft`) está prohibido `--text-3`** (cae a 4.1–4.9). Sobre tintes se usa `--text-1` o `--text-2` (≥ 6.36:1 en el peor caso, gold-soft sobre s2) o el color semántico propio (≥ 4.66:1, danger sobre danger-soft en s3).
+- El cuerpo de lectura usa `--text-1` a 16px; información necesaria nunca en `--text-3` a menos de 12px.
 
-### 2.1 The < 5% Accent Area Discipline
-In professional developer cockpits, color is used for **semantic orientation, not surface decoration**. 
-- The primary functional accent (`#38bdf8` - Sky Cyan) is strictly limited to **$< 5\%$ of any viewport area**.
-- It is reserved exclusively for:
-  1. The single primary action button per view (e.g., "Iniciar Evaluación", "Evaluar con IA").
-  2. Keyboard focus indicators (`:focus-visible` ring).
-  3. Active tab underlines and selected navigational markers.
-- All secondary actions remain neutral or subtle bordered outlines (`1px solid rgba(255, 255, 255, 0.08)`).
+### 1.3 Acento, papel y semántica
 
-### 2.2 Dark Mode Tonal Progression (Lightness over Shadows)
-In dark user interfaces, shadows blend into dark backdrops and become muddy. Learning Workspace establishes physical elevation through **progressive tonal lightness steps**, where surfaces closer to the user are subtly lighter in gray value, paired with a specular top-edge micro-reflection.
+| Token | Hex | Contraste app / s1 / s3 | Rol exclusivo |
+|:--|:--|:--|:--|
+| `--paper` | `#EEECE7` | — | Relleno del botón primario (1 por región de acción) |
+| `--paper-hover` | `#DAD7D0` | — | Hover del primario |
+| `--paper-active` | `#C7C4BD` | — | Active del primario |
+| `--accent` | `#909CF5` (iris) | 7.6 / 7.2 / 6.2 | Foco de teclado, selección, tab activa, links, badge "Mejor siguiente", cursor de gráfico |
+| `--accent-strong` | `#A5B1FD` | 9.4 / 8.9 / 7.6 | Hover de links, texto sobre `--accent-soft` |
+| `--accent-soft` | `rgba(144,156,245,.14)` | — | Fondo de ítem seleccionado / fila activa |
+| `--mastery` | `#74C692` (salvia) | 9.4 / 8.9 / 7.6 | Card dominada (≥100), icono `Check` de cobertura "cubierto" |
+| `--mastery-soft` | `rgba(116,198,146,.12)` | — | Fondo de pill de dominio |
+| `--gold` | `#E8BE62` | 11.0 / 10.4 / 8.9 | **Solo** excelencia 101–120 (segmento extra, ★) |
+| `--gold-soft` | `rgba(232,190,98,.12)` | — | Fondo de pill/banda de excelencia |
+| `--warn` | `#F0995B` | 8.6 / 8.2 / 7.0 | Prerrequisitos pendientes, "un poco corta", evaluación desactualizada, severidad media |
+| `--warn-soft` | `rgba(240,153,91,.12)` | — | Fondo de aviso |
+| `--danger` | `#E97871` (coral) | 6.8 / 6.4 / 5.6 | Errores, eliminar, severidad alta |
+| `--danger-soft` | `rgba(233,120,113,.12)` | — | Fondo de error inline |
+| `--rail-base` | `#B7B3AB` (= text-2) | 9.7 sobre inset | Segmento 0–100 del riel de puntaje **mientras no hay dominio** |
 
-| Elevation Level | Token Name | Hex Value | Role & Usage | Specular Inset |
-|:---|:---|:---|:---|:---|
-| **Level 0** | `--surface-canvas` | `#06080d` | Screen backdrop, infinite canvas background | None |
-| **Level 1** | `--surface-base` | `#080b11` | Primary workspace background, grid container | None |
-| **Level 2** | `--surface-subtle` | `#0d111a` | Static panels, sidebars, dock background, table rows | `inset 0 1px 0 0 rgba(255, 255, 255, 0.04)` |
-| **Level 3** | `--surface-card` | `#131824` | Default concept cards, flashcards, form inputs | `inset 0 1px 0 0 rgba(255, 255, 255, 0.08)` |
-| **Level 4** | `--surface-raised` | `#1a2130` | Hovered cards, selected states, dropdown menus | `inset 0 1px 0 0 rgba(255, 255, 255, 0.14)` |
-| **Level 5** | `--surface-overlay` | `#222b3e` | Modals, popovers, global HUD, command palette | `inset 0 1px 0 0 rgba(255, 255, 255, 0.16)` |
+**Estado seleccionado** (fila, card, nodo, chip): fondo `--accent-soft` + borde 1px `--accent` (6.2–7.6:1, cumple 1.4.11) + `aria-selected`/`aria-pressed`/`aria-current`.
 
-### 2.3 Specular Top-Edge Micro-Highlights
-Every elevated container (card, button, modal) applies the physical lighting principle of an overhead key light source:
-```css
-/* Universal Top-Edge Specular Highlight Token */
---shadow-inset-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
---shadow-card: 0 4px 12px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-line), var(--shadow-inset-top);
---shadow-card-hover: 0 8px 24px -4px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(56, 189, 248, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
-```
+**Presupuesto del acento.** `--accent` es exclusivamente interacción: foco, selección, tab activa, link, "Mejor siguiente" y cursor de gráfico. **No es un color de datos**: ninguna barra, puntaje o métrica se rellena con iris. Con eso, `--accent` + `--paper` ocupan < 5% del área de cualquier vista (verificable: a lo sumo 1 botón paper + 1 selección + 1 tab activa por pantalla).
 
-### 2.4 WCAG 2.2 AA Contrast Discipline & Text Token Scoping
+**Sin color como único portador**: todo estado semántico lleva icono + texto (p. ej. `✓ Dominada`, `★ 112`, `! Prerrequisitos`).
 
-In dark engineering user interfaces, perceived contrast is strongly governed by font weight and stroke rendering against deep backdrops. Standard mathematical contrast metrics evaluate color alone and ignore glyph stroke weight. On dark surfaces (`#080b11`), pairing a low-contrast gray with light font weights (`400`) causes optical halation, making text functionally illegible even if it marginally crosses mathematical boundaries.
+### 1.4 Mapeo de estados a tokens (lista cerrada)
 
-To enforce strict adherence to **WCAG 2.2 §1.4.3 (Contrast Minimum, Level AA)** and **§1.4.6 (Level AAA)**, typography color tokens are partitioned into rigorous semantic boundaries:
+**Estado de evaluación (`evaluation.status` / `STATUS_LABEL`)**
 
-| Token Name | Hex Value | Weight Contract | Contrast vs Base (`#080b11`) | Contrast vs Card (`#131824`) | WCAG Rating | Enforced Semantic Scope & Rules |
-|:---|:---:|:---:|:---:|:---:|:---:|:---|
-| `--color-text-primary` | `#f8fafc` | 400 / 600 / 700 | `15.8:1` | `13.5:1` | **AAA Pass** | View headings, card titles, primary reading prose, trade-off comparisons, code text. |
-| `--color-text-secondary` | `#94a3b8` | **Min 500** | `7.4:1` | `6.3:1` | **AAA Pass** | **MANDATORY for all readable secondary metadata, labels, timestamps, rubric criteria, category chips, and card subtitles.** Minimum `font-weight: 500` is compulsory to eliminate dark halation. |
-| `--color-text-muted` | `#64748b` | 400 / 500 | `4.2:1` | `3.6:1` | Non-Reading | **STRICTLY RESTRICTED** to non-essential decorative hints, input placeholders, and inactive keyboard shortcuts. Strictly prohibited for readable content, labels, or metadata. |
-| `--color-text-subtle` | `#475569` | 400 | `2.2:1` | `1.9:1` | Exempt (§1.4.3) | **STRICTLY RESTRICTED** exclusively to disabled or inactive UI affordances. Explicitly exempt from minimum contrast requirements under WCAG 2.2 §1.4.3. |
+| Estado | Pill: fondo / texto | Icono lucide | Copy |
+|:--|:--|:--|:--|
+| `exceptional` (101–120) | `--gold-soft` / `--gold` | `Star` | "Profundización extra" |
+| `strong` (100) | `--mastery-soft` / `--mastery` | `Check` | "Base cubierta" |
+| `developing` (60–99) | `--pill-neutral` / `--text-2` | `CircleDashed` | "En progreso" |
+| `review` (<60) | `--warn-soft` / `--warn` | `AlertTriangle` | "Conviene revisar" |
+| sin intento | transparente, borde `--line` / `--text-3` | `Circle` | "Sin evaluar" |
 
-> [!IMPORTANT]
-> **Secondary Text Invariant**: Any secondary metadata, card footer, author name, timestamp, or descriptive subtitle that the user must read or act upon MUST use `--color-text-secondary: #94a3b8` at `font-weight: 500` or higher. Under no circumstances may `--color-text-muted` or `--color-text-subtle` be used for legible information.
+**Severidad de gaps**
 
----
+| Severidad | Marcador | Texto |
+|:--|:--|:--|
+| alto | icono `ChevronsUp` 16px `--danger` | "Alto" en `--danger` |
+| medio | icono `ChevronUp` 16px `--warn` | "Medio" en `--warn` |
+| bajo | icono `Minus` 16px `--text-3` | "Bajo" en `--text-2` |
 
-## 3. Immutable Category Color Anchors
+**Cobertura de la superficie (coaching)**
 
-Category colors are **navigational anchor coordinates**. Under **Invariant 3.1 of DESIGN_CRITERIA.md**, category colors are immutable: they are NEVER overwritten or replaced by mastery status, completion percentages, or error states.
+| Estado | Icono | Color | aria-label |
+|:--|:--|:--|:--|
+| covered | `Check` | `--mastery` | "Cubierto" |
+| partial | `CircleDashed` | `--warn` | "Parcial" |
+| missing | `X` | `--danger` | "Falta" |
+| pending | `Circle` | `--text-3` | "Sin revisar" |
 
-### 3.1 React Curriculum (11 Immutable Categories)
+**Avisos inline (una fila, sin caja con borde de color)**
 
-| Category Key | Label | Hex Anchor | HSL Representation | Contrast vs Base | Domain Role & Semantic Scope |
-|:---|:---|:---:|:---:|:---:|:---|
-| `fundamentals` | Modelo mental & componentes | `#61DAFB` | `hsl(193, 95%, 68%)` | `11.8:1` (AAA) | Conceptos fundacionales de render y flujo unidireccional |
-| `state` | Estado & datos | `#F59E0B` | `hsl(38, 92%, 50%)` | `8.9:1` (AAA) | Estado local, reducer, context y server cache |
-| `effects` | Efectos & asincronía | `#A78BFA` | `hsl(255, 92%, 76%)` | `9.4:1` (AAA) | Conexión a sistemas externos, web sockets y cleanup |
-| `rendering` | Render & performance | `#4ADE80` | `hsl(142, 71%, 58%)` | `11.2:1` (AAA) | Fiber reconciler, diffing algorítmico y batching |
-| `architecture` | Arquitectura web | `#2DD4BF` | `hsl(173, 80%, 40%)` | `10.5:1` (AAA) | Composición a escala, modularidad y boundary isolation |
-| `quality` | Testing & calidad | `#F472B6` | `hsl(330, 81%, 70%)` | `8.6:1` (AAA) | Pruebas de integración, testing library y contratos |
-| `platform` | Web, seguridad & deploy | `#94A3B8` | `hsl(215, 20%, 65%)` | `7.2:1` (AA) | CSP, OWASP frontend, DOM APIs y SSR |
-| `designSystem` | Design systems & contratos | `#FB7185` | `hsl(351, 95%, 71%)` | `8.4:1` (AAA) | Componentes públicos, tokens semánticos y resiliencia de interfaz |
-| `runtime` | Browser & runtime | `#FBBF24` | `hsl(43, 96%, 56%)` | `10.8:1` (AAA) | V8 engine, Event loop, tasks, microtasks y memory |
-| `operations` | Producción & reliability | `#F97316` | `hsl(25, 95%, 53%)` | `7.6:1` (AA) | Observabilidad frontend, telemetry y CI/CD |
-| `leadership` | Producto & liderazgo | `#C084FC` | `hsl(271, 91%, 65%)` | `8.8:1` (AAA) | ADRs, RFCs, decisiones arquitectónicas y mentoring |
+| Tipo | Fondo | Icono (color) | Texto |
+|:--|:--|:--|:--|
+| Error | `--danger-soft` | `AlertCircle` (`--danger`) | `--text-1`, acción de recuperación como botón ghost |
+| Advertencia / evaluación desactualizada | `--warn-soft` | `History` o `AlertTriangle` (`--warn`) | `--text-1` |
+| Información | transparente + hairline superior `--line-subtle` | `Info` (`--text-2`) | `--text-2` |
+| Éxito | `--mastery-soft` | `CheckCircle2` (`--mastery`) | `--text-1` |
 
-### 3.2 Rails Curriculum (7 Immutable Categories)
+Todos con `--r-md` 8, padding 8×12, sin borde.
 
-| Category Key | Label | Hex Anchor | HSL Representation | Contrast vs Base | Domain Role & Semantic Scope |
-|:---|:---|:---:|:---:|:---:|:---|
-| `fundamentals` | Rails core & request | `#E8A33D` | `hsl(36, 79%, 57%)` | `9.2:1` (AAA) | Request lifecycle, Rack middleware y MVC routing |
-| `activerecord` | Active Record & DB | `#CC342D` | `hsl(3, 63%, 49%)` | `5.8:1` (AA) | ORM, queries perezosas, migraciones y transacciones |
-| `patterns` | Diseño aplicado | `#5AA9FF` | `hsl(211, 100%, 68%)` | `9.7:1` (AAA) | Service Objects, Query Objects y Form Objects |
-| `sti` | STI & polimorfismo | `#A78BFA` | `hsl(255, 92%, 76%)` | `9.4:1` (AAA) | Single Table Inheritance y polimorfismo relacional |
-| `infra` | API, seguridad & runtime | `#94A3B8` | `hsl(215, 20%, 65%)` | `7.2:1` (AA) | Rails API-only, CORS, JWT tokens y seguridad |
-| `assets` | Asset pipeline | `#2DD4BF` | `hsl(173, 80%, 40%)` | `10.5:1` (AAA) | Propshaft, esbuild, fingerprinting y assets |
-| `testing` | Testing (RSpec) | `#4ADE80` | `hsl(142, 71%, 58%)` | `11.2:1` (AAA) | RSpec suites, FactoryBot, mocks y request specs |
+**Variantes de botón (color; mecánica de estados en design-spec §D)**
 
-### 3.3 Semantic Status & Scoring Scale (0–120 Rubric)
-Evaluations and mastery states utilize a disciplined semantic tier:
+| Variante | Fondo | Borde | Texto | Hover | Active |
+|:--|:--|:--|:--|:--|:--|
+| Primario | `--paper` | — | `--text-on-paper` | `--paper-hover` | `--paper-active` |
+| Secundario | `rgba(255,248,230,.05)` sobre su anfitrión | `--line` | `--text-1` | + `--hover-overlay` y `--line-strong` | + `--press-overlay` |
+| Ghost | transparente | — | `--text-2` | `--hover-overlay` + `--text-1` | `--press-overlay` |
+| Destructivo | transparente | — | `--danger` | `--danger-soft` | `--danger-soft` + `--line-strong` |
+| Deshabilitado (todas) | transparente (primario: `rgba(255,248,230,.08)`) | `--line-subtle` | `--text-4` | sin cambio | sin cambio |
 
-```
-  [0 ── 49 pts]            [50 ── 69 pts]           [70 ── 84 pts]           [85 ── 100 pts]          [101 ── 120 pts]
-  Inaceptable / Brechas    En Desarrollo / Básico   Competente / Aceptable   Avanzado / Senior        Staff / Excelencia
-  --color-error            --color-warning          --color-info             --color-success          --color-excellence
-  #ef4444 (Red)            #f59e0b (Amber)          #38bdf8 (Cyan)           #10b981 (Emerald)        #f5c451 (Gold)
-```
+Overlays relativos (funcionan sobre cualquier superficie, siempre aclaran): `--hover-overlay: rgba(255,248,230,.06)`, `--press-overlay: rgba(255,248,230,.10)`. **Regla única: todo hover y press del sistema** (botones, items de menú, filas, cards del mapa, nodos del grafo, chips) se expresa con estos overlays sobre su propia superficie base (no la de su anfitrión); los bordes solo cambian si el elemento ya tenía uno (`--line` → `--line-strong`), y un elemento seleccionado conserva su borde `--accent` en hover; ninguna regla de hover cambia a otra superficie sólida. Única excepción: el botón destructivo usa `--danger-soft` como hover (y suma `--line-strong` en press) para anticipar la consecuencia.
 
----
+Relleno neutro relativo para pills y chips sin semántica: `--pill-neutral: rgba(255,248,230,.06)` (text-2 encima: 8.1 / 7.5 / 7.0 / 6.4 sobre app / s1 / s2 / s3).
 
-## 4. Modular Scale Typography & Optical Alignment
+### 1.5 Paletas de categoría (identidad, no estado)
 
-### 4.1 Typeface Selection
-1. **Primary UI & Editorial Sans**: `Inter` (with native fallback to `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto`).
-   - Selected for superior x-height, clear optical kerning, and legibility at dense 12px–14px sizes.
-2. **Technical Metrics & Code Monospace**: `JetBrains Mono` (with fallback to `ui-monospace, SFMono-Regular, Menlo, Monaco`).
-   - Selected for explicit operator legibility, programming ligatures, distinct `0` vs `O` and `1` vs `l`, and uniform tabular width.
+Hues optimizados para maximizar la distancia perceptual mínima entre sí y contra los 5 colores de estado (ΔE2000 mínimo ≈ 6.6 con 11 categorías: es el techo físico a esta luminosidad). Por eso la separación se garantiza **por forma**, no solo por color:
 
-### 4.2 Modular Scale Specification
-- **Base Size ($Step\ 0$)**: `16px` (`1.000rem`)
-- **Ratio**: `1.200` (Minor Third) — chosen specifically to optimize high-density dashboard layouts without dramatic vertical height bloat.
+**Regla de separación por forma**
+- **Categoría = punto (círculo 8px) o trazo recto de 2px.** Nunca barra de progreso, nunca pill, nunca icono.
+- **Estado = icono + texto (+ pill o riel).** Nunca un punto suelto (tampoco severidad, cobertura ni "IA trabajando").
+- Las barras de progreso por categoría (sidebar, bandas) se rellenan con `--rail-base`; la categoría la identifica solo el punto junto al nombre.
 
-| Token | Step | Computed Rem | Pixel Ref | Line Height | Letter Spacing | Weight | Optical Role & Usage |
-|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---|
-| `--text-caption` | $-2$ | `0.694rem` | `11.1px` | `1.00rem` | `+0.040em` | `500` | Micro-badges, category tags (Uppercase), shortcut keys |
-| `--text-sm` | $-1$ | `0.833rem` | `13.3px` | `1.25rem` | `0` | `450` | Secondary labels, timestamps, metadata, helper hints |
-| `--text-base` | $0$ | `1.000rem` | `16.0px` | `1.50rem` | `-0.011em` | `400` | Primary reading prose, trade-off analysis, explanation |
-| `--text-base-med` | $0$ | `1.000rem` | `16.0px` | `1.50rem` | `-0.011em` | `500` | Light-on-dark halation compensation (dark mode body) |
-| `--text-lead` | $+1$ | `1.200rem` | `19.2px` | `1.75rem` | `-0.015em` | `500` | Executive summary ingress, modal section subheads |
-| `--text-h3` | $+2$ | `1.440rem` | `23.0px` | `2.00rem` | `-0.018em` | `600` | Card group titles, rubric criterion titles |
-| `--text-h2` | $+3$ | `1.728rem` | `27.6px` | `2.25rem` | `-0.022em` | `600` | Modal main titles, view headings, milestone titles |
-| `--text-h1` | $+4$ | `2.074rem` | `33.2px` | `2.50rem` | `-0.026em` | `700` | Cockpit header title, primary hero headline |
-| `--text-display` | $+5$ | `2.488rem` | `39.8px` | `2.75rem` | `-0.030em` | `700` | Master score display (`118 / 120`), hero stat metric |
+OKLCH L = 0.74, C = 0.09. Contraste ≥ 7.0:1 sobre `--surface-1`. Sustituyen en la presentación a los hex de los datos (`graph.categories[cat].color`) mediante `src/ui/theme/categoryPalette.js`; categoría desconocida → `color-mix(in oklch, <dato> 60%, var(--text-2))`.
 
-### 4.3 Mandatory Tabular Figures Invariant
-> [!IMPORTANT]
-> **Zero Jitter Invariant**: All numbers that can change dynamically, all timers, progress ratios, rubric breakdown metrics, character counts, and index positions MUST enforce:
-> ```css
-> font-variant-numeric: tabular-nums;
-> ```
-> Or utilize `--font-mono` directly. Proportional numbers cause horizontal jitter during real-time streaming evaluations and break vertical columnar alignment in data scorecards.
+**React**
 
-### 4.4 Measure (Line Length) & Text Wrapping Rules
-- **Prose Reading Columns**: Strictly constrained between `45ch` and `72ch` (`max-width: 48rem` / `768px`). Unbounded line lengths cause severe eye-tracking fatigue.
-- **Headings Wrapping**: `text-wrap: balance;` applied globally to `h1, h2, h3, h4`.
-- **Prose Paragraphs**: `text-wrap: pretty;` applied globally to `p, li, dd` to prevent orphan words.
+| Categoría | Hue | Hex |
+|:--|:--:|:--|
+| fundamentals · Modelo mental & componentes | 205 | `#5DBBC6` |
+| state · Estado & datos | 70 | `#D0A16B` |
+| effects · Efectos & asincronía | 290 | `#AAA1E0` |
+| rendering · Render & performance | 120 | `#A3B472` |
+| architecture · Arquitectura web | 170 | `#6CBDA2` |
+| quality · Testing & calidad | 335 | `#CF95C1` |
+| platform · Web, seguridad & deploy | 230 | `#6BB6D9` |
+| designSystem · Design systems & contratos | 0 | `#DA93A8` |
+| runtime · Browser & runtime | 90 | `#C1A966` |
+| operations · Producción & reliability | 45 | `#DB997B` |
+| leadership · Producto & liderazgo | 310 | `#BC9BD6` |
 
-### 4.5 Iconography System & Optical Alignment
+**Rails**
 
-To uphold the "Dark Engineering Editorial" aesthetic benchmark (Linear / Raycast / Cursor), iconography must exhibit surgical geometric precision, uniform line density, and zero optical jarring against monospace code elements.
+| Categoría | Hex |
+|:--|:--|
+| fundamentals · Rails core & request | `#D0A16B` |
+| activerecord · Active Record & DB | `#DA93A8` |
+| patterns · Diseño aplicado | `#6BB6D9` |
+| sti · STI & polimorfismo | `#AAA1E0` |
+| infra · API, seguridad & runtime | `#5DBBC6` |
+| assets · Asset pipeline | `#6CBDA2` |
+| testing · Testing (RSpec) | `#A3B472` |
 
-#### 4.5.1 Designated Icon Family
-- **Standard Library**: `lucide-react`
-- **Contour & Geometry Style**: Technical, sharp geometric contours with crisp path corners. Icons must feel engineered and functional, strictly rejecting playful, bulbous, or overly rounded cartoon iconographies.
-- **Rule of Invariance**: A single icon family with uniform stroke weight is enforced across the entire application. Never mix filled and outline icon styles arbitrarily; never invent an icon for an established concept (`Search` for query, `Settings` for configuration, `Code` for snippets/AST, `CheckCircle` for verified mastery, `AlertTriangle` for warnings). Icons exist to accelerate optical scanning, not to serve as decorative visual noise.
+**Usos permitidos (lista cerrada)**: punto 8px junto al nombre; trazo superior de 2px en el nodo del grafo; `--lesson-color` (se declara en el contenedor de la sesión de estudio con el hex de la categoría de la card) usado solo en el punto del encabezado de la card. **Prohibido**: fondos, bordes completos, texto, barras, estados.
 
-#### 4.5.2 Stroke Width & Optical Sizing Standards
-Default icon weights (such as 2px or 2.5px strokes) create excessive optical density that overpowers delicate 13px–14px typography on dark surfaces. All icons throughout the workspace strictly enforce `--icon-stroke: 1.5px`, explicitly prohibiting bulky 2px defaults.
+**Colores de milestones y bandas de seniority** (`milestone.color`, `band.color` en los datos): **no se usan**. Milestones y bandas se muestran en neutro; su estado se comunica con icono + texto (§1.4).
 
-| Token Name | Optical Size | CSS Custom Property | Stroke Width | Standard Application Context |
-|:---|:---:|:---:|:---:|:---|
-| **Micro / Tag** | `12px` | `--icon-xs` | `1.5px` | Status badges, category micro-chips, tight inline tags, compact indicators |
-| **Secondary Metadata** | `14px` | `--icon-sm` | `1.5px` | Secondary metadata, inline code labels, breadcrumbs, timestamp affixes |
-| **Standard Control** | `16px` | `--icon-md` | `1.5px` | Standard control buttons, navigation tabs, input affixes, search triggers |
-| **Dialog / Hero** | `20px` | `--icon-lg` | `1.5px` | Modal dialog headers, empty state graphics, hero callouts, card actions |
+### 1.6 Código
 
-#### 4.5.3 Optical Alignment & Zero-CLS Layout Rules
-Icons placed alongside text must maintain perfect baseline balance without layout jumps during asynchronous rendering or font loading:
+| Token | Valor | Uso |
+|:--|:--|:--|
+| `--code-bg` | `--surface-inset` | Bloque de código, comparación |
+| `--code-fs` | `--fs-sm` 14px, line-height 24px | Código en bloque |
+| `--code-inline-bg` | `rgba(255,248,230,.07)` | `code` inline en prosa |
+| `--code-inline-fs` | `--fs-sm` 14px mono (dentro de prosa de 16px), padding 0×4px, `--r-xs` | — |
+| `--syn-comment` | `--text-3`, itálica | Comentarios |
+| `--syn-keyword` | `#BAA4E2` (9.2:1 sobre inset) | `const`, `return`, `def`, `class` |
+| `--syn-string` | `#A4C386` (10.4:1) | Strings |
+| `--syn-number` | `#E5A880` (9.9:1) | Números, booleanos, símbolos Ruby |
+| `--syn-function` | `#80C1E1` (10.3:1) | Funciones, métodos |
+| `--syn-tag` | `#E199AF` (9.0:1) | Tags JSX/HTML |
+| `--syn-attr` | `#D5BA82` (10.8:1) | Atributos, props, keys |
+| `--syn-type` | `#81C6C1` (10.4:1) | Clases, constantes, tipos |
+| `--syn-punct` | `--text-2` | Puntuación, operadores |
+| `--syn-plain` | `--text-1` | Identificadores |
 
-```css
-/* Optical Alignment & Zero-CLS Sizing Container */
-.ui-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  vertical-align: middle;
-  line-height: 1;
-}
+**Bloque de código**: fondo `--code-bg`, borde `--line`, `--r-lg` 12, cabecera 36px con label de lenguaje (`--fs-xs`, `--text-3`) y acciones ghost (Copiar, Explicar), cuerpo padding 16, scroll horizontal propio.
 
-.ui-icon svg {
-  width: var(--icon-size, 16px);
-  height: var(--icon-size, 16px);
-  stroke-width: var(--icon-stroke, 1.5px);
-  stroke: currentColor;
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
+**Comparación ingenuo vs. producción**: dos bloques de código lado a lado (desktop ≥ 1100) o apilados. Cada uno lleva, en su cabecera, un marcador de forma + texto: `✕ Enfoque ingenuo` (icono `X` en `--danger`) y `✓ Patrón de producción` (icono `Check` en `--mastery`). Debajo de cada bloque, una línea de texto `--text-2`: "Por qué falla: …" / "Trade-off asumido: …". Sin bordes de color.
 
-/* Optical Size Modifiers */
-.ui-icon--xs svg { width: var(--icon-xs); height: var(--icon-xs); }
-.ui-icon--sm svg { width: var(--icon-sm); height: var(--icon-sm); }
-.ui-icon--md svg { width: var(--icon-md); height: var(--icon-md); }
-.ui-icon--lg svg { width: var(--icon-lg); height: var(--icon-lg); }
-```
+**Mermaid** (`mermaid.initialize` → `themeVariables`): `darkMode: true`, `background: #070604`, `primaryColor: #1D1B19`, `primaryTextColor: #EEECE7`, `primaryBorderColor: #474440`, `lineColor: #938F87`, `secondaryColor: #161512`, `tertiaryColor: #100E0C`, `fontFamily: "Geist Variable"`, `fontSize: "14px"`. Contenedor igual al bloque de código sin cabecera.
 
-- **Optical Baseline Alignment**: Icons must always be centered with the adjacent text cap-height using `display: inline-flex; align-items: center; gap: var(--space-1-5)`. Never rely on raw, uncontained SVG placement, which misaligns with the font baseline.
-- **Explicit Sizing Container (Zero-CLS)**: The icon wrapper must declare explicit width and height containers (`width: var(--icon-size); height: var(--icon-size);`) to prevent Cumulative Layout Shift (CLS = 0) during component mount or dynamic icon swapping.
+### 1.7 Gráficos
+
+| Token | Valor | Uso |
+|:--|:--|:--|
+| `--chart-eval` | `--text-1`; círculo relleno r=4 | Evaluación completa (serie principal) |
+| `--chart-eval-line` | `--text-2`, 1.5px | Línea que une evaluaciones |
+| `--chart-coach` | `--text-3`; rombo hueco 8px, trazo 1.5 | Checkpoint de coaching |
+| `--chart-band-extra` | `--gold-soft` | Banda 100–120 |
+| `--chart-guide` | `--line`, 1px, discontinua 2/4 | Guías 60 y 120 |
+| `--chart-threshold` | `--text-3`, 1px continua | Guía 100 ("100 · base suficiente") |
+| `--chart-cursor` | `--accent`, 1px + anillo 2px r=7 | Punto seleccionado |
+| `--chart-axis` | `--fs-xs` 12 mono 500, `--text-3` | Etiquetas de eje y leyenda |
+| `--chart-judge` | igual que `--chart-eval`, umbral en 95 | Historial del juez pedagógico (0–100) |
+
+La serie se distingue por **forma** (círculo lleno vs. rombo hueco) y por leyenda con texto. El único color no neutro es el cursor (iris) y la banda dorada.
+
+### 1.8 Streaming, carga y provisionalidad
+
+| Token | Valor | Uso |
+|:--|:--|:--|
+| `--skeleton` | `rgba(255,248,230,.07)` (relativo, visible sobre cualquier superficie); animación opacidad .55 ↔ 1, 1.4s ease-in-out | Bloques esqueleto con la geometría exacta del contenido resuelto |
+| `--caret` | barra 2px × 1em, `--text-2`, parpadeo 1s `steps(2)` | Final de texto que se está recibiendo |
+| `--provisional` | cifras en `--text-2` (no `--text-1`) + pill "Provisional" (`--pill-neutral`/`--text-2`) + segmentos del riel al 50% de opacidad | Puntaje y rúbrica mientras la evaluación está en curso |
+| `--expected-marker` | tick 1px `--text-3` + label `--fs-xs` 12 mono 500 "esperado 90 s" | Barra de tiempo del loader |
+| `--timebar-fill` | `--text-3` hasta el esperado; `--warn` pasado 1.5× | Barra de tiempo del loader |
+| `--pulse-ai` | opacidad .45 ↔ 1, 1.6s | Icono `Sparkles` 12–16px `--text-1` de "IA trabajando" + texto o `aria-label` "IA trabajando en esta card" (nunca escala, nunca punto) |
 
 ---
 
-## 5. Concentric Radii Mathematical Law
+## 2. Tipografía
 
-### 5.1 The Fundamental Law of Concentricity
-When one rounded element is nested inside another, visual harmony demands that the curves share a common focal center. If the radii are identical, the inner corner appears warped and pinched against the outer container.
+### 2.1 Familias (empaquetadas localmente vía `@fontsource-variable/*`, sin CDN — requisito local-first/Electron)
 
-$$\mathbf{outerRadius} = \mathbf{innerRadius} + \mathbf{padding}$$
-$$\mathbf{innerRadius} = \max(0, \mathbf{outerRadius} - \mathbf{padding})$$
+| Token | Familia | Rol |
+|:--|:--|:--|
+| `--font-ui` | `"Geist Variable", ui-sans-serif, system-ui, sans-serif` | Toda la UI y el cuerpo de lectura |
+| `--font-mono` | `"Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace` | Métricas, puntajes, contadores, código, atajos |
+| `--font-read` | `"Newsreader Variable", ui-serif, Georgia, serif` | Display editorial: título de la card, *En una frase*, pregunta de flashcard, titulares de estados vacíos |
 
-```
-     ┌───────────────────────────────────────────────────┐  ▲
-     │  outerRadius = 12px                               │  │
-     │                                                   │  │ Padding = 8px
-     │        ┌─────────────────────────────────┐        │  │
-     │        │  innerRadius = 4px              │        │  ▼
-     │        │  (12px - 8px = 4px)             │        │
-     │        └─────────────────────────────────┘        │
-     └───────────────────────────────────────────────────┘
-```
+`font-variant-numeric: tabular-nums` es obligatorio en `--font-mono` y en toda cifra que cambie en vivo.
 
-### 5.2 Complete Concentric Pairing Matrix
+### 2.2 Escala modular — ratio 1.125 (segunda mayor), base 14px
 
-| Nesting Context | Outer Container ($R_o$) | Internal Padding ($P$) | Inner Child Element ($R_i$) | Exact Formula Validation |
-|:---|:---:|:---:|:---:|:---|
-| **App Shell $\to$ Dock/Sidebar** | `16px` | `8px` | `8px` | $16 - 8 = 8\text{px}$ (Perfect alignment) |
-| **Modal Dialog $\to$ Content Well** | `16px` | `12px` | `4px` | $16 - 12 = 4\text{px}$ (Concentric well) |
-| **Primary Panel $\to$ Concept Card** | `14px` | `8px` | `6px` | $14 - 8 = 6\text{px}$ (Harmonious card dock) |
-| **Concept Card $\to$ Code Well** | `12px` | `8px` | `4px` | $12 - 8 = 4\text{px}$ (Flawless card-to-code) |
-| **Code Well $\to$ Copy Badge** | `6px` | `4px` | `2px` | $6 - 4 = 2\text{px}$ (Sub-micro precision) |
-| **Category Chip $\to$ Color Dot** | `9999px` (Pill) | `6px` | `9999px` (Circle) | Concentric circular pill geometry |
+`size(n) = 14 × 1.125ⁿ`, redondeado al entero.
 
-### 5.3 Uniform Control Radius Law
-Under **SKILL.md** and **DESIGN_CRITERIA.md**, all interactive controls (primary buttons, secondary buttons, outline buttons, text inputs, search fields, selects) share an identical uniform radius:
-```css
---radius-control: 6px; /* High-density engineering precision */
-```
-*Different border radii on primary vs. secondary buttons within the same view are strictly forbidden.*
+| Token | n | Exacto | px / rem | Line-height | Uso |
+|:--|:--:|:--|:--|:--|:--|
+| `--fs-2xs` | −2 | 11.06 | 11 / .6875 | 16 | Solo eyebrows y kbd (excepción §2.4) |
+| `--fs-xs` | −1 | 12.44 | 12 / .75 | 16 | Metadatos, pills, captions, leyendas (excepción §2.4) |
+| `--fs-sm` | 0 | 14.00 | 14 / .875 | 20 | **Base UI**: controles, filas, labels |
+| `--fs-md` | 1 | 15.75 | 16 / 1 | 26 | **Cuerpo de lectura**, textarea |
+| `--fs-lg` | 2 | 17.72 | 18 / 1.125 | 26 | Títulos de sección de card, títulos de panel |
+| `--fs-xl` | 3 | 19.93 | 20 / 1.25 | 28 | Títulos de vista (Progreso, Flashcards) |
+| `--fs-2xl` | 4 | 22.43 | 22 / 1.375 | 30 | *En una frase* (serif) |
+| `--fs-3xl` | 5 | 25.23 | 25 / 1.5625 | 32 | Puntaje del scorecard (mono) |
+| `--fs-4xl` | 6 | 28.38 | 28 / 1.75 | 36 | Título de la card (serif) |
+| `--fs-5xl` | 7 | 31.93 | 32 / 2 | 40 | Pregunta de flashcard (serif) |
 
----
+### 2.3 Tamaños en móvil (< 768px)
 
-## 6. Elevation, Depth & Micro-Reliefs
+| Token | Desktop | Móvil |
+|:--|:--:|:--:|
+| `--fs-5xl` (pregunta flashcard) | 32 | 25 (`--fs-3xl`) |
+| `--fs-4xl` (título card) | 28 | 22 (`--fs-2xl`) |
+| `--fs-2xl` (*En una frase*) | 22 | 20 (`--fs-xl`) |
+| `--fs-3xl` (puntaje) | 25 | 25 |
+| `--fs-2xs` | 11 | 12 (sube a `--fs-xs`; nada < 12 en móvil) |
+| Resto | igual | igual |
 
-### 6.1 The 5-Tier Elevation Ladder
+### 2.4 Excepción documentada de tamaño mínimo
+El piso de texto informativo es 14px. Se permiten 12px (`--fs-xs`) **solo** en: pills/badges, metadatos secundarios (fechas, modelo, conteos), ejes y leyendas de gráficos. 11px (`--fs-2xs`) **solo** en eyebrows (MAYÚSCULAS, peso 600) y kbd. Nunca en cuerpo, labels de formulario ni botones. En móvil nada baja de 12px.
 
-```
-[Level 5] ─── Modal Dialog / Command Palette / HUD Floating   (L = 13.5%, Blur 60px, Inset 0.16)
-   ▲
-[Level 4] ─── Card Active / Dropdown / Popover               (L = 11.0%, Blur 24px, Inset 0.14)
-   ▲
-[Level 3] ─── Interactive Concept Card / Flashcard           (L = 9.0%,  Blur 12px, Inset 0.08)
-   ▲
-[Level 2] ─── Static Panel / Sidebar Dock / Toolbar Deck     (L = 6.5%,  Blur 2px,  Inset 0.04)
-   ▲
-[Level 1] ─── Workspace Base Grid / Canvas Background        (L = 4.0%,  Flat,      No Inset)
-```
+### 2.5 Pesos y tracking
 
-### 6.2 Elevation Tokens Specification
-```css
-:root {
-  /* Level 1: Workspace Base */
-  --elevation-1-bg: #080b11;
-  --elevation-1-border: 1px solid rgba(255, 255, 255, 0.04);
-  --elevation-1-shadow: none;
+| Estilo | Familia | Peso | Tracking |
+|:--|:--|:--|:--|
+| Display serif (`--fs-2xl`…`--fs-5xl`) | read | 460 | −0.015em |
+| Títulos UI (`--fs-lg`, `--fs-xl`) | ui | 600 | −0.015em |
+| Labels / botones | ui | 500 | −0.005em |
+| Cuerpo | ui | 400 | 0 |
+| Texto en `--text-3` | ui | ≥ 500 | 0 |
+| Eyebrow (`--fs-2xs`, MAYÚSCULAS) | ui | 600 | +0.04em, `--text-3` |
+| Métricas | mono | 500 | 0 (tabular) |
 
-  /* Level 2: Dock / Secondary Panel */
-  --elevation-2-bg: #0d111a;
-  --elevation-2-border: 1px solid rgba(255, 255, 255, 0.06);
-  --elevation-2-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+### 2.6 Pares numerador / denominador (`112/120`)
 
-  /* Level 3: Card Surface */
-  --elevation-3-bg: #131824;
-  --elevation-3-border: 1px solid rgba(255, 255, 255, 0.08);
-  --elevation-3-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+Regla: **denominador = paso n − 2 del numerador, con piso en `--fs-xs`**; mono 500, `--text-3`.
 
-  /* Level 4: Raised Card / Hover State */
-  --elevation-4-bg: #182030;
-  --elevation-4-border: 1px solid rgba(56, 189, 248, 0.28);
-  --elevation-4-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+| Numerador | Denominador |
+|:--|:--|
+| `--fs-3xl` 25 (n=5, scorecard) | `--fs-xl` 20 (n=3) |
+| `--fs-lg` 18 (n=2, encabezado de card, flashcard) | `--fs-sm` 14 (n=0) |
+| `--fs-sm` 14 (n=0, filas, nodos, HUD) | `--fs-xs` 12 (piso) |
+| `--fs-xs` 12 (pills) | `--fs-xs` 12 (piso; solo cambia el color) |
 
-  /* Level 5: Modal / Dialog / Popover */
-  --elevation-5-bg: #121722;
-  --elevation-5-border: 1px solid rgba(255, 255, 255, 0.12);
-  --elevation-5-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
-}
-```
+Ambos en mono tabular, alineados por baseline.
+
+Medida de lectura: `max-width: 68ch` (≈ 680px a 16px) en la columna de estudio.
 
 ---
 
-## 7. Sizing Units, Spacing Grid & Viewport Ergonomics
+## 3. Espaciado y dimensiones (grid de 4px)
 
-### 7.1 The Rigid 4px / 8px Spacing Grid
-All paddings, margins, gaps, and structural offsets map directly to mathematical multiples of `4px` and `8px`:
+| Token | px | Uso típico |
+|:--|:--:|:--|
+| `--sp-1` | 4 | Icono ↔ texto en pills, padding de contenedores de segmentos |
+| `--sp-2` | 8 | Gap entre controles de una barra, padding de paleta |
+| `--sp-3` | 12 | Padding horizontal de filas/avisos, gap de grilla densa |
+| `--sp-4` | 16 | Padding de card/panel, gutter móvil |
+| `--sp-5` | 20 | Separación entre grupos dentro de una sección |
+| `--sp-6` | 24 | Padding de columna de estudio, gutter desktop |
+| `--sp-8` | 32 | Separación entre secciones de la card |
+| `--sp-10` | 40 | Separación entre bloques mayores (máximo vacío permitido) |
+| `--sp-12` | 48 | Solo márgenes de estados vacíos |
 
-```
-  --space-0:    0px
-  --space-0-5:  2px   (Micro gap between tight badges)
-  --space-1:    4px   (Tight padding, badge vertical pad)
-  --space-1-5:  6px   (Button vertical pad, chip gap)
-  --space-2:    8px   (Default component interior padding, icon-text gap)
-  --space-3:   12px   (Card padding, input horizontal pad)
-  --space-4:   16px   (Panel padding, standard stack gap)
-  --space-5:   20px   (Modal interior padding, section separation)
-  --space-6:   24px   (Major section vertical stack)
-  --space-8:   32px   (Macro organism separation)
-  --space-10:  40px   (Viewport container gutters)
-  --space-12:  48px   (Cockpit header vertical clearance)
-  --space-16:  64px   (Hero section vertical breathing room)
-```
+Única excepción al grid: hairlines de 1px, trazos de 2px y el offset de foco de 2px.
 
-### 7.2 Strict Unit Usage Matrix (The Question the Unit Answers)
-1. **Use `rem` for**:
-   - All font sizes and line heights (respects user's OS / browser default font accessibility scaling).
-   - Text-adjacent inner paddings (buttons, badges, inputs grow gracefully if text size is enlarged).
-   - Control minimum heights (`min-height: 2.0rem` / `32px`).
-   - Line-length constraints (`max-width: 48rem` / `768px`).
-2. **Use `px` for**:
-   - Border widths and hairlines (`1px`, `2px`). Prevents blurry fractional device-pixel rendering.
-   - Shadow offsets and blur radiuses (`0 4px 12px`).
-   - Fixed hardware icons (`16px`, `20px`).
-   - Coordinate transforms in topological graph canvases (`SVG pan/zoom viewBox`).
-3. **Use `%`, `fr`, `clamp()` for**:
-   - Resilient layout containers, sidebar widths (`clamp(240px, 20vw, 320px)`), and grid columns (`repeat(auto-fill, minmax(280px, 1fr))`).
+### 3.1 Alturas de control (explícitas, anti-CLS)
 
-### 7.3 Viewport Budgeting & Anti-Layer-Cake Law (1440×900 Desktop)
-Under **Invariant 1.2 of DESIGN_CRITERIA.md**:
-- The total vertical sum of all fixed headers, sticky toolbars, breadcrumbs, and filter strips **CANNOT EXCEED 130px**.
-- At least **70% of the vertical viewport ($> 630\text{px}$ on 900px screens)** must be dedicated directly to the active content canvas.
-- On launch, the user MUST be able to view at least **2 full rows of concept cards** without scrolling.
+| Token | Desktop | Móvil (<768) | Uso |
+|:--|:--:|:--:|:--|
+| `--ctl-xs` | 24 | 32 | Pills interactivas compactas, kbd |
+| `--ctl-sm` | 28 | 40 | Botones de toolbar, icon buttons secundarios |
+| `--ctl-md` | 32 | 44 | Botón estándar, input, select, tab |
+| `--ctl-lg` | 40 | 48 | Primario de sección, input de la paleta |
+| `--bar-h` | 52 | 56 | Barra superior del canvas y de la sesión |
+| `--dock-h` | — | 64 + `env(safe-area-inset-bottom)` | Dock de navegación móvil |
+| `--sidebar-w` | 248 (colapsada 56) | — | Sidebar |
+| `--rail-w` | 320 | — | Riel de contexto de la card |
+| `--rail-track` | 4 (8 en el scorecard) | 4 | Grosor del riel de puntaje |
 
-### 7.4 Mobile Ergonomics & Thumb Zone (390×844 Viewport)
-Under **Invariant 4.1 of DESIGN_CRITERIA.md**:
-- All primary interactive elements have a minimum touch target of **$44 \times 44\text{px}$**.
-- Fixed bottom dock (`.mobile-bottom-nav`) is anchored to the bottom with:
-  ```css
-  height: calc(56px + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  ```
-- All scrollable mobile containers maintain a bottom safety cushion of `padding-bottom: 80px` to prevent content occlusion behind the fixed navigation dock.
+Todo target táctil en móvil ≥ 44×44 (los de 32/40 amplían su área con un pseudo-elemento hasta 44).
+
+### 3.2 Breakpoints
+
+| Nombre | Rango | Cambio estructural |
+|:--|:--|:--|
+| `mobile` | < 48em (768) | Sin sidebar; dock inferior; sesión sin riel |
+| `tablet` | 48em–68.74em | Sidebar colapsada a 56 (iconos + tooltip); riel de la card como sección final |
+| `desktop` | 68.75em–89.99em | Sidebar 248; riel 320 |
+| `wide` | ≥ 90em (1440) | Igual; el mapa centra a `max-width: 1320px` |
 
 ---
 
-## 8. Anti-Carditis & Structural Surface Architecture
+## 4. Radios concéntricos
 
-### 8.1 The "Shared Surface" Rule
-In traditional amateur designs, developers wrap every paragraph, stat, code sample, and rubric criterion inside its own dark card with a rounded border (creating a "nesting doll" or "carditis").
+Regla: **`radio_exterior = radio_interior + padding`** cuando el padding es menor que el radio exterior. Si el padding ≥ radio exterior, el hijo no toca la curva y usa su propio token (exento).
 
-**The Law of Learning Workspace**:
-1. A modal dialog or a slide-over drawer is already an elevated container.
-2. Inside that container, **do not spawn nested boxed cards** unless the element is explicitly an independent, draggable, or interactive sub-unit.
-3. Partition content through:
-   - Clear modular typographic scale (H3 vs. Body vs. Caption).
-   - Spatial proximity (Gestalt grouping via `gap: 16px` vs `gap: 8px`).
-   - Muted 1px hairline dividers (`border-bottom: 1px solid rgba(255, 255, 255, 0.06)`).
+| Token | px | Elemento |
+|:--|:--:|:--|
+| `--r-xs` | 4 | kbd, code inline, pills internas |
+| `--r-sm` | 6 | Botones, inputs, tabs, items de menú, segmentos |
+| `--r-md` | 8 | Avisos inline, tooltips, filas de la paleta |
+| `--r-group` | 10 | Segmented controls, menús, popovers con lista (6 + 4) |
+| `--r-lg` | 12 | Cards del mapa, nodos del grafo, bloques de código, HUD colapsado |
+| `--r-xl` | 16 | Diálogos, paleta, drawer, HUD expandido |
+| `--r-full` | 999 | Pills de estado, puntos, pistas del riel |
 
-```
-  INCORRECT (Carditis / Div Soup):
-  ┌─ Modal Frame ──────────────────────────────────────────┐
-  │ ┌─ Card 1 ────────┐  ┌─ Card 2 ──────────────────────┐ │
-  │ │ Title: Accuracy │  │ Description: Fiber reconciler │ │
-  │ └─────────────────┘  └───────────────────────────────┘ │
-  │ ┌─ Card 3 ───────────────────────────────────────────┐ │
-  │ │ ┌─ Card 4 (Nested Code) ─────────────────────────┐ │ │
-  │ └─┴────────────────────────────────────────────────┴─┘ │
-  └────────────────────────────────────────────────────────┘
+**Pares verificados (todos los paddings en el grid de 4px)**
 
-  CORRECT (Unified Surface Architecture):
-  ┌─ Modal Frame (Unified Surface: #121722) ────────────────┐
-  │ Heading: Fiber Reconciler Architecture                  │
-  │ Subtitle & Category Pill (Cyan #61DAFB)                 │
-  │ ─────────────────────────────────────────────────────── │ (1px Hairline)
-  │ Executive Mental Model Summary (16px text-base)         │
-  │                                                         │
-  │ ┌─ Code Comparison (Single Well: #090d15) ────────────┐ │
-  │ │ Naive (Sync blocking) vs Production (Lane priority) │ │
-  │ └─────────────────────────────────────────────────────┘ │
-  │ ─────────────────────────────────────────────────────── │ (1px Hairline)
-  │ 4-Dimension Rubric Breakdown (Tabular alignment)        │
-  └─────────────────────────────────────────────────────────┘
-```
+| Contenedor → hijo | Exterior | Interior | Padding |
+|:--|:--:|:--:|:--:|
+| Segmented control → segmento | 10 | 6 | 4 |
+| Menú / popover con lista → item | 10 | 6 | 4 |
+| Paleta de comandos → fila de resultado | 16 | 8 | 8 |
+| HUD expandido → fila de tarea | 16 | 12 | 4 |
+| Card del mapa (padding 16) → botón | 12 | 6 | exento (16 ≥ 12) |
+| Diálogo (padding 20/24) → botones | 16 | 6 | exento |
 
 ---
 
-## 9. Authentic Senior/Staff Engineering Domain Fixtures
+## 5. Elevación y profundidad (modo oscuro)
 
-Every visual representation, preview state, and design artifact in Learning Workspace is strictly grounded in authentic high-level production engineering scenarios. **Zero generic placeholder text or toy examples are tolerated.**
+La profundidad se comunica con **luminosidad de superficie**. Solo los overlays proyectan sombra. Todo overlay es **más claro que su anfitrión**.
 
-### 9.1 React Domain Fixture Catalog (Senior/Staff Level)
+| Nivel | Elementos | Superficie | Borde | Sombra |
+|:--|:--|:--|:--|:--|
+| 0 — lienzo | App, sesión de estudio | `--bg-app` | — | — |
+| 1 — contenido | Cards, nodos, filas, paneles | `--surface-1` | `--line` | `inset 0 1px 0 rgba(255,248,230,.04)` |
+| 2 — hover/activo | Hover y press de cualquier nivel | superficie base **propia** del elemento + `--hover-overlay` / `--press-overlay` | solo si el elemento ya tenía borde: `--line` → `--line-strong`; un elemento seleccionado conserva su borde `--accent` | sin cambio |
+| 3 — modal | Drawer de ajustes, diálogo de flashcard, confirmaciones | `--surface-1` sobre `--scrim` | `--line-strong` | `--shadow-modal` |
+| 4 — paleta | Paleta de comandos | `--surface-2` sobre `--scrim` | `--line-strong` | `--shadow-modal` |
+| 5 — flotante | Popovers, menús, tooltips, deep dive, HUD expandido | `--surface-3` | `--line-strong` | `--shadow-pop` |
 
-#### Fixture 1: React Fiber Reconciler & Concurrent Lanes
-- **Concept ID**: `rendering_fiber_lanes`
-- **Category**: `rendering` (`#4ADE80`)
-- **Mental Model**: Fiber as a linked-list call stack re-implementation with alternate pointers (`current` $\leftrightarrow$ `workInProgress`) allowing incremental, preemptible work.
-- **Code Comparison Naive vs. Senior**:
-  - *Naive*: Bloquear el main thread con cálculos síncronos en componentes masivos sin particionar trabajo.
-    ```javascript
-    // Naive: Bloqueo de frame rate en renders grandes
-    function FilterableGrid({ items, filter }) {
-      const filtered = items.filter(item => item.name.includes(filter));
-      return filtered.map(item => <Row key={item.id} data={item} />);
-    }
-    ```
-  - *Production Senior*: Partición de prioridades con `useDeferredValue` y `startTransition` desacoplando el input de alta prioridad del árbol de render pesado.
-    ```javascript
-    // Senior: Concurrency con lanes y alternate fiber traversal
-    function FilterableGrid({ items, filter }) {
-      const deferredFilter = useDeferredValue(filter);
-      const isStale = filter !== deferredFilter;
-      const filtered = useMemo(
-        () => items.filter(item => item.name.includes(deferredFilter)),
-        [items, deferredFilter]
-      );
-      return (
-        <div style={{ opacity: isStale ? 0.7 : 1, transition: 'opacity 120ms' }}>
-          <VirtualList items={filtered} />
-        </div>
-      );
-    }
-    ```
+`--shadow-pop: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -6px rgba(0,0,0,.55)`
+`--shadow-modal: 0 2px 4px rgba(0,0,0,.35), 0 12px 32px -8px rgba(0,0,0,.6), 0 32px 80px -24px rgba(0,0,0,.7)`
 
-#### Fixture 2: Browser Event Loop & Task Starvation
-- **Concept ID**: `runtime_event_loop`
-- **Category**: `runtime` (`#FBBF24`)
-- **Mental Model**: La cola de microtasks (`Promise.then`, `queueMicrotask`, `MutationObserver`) se drena por completo antes del siguiente tick de rendering, lo que puede provocar starvation del compositor si se anidan recursivamente.
-
-### 9.2 Rails Domain Fixture Catalog (Senior/Staff Level)
-
-#### Fixture 1: Active Record N+1 Prevention & Eager Loading
-- **Concept ID**: `activerecord_n_plus_one`
-- **Category**: `activerecord` (`#CC342D`)
-- **Mental Model**: `preload` (queries separadas vía `WHERE IN`) vs `eager_load` (única query con `LEFT OUTER JOIN`) y trade-offs de saturación de memoria en buffers de ActiveRecord.
-- **Production Code**:
-  ```ruby
-  # Production Senior: Query Object con control estricto de memoria y joins
-  class OrdersReportQuery
-    def initialize(relation = Order.all)
-      @relation = relation.extending(Scopes)
-    end
-
-    def call(date_range:)
-      @relation
-        .includes(:customer, line_items: :product)
-        .where(created_at: date_range)
-        .order(created_at: :desc)
-    end
-  end
-  ```
-
-### 9.3 Canonical 120-Point Rubric Fixture
-Every AI evaluation displays the verified 4-dimension scorecard with tabular precision:
-
-```typescript
-// Authentic Evaluation Result Schema
-interface CanonicalEvaluationFixture {
-  score: 114; // 0..120 (Base 100 + 14 bonus points)
-  verdict: "Staff-Level Architectural Mastery: Impeccable causality analysis and production risk awareness.";
-  rubric: {
-    accuracy: {
-      score: 38;
-      max: 40;
-      label: "Exactitud Conceptual";
-      note: "Diferencia con precisión el doble buffer de Fiber y el scheduler cooperativo.";
-    };
-    causalityAndTradeoffs: {
-      score: 24;
-      max: 25;
-      label: "Causalidad y Trade-offs";
-      note: "Articula el costo de memoria de los Alternate Fibers vs garbage collection overhead.";
-    };
-    application: {
-      score: 20;
-      max: 20;
-      label: "Aplicabilidad en Producción";
-      note: "Propone virtualización combinada con useDeferredValue para evitar frame drops.";
-    };
-    completeness: {
-      score: 14;
-      max: 15;
-      label: "Complitud y Casos Borde";
-      note: "Identifica starvation potencial cuando inputs continuos saturan InputContinuousLane.";
-    };
-    seniorBonus: {
-      score: 18;
-      max: 20;
-      label: "Excelencia Arquitectónica Staff";
-      note: "Conecta la arquitectura interna de React con la spec de Scheduling del W3C.";
-    };
-  };
-}
-```
+Así, un menú dentro del drawer (s3 sobre s1) o dentro de la paleta (s3 sobre s2) siempre queda por encima visualmente. Sin glows, gradientes de fondo ni glassmorphism (única excepción: `--bar-glass` y el blur del `--scrim`, 8px).
 
 ---
 
-## 10. Complete CSS Design System Token Implementation
+### 5.1 Toasts
+Superficie `--surface-3`, borde `--line-strong`, `--r-lg` 12, `--shadow-pop`, padding 12×16, ancho 360–400px. Contenido: icono semántico 16px (§1.4 avisos) + texto `--fs-sm` `--text-1` + acción opcional (botón ghost, p. ej. "Deshacer") + cerrar. Posición: abajo a la derecha a 16px (desktop); en móvil centrado, 12px por encima del dock. Duración 5s (pausa en hover/foco); `role="status"` (éxito/info) o `role="alert"` (error). Máximo 3 apilados (gap 8).
 
-The following tokens are authored to be dropped directly into the application stylesheet (`src/styles/theme.css` / CSS custom properties):
+## 6. Iconografía
+- Set: **lucide** (`lucide-react`), trazo 1.5px, tamaños 16 (inline/controles) y 20 (navegación). Color `currentColor`.
+- Cero emoji en la UI. Reemplazos: 🧠 → `BrainCircuit`, ⚖️ → `Scale`, ✨ → `Sparkles`, 🔥 → `Flame`, ⚡ → `Zap`, 🏆 → `Trophy`, ✓ → `Check`, 🗺 → `Map`, 📊 → `BarChart3`, ⚙ → `Settings2`.
+- Icon buttons siempre con `aria-label` + tooltip.
 
-```css
-/* ==========================================================================
-   LEARNING WORKSPACE — MASTER DESIGN TOKENS (DESIGN.md)
-   ========================================================================== */
+## 7. Movimiento
 
-:root {
-  /* Surface Scale (Tonal Lightness Progression) */
-  --surface-canvas:         #06080d;
-  --surface-base:           #080b11;
-  --surface-subtle:         #0d111a;
-  --surface-card:           #131824;
-  --surface-card-hover:     #182030;
-  --surface-raised:         #1a2130;
-  --surface-overlay:        #222b3e;
-  --surface-modal:          #121722;
-  --surface-inset:          #090d15;
+| Token | Valor | Uso |
+|:--|:--|:--|
+| `--dur-1` | 120ms | Hover, color, opacidad |
+| `--dur-2` | 180ms | Popovers, tooltips, tabs |
+| `--dur-3` | 240ms | Drawers, diálogos, capa de estudio |
+| `--dur-flip` | 420ms | Volteo de flashcard |
+| `--ease-out` | `cubic-bezier(.2,0,0,1)` | Entradas |
+| `--ease-in-out` | `cubic-bezier(.4,0,.2,1)` | Transformaciones |
 
-  /* Borders & Dividers */
-  --border-subtle:          rgba(255, 255, 255, 0.04);
-  --border-line:            rgba(255, 255, 255, 0.08);
-  --border-strong:          rgba(255, 255, 255, 0.16);
-  --border-accent:          rgba(56, 189, 248, 0.35);
+Entradas: opacidad 0→1 + `translateY(4px)` o `scale(.98)`. Salidas al 70% de la duración. `prefers-reduced-motion: reduce` → solo opacidad; el volteo 3D se reemplaza por fundido de `--dur-2`; skeleton y pulso quedan estáticos.
 
-  /* Primary Functional Accent (< 5% Viewport Area) */
-  --color-accent-primary:   #38bdf8;
-  --color-accent-hover:     #0ea5e9;
-  --color-accent-active:    #0284c7;
-  --color-accent-subtle:    rgba(56, 189, 248, 0.12);
-  --color-accent-glow:      rgba(56, 189, 248, 0.22);
-  --color-focus:            #38bdf8;
+## 8. Elementos firma
 
-  /* Typography Colors & WCAG 2.2 AA Contrast Discipline */
-  --color-text-primary:     #f8fafc;  /* 15.8:1 AAA - Headings, titles, primary reading prose */
-  --color-text-secondary:   #94a3b8;  /* 7.4:1 AAA (min weight 500) - MANDATORY for all readable metadata/labels */
-  --color-text-muted:       #64748b;  /* 4.2:1 - Strictly restricted to placeholders & non-essential hints */
-  --color-text-subtle:      #475569;  /* 2.2:1 - Strictly restricted to disabled/inactive UI affordances (WCAG 1.4.3 exempt) */
-  --color-text-inverse:     #080b11;  /* High-contrast text on bright accent surfaces */
+### 8.1 Riel de puntaje (Score rail)
+La pieza de datos central. Pista de 120 unidades:
+- Pista `--surface-inset`, alto `--rail-track` (4px; 8px en el scorecard), `--r-full`.
+- Segmento base 0–100: `--rail-base` (papel apagado) si < 100; `--mastery` si ≥ 100.
+- Marca en 100: 1px `--text-3`, alto pista + 4px, centrada.
+- Segmento extra 100–120: `--gold`, separado 1px del base.
+- Lectura: mono 500 "`112`" + "`/120`" (§2.6); si > 100, prefijo `★` en `--gold`; si ≥ 100 sin extra, `✓` en `--mastery`.
+- Sin evaluación: pista vacía + texto "Sin evaluar" `--text-3`.
+- Variante juez pedagógico (0–100, meta 95): misma pista de 100 unidades, marca en 95.
 
-  /* Semantic Status */
-  --color-error:            #ef4444;
-  --color-error-subtle:     rgba(239, 68, 68, 0.12);
-  --color-warning:          #f59e0b;
-  --color-warning-subtle:   rgba(245, 158, 11, 0.12);
-  --color-success:          #10b981;
-  --color-success-subtle:   rgba(16, 185, 129, 0.12);
-  --color-info:             #38bdf8;
-  --color-info-subtle:      rgba(56, 189, 248, 0.12);
-  --color-excellence:       #f5c451;
-  --color-excellence-subtle:rgba(245, 196, 81, 0.14);
+### 8.2 Punto de categoría
+Círculo 8px con el color de categoría + label `--text-2`. Única representación de categoría.
 
-  /* Immutable Category Color Anchors: React Curriculum */
-  --cat-react-fundamentals: #61DAFB;
-  --cat-react-state:        #F59E0B;
-  --cat-react-effects:      #A78BFA;
-  --cat-react-rendering:    #4ADE80;
-  --cat-react-architecture: #2DD4BF;
-  --cat-react-quality:      #F472B6;
-  --cat-react-platform:     #94A3B8;
-  --cat-react-designSystem: #FB7185;
-  --cat-react-runtime:      #FBBF24;
-  --cat-react-operations:   #F97316;
-  --cat-react-leadership:   #C084FC;
+### 8.3 Eyebrow
+`--fs-2xs`, 600, MAYÚSCULAS, +0.04em, `--text-3`. Máximo uno por sección. Nunca en color.
 
-  /* Immutable Category Color Anchors: Rails Curriculum */
-  --cat-rails-fundamentals: #E8A33D;
-  --cat-rails-activerecord: #CC342D;
-  --cat-rails-patterns:     #5AA9FF;
-  --cat-rails-sti:          #A78BFA;
-  --cat-rails-infra:        #94A3B8;
-  --cat-rails-assets:       #2DD4BF;
-  --cat-rails-testing:      #4ADE80;
+### 8.4 Superficie de lectura
+Columna de 68ch sobre `--bg-app` sin card; títulos de sección `--fs-lg`, separación `--sp-8`. Solo las piezas estructuradas (código, tabla, diagrama, comparación) usan `--surface-inset`/`--surface-1`.
 
-  /* Typography Families */
-  --font-sans:              Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono:              "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+## 9. Voz y copy
+- Español rioplatense (vos), directo y técnico. *Sentence case*; MAYÚSCULAS solo en eyebrows.
+- Números con formato es-AR; puntajes siempre `n/120`; porcentajes sin decimales.
+- Estados de IA dicen qué pasa y qué hacer: "No se pudo conectar con el servicio de IA. Revisá que el gateway esté iniciado y reintentá."
+- Respaldo: "El archivo incluye tus API keys. Guardalo en un lugar seguro."
+- Sin exclamaciones ni emoji. La excelencia se celebra con ★ y oro.
 
-  /* Typography Scale (Ratio 1.200, Base 16px) */
-  --text-caption:           0.694rem; /* 11.1px */
-  --text-sm:                0.833rem; /* 13.3px */
-  --text-base:              1.000rem; /* 16.0px */
-  --text-lead:              1.200rem; /* 19.2px */
-  --text-h3:                1.440rem; /* 23.0px */
-  --text-h2:                1.728rem; /* 27.6px */
-  --text-h1:                2.074rem; /* 33.2px */
-  --text-display:           2.488rem; /* 39.8px */
+## 10. Capas (z-index)
 
-  /* Iconography Tokens (lucide-react @ 1.5px engineering standard) */
-  --icon-stroke:            1.5px;    /* Refined engineering editorial standard (never bulky 2px) */
-  --icon-xs:                12px;     /* Status badges, tight tags */
-  --icon-sm:                14px;     /* Secondary metadata, inline code labels */
-  --icon-md:                16px;     /* Standard control buttons, nav tabs, input affixes */
-  --icon-lg:                20px;     /* Dialog headers, hero actions */
+Orden por flujo real: los popovers siempre se abren desde la capa superior activa, por eso van por encima de todas las capas de contenido.
 
-  /* Rigid Spacing Scale */
-  --space-0:                0px;
-  --space-0-5:              0.125rem; /* 2px */
-  --space-1:                0.25rem;  /* 4px */
-  --space-1-5:              0.375rem; /* 6px */
-  --space-2:                0.5rem;   /* 8px */
-  --space-3:                0.75rem;  /* 12px */
-  --space-4:                1.0rem;   /* 16px */
-  --space-5:                1.25rem;  /* 20px */
-  --space-6:                1.5rem;   /* 24px */
-  --space-8:                2.0rem;   /* 32px */
-  --space-10:               2.5rem;   /* 40px */
-  --space-12:               3.0rem;   /* 48px */
-  --space-16:               4.0rem;   /* 64px */
+| Token | Valor | Capa |
+|:--|:--:|:--|
+| `--z-base` | 0 | Contenido |
+| `--z-sticky` | 10 | Barras sticky internas (tabs de la card, cabeceras de grupo) |
+| `--z-chrome` | 20 | Barra superior, sidebar, dock móvil |
+| `--z-study` | 30 | Sesión de estudio (capa completa sobre el shell) |
+| `--z-hud` | 40 | HUD de tareas (visible también durante el estudio) |
+| `--z-drawer` | 50 | Drawer de ajustes (scrim en 49) |
+| `--z-modal` | 60 | Diálogos: flashcard, confirmación (scrim en 59) |
+| `--z-palette` | 70 | Paleta de comandos (scrim en 69) |
+| `--z-popover` | 80 | Popovers, menús, deep dive |
+| `--z-toast` | 90 | Toasts (ver §5.1) |
+| `--z-tooltip` | 100 | Tooltips |
 
-  /* Concentric Border Radii Scale */
-  --radius-xs:              2px;
-  --radius-sm:              4px;
-  --radius-control:         6px;      /* Uniform for all buttons & inputs */
-  --radius-md:              6px;
-  --radius-card-inner:      6px;
-  --radius-lg:              8px;
-  --radius-card:            12px;
-  --radius-panel:           14px;
-  --radius-modal:           16px;
-  --radius-pill:            9999px;
+## 11. Base de accesibilidad
+- Foco visible: `outline: 2px solid var(--accent); outline-offset: 2px;` solo `:focus-visible` (iris 6.2–7.6:1 contra cualquier superficie).
+- Scrollbars: `scrollbar-width: thin; scrollbar-color: rgba(255,248,230,.14) transparent;` (WebKit 8px, thumb `--r-full`).
+- `::selection { background: var(--selection); color: var(--text-1); }`
+- `color-scheme: dark` en `:root`.
 
-  /* Specular Highlights & Shadows */
-  --shadow-inset-top:       inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
-  --shadow-inset-top-strong:inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
-  --shadow-card:            0 4px 14px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-line), var(--shadow-inset-top);
-  --shadow-card-hover:      0 8px 24px -4px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(56, 189, 248, 0.3), var(--shadow-inset-top-strong);
-  --shadow-modal:           0 24px 60px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08), var(--shadow-inset-top-strong);
+## 12. Representación auténtica
+Maquetas, fixtures y estados usan contenido real. Set canónico de ejemplos (nodos reales de `src/`):
 
-  /* Performance & Transitions */
-  --ease-out-editorial:     cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-fast:          120ms;
-  --duration-normal:        200ms;
-  --duration-relaxed:       320ms;
-}
+| Caso | Grafo | Nodo real | Estado de ejemplo |
+|:--|:--|:--|:--|
+| Excelencia | React | "Estado, snapshots y batching" | 112/120, ★ Profundización extra |
+| Dominio exacto | React | "Hooks y reglas de uso" | 100/120, ✓ Base cubierta |
+| En progreso | React | "useState vs useReducer" | 74/120, En progreso |
+| Revisar | Rails | "Routing RESTful" | 41/120, Conviene revisar |
+| Sin evaluar | Rails | "Request lifecycle & Rack" | Sin evaluar, prerrequisitos pendientes |
+| Label más largo | React | "Layout resiliente, contenido e internacionalización" | Prueba de truncado a 2 líneas |
+| Punto de partida | React | "JavaScript moderno para leer React" | Mejor siguiente |
 
-/* Tabular numbers globally applied to metric targets */
-.tabular-metric,
-.score-value,
-.timer-display,
-.count-badge,
-.rubric-score {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-/* Headings and body wrapping */
-h1, h2, h3, h4, h5, h6 {
-  text-wrap: balance;
-}
-
-p, li, dd {
-  text-wrap: pretty;
-}
-
-/* Iconography optical alignment and zero-CLS bounding box */
-.ui-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  vertical-align: middle;
-  line-height: 1;
-}
-
-.ui-icon svg {
-  width: var(--icon-size, 16px);
-  height: var(--icon-size, 16px);
-  stroke-width: var(--icon-stroke, 1.5px);
-  stroke: currentColor;
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.ui-icon--xs svg { width: var(--icon-xs); height: var(--icon-xs); }
-.ui-icon--sm svg { width: var(--icon-sm); height: var(--icon-sm); }
-.ui-icon--md svg { width: var(--icon-md); height: var(--icon-md); }
-.ui-icon--lg svg { width: var(--icon-lg); height: var(--icon-lg); }
-
-/* Sleek ultra-thin dark scrollbars */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
-}
-
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-```
-
----
-
-## 11. Auditor Defense Gate Checklist (Self-Certification)
-
-Before handoff to Phase 1, this document is verified against the Phase 0 Golden Criteria:
-
-- [x] **Visual Tone Consistency & Iconography**: Radii (6px controls, 12px cards, 16px modals), typography (Inter + JetBrains Mono), standardized iconography (`lucide-react` @ 1.5px stroke, 12/14/16/20px optical scale), and dark engineering atmosphere strictly align with "El cockpit de dominio técnico".
-- [x] **Concentric Radii Formula**: Complete paired mapping matrix demonstrates $R_o = R_i + P$ with zero corner clipping across all 6 nesting tiers.
-- [x] **Color Palette Discipline & WCAG 2.2 AA**: Functional accent (`#38bdf8`) restricted to $< 5\%$ of visual area. Text tokens strictly adhere to WCAG 2.2 AA/AAA with `--color-text-secondary: #94a3b8` (minimum weight 500) enforced for all readable copy.
-- [x] **Immutable Category Colors**: Full taxonomy specified for all 11 React categories and 7 Rails categories with guaranteed invariance against progress states.
-- [x] **Modular Typography Scale**: Ratio 1.200 (Minor Third), base 16px, explicit rem/px tokens, and mandatory `font-variant-numeric: tabular-nums`.
-- [x] **Elevation & Depth**: Tonal lightness hierarchy (Levels 0–5) with specular top-edge micro-highlights (`inset 0 1px 0 0 rgba(255, 255, 255, 0.08)`).
-- [x] **Sizing & Spacing Units**: Rigid 4px/8px scale, rem for text/padding, px for hairlines.
-- [x] **Authentic Product Representation**: 100% grounded in authentic senior/staff engineering domain fixtures (Fiber reconciler, Concurrency lanes, Event loop tasks, ActiveRecord N+1, 120-point rubric; zero lorem ipsum).
+Prohibido lorem ipsum, "Card title", "User 1".
