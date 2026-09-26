@@ -437,7 +437,7 @@ Superficie `--surface-3`, borde `--line-strong`, `--r-lg` 12, `--shadow-pop`, pa
 | `--ease-in-out` | `cubic-bezier(.4,0,.2,1)` | Transformaciones |
 | `--move-1` / `--move-2` / `--move-3` / `--move-4` | 4 / 8 / 16 / 24px | Distancias de entrada: popover / capa de estudio / drawer / hoja inferior |
 
-Entradas: opacidad 0→1 + `translateY(4px)` o `scale(.98)`. Salidas al 70% de la duración. `prefers-reduced-motion: reduce` → solo opacidad; el volteo 3D se reemplaza por fundido de `--dur-2`; skeleton y pulso quedan estáticos.
+Entradas: opacidad 0→1 + `translateY(var(--move-n))` (distancia según el componente) o `scale(.98)`. Salidas al 70% de la duración. `prefers-reduced-motion: reduce` → solo opacidad; el volteo 3D se reemplaza por fundido de `--dur-2`; skeleton y pulso quedan estáticos.
 
 ## 8. Elementos firma
 

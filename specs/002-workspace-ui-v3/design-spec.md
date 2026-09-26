@@ -894,7 +894,7 @@ Scrollbars: `scrollbar-width: thin` + color de DESIGN §11 en todos; `scrollbar-
 
 **FlashCard (grid)** — `--surface-1`, borde `--line`, `--r-lg`, padding 16, alto 216 fijo: meta (categoría con punto + `#pp`) · título `--fs-md` 600 (2 líneas) · resumen `--fs-sm` `--text-2` (2 líneas) · estado (StatusPill o "IA en progreso" con spinner, + "Con IA" `Sparkles`) · riel sm · pie: CTA secundario sm "Practicar recuerdo"/"Revisar mi explicación" (máx. 184) + icon button ghost 28 `ArrowUpRight` (`aria-label`/tooltip "Estudiar card completa") → ≤ 220px, cabe en el ancho útil mínimo de 248 (280 − 32). Grid `minmax(280px,1fr)` gap 12. Destacada ("Al azar"): estilo seleccionado 2s + scroll a la vista.
 
-**FlashDialog** — D.3; cabecera 56 (padding 0×20, hairline): punto + categoría · "Card i de n" mono · racha (`Flame` 16 + n, solo práctica) · StatusPill · cerrar. Cuerpo padding 32 (móvil 20); frente y dorso se apilan en la misma celda de grid (`grid-area: 1/1`), de modo que el alto del cuerpo = el mayor de los dos (mín. 360); si supera `88vh − 56 − 64`, el cuerpo scrollea en Y (la cara visible); frente = eyebrow "PREGUNTA DE REPASO" + pregunta serif `--fs-5xl` + primario "Revelar respuesta" + kbd "Espacio"; dorso = secciones (DESIGN lectura) con botones "Escuchar" ghost sm. Volteo: `rotateY` 180° `--dur-flip` con `backface-visibility:hidden` (reduced-motion: fundido). Pie 64 (padding 0×20, hairline; móvil: 2 filas, navegación arriba y calificación abajo, 112 + safe-area): `‹` icon 32 · "i/n" mono · `›` · (práctica y volteada) "¿Cómo lo recordaste?" + 4 botones secundarios sm con kbd "1 Otra vez", "2 Difícil", "3 Bien", "4 Fácil" · "Estudiar card completa" ghost.
+**FlashDialog** — D.3; cabecera 56 (padding 0×20, hairline): punto + categoría · "Card i de n" mono · racha (`Flame` 16 + n, solo práctica) · StatusPill · cerrar. Cuerpo padding 32 (móvil 20); frente y dorso se apilan en la misma celda de grid (`grid-area: 1/1`), de modo que el alto del cuerpo = el mayor de los dos (mín. 360); si supera `88vh − 56 − 64`, el cuerpo scrollea en Y (la cara visible); frente = eyebrow "PREGUNTA DE REPASO" + pregunta serif `--fs-5xl` + primario "Revelar respuesta" + kbd "Espacio"; dorso = secciones (DESIGN lectura) con botones "Escuchar" ghost sm. Volteo: `rotateY` 180° `--dur-flip` con `backface-visibility:hidden` (reduced-motion: fundido). Pie 64 (padding 0×20, hairline; móvil: 2 filas, navegación arriba y calificación abajo, 112 + safe-area): `‹` icon 32 · "i/n" mono · `›` · (práctica y volteada) "¿Cómo lo recordaste?" + 4 botones secundarios sm con kbd "1 Otra vez", "2 Difícil", "3 Bien", "4 Fácil" · "Estudiar card completa" ghost. Calificación en diálogos angostos: ver F.6a.
 
 **BandCard (Progreso)** — `--surface-1`, borde `--line`, `--r-lg`, padding 20: eyebrow etapa ("NIVEL I") + estado a la derecha (`CheckCircle2` `--mastery` "Nivel completo" / `CircleDashed` `--text-2` "En progreso" / `Lock` `--text-3` "Base pendiente") · label `--fs-sm` 600 + `%` `--fs-lg` mono · riel sm (relleno `--rail-base` o `--mastery` al 100%) · "{d}/{t} cards · {k} milestones" `--fs-xs` · "Requiere: {band}" `--fs-xs` `--text-3` · chips de milestones (pill neutral; completo: `Check` 12 + texto `--text-1`) · descripción `--fs-sm` `--text-2`. Grid 2×2 (≥ 1440: 4 columnas).
 
@@ -941,3 +941,351 @@ Scrollbars: `scrollbar-width: thin` + color de DESIGN §11 en todos; `scrollbar-
 | Volteo de flashcard | `--dur-flip` | — |
 
 Distancias como tokens (definidos en G): `--move-1` 4px, `--move-2` 8px, `--move-3` 16px, `--move-4` 24px; salidas = `calc(var(--dur-n) * .7)`. En la tabla: sesión `--move-2`, drawer `--move-3`, hoja `--move-4`, popover `--move-1`. Todo movimiento se reduce a opacidad con `prefers-reduced-motion`.
+
+---
+
+## Sección E — Matriz universal de 5 estados
+
+Reglas comunes: (1) el **esqueleto** reproduce la geometría exacta del estado resuelto (mismas alturas, radios y gaps de D.9) usando `--skeleton`; nunca spinners de página completa. (2) Todo **vacío** tiene titular serif + explicación + 1 acción primaria (EmptyState, D.9) salvo vacíos de lista secundaria (texto `--text-3` de 1 línea). (3) Todo **error** explica en lenguaje llano, conserva lo que ya estaba en pantalla (no destructivo) y ofrece 1 acción de recuperación. (4) **Límite** cubre: máximo de datos, 120/120, textos más largos reales (DESIGN §12), viewport de 320px de ancho (mínimo soportado, WCAG 1.4.10).
+
+### E.1 Mapa (lista + ruta)
+
+| Estado | Geometría y mensaje |
+|:--|:--|
+| Vacío | No existe grafo vacío. Foco sin cards pendientes → ORG-ROUTE muestra "Ruta completada" (INF-024) con `CheckCircle2` `--mastery` + "Todas las cards de este foco están dominadas." + primario "Ver progreso"; la lista sigue mostrando las cards. |
+| Cargando (hidratación de progreso, típ. < 300ms) | Lista y ruta se renderizan de inmediato con los datos estáticos del grafo (labels, prioridades); solo los elementos de progreso muestran esqueleto: riel sm (4px) y `ScoreValue` (40×12) por card, y "d/t" de la sidebar (28×12). Sin layout shift: todas las piezas tienen alto fijo. |
+| Poblado | D.9 ConceptCard / RouteNow. |
+| Límite | 101 cards / 11 categorías (React); card con 112/120 ★; card "Layout resiliente, contenido e internacionalización" (clamp 2 líneas); foco con 19 cards (Arquitectura web) → grupo único largo con cabecera sticky; 320px: filas de 64 sin desborde, stepper de la ruta con 9 pasos. |
+| Error (falla IndexedDB al hidratar) | Notice de error bajo la barra, dentro del canvas (no franja fija): "No pudimos leer tu progreso guardado. El mapa funciona, pero los puntajes no se muestran." + ghost "Reintentar" (re-hidrata). Las cards muestran "Sin evaluar". |
+
+### E.2 Grafo
+
+| Estado | Geometría y mensaje |
+|:--|:--|
+| Vacío | Foco con 0 nodos visibles (imposible con datos actuales) → EmptyState "No hay conceptos en este foco" + "Ver todos". |
+| Cargando | Layout síncrono (< 16ms para 101 nodos); nodos con esqueleto solo en riel y puntaje, igual que E.1. |
+| Poblado | D.9 GraphNode. |
+| Límite | 101 nodos, 212 aristas, `maxRank` real; zoom mín 0.18 muestra todo; hover sobre nodo con 8 hijos; label de 29×2 caracteres truncado con `…` y `<title>` completo. |
+| Error (`hasCycle` en layout) | Notice warn en el panel de lectura: "Detectamos un ciclo en las dependencias; algunas flechas pueden verse fuera de orden." El grafo se dibuja igual. |
+
+### E.3 Sesión — marco y 01 Leer
+
+| Estado | Geometría y mensaje |
+|:--|:--|
+| Vacío | Card sin `lesson` (dato roto, p. ej. `react_rails_auth` legacy) → EmptyState en la columna: "Esta card todavía no tiene contenido de lectura." + primario "Volver al mapa". Nunca excepción. |
+| Cargando | La lección es estática (sin carga). Mermaid (lazy): contenedor con alto reservado de 240 y esqueleto; texto "Preparando diagrama…" `--fs-sm` `--text-3`. TTS preparando: botón play con spinner + "Preparando i/n". |
+| Poblado | Secciones INF-070…084 en orden. |
+| Límite | Card con todas las secciones (tabla + mermaid + comparación + 12 preguntas de entrevista + 6 fuentes); titular de 3 líneas; tabla de 5 columnas con scroll X; 320px: comparación apilada, tabla con scroll X y máscara. |
+| Error | Mermaid falla → el contenedor muestra el código fuente del diagrama en CodeBlock con la leyenda "No se pudo dibujar el diagrama; este es su texto." TTS no soportado → los controles TTS (barra, mini-player, botones de sección) quedan `aria-disabled` con tooltip "Este navegador no ofrece lectura en voz alta."; en móvil el mini-player muestra esa frase en una línea en lugar de los controles. Falla de reproducción → Notice error en la cabecera de la columna con el texto INV §11.3 + "Reintentar". |
+
+### E.4 02 Mentor IA
+
+| Estado | Geometría y mensaje |
+|:--|:--|
+| Vacío | EmptyState: icono `BrainCircuit`; "Comenzá tu sesión con el mentor"; "El mentor redacta una lección completa —analogías, mecánica interna y código— y un juez pedagógico la revisa hasta que alcanza calidad de 95/100."; primario "Generar lección". Riel: "Todavía no hay auditoría." |
+| Cargando / streaming | Stepper (paso activo con spinner) + mensaje de etapa + "Cancelar"; documento con el texto que va llegando y caret; antes del primer carácter, esqueleto de 6 líneas de texto (alturas 26, anchos 100/96/92/100/88/60%). Composer bloqueado con INF-100. Riel: juez con esqueleto (puntaje 72×32, 5 filas 28). |
+| Poblado | Lección + hilo + composer activo; riel con puntaje, historial y rúbrica. |
+| Límite | 6 iteraciones (máximo): historial "72 → 81 → 88 → 90 → 93 → 94" + aviso info "Límite de 6 iteraciones alcanzado (puntaje 94/100)." + "Regenerar lección"; hilo de 40 mensajes (scroll de la columna, composer sticky); mensaje de 4000 caracteres (contador `--fs-xs` al superar 3600: "3.812/4.000"). |
+| Error | Falla del harness: Notice error sobre el documento "No se pudo completar la lección. {mensaje de `userFacingAiError`}" + "Reintentar"; el borrador parcial se conserva. Falla del chat: el mensaje del usuario queda en el hilo con pie `AlertCircle` "No se pudo obtener la respuesta del mentor." + "Reintentar" (reenvía la misma pregunta). |
+
+### E.5 03 Parafrasear
+
+| Estado | Geometría y mensaje |
+|:--|:--|
+| Vacío | Textarea vacía con placeholder (INV §13); riel de coaching: pill "Automático" + "Escribí para activar el coaching automático."; puntaje "—/120" con riel vacío; superficie con los ítems en estado `pending` (lista completa visible desde el inicio: el usuario ve qué debe cubrir). |
+| Cargando (revisión en curso) | DebounceRing → spinner; puntaje y foco anteriores quedan visibles **sin atenuar** (contraste intacto), marcados con la pill "Desactualizado" (`History`, neutra) junto al eyebrow y `aria-busy="true"`; LiveRequestFeedback con la fase; si no hay revisión previa, esqueletos: puntaje 96×32, foco 3 líneas, superficie N filas de 28. |
+| Poblado | D.9 CoachPanel. |
+| Límite | Borrador de 8.000 caracteres (el textarea crece; la columna scrollea); 24 iteraciones en el historial (máximo guardado); superficie de 14 ítems; puntaje 120 con "Profundidad extra"; < 80 caracteres → "un poco corta" `--warn`. |
+| Error | Dictado: no soportado → botón "Dictar" `aria-disabled` + tooltip "Tu navegador no ofrece dictado por voz."; permiso denegado o falla durante la grabación → se detiene la grabación y aparece Notice error bajo la toolbar "No pudimos acceder al micrófono. Revisá los permisos del navegador." + "Reintentar" (nunca `alert()`; lo ya transcrito se conserva). Coaching falla → pill "Error" + Notice en el riel con el texto de `userFacingAiError` + "Reintentar" + link "Revisar conexión de IA" (abre ajustes); el borrador nunca se toca. Falla de guardado local → Notice warn "La revisión llegó, pero no se pudo guardar su iteración local." |
+
+### E.6 04 Evaluar
+
+| Estado | Geometría y mensaje |
+|:--|:--|
+| Vacío (sin borrador) | EvalActionRow con "Todavía no escribiste una respuesta" + primario deshabilitado + link "Ir a Parafrasear →"; debajo EmptyState: "Todavía no hay una evaluación completa." + texto INV §14. |
+| Vacío (con checkpoints) | EmptyState: "Tenés {n} checkpoints de coaching." + texto INV §14 + primario "Evaluar ahora"; gráfico con solo rombos. |
+| Cargando | ProgressLoader + StreamingPreview con la geometría exacta del resultado (Scorecard 204, Próximo foco 146, Desglose 202) en esqueleto; secciones que llegan reemplazan su esqueleto sin cambiar de alto; puntaje provisional (DESIGN §1.8). |
+| Poblado | Scorecard, Próximo foco, Desglose, Recorrido, Análisis, Respuesta, Acciones. |
+| Límite | 120/120 (riel lleno, ★ 120, "Profundización extra", explicación "La base ya está cubierta. Los 20 puntos dorados son profundidad opcional."); 12 intentos (máximo guardado) en lista y gráfico; 0/120 (riel vacío, `review`); tiempo > 1.5× esperado (barra `--warn`, "Casi en el límite, esperando la respuesta…"); veredicto largo (clamp 2 + "Ver más"). |
+| Error | Notice error en el lugar del loader: "No se pudo completar la evaluación. {mensaje}" + primario "Reintentar" + ghost "Revisar conexión de IA"; el borrador y los intentos previos siguen visibles. Cancelada: toast info "Evaluación cancelada." |
+
+### E.7 Flashcards
+
+| Estado | Geometría y mensaje |
+|:--|:--|
+| Vacío (filtro sin resultados) | INF-159 como EmptyState compacto (padding 48) con "Ver todas". Toolbar visible (filtros siempre accesibles). |
+| Cargando | Las cards se renderizan de inmediato con los datos estáticos (categoría, título, resumen, CTA); solo la pill de estado (96×20) y el riel sm muestran esqueleto hasta que se leen los intentos. |
+| Poblado | D.9 FlashCard / FlashDialog. |
+| Límite | 101 cards; card con respuesta evaluada de 3.000 caracteres (dorso con scroll Y); racha 25; sesión completada; navegador sin TTS → botones "Escuchar" `aria-disabled` con tooltip (E.3). |
+| Error | Falla al leer intentos: Notice error "No pudimos leer tus respuestas guardadas; se muestran las cards sin puntaje." + "Reintentar". |
+
+### E.8 Progreso
+
+| Estado | Geometría y mensaje |
+|:--|:--|
+| Vacío (0 dominadas) | Bandas y milestones visibles al 0% (el objetivo es mostrar el camino); % global "0%" + texto "Dominá tu primera card para empezar a cerrar milestones." + primario "Estudiar ahora" (card primaria de la ruta). |
+| Cargando | Esqueletos de riel y cifras (igual regla que E.1). |
+| Poblado | D.9 BandCard, MilestoneRow. |
+| Límite | 100% (todas las bandas "Nivel completo", milestones "Completo"); Rails sin bandas → la sección Seniority no se muestra y Milestones sube. |
+| Error | Notice de error "No pudimos leer tu progreso guardado." + "Reintentar"; las cifras (% global, % de bandas y milestones, `d/t`) se muestran como "—" (nunca 0%, que sería falso) y los rieles vacíos con `aria-label` "Sin datos". |
+
+### E.9 Ajustes y respaldo
+
+| Estado | Geometría y mensaje |
+|:--|:--|
+| Vacío | Conexiones: EmptyState compacto INV §6 ("Todavía no hay conexiones configuradas." + "Explorar catálogo de proveedores"). Catálogo con búsqueda sin resultados: INV §6 + "Restablecer filtros". |
+| Cargando | Catálogo: 6 filas de 48 en esqueleto + summary "Actualizando el directorio de providers…"; modelos: botón "Cargando…" + listbox en esqueleto (5 filas). Probar: botón "Probando…" + Notice info "Probando el modelo con una inferencia mínima…". |
+| Poblado | D.9 SettingsDrawer. |
+| Límite | 24 presets + catálogo remoto (> 100 providers: lista agrupada con cabeceras sticky); 250 modelos (listbox filtrable); label de 80 caracteres (ellipsis). |
+| Error | Catálogo de modelos: falla de `fetchAiProviderModels` → Notice error bajo el campo Modelo "No se pudo cargar el catálogo de modelos. Podés escribir el slug manualmente." + "Reintentar", y el campo pasa a modo slug manual; respuesta vacía → texto INV §6 ("No encontramos modelos…") y modo manual. Directorio caído → Notice warn "No se pudo actualizar el directorio. Podés usar la biblioteca integrada o reintentar." + "Reintentar" (se muestra `PROVIDER_LIBRARY`). Prueba fallida → Notice error con el texto por código (INV §6). Validación → mensajes por campo (D.5). Respaldo inválido → Notice error en la sección de datos "El archivo no es un respaldo válido de Learning Workspace." (sin `alert()`); export fallido → toast error persistente con "Reintentar". |
+
+### E.10 Paleta y HUD
+
+| Surface | Vacío | Cargando | Poblado | Límite | Error |
+|:--|:--|:--|:--|:--|:--|
+| Paleta | Sin coincidencias: `No encontramos cards ni acciones para "{q}".` en `--text-2` centrado (fila de 96) | — (búsqueda síncrona) | Grupos Acciones + Cards | 101 cards + 7 acciones; query de 1 carácter | — |
+| HUD | Oculto (sin tareas) | Tarea sin chars: "Conectando…" | D.9 | 6 tareas: expandido con scroll Y (máx. 420) | Tarea en error: el HUD **permanece visible** y el colapsado muestra `AlertCircle` `--danger` + "Falló: {tipo} de {label}" hasta que el usuario la descarta; fila con mensaje + "Abrir card" + "Reintentar" + "Descartar"; además toast `alert` persistente con "Abrir card" y anuncio en la región `assertive` |
+
+---
+
+## Sección F — Accesibilidad y usabilidad (WCAG 2.2 AA · Nielsen)
+
+### F.1 Contraste (pares reales de la UI)
+
+| Uso | Texto / elemento | Fondo | Ratio | Req. | OK |
+|:--|:--|:--|:--:|:--:|:--:|
+| Cuerpo de lectura | `--text-1` #EEECE7 | `--bg-app` #100E0C | 16.3 | 4.5 | ✓ |
+| Metadatos de card | `--text-3` #938F87 | `--surface-1` #161512 | 5.7 | 4.5 | ✓ |
+| Placeholder / hint en paleta | `--text-3` | `--surface-2` #1D1B19 | 5.3 | 4.5 | ✓ |
+| Tooltip | `--text-1` | `--surface-3` #242220 | 13.4 | 4.5 | ✓ |
+| Texto en selección | `--text-2` #B7B3AB | `--accent-soft` sobre s1 (#272832) | 7.0 | 4.5 | ✓ |
+| Link / "Ver en vivo" | `--accent` #909CF5 | s1 / app | 7.2 / 7.6 | 4.5 | ✓ |
+| Botón primario | `--text-on-paper` | `--paper` | 16.3 | 4.5 | ✓ |
+| Pill excelencia | `--gold` | `--gold-soft` sobre s1 | 8.2 | 4.5 | ✓ |
+| Pill dominio | `--mastery` | `--mastery-soft` sobre s1 | 7.2 | 4.5 | ✓ |
+| Aviso de error | `--text-1` | `--danger-soft` sobre app | 14.0 | 4.5 | ✓ |
+| Destructivo | `--danger` | `--danger-soft` sobre s3 (peor caso) | 4.66 | 4.5 | ✓ |
+| Código (peor token) | `--syn-tag` #E199AF | `--surface-inset` | 9.0 | 4.5 | ✓ |
+| Borde de input | `--line-control` #6B6861 | s1 | 3.28 | 3.0 (1.4.11) | ✓ |
+| Estado seleccionado | borde `--accent` | s1 | 7.2 | 3.0 | ✓ |
+| Anillo de foco | `--accent` | peor superficie (s3) | 6.2 | 3.0 | ✓ |
+| Riel base (dato gráfico) | `--rail-base` | `--surface-inset` | 9.7 | 3.0 | ✓ |
+| Riel dominio / extra | `--mastery` / `--gold` | inset | 9.9 / 11.6 | 3.0 | ✓ |
+| Deshabilitado | `--text-4` | cualquiera | 2.4–2.9 | exento | — |
+
+### F.2 Indicadores que no dependen del color
+
+| Información | Color | Refuerzo no cromático |
+|:--|:--|:--|
+| Dominio / excelencia | salvia / oro | `✓` / `★` + texto del estado + cifra |
+| Categoría | punto / trazo | label de texto siempre visible |
+| Seleccionado | tinte + borde iris | `aria-selected`/`aria-current`/`aria-pressed` + borde (forma) |
+| Severidad | coral / naranja / neutro | iconos `ChevronsUp` / `ChevronUp` / `Minus` + texto |
+| Cobertura | salvia / naranja / coral / neutro | `Check` / `CircleDashed` / `X` / `Circle` + `aria-label` |
+| Ruta sugerida | iris | pill con texto "Mejor siguiente" / "Nivel n"; en el grafo línea continua vs discontinua |
+| IA trabajando | — | icono `Sparkles` pulsante + texto o `aria-description` |
+| Serie de gráfico | — | forma (círculo lleno / rombo hueco) + leyenda |
+| Prerrequisitos | naranja | icono `AlertTriangle` + "n prerreq." |
+
+### F.3 Foco visible y teclado
+- Anillo global: `outline: 2px solid var(--accent); outline-offset: 2px` en `:focus-visible` (campos de texto: D.5). Nodos del grafo y puntos del gráfico: anillo SVG equivalente (D.9).
+- Nunca `outline: none` sin reemplazo. Elementos `tabindex=-1` usados como destino de foco programático (títulos) no muestran anillo al recibir foco por script, salvo navegación por teclado.
+- Orden de Tab: sidebar → barra → contenido (mapa) · barra de estudio → pestañas → columna → riel (sesión) · HUD al final.
+- Skip link: primer elemento del documento, visible al foco: "Saltar al contenido" → `main`.
+- Mapa de atajos completo en D.2; regla de ámbito WCAG 2.1.4 en D.2.
+- Target size (2.5.8): mínimo 24×24 desktop (se cumple: controles ≥ 24) y 44×44 móvil (D.8).
+- **Foco no oculto (2.4.11)**: todo contenedor con scroll declara `scroll-padding-top` = alto de lo sticky que lo cubre (`.view-scroll`: `var(--bar-h)` + 44 si hay cabecera de grupo pegada; `.study-scroll`: 44 de las pestañas) y `scroll-padding-bottom` = barra de resumen / slot / dock móvil (`var(--dock-h)` + safe-area) / HUD visibles, sumados (+ 16). Al mover el foco por teclado, el elemento se desplaza a la vista respetando esos márgenes.
+- **Modo de alto contraste (`forced-colors: active`)**: el foco usa `outline: 2px solid Highlight` (también en campos de texto, que en modo normal usan borde + box-shadow); bordes de cards e inputs `1px solid CanvasText`; seleccionado con `outline 2px solid Highlight`; iconos con `currentColor`.
+- **Deshabilitado con motivo**: un control deshabilitado cuyo motivo importa ("Evaluar borrador" sin borrador, "Dictar" sin soporte, controles TTS sin soporte, "Probar modelo" sin modelo) usa `aria-disabled="true"` (sigue siendo enfocable) + `aria-describedby` hacia el motivo, visible como tooltip al foco/hover; los clics no hacen nada. `disabled` nativo solo cuando el motivo es obvio por contexto.
+- **Encabezados**: un `h1` por vista (Mapa: título de contexto de la barra; Flashcards/Progreso: título de la vista; sesión: el título compacto de la barra es el `h1` y el titular serif de Leer es visual, `aria-hidden` para no duplicar); `h2` = secciones de la vista o de la etapa (secciones de Leer, "Evaluación completa", "Desglose del puntaje", secciones del riel); `h3` = subsecciones (Antes/Ahora/Después, grupos de superficie, subtítulos del análisis).
+- **Skip links**: "Saltar al contenido" (→ `main`) en el shell; al abrir la sesión se habilita un segundo skip link como primer elemento de la sesión: "Saltar al contenido de la etapa" (→ panel de la etapa).
+
+### F.4 Lectores de pantalla y regiones vivas
+- Landmarks: `nav` (sidebar, dock), `main` (canvas), `region` (sesión), `complementary` (riel).
+- Una región `aria-live="polite"` global (portal) anuncia: cambio de etapa ("Etapa 03 Parafrasear"), inicio/fin de evaluación ("Evaluación completada: 112 de 120"), resultado de coaching ("Revisión lista: 84 de 120, foco: …"), toasts `status`. Errores → región `assertive` (toasts `alert`).
+- Streaming: los textos largos que llegan por streaming **no** se anuncian carácter a carácter; se anuncia solo el cambio de fase y el resultado final.
+- Moderación de anuncios: el resultado del coaching se anuncia solo si el puntaje cambió ≥ 5 puntos o si se completó la superficie (nunca en cada revisión automática sin cambio relevante); el cambio de etapa se anuncia solo cuando ocurre sin mover el foco a la pestaña (atajos 1–4, "Ver en vivo", apertura desde flashcards/HUD) — el clic o las flechas sobre la pestaña ya lo anuncian por su rol; "Guardado" no se anuncia (el textarea lleva `aria-describedby` "Se guarda automáticamente").
+- Riel de puntaje: `role="img"` con `aria-label`; cifras con `aria-hidden` duplicadas en el label para no leer "112 barra 120".
+- Grafo: `role="application"` + `aria-label` (INV §8.1) + `aria-roledescription="mapa de dependencias"`; nodos `role="button"` con label completo (INV §8.1 `nodeAriaLabel`).
+- Idioma: `<html lang="es">`; bloques de código `lang="en"` (`translate="no"`).
+
+### F.5 Notificaciones y recuperación
+
+| Acción | Tipo | Patrón |
+|:--|:--|:--|
+| Eliminar una conexión | destructiva reversible | Se elimina de inmediato y **en el lugar de la fila** aparece una fila de deshacer (56px, dentro del drawer y de su focus trap): "Se eliminó {label}." + botón "Deshacer" (foco se mueve a este botón). Tras 5s (pausa con hover/foco) la fila colapsa y el foco pasa a la fila siguiente (o a "+ Agregar" si era la última) |
+| Eliminar todas las conexiones | destructiva masiva | ConfirmDialog (destructivo relleno "Eliminar todas") + toast de confirmación sin deshacer |
+| Importar respaldo | reemplaza todo | ConfirmDialog con copy honesto (D.9) → aplica → toast "Respaldo importado. Recargando…" → recarga |
+| Exportar respaldo | — | Toast "Respaldo exportado. El archivo incluye tus API keys: guardalo en un lugar seguro."; si falla, toast de error persistente con "Reintentar" |
+| "Retomar en Parafrasear" (reemplaza el borrador actual por la respuesta evaluada) | reversible | Si el borrador actual no está vacío y difiere → toast "Borrador reemplazado." + "Deshacer" (5s, restaura el anterior) |
+| Cancelar evaluación / harness | no destructiva | Sin confirmación; toast info "Evaluación cancelada." / "Lección cancelada."; el borrador se conserva |
+| Regenerar lección (reemplaza la lección del mentor) | reversible | Notice info **inline** sobre el documento (no toast): "Lección anterior reemplazada." + "Deshacer" (restaura el texto previo y cancela la tarea); persiste hasta que la nueva lección termina o el usuario deshace |
+| Cerrar la sesión con evaluación en curso | — | Sin confirmación: la tarea sigue en background (HUD); toast info "La evaluación sigue en segundo plano." la primera vez por sesión |
+
+Toasts: DESIGN §5.1 (abajo a la derecha / sobre el dock o slot móvil), pausa en hover/foco; los de **error no se autodescartan** (persisten hasta cerrar o resolver). "Deshacer" alcanzable por teclado: F6 (o Ctrl+F6) mueve el foco a la región de toasts; ⌘/Ctrl+Z deshace la última acción con deshacer visible **solo si el foco no está en un campo editable** (ahí conserva el deshacer nativo del texto). Ambos atajos se agregan al mapa de D.2 por esta enmienda (F.6a).
+
+### F.6a Enmiendas de accesibilidad a la Sección D (prevalecen sobre D)
+
+| Ref. D | Enmienda |
+|:--|:--|
+| D.5 Segmented | Segmento activo: fondo `--surface-2` + **borde 1px `--line-control`** (3.1–3.6:1 contra el contenedor, cumple 1.4.11) + texto `--text-1` 600; inactivo: sin borde, `--text-2` 500. F.2: "segmento activo → borde + peso + `aria-checked`". |
+| D.4 Destructivo relleno | Active: `color-mix(in oklch, var(--danger) 90%, black)` (5.2:1 con `--text-on-paper`). |
+| D.9 CoachPanel §3 | Estado obsoleto sin opacidad: pill "Desactualizado" + `aria-busy` (E.5). |
+| D.9 GraphNode | **Modelo de teclado**: el canvas es **una sola parada de Tab** (roving tabindex; entra en el último nodo con foco o en el primario). ←/→ = nodo más cercano en la etapa anterior/siguiente; ↑/↓ = nodo anterior/siguiente dentro de la misma etapa; Home = nodo primario; Enter/Espacio = abrir; `+`/`-` = zoom; `0` = ver el mapa completo; Tab sale hacia los controles flotantes. El nodo enfocado se desplaza a la vista con margen de 48px (animación `--dur-2`, instantánea con reduced-motion). Los nodos fuera del foco de categoría son **inactivos**: sin eventos de puntero, `aria-hidden="true"`, excluidos del roving (su contraste 2.56:1 queda exento como contenido inactivo). |
+| D.2 Atajos | Se agregan: F6 / Ctrl+F6 → región de toasts; ⌘/Ctrl+Z → deshacer (solo fuera de campos editables). |
+| D.11 Salidas | Toda duración de salida = `calc(var(--dur-n) * .7)`; los literales 168/170/130/85ms de D.11 se leen como esos cálculos. |
+| D.8 / B.6 320px | Soporte mínimo 320px (WCAG 1.4.10): items del dock ≥ 64 (5×64 = 320); pestañas móviles con scroll horizontal propio + máscara de 16px cuando el ancho útil < 306 (la activa siempre visible vía `scrollIntoView`); barra móvil < 360: el botón Foco es solo icono (44) → 16 + 24 + 8 + 128 + 8 + 44 + 8 + 44 + 16 = 296 ≤ 320. |
+| D.9 FlashDialog (pie) | El pie tiene alto `auto` y hasta **dos filas** (padding 12×20, gap 8, hairline superior); el cuerpo ocupa el alto restante con su propio scroll Y. **Fila 1**: navegación (`‹` · "i/n" · `›`) + "Estudiar card completa" (ghost sm con `ArrowUpRight`; si el ancho del diálogo < 480px, icon button 44 con `aria-label`). **Fila 2** (solo en práctica y con la card volteada): si el diálogo mide ≥ 640px → "¿Cómo lo recordaste?" + los 4 botones secundarios sm con `kbd` en una línea; entre 480 y 639px → la pregunta arriba y los 4 botones en una línea sin `kbd`; < 480px → pregunta arriba y grid 2×2 de botones de 44, sin `kbd` (container queries sobre el diálogo; cubre móvil y zoom 400%). Tests: `flashcards.spec.js` a 1440×900 y `mobile.spec.js` a 360×640 (sin táctil) y 320×640 verifican que ningún control del pie desborda (`scrollWidth ≤ clientWidth`). |
+| D.9 Composer / controles con motivo | Deshabilitados con motivo según F.3 (`aria-disabled`). |
+
+### F.6 Heurísticas de Nielsen (verificación)
+
+| # | Heurística | Cómo se cumple |
+|:--:|:--|:--|
+| 1 | Visibilidad del estado | HUD, chip de tarea, pill de conexión del coaching, loader con tiempo esperado, "Guardado" en el editor |
+| 2 | Coincidencia con el mundo real | Escala 0–120 explicada ("100 · base suficiente", "120 · excelencia"); etapas numeradas como un proceso de estudio |
+| 3 | Control y libertad | Cancelar en toda tarea IA; Deshacer en reemplazos; Esc con prioridad única; "Volver a" con historial |
+| 4 | Consistencia | Un solo riel de puntaje, un estilo de selección, un estilo de opción activa, una regla de hover |
+| 5 | Prevención de errores | Validación en envío, botones deshabilitados con motivo (tooltip), confirmación solo donde es irreversible |
+| 6 | Reconocer antes que recordar | Superficie completa siempre visible en el riel; atajos visibles en tooltips y kbd |
+| 7 | Flexibilidad | ⌘K, atajos por región, Zen, preferencias persistidas (modo del mapa, velocidad, sidebar) |
+| 8 | Estética minimalista | Sin cajas anidadas; iris < 5%; tipografía como jerarquía |
+| 9 | Recuperación de errores | Mensajes de E.* con causa + acción; nunca pierden datos |
+| 10 | Ayuda | Tooltips de subtítulos de etapa, ayuda de Base URL, explicación de la escala en el scorecard |
+
+---
+
+## Sección G — Referencia de tokens y blueprint de implementación
+
+### G.1 Tokens CSS (`src/ui/theme/tokens.css`)
+
+Todos los tokens de DESIGN.md v3.1.3 se publican **con el mismo nombre** en `:root`. Además, los derivados usados en D:
+
+```css
+:root {
+  color-scheme: dark;
+  /* neutros */ --bg-sidebar:#090806; --bg-app:#100E0C; --surface-1:#161512; --surface-2:#1D1B19; --surface-3:#242220; --surface-inset:#070604;
+  --line-subtle:rgba(255,248,230,.06); --line:rgba(255,248,230,.09); --line-strong:rgba(255,248,230,.16); --line-control:#6B6861;
+  --scrim:rgba(4,3,2,.72); --bar-glass:rgba(16,14,12,.88); --selection:#2A2E56;
+  --hover-overlay:rgba(255,248,230,.06); --press-overlay:rgba(255,248,230,.10); --pill-neutral:rgba(255,248,230,.06); --skeleton:rgba(255,248,230,.07);
+  /* texto */ --text-1:#EEECE7; --text-2:#B7B3AB; --text-3:#938F87; --text-4:#5F5C56; --text-on-paper:#100E0C;
+  /* acento y semántica */ --paper:#EEECE7; --paper-hover:#DAD7D0; --paper-active:#C7C4BD;
+  --accent:#909CF5; --accent-strong:#A5B1FD; --accent-soft:rgba(144,156,245,.14);
+  --mastery:#74C692; --mastery-soft:rgba(116,198,146,.12); --gold:#E8BE62; --gold-soft:rgba(232,190,98,.12);
+  --warn:#F0995B; --warn-soft:rgba(240,153,91,.12); --danger:#E97871; --danger-soft:rgba(233,120,113,.12); --rail-base:#B7B3AB;
+  /* código */ --code-bg:var(--surface-inset); --code-inline-bg:rgba(255,248,230,.07); --code-fs:var(--fs-sm); --code-lh:1.5rem; --code-inline-fs:var(--fs-sm);
+  --syn-comment:var(--text-3); --syn-keyword:#BAA4E2; --syn-string:#A4C386; --syn-number:#E5A880; --syn-function:#80C1E1; --syn-tag:#E199AF; --syn-attr:#D5BA82; --syn-type:#81C6C1; --syn-punct:var(--text-2); --syn-plain:var(--text-1);
+  /* gráficos (DESIGN §1.7) */ --chart-eval:var(--text-1); --chart-eval-line:var(--text-2); --chart-coach:var(--text-3); --chart-band-extra:var(--gold-soft); --chart-guide:var(--line); --chart-threshold:var(--text-3); --chart-cursor:var(--accent); --chart-axis:var(--text-3); --chart-judge:var(--text-1);
+  /* streaming y carga (DESIGN §1.8) */ --caret-w:2px; --caret-color:var(--text-2); --caret-dur:1s; --skeleton-dur:1.4s; --pulse-dur:1.6s; --timebar-fill:var(--text-3); --timebar-over:var(--warn); --expected-marker:var(--text-3); --provisional-opacity:.5;
+  /* riel de puntaje y categoría */ --rail-track:4px; --rail-track-lg:8px; --lesson-color:var(--text-2); /* se sobrescribe en .study con el color de la categoría */
+  /* tipografía */ --font-ui:"Geist Variable",ui-sans-serif,system-ui,sans-serif; --font-mono:"Geist Mono Variable",ui-monospace,"SF Mono",Menlo,monospace; --font-read:"Newsreader Variable",ui-serif,Georgia,serif;
+  --fs-2xs:.6875rem; --fs-xs:.75rem; --fs-sm:.875rem; --fs-md:1rem; --fs-lg:1.125rem; --fs-xl:1.25rem; --fs-2xl:1.375rem; --fs-3xl:1.5625rem; --fs-4xl:1.75rem; --fs-5xl:2rem;
+  --lh-2xs:1rem; --lh-xs:1rem; --lh-sm:1.25rem; --lh-md:1.625rem; --lh-lg:1.625rem; --lh-xl:1.75rem; --lh-2xl:1.875rem; --lh-3xl:2rem; --lh-4xl:2.25rem; --lh-5xl:2.5rem;
+  /* espacio */ --sp-1:.25rem; --sp-2:.5rem; --sp-3:.75rem; --sp-4:1rem; --sp-5:1.25rem; --sp-6:1.5rem; --sp-8:2rem; --sp-10:2.5rem; --sp-12:3rem;
+  /* controles */ --ctl-xs:1.5rem; --ctl-sm:1.75rem; --ctl-md:2rem; --ctl-lg:2.5rem; --bar-h:3.25rem; --tabs-h:2.75rem; --dock-h:4rem; --sidebar-w:15.5rem; --sidebar-w-collapsed:3.5rem; --rail-w:20rem; --panel-w:22.5rem; --col-w:45rem; --col-wide:55rem;
+  --slot-h:3.5rem; /* móvil: se actualiza por ResizeObserver */
+  /* radios */ --r-xs:4px; --r-sm:6px; --r-md:8px; --r-group:10px; --r-lg:12px; --r-xl:16px; --r-full:999px;
+  /* elevación */ --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 24px -6px rgba(0,0,0,.55); --shadow-modal:0 2px 4px rgba(0,0,0,.35),0 12px 32px -8px rgba(0,0,0,.6),0 32px 80px -24px rgba(0,0,0,.7);
+  /* movimiento */ --dur-1:120ms; --dur-2:180ms; --dur-3:240ms; --dur-flip:420ms; --ease-out:cubic-bezier(.2,0,0,1); --ease-in-out:cubic-bezier(.4,0,.2,1);
+  --move-1:4px; --move-2:8px; --move-3:16px; --move-4:24px; --scale-enter:.98;
+  /* tiempos de interacción */ --delay-tooltip:600ms; --dur-rail-grow:480ms; --dur-highlight:1200ms; --dur-spotlight:2000ms; --dur-feedback-copy:2000ms; --dur-feedback-saved:1500ms; --dur-feedback-cancel:1400ms; --delay-live-review:5000ms; --dur-toast:5000ms; --dur-undo:5000ms;
+  /* capas */ --z-base:0; --z-sticky:10; --z-chrome:20; --z-study:30; --z-hud:40; --z-drawer:50; --z-modal:60; --z-palette:70; --z-popover:80; --z-toast:90; --z-tooltip:100;
+}
+@media (max-width: 47.99em) {
+  :root { --rail-track:4px; --ctl-xs:2rem; --ctl-sm:2.5rem; --ctl-md:2.75rem; --ctl-lg:3rem; --bar-h:3.5rem;
+          --fs-5xl:1.5625rem; --lh-5xl:2rem; --fs-4xl:1.375rem; --lh-4xl:1.875rem; --fs-2xl:1.25rem; --lh-2xl:1.75rem; --fs-2xs:.75rem; }
+}
+@media (prefers-reduced-motion: reduce) { :root { --move-1:0px; --move-2:0px; --move-3:0px; --move-4:0px; --dur-flip:180ms; --scale-enter:1; } }
+/* Dialog y paleta entran con transform: scale(var(--scale-enter)) → 1; --scale-enter vale .98 fuera de reduced-motion */
+```
+
+Paletas de categoría: `src/ui/theme/categoryPalette.js` exporta `getCategoryColor(graphId, catId, fallbackHex)` con las tablas de DESIGN §1.5.
+
+### G.2 Estructura de archivos (≤ 150 líneas por archivo JS/JSX)
+
+```
+src/
+  main.jsx                       fuentes (@fontsource-variable/*) + tokens + base + <App/>
+  App.jsx                        <Workspace/> (compone store, rutas, shell, capas)
+  logic/guidance.js              getGuidance, getLessonContext, getNextFocusNode (port legacy)
+  logic/railsContent.js          contexto, overrides, correcciones y milestones Rails (port legacy) → consumido por railsGraph.js
+  ui/
+    theme/  tokens.css base.css categoryPalette.js  (+ CSS por área: shell.css map.css graph.css study.css read.css mentor.css coach.css eval.css flash.css progress.css settings.css overlays.css primitives.css)
+    state/  workspaceStore.js (useSyncExternalStore: graphId, view, mapMode, focusCat, study{nodeId,stage,history,zen,attemptId}, overlays, prefs)
+            routing.js (parse/build + popstate + pila "volver")   progress.js (hidratación y regla de dominio unificada)
+            useProgress.js   usePrefs.js   toastStore.js (toasts + pila de deshacer)
+    hooks/  useTts.js useDictation.js useLiveReview.js useMentorChat.js useMediaQuery.js useHotkeys.js useFocusReturn.js useScrollLock.js useElementSize.js useProviderProfile.js
+    primitives/  Button IconButton Segmented Pill StatusPill ScoreRail ScoreValue Kbd Tooltip Menu Dialog Sheet Drawer Notice Skeleton EmptyState Toaster ConfirmDialog CodeBlock Markdown Mermaid Icon Eyebrow LiveAnnouncer SkipLink LiveRequestFeedback RowButton
+    shell/  AppShell Sidebar SidebarNav SidebarFocus TopBar MobileTopBar MobileDock FocusPicker
+    map/    MapView SuggestedRoute RouteNow RouteColumn RouteRow ConceptGrid ConceptCard ConceptRow
+    graph/  GraphView GraphCanvas GraphNode GraphEdges GraphOverlays useGraphViewport
+    study/  StudySession StudyHeader TtsControls StageTabs TaskChip ContextRail StageSummaryBar RailPanel MiniPlayer
+      read/     ReadStage TitleBlock ReadSection EnUnaFrase RichText DeepDive AuditBlock LessonTable LessonDiagram LessonCode CodeComparison StepsPitfalls InterviewCoverage SourcesRelated ReadingChunks
+      mentor/   MentorStage MentorStepper LessonDocument Thread Composer JudgePanel
+      paraphrase/ ParaphraseStage ParaToolbar DraftEditor ParaFooter ChunkView CoachPanel CoverageList DebounceRing IterationNav MiniChart
+      evaluate/ EvaluateStage EvalActionRow ProgressLoader StreamingPreview Scorecard NextFocus RubricRows AnalysisDetails EvalActions AttemptChart AttemptsList
+    flashcards/ FlashcardsView FlashToolbar FlashCard FlashDialog FlashFace flashFilters.js
+    progress/   ProgressView BandCard MilestoneRow DataSection
+    settings/   SettingsDrawer ConnectionsView CatalogView EditorView ModelPicker BackupSection useProviderSettings.js
+    palette/    CommandPalette usePaletteItems.js
+    hud/        TaskHud
+```
+
+Reglas: la capa `ui/` no importa nada de `legacy/`; consume solo `src/ai/*`, `src/logic/*`, datos de `src/*.js` y sus propios módulos. `learningController.js` y los hooks existentes se conservan (tests de lógica), corregidos según `spec.md §4` e INV §22.1. `scripts/audit-lines.mjs` se extiende para auditar `src/ui/**` y `src/logic/guidance.js`.
+
+### G.3 Dependencias nuevas
+Runtime: `lucide-react`, `@fontsource-variable/geist`, `@fontsource-variable/geist-mono`, `@fontsource-variable/newsreader` (fuentes locales, compatibles con la CSP `font-src 'self' data:`). Desarrollo: `@axe-core/playwright`. Prism y Mermaid ya existen.
+
+### G.4 Cambios en `index.html`
+- `<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">`
+- `<meta name="theme-color" content="#100E0C">` (reemplaza `#0b0d13`) y `public/manifest.json` (`background_color`/`theme_color`) al mismo valor.
+- Favicon SVG nuevo: cuadrado redondeado 64 (`rx 14`) en `#100E0C` con tres nodos conectados en `#EEECE7` y el nodo final en `#909CF5` (glifo de marca de la sidebar; sin el círculo cian legacy).
+- `<title>Learning Workspace</title>`.
+- CSP sin cambios (Mermaid y Prism se empaquetan; fuentes vía `font-src 'self'`).
+
+---
+
+## Sección H — Contrato de implementación y verificación
+
+### H.1 Checklist para implementar (se verifica por vista)
+1. Tokens: ningún color, tamaño de fuente, radio, sombra, duración o z-index literal fuera de `tokens.css`. Permitidos: 0, 1px/2px de hairlines y trazos, y `calc()` construidos sobre tokens (p. ej. salidas `calc(var(--dur-2) * .7)`, scrims por capa `calc(var(--z-drawer) - 1)`).
+2. Geometría: alturas fijas de D.8/D.9 (cards 140, nodos 236×88, filas, barras); budgets de C.2, C.7, C.11, C.12 verificados con capturas a 1440×900, 1024×768 y 390×844.
+3. Estados: cada surface de E.1–E.10 renderizable con fixtures (`tests/fixtures/*`) y visible en capturas.
+4. Overlays: D.3 (capa, rol, foco inicial, cierre, retorno de foco, scroll-lock, un modal a la vez).
+5. Botones: 6 estados (D.4) y `min-width` reservados; ningún label desborda (`scrollWidth ≤ clientWidth`).
+6. Teclado: todos los atajos de D.2 con su ámbito; Esc según prioridad; Tab order de F.3.
+7. Accesibilidad: F.1–F.4; `axe-core` sin violaciones *serious/critical* en mapa, sesión (4 etapas), flashcards, progreso y ajustes.
+8. Anti-slop: cero emoji; iris solo en interacción; categorías solo como punto/trazo; sin cajas anidadas con borde; ninguna barra con `space-between` a ancho completo.
+9. Código: 0 violaciones de `scripts/audit-lines.mjs` (incluye `src/ui/**`); `npm run test:logic` y `npm run build` en verde.
+
+### H.2 Verificación automatizada (Playwright, reescritura de `tests/e2e`)
+
+| Suite | Casos mínimos |
+|:--|:--|
+| `workspace.spec.js` | carga `/react` y `/rails`; cambio de grafo; foco filtra lista/ruta; Lista ↔ Grafo; ⌘K abre paleta y abre una card; rutas profundas y back/forward |
+| `study.spec.js` | abrir card → 01 Leer con secciones; cambiar etapas (clic y 1–4); Zen + Esc (sale de Zen, luego cierra); "Volver a"; deep dive abre/cierra; comparación de código visible en `state_updates` |
+| `coach.spec.js` | escribir borrador (autosave), revisión en vivo con gateway simulado (route mock de `/api/ai/live-review/stream`), superficie y foco en el riel |
+| `evaluate.spec.js` | evaluación con stream simulado: loader → preview → resultado; cancelar; error + reintentar; background (cerrar la sesión mientras corre → HUD) |
+| `flashcards.spec.js` | filtros, volteo con Espacio, práctica 1–4 con racha, "Practicar en Parafrasear" abre 03 |
+| `mobile.spec.js` (390×844) | dock, hoja de foco, sesión con slot inferior, sin desbordes horizontales (`document.documentElement.scrollWidth ≤ 390`) |
+| `a11y.spec.js` | axe en las vistas de H.1.7; foco visible tras Tab; retorno de foco al cerrar overlays |
+
+Suites adicionales: `backup.spec.js` (exportar descarga un JSON válido; importar con confirmación reemplaza datos; archivo inválido muestra el aviso), `hud.spec.js` (tarea en background visible en HUD, pestañas y nodo; cancelar; error persistente), `undo.spec.js` (eliminar conexión → fila de deshacer con foco → restaura; "Retomar en Parafrasear" → deshacer), `keyboard.spec.js` (prioridad de Esc de D.2 con paleta + deep dive + Zen abiertos en orden; roving del grafo; F6 a toasts), y `mobile.spec.js` también a **320×640**.
+
+**Cómo forzar estados (fixtures deterministas)**:
+- *Datos*: `page.addInitScript` siembra IndexedDB (`learning-graph-ai` v3) desde `tests/fixtures/hydrated-state.json`, `workspace-boundary.json` (12 intentos, 120/120, 24 iteraciones) y `workspace-degraded.json`, antes de cargar la app.
+- *Carga*: `page.route('**/api/ai/**', …)` que responde el SSE en trozos con demoras controladas (`await` entre eventos) para capturar loader/preview/esqueletos.
+- *Error de IA*: la ruta responde 502 o un evento `error` SSE.
+- *Error de IndexedDB*: `addInitScript` que reemplaza `indexedDB.open` por una implementación que dispara `onerror`.
+- *Sin TTS / dictado*: `addInitScript` que elimina `window.speechSynthesis` y `SpeechRecognition`.
+
+**Más estados forzables**: *carga lenta del progreso* → `addInitScript` que envuelve `IDBObjectStore.prototype.getAll` para resolver tras una promesa controlada por el test (`window.__releaseHydration()`); *falla de Mermaid* → `page.route('**/mermaid*.js', r => r.abort())` o fixture de card con `mermaid` sintácticamente inválido.
+
+**Medición de CLS**: cada suite visual registra un `PerformanceObserver({type:'layout-shift', buffered:true})` y afirma `sum(value) < 0.1` desde que aparece el loader hasta que el resultado está completo (y en la hidratación del mapa).
+
+Las suites usan mocks de red (`page.route`) para el gateway: no dependen de un proveedor real. `playwright.config.js` usa `webServer: { command: 'npm run build && npx vite preview --port 4173', port: 4173 }` en lugar del `globalSetup` con rutas de Windows.
+
+### H.3 Verificación visual
+Capturas en 1440×900, 1024×768, 390×844 y 320×640 de: mapa (lista y grafo), sesión en cada etapa con datos poblados, **cada estado de E.1–E.10** (vacío/cargando/poblado/límite/error) en desktop y los de las superficies móviles en 390 y 320, flashcards (grid y diálogo frente/dorso), progreso, ajustes (3 vistas), paleta, HUD. Cada captura se revisa con las 4 pasadas de `docs/DESIGN_CRITERIA.md` y debe obtener ≥ 9.0.
+
+*Estado del documento: Fases 0–3 selladas (ver `design-reviews/`).*
