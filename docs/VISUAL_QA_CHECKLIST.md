@@ -1,116 +1,116 @@
-# Checklist de QA visual — Learning Workspace
+# Visual QA checklist — Learning Workspace
 
-Revisado: 2026-08-12, contra la app Vite local. La evidencia combinó capturas reales, interacción por mouse/teclado y revisión de los contratos de estado que no existen en el IndexedDB actual.
+Reviewed: 2026-08-12, against the local Vite app. The evidence combined real screenshots, mouse/keyboard interaction, and review of the state contracts that do not exist in the current IndexedDB.
 
-Estados: `Pass` = comprobado en runtime; `Finding resuelto` = se encontró, corrigió y se volvió a comprobar; `N/A verificado` = no había datos seguros para montar ese estado, pero su contrato, estilos y tests se revisaron. No quedan filas pendientes.
+Statuses: `Pass` = verified at runtime; `Finding resolved` = it was found, fixed, and re-verified; `N/A verified` = there was no safe data to mount that state, but its contract, styles, and tests were reviewed. No rows remain pending.
 
-## Evidencia transversal
+## Cross-cutting evidence
 
-- Breakpoints capturados: `1440×900`, `1280×800`, `1024×768`, `768×900` y `390×844`.
-- En escritorio el documento conserva el viewport (`scrollWidth === viewport width`, sin scroll global). En móvil hay scroll vertical de contenido, pero tras el fix `scrollWidth` quedó en `375 px` dentro de un viewport de `390 px`: sin overflow horizontal.
-- Se verificaron rutas reales: `/` redirige a `/react`; `/react`, `/rails`, `/react/card/react_mental_model` y `/react/card/js_basics` abren la superficie correspondiente.
-- Se ejecutaron `npm run build` y `npm run test:logic` tras los cambios de UI.
+- Breakpoints captured: `1440×900`, `1280×800`, `1024×768`, `768×900` and `390×844`.
+- On desktop the document preserves the viewport (`scrollWidth === viewport width`, no global scroll). On mobile there is vertical content scroll, but after the fix `scrollWidth` settled at `375 px` within a `390 px` viewport: no horizontal overflow.
+- Real routes were verified: `/` redirects to `/react`; `/react`, `/rails`, `/react/card/react_mental_model` and `/react/card/js_basics` open the corresponding surface.
+- `npm run build` and `npm run test:logic` were run after the UI changes.
 
-## Findings resueltos
+## Findings resolved
 
-| ID | Finding | Corrección | Revisión posterior |
+| ID | Finding | Fix | Follow-up review |
 | --- | --- | --- | --- |
-| V-01 | El foco inicial mostraba una etapa siguiente como columna parcialmente cortada. | `GraphTopologyView` calcula cuántas etapas completas caben y ajusta su escala/anchor de forma determinista. | Capturas a 1440, 1280 y 1024: solo se ven cards completas; el control “Próximo foco” vuelve al mismo encuadre. |
-| V-02 | El botón de cierre de la flashcard quedaba vacío porque el estilo global ocultaba el carácter `×`. | Se sustituyó por un SVG del mismo sistema de iconos. | Captura de detalle: icono visible, botón accesible y cierre operativo. |
-| V-03 | En 390 px el panel de progreso se renderizaba en fila y hacía crecer el documento a ~5.151 px de ancho. | El panel móvil ahora apila secciones, limita su ancho y delega el desplazamiento solo a sus tiras internas. | `scrollWidth` bajó de 5151 a 375 px; desapareció la barra horizontal global. |
-| V-04 | El filtro vacío de flashcards usaba un botón estirado a todo el canvas y no tenía jerarquía. | Estado vacío centrado, copy legible y acción compacta. | Captura con “Con extra dorado”: mensaje y “Ver todas” centrados y proporcionados. |
-| V-05 | Un error de coaching podía mostrarse como texto poco distinguible. | Panel de error con contraste, indicador, causa y recuperación en español. | Contrato visual y el formateador de errores se revisaron; el draft no se descarta. |
-| V-06 | Cambiar de tab podía conservar una posición de scroll intermedia. | La card resetea scroll horizontal y vertical al cambiar nodo o vista. | Se cambió Lectura → Coaching → Evaluar en runtime: cada superficie comenzó desde arriba. |
+| V-01 | The initial focus showed a next stage as a partially cut-off column. | `GraphTopologyView` computes how many complete stages fit and adjusts its scale/anchor deterministically. | Screenshots at 1440, 1280 and 1024: only complete cards are visible; the “Próximo foco” control returns to the same framing. |
+| V-02 | The flashcard close button appeared empty because the global style hid the `×` character. | It was replaced with an SVG from the same icon system. | Detail screenshot: icon visible, accessible button, working close. |
+| V-03 | At 390 px the progress panel rendered in a row and grew the document to ~5,151 px wide. | The mobile panel now stacks sections, constrains its width, and delegates scrolling only to its internal strips. | `scrollWidth` dropped from 5151 to 375 px; the global horizontal bar disappeared. |
+| V-04 | The empty flashcard filter used a button stretched across the entire canvas and had no hierarchy. | Centered empty state, legible copy, and compact action. | Screenshot with “Con extra dorado”: message and “Ver todas” centered and proportionate. |
+| V-05 | A coaching error could render as barely distinguishable text. | Error panel with contrast, indicator, cause, and Spanish recovery copy. | The visual contract and the error formatter were reviewed; the draft is not discarded. |
+| V-06 | Switching tabs could retain an intermediate scroll position. | The card resets horizontal and vertical scroll when the node or view changes. | Lectura → Coaching → Evaluar was switched at runtime: each surface started from the top. |
 
-## A. Shell de escritorio y mapa
+## A. Desktop shell and map
 
-| ID | Superficie / estado | Estado | Evidencia / resultado |
+| ID | Surface / state | Status | Evidence / result |
 | --- | --- | --- | --- |
-| A1 | Inicio con navegación cerrada | Finding resuelto | Captura 1440: mapa protagonista, command bar compacta y sin scroll global. V-01 elimina cards cortadas. |
-| A2 | Navegación abierta | Pass | Captura 1440: React/Rails, filtros, tabs y próximo desafío legibles en el rail; el canvas conserva el foco. |
-| A3 | Panel de progreso | Pass + N/A verificado | Captura 1440 de panel vacío: rail propio, milestones y bandas sin desplazar el mapa. Los estados parcial/completo/dorado dependen del progreso real; estilos y cálculo de milestones se revisaron mediante contratos existentes. |
-| A4 | Panel de IA | Pass + N/A verificado | Se comprobó estado sin conexión, catálogo cargado, búsqueda MiniMax y formulario de MiniMax. No se creó una conexión personal ni se envió una key solo para fabricar error/éxito. |
-| A5 | Cambio de grafo | Pass | React → Rails abrió `/rails`, actualizó título, categorías, ruta sugerida y contador. `/` vuelve a React como default. |
-| A6 | Cambio de modo | Pass | Grafo ↔ Flashcards probado con rail abierto/cerrado: conserva workspace y no genera scroll ni rutas inválidas. |
-| A7 | Breakpoints | Finding resuelto | 1440/1280/1024/768/390 revisados. V-03 resolvió el único overflow horizontal detectado. |
+| A1 | Start with navigation closed | Finding resolved | Screenshot at 1440: map as the protagonist, compact command bar, no global scroll. V-01 removes cut-off cards. |
+| A2 | Navigation open | Pass | Screenshot at 1440: React/Rails, filters, tabs, and next challenge legible in the rail; the canvas keeps focus. |
+| A3 | Progress panel | Pass + N/A verified | Screenshot at 1440 of the empty panel: its own rail, milestones, and bands without displacing the map. The partial/complete/gold states depend on real progress; styles and milestone calculation were reviewed through existing contracts. |
+| A4 | AI panel | Pass + N/A verified | The disconnected state, loaded catalog, MiniMax search, and MiniMax form were checked. No personal connection was created and no key was submitted just to fabricate error/success. |
+| A5 | Graph switch | Pass | React → Rails opened `/rails`, updating title, categories, suggested route, and counter. `/` returns to React as the default. |
+| A6 | Mode switch | Pass | Grafo ↔ Flashcards tested with the rail open/closed: it preserves the workspace and generates no scroll or invalid routes. |
+| A7 | Breakpoints | Finding resolved | 1440/1280/1024/768/390 reviewed. V-03 resolved the only horizontal overflow detected. |
 
-## B. Grafo topológico
+## B. Topological graph
 
-| ID | Superficie / estado | Estado | Evidencia / resultado |
+| ID | Surface / state | Status | Evidence / result |
 | --- | --- | --- | --- |
-| B1 | Ruta inicial | Finding resuelto | V-01: las primeras etapas y la siguiente visible entran completas; no hay medias cards. |
-| B2 | Navegación expandida | Pass | Rail abierto muestra tres etapas completas y la guía contextual sin solaparse. |
-| B3 | Hover y foco | Pass | Hover sobre “Modelo mental” mostró `Necesita 1 · Habilita 2`, aristas de entrada/salida de alto contraste y título completo con `<title>`. El mismo estado se conecta a `onFocus`. |
-| B4 | Estados de nodo | Pass + N/A verificado | Se capturaron pendiente, score `0/120`, seleccionado y guía de ruta. Las clases para parcial, base `100/120` y excelencia dorada están cubiertas por `getNodeVisual` y CSS; el store actual no contiene esos scores para capturarlos sin alterar datos de estudio. |
-| B5 | Controles | Pass | Zoom aumentó el ancho de nodo de 236.6 a 274.5 px y Alejar lo restauró. Pan, fit y próximo foco conservan el viewport sin salto. |
-| B6 | Mapa completo | Pass | Fit muestra el DAG entero como overview; “Próximo foco” restaura la ruta de estudio. |
-| B7 | Filtros | Pass | Aislar “Arquitectura web” dejó 19 de 101 nodos activos y actualizó el próximo desafío a Routing SPA. |
+| B1 | Initial route | Finding resolved | V-01: the first stages and the next visible one fit completely; there are no half cards. |
+| B2 | Expanded navigation | Pass | Open rail shows three complete stages and the contextual guide without overlapping. |
+| B3 | Hover and focus | Pass | Hover over “Modelo mental” showed `Necesita 1 · Habilita 2`, high-contrast input/output edges, and the full title via `<title>`. The same state is wired to `onFocus`. |
+| B4 | Node states | Pass + N/A verified | Pending, score `0/120`, selected, and route guide were captured. The classes for partial, base `100/120`, and golden excellence are covered by `getNodeVisual` and CSS; the current store contains none of those scores to capture without altering study data. |
+| B5 | Controls | Pass | Zoom increased the node width from 236.6 to 274.5 px and Alejar restored it. Pan, fit, and next focus preserve the viewport without jumping. |
+| B6 | Full map | Pass | Fit shows the entire DAG as an overview; “Próximo foco” restores the study route. |
+| B7 | Filters | Pass | Isolating “Arquitectura web” left 19 of 101 nodes active and updated the next challenge to Routing SPA. |
 
 ## C. Flashcards
 
-| ID | Superficie / estado | Estado | Evidencia / resultado |
+| ID | Surface / state | Status | Evidence / result |
 | --- | --- | --- | --- |
-| C1 | Grid | Pass + N/A verificado | Grid de tres columnas a 1280 y 1440; títulos largos truncan de forma consistente. Se capturaron cards sin intento y score bajo. Base/excelencia no existen en el store actual; sus filtros y clases están cubiertos por el selector de attempts. |
-| C2 | Filtros y aleatoria | Finding resuelto | “Elegir una al azar” marcó una única card y desplazó la grilla. “Con extra dorado” mostró V-04; “Ver todas” recupera el grid. |
-| C3 | Detalle | Finding resuelto | Frente, reverso, metadata de modelo/duración, navegación y cierre se probaron. V-02 hace visible el cierre. |
-| C4 | Traspaso a lección | Pass | “Estudiar card” desde el modal navegó a `/react/card/js_basics` y cerró la flashcard. |
+| C1 | Grid | Pass + N/A verified | Three-column grid at 1280 and 1440; long titles truncate consistently. Cards with no attempt and low score were captured. Base/excellence do not exist in the current store; their filters and classes are covered by the attempts selector. |
+| C2 | Filters and random pick | Finding resolved | “Elegir una al azar” marked a single card and scrolled the grid. “Con extra dorado” showed V-04; “Ver todas” recovers the grid. |
+| C3 | Detail | Finding resolved | Front, back, model/duration metadata, navigation, and close were tested. V-02 makes the close visible. |
+| C4 | Handoff to lesson | Pass | “Estudiar card” from the modal navigated to `/react/card/js_basics` and closed the flashcard. |
 
-## D. Card: lectura y navegación
+## D. Card: reading and navigation
 
-| ID | Superficie / estado | Estado | Evidencia / resultado |
+| ID | Surface / state | Status | Evidence / result |
 | --- | --- | --- | --- |
-| D1 | Entrada / salida | Pass | Nodo → ruta de card; cierre → `/react`; atrás restaura el mapa. La card usa el viewport completo sin scroll del documento. |
-| D2 | Header | Pass + N/A verificado | Se capturaron pending y score 0. El header comparte tono y estructura con los estados de mastery/extra definidos en `getScoreView`; no se creó una evaluación artificial. |
-| D3 | Tabs | Finding resuelto | Lectura, Coaching y Evaluar se probaron después de scroll; V-06 garantiza inicio de superficie en cada cambio. |
-| D4 | Lectura larga | Pass | Captura de card real con summary, explicación fragmentada, labels y acciones TTS por sección. Code/diagramas siguen el mismo renderer de contenido; no se detectó corte horizontal. |
-| D5 | TTS | N/A verificado | Controles idle, replay, anterior/siguiente y velocidad son accesibles en header/secciones. La reproducción literal requiere una voz del navegador disponible en el dispositivo, por lo que no se forzó audio durante auditoría visual. |
-| D6 | Tooltips / chunks | Pass | Hover de chunk activó foco global: texto del chunk blanco y entorno atenuado, sin ocultar código. El efecto se restringe al contenido de la vista. |
-| D7 | Scroll / responsive | Pass | Desktop mantiene `body` con overflow oculto y la card usa su propio scroller. Móvil no presenta ancho excedido ni doble barra global. |
+| D1 | Entry / exit | Pass | Node → card route; close → `/react`; back restores the map. The card uses the full viewport with no document scroll. |
+| D2 | Header | Pass + N/A verified | Pending and score 0 were captured. The header shares tone and structure with the mastery/extra states defined in `getScoreView`; no artificial evaluation was created. |
+| D3 | Tabs | Finding resolved | Lectura, Coaching, and Evaluar were tested after scrolling; V-06 guarantees each surface starts at the top on every change. |
+| D4 | Long reading | Pass | Screenshot of a real card with summary, chunked explanation, labels, and per-section TTS actions. Code/diagrams follow the same content renderer; no horizontal cut was detected. |
+| D5 | TTS | N/A verified | Idle, replay, previous/next, and speed controls are accessible in the header/sections. Literal playback requires a browser voice available on the device, so audio was not forced during the visual audit. |
+| D6 | Tooltips / chunks | Pass | Chunk hover activated global focus: chunk text in white and surroundings dimmed, without hiding code. The effect is restricted to the view's content. |
+| D7 | Scroll / responsive | Pass | Desktop keeps `body` overflow hidden and the card uses its own scroller. Mobile shows no excess width or double global bar. |
 
 ## E. Coaching
 
-| ID | Superficie / estado | Estado | Evidencia / resultado |
+| ID | Surface / state | Status | Evidence / result |
 | --- | --- | --- | --- |
-| E1 | Vacío | Pass | Card sin borrador: instrucción clara y sin skeleton ni request automática. |
-| E2 | Editor | Pass | Editor expandido sin scrollbar interior; 48 caracteres y el contador se mostraron sin mover el scroll de la card. |
-| E3 | Debounce | Pass | Tras escribir se mostró PAUSA, anillo, `5s`, `Ctrl/Cmd + ↵` y `Esc`. Esc canceló la espera sin cerrar la card. |
-| E4 | Streaming | N/A verificado | El parser SSE y los estados connecting/processing/scoring/coverage/hint se revisaron contra `liveReviewStream` y `LiveRequestFeedback`. No se lanzó una request de proveedor solo para producir tokens durante la auditoría. |
-| E5 | Resultado | N/A verificado | Escalas 0–120, cobertura y extra dorado comparten `buildLiveReviewState`/`getScoreView`. No había un live review persistido para montar este estado sin alterar la sesión. |
-| E6 | Error | Finding resuelto | V-05: mensajes de red/5xx se traducen a recuperación accionable y el campo no se limpia. |
-| E7 | Historial / chat | N/A verificado | El store conserva iteraciones inmutables por hash y el componente deja editable solo la actual; no había historial de coaching en el store de auditoría para una captura fiel. |
+| E1 | Empty | Pass | Card without a draft: clear instruction, no skeleton, no automatic request. |
+| E2 | Editor | Pass | Editor expanded without an interior scrollbar; 48 characters and the counter were shown without moving the card's scroll. |
+| E3 | Debounce | Pass | After typing, PAUSA, ring, `5s`, `Ctrl/Cmd + ↵` and `Esc` were shown. Esc canceled the wait without closing the card. |
+| E4 | Streaming | N/A verified | The SSE parser and the connecting/processing/scoring/coverage/hint states were reviewed against `liveReviewStream` and `LiveRequestFeedback`. No provider request was fired just to produce tokens during the audit. |
+| E5 | Result | N/A verified | The 0–120 scales, coverage, and golden extra share `buildLiveReviewState`/`getScoreView`. There was no persisted live review to mount this state without altering the session. |
+| E6 | Error | Finding resolved | V-05: network/5xx messages translate into actionable recovery and the field is not cleared. |
+| E7 | History / chat | N/A verified | The store keeps immutable iterations per hash and the component leaves only the current one editable; there was no coaching history in the audited store for a faithful screenshot. |
 
-## F. Evaluación completa
+## F. Full evaluation
 
-| ID | Superficie / estado | Estado | Evidencia / resultado |
+| ID | Surface / state | Status | Evidence / result |
 | --- | --- | --- | --- |
-| F1 | Vacío / borrador | Pass | Se capturaron card sin evaluación y borrador corto; el borrador existente mostró conteo y CTA de evaluación. |
-| F2 | Streaming | N/A verificado | Skeleton, secciones SSE y cancelación están enlazados al mismo cliente que coaching. No se iniciaron evaluaciones facturables de prueba. |
-| F3 | Resultado | Pass + N/A verificado | Captura de resultado real `0/120`, score canónico, umbral 100 y carril de excelencia hasta 120. Los estados 100 y >100 no existen localmente; cálculo y clases se revisaron. |
-| F4 | Rúbricas | Pass | Expandir Precisión mostró detalle sin aumentar la altura de la rúbrica de la columna vecina. |
-| F5 | Historial | Pass + N/A verificado | Línea de progreso real, intento, fecha, modelo `deepseek/deepseek-v4-flash` y duración `38.0 s` visibles. No había múltiples intentos/stale para navegar sin fabricar datos. |
-| F6 | Error / retry | Finding resuelto | V-05 cubre copia recuperable y conservación de draft. Los aborts se tratan como cancelación y no como error. |
+| F1 | Empty / draft | Pass | A card without evaluation and a short draft were captured; the existing draft showed count and evaluation CTA. |
+| F2 | Streaming | N/A verified | Skeleton, SSE sections, and cancellation are wired to the same client as coaching. No billable test evaluations were started. |
+| F3 | Result | Pass + N/A verified | Screenshot of a real `0/120` result, canonical score, threshold 100, and excellence lane up to 120. The 100 and >100 states do not exist locally; calculation and classes were reviewed. |
+| F4 | Rubrics | Pass | Expanding Precisión showed detail without increasing the height of the neighboring column's rubric. |
+| F5 | History | Pass + N/A verified | Real progress line, attempt, date, model `deepseek/deepseek-v4-flash`, and duration `38.0 s` visible. There were no multiple/stale attempts to navigate without fabricating data. |
+| F6 | Error / retry | Finding resolved | V-05 covers recoverable copy and draft preservation. Aborts are treated as cancellation, not as an error. |
 
-## G. Provider settings y accesibilidad transversal
+## G. Provider settings and cross-cutting accessibility
 
-| ID | Superficie / estado | Estado | Evidencia / resultado |
+| ID | Surface / state | Status | Evidence / result |
 | --- | --- | --- | --- |
-| G1 | Catálogo | Pass + N/A verificado | Catálogo Models.dev cargó 180 providers; búsqueda MiniMax filtró a 4 e informó protocolos/adaptadores. La UI de carga/error/fallback está cubierta por el estado de catálogo, sin inducir fallo de red. |
-| G2 | Formulario | Pass + N/A verificado | Se revisaron Endpoint compatible, MiniMax directo y aviso de modelos locales solo desktop. OpenRouter/custom reutilizan el mismo formulario de endpoint/modelo. |
-| G3 | Prueba de modelo | N/A verificado | Sin key en memoria el botón se mantiene deshabilitado, evitando requests inválidas. Los resultados del gateway se mapean a estado de prueba y error; no se expusieron credenciales. |
-| G4 | Persistencia | Pass | `test:logic` cubre migración v3, múltiples conexiones y selección activa. La UI declara explícitamente que la key solo vive en la pestaña. |
-| G5 | Teclado | Pass | DOM snapshot confirmó nombres accesibles; Escape cancela debounce y no cierra card durante esa prioridad. Dialogs, navegación y controles usan labels explícitos. |
-| G6 | Movimiento | Pass | `prefers-reduced-motion` desactiva scroll suave dentro de mapa/card; estados no dependen de animación para comunicar resultado. |
-| G7 | Tipografía / contraste | Pass | Scan de CSS: ningún `font-size` menor a 10 px; solo 9 tokens operativos quedan entre 10–10.5 px y el texto de lectura usa 11 px o más. Capturas confirmaron contraste de copy, controles y errores. |
+| G1 | Catalog | Pass + N/A verified | The Models.dev catalog loaded 180 providers; the MiniMax search filtered down to 4 and reported protocols/adapters. The loading/error/fallback UI is covered by the catalog state, without inducing a network failure. |
+| G2 | Form | Pass + N/A verified | Endpoint compatible, MiniMax directo, and the desktop-only local-models notice were reviewed. OpenRouter/custom reuse the same endpoint/model form. |
+| G3 | Model test | N/A verified | With no key in memory the button stays disabled, avoiding invalid requests. Gateway results map to test and error states; no credentials were exposed. |
+| G4 | Persistence | Pass | `test:logic` covers the v3 migration, multiple connections, and active selection. The UI explicitly states that the key only lives in the tab. |
+| G5 | Keyboard | Pass | A DOM snapshot confirmed accessible names; Escape cancels the debounce and does not close the card during that priority. Dialogs, navigation, and controls use explicit labels. |
+| G6 | Motion | Pass | `prefers-reduced-motion` disables smooth scroll inside map/card; states do not depend on animation to communicate the result. |
+| G7 | Typography / contrast | Pass | CSS scan: no `font-size` below 10 px; only 9 operational tokens sit between 10–10.5 px and reading text uses 11 px or more. Screenshots confirmed contrast of copy, controls, and errors. |
 
-## Resultado del detector de UI
+## UI detector result
 
-El detector de Impeccable se ejecutó sobre los targets modificados. No reportó errores. Sus advertencias se revisaron de forma explícita:
+Impeccable's detector ran over the modified targets. It reported no errors. Its warnings were explicitly reviewed:
 
-- `bounce-easing` es un falso positivo: `debounce-shortcut-confirm` usa `cubic-bezier(.16, 1, .3, 1)`, una desaceleración suave, no una animación de rebote.
-- `layout-transition` también es un falso positivo: corresponde a `stroke-width` de un SVG, no a `width`, `height`, `margin` o `padding` de layout.
-- Las tres advertencias de `Inter` pertenecen a la tipografía de UI ya adoptada por el producto; sustituirla requeriría incorporar y licenciar una familia nueva para todo el sistema, no un cambio aislado de esta auditoría.
-- Los avisos de color, radios y tamaños fuera de `DESIGN.md` reflejan la paleta/escala extensa ya presente en el producto. No son regresiones introducidas en esta pasada; quedan como una futura consolidación de tokens, separada de la QA visual funcional para no arriesgar contraste o jerarquía aprobados.
+- `bounce-easing` is a false positive: `debounce-shortcut-confirm` uses `cubic-bezier(.16, 1, .3, 1)`, a soft deceleration, not a bounce animation.
+- `layout-transition` is also a false positive: it corresponds to an SVG's `stroke-width`, not to a layout `width`, `height`, `margin`, or `padding`.
+- The three `Inter` warnings belong to the UI typography already adopted by the product; replacing it would require incorporating and licensing a new family for the whole system, not an isolated change from this audit.
+- The color, radii, and size notices outside `DESIGN.md` reflect the extensive palette/scale already present in the product. They are not regressions introduced in this pass; they remain as a future token consolidation, separate from the functional visual QA, to avoid risking approved contrast or hierarchy.
 
-## Cierre
+## Closing
 
-La checklist está cerrada: no quedan `Pendiente` ni findings sin una segunda comprobación. Las entradas `N/A verificado` no son deuda funcional: documentan estados que requieren una evaluación, historial o credencial reales y que no se fabricaron para preservar los datos y el presupuesto del usuario.
+The checklist is closed: no `Pending` entries or findings remain without a second verification. The `N/A verified` entries are not functional debt: they document states that require a real evaluation, history, or credentials, and that were not fabricated in order to preserve the user's data and budget.

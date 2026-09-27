@@ -1,81 +1,81 @@
-# Deploy público: Vercel + BYOK
+# Public deploy: Vercel + BYOK
 
-El modo recomendado ejecuta la SPA y el gateway Node en el mismo deployment de
-Vercel:
+The recommended mode runs the SPA and the Node gateway on the same Vercel
+deployment:
 
 ```text
-Navegador --> Vercel (React/Vite + /api/ai) --> provider OpenAI-compatible
-              sin API keys persistidas
+Browser --> Vercel (React/Vite + /api/ai) --> OpenAI-compatible provider
+            no persisted API keys
 ```
 
-Las funciones en `api/ai/**` reutilizan el gateway de `server/`. Vercel permite
-streams de hasta cinco minutos en esta configuración. El mismo origen se acepta
-automáticamente; no hace falta configurar CORS para la propia URL del deployment.
+The functions in `api/ai/**` reuse the gateway from `server/`. Vercel allows
+streams of up to five minutes in this configuration. Same origin is accepted
+automatically; there is no need to configure CORS for the deployment's own URL.
 
-## 1. Desplegar en Vercel
+## 1. Deploy to Vercel
 
-El repositorio ya incluye `vercel.json`. Desde la raíz, con la sesión de Vercel
-iniciada:
+The repository already includes `vercel.json`. From the root, with the Vercel
+session signed in:
 
 ```bash
 npx vercel --prod
 ```
 
-No agregues una API key de proveedor a Vercel para el modo BYOK. Si querés un
-provider por defecto para uso interno, definí `MINIMAX_API_KEY` o
-`FREELLMAPI_*` solo como variables de entorno del servidor, nunca como
-`VITE_*` ni en el repositorio.
+Do not add a provider API key to Vercel for BYOK mode. If you want a default
+provider for internal use, define `MINIMAX_API_KEY` or `FREELLMAPI_*` only as
+server environment variables, never as `VITE_*` or in the repository.
 
-El health check del mismo deployment es:
+The health check for this deployment is:
 
 ```text
-https://TU-PROYECTO.vercel.app/api/ai/status
+https://know-graph.vercel.app/api/ai/status
 ```
 
-Un `200` confirma que el gateway vive. `gateway.configured: false` es normal
-cuando no definiste un provider por defecto: cada persona provee su perfil desde
-Configuración de IA.
+A `200` confirms the gateway is alive. `gateway.configured: false` is normal
+when you have not defined a default provider: each person provides their
+profile from Configuración de IA.
 
-## 2. Gateway externo (opcional)
+## 2. External gateway (optional)
 
-Usá Render u otro proceso Node si necesitás límites de ejecución distintos o
-querés aislar el gateway. En ese caso configurá en Vercel:
+Use Render or another Node process if you need different execution limits or
+want to isolate the gateway. In that case configure in Vercel:
 
 ```text
 VITE_AI_API_URL=https://TU-GATEWAY.example.com
 ```
 
-Y en el gateway externo agregá una allowlist concreta, por ejemplo:
+And on the external gateway add a concrete allowlist, for example:
 
 ```text
-CORS_ALLOWED_ORIGINS=https://TU-PROYECTO.vercel.app
+CORS_ALLOWED_ORIGINS=https://know-graph.vercel.app
 ```
 
-Para previews puntuales podés agregar más orígenes separados por coma. Nunca
-uses `*`: el gateway acepta una API key por request.
+For one-off previews you can add more comma-separated origins. Never use
+`*`: the gateway accepts one API key per request.
 
-## 3. Configurar un provider desde la aplicacion
+## 3. Configure a provider from the application
 
-Abrí el botón **IA** de la barra superior. El directorio permite buscar providers conocidos y muestra cuáles son conectables desde este gateway. Las filas **Compatible** usan `POST /chat/completions` y streaming SSE; las filas **Requiere adaptador** se muestran para descubrimiento, pero no aceptan una conexión hasta que el gateway implemente su protocolo nativo. Para MiniMax elegí el preset, pegá tu API key y seleccioná el modelo.
+Open the **IA** button in the top bar. The directory lets you search known providers and shows which ones are connectable from this gateway. **Compatible** rows use `POST /chat/completions` and SSE streaming; **Requiere adaptador** rows are shown for discovery, but do not accept a connection until the gateway implements their native protocol. For MiniMax, choose the preset, paste your API key, and select the model.
 
-- En navegador, el perfil queda en `sessionStorage`: se borra al cerrar la pestana.
-- En Electron, el perfil se cifra con el almacenamiento seguro del sistema operativo.
-- La API key viaja solo al gateway en la request que la necesita. El gateway no la escribe a disco ni la incluye en respuestas, errores o logs.
-- En produccion el gateway rechaza endpoints no HTTPS, locales o de redes privadas. Para desarrollo local explicito puede usarse `ALLOW_PRIVATE_PROVIDER_URLS=true`.
+- In the browser, the profile lives in `sessionStorage`: it is deleted when the tab closes.
+- In Electron, the profile is encrypted with the operating system's secure storage.
+- The API key travels only to the gateway, in the request that needs it. The gateway does not write it to disk or include it in responses, errors, or logs.
+- In production the gateway rejects non-HTTPS, local, or private-network endpoints. For explicit local development, `ALLOW_PRIVATE_PROVIDER_URLS=true` can be used.
 
-Usá **Probar modelo** antes de guardar. La prueba hace una inferencia mínima
-contra `POST /chat/completions`; así valida la URL, la key y el slug reales. El
-catálogo es una operación separada y un provider puede usarse aun sin `/models`.
+Use **Probar modelo** before saving. The test makes a minimal inference
+against `POST /chat/completions`; this way it validates the real URL, key, and
+slug. The catalog is a separate operation and a provider can be used even
+without `/models`.
 
-## Checklist final
+## Final checklist
 
-- [ ] `npm run check` pasa localmente.
-- [ ] El deployment de Vercel responde `200` en `/api/ai/status`.
-- [ ] Si usás gateway externo, `CORS_ALLOWED_ORIGINS` contiene el dominio de Vercel.
-- [ ] Si usás gateway externo, `VITE_AI_API_URL` apunta a su URL HTTPS y se redeployó Vercel.
-- [ ] Se verifico una evaluacion real con un perfil BYOK desde la UI.
-- [ ] No hay keys en Git, archivos `.env`, `VITE_*` ni logs compartidos.
+- [ ] `npm run check` passes locally.
+- [ ] The Vercel deployment answers `200` on `/api/ai/status`.
+- [ ] If you use an external gateway, `CORS_ALLOWED_ORIGINS` contains the Vercel domain.
+- [ ] If you use an external gateway, `VITE_AI_API_URL` points to its HTTPS URL and Vercel was redeployed.
+- [ ] A real evaluation was verified with a BYOK profile from the UI.
+- [ ] There are no keys in Git, `.env` files, `VITE_*`, or shared logs.
 
-## Limite de este modo publico
+## Limits of this public mode
 
-BYOK evita que la app comparta una key de proveedor, pero el gateway sigue siendo un proxy publico. Para un lanzamiento abierto agrega autenticacion, rate limiting por usuario/IP y limites de tamano/costo antes de permitir trafico anonimo.
+BYOK prevents the app from sharing a provider key, but the gateway remains a public proxy. For an open launch, add authentication, per-user/IP rate limiting, and size/cost limits before allowing anonymous traffic.

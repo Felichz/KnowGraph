@@ -8,61 +8,61 @@ web
 
 ## Users
 
-El usuario principal es un desarrollador web con experiencia práctica que se prepara para entrevistas senior o tech lead, especialmente en React y Rails. El producto nació para el flujo personal de Félix y debe poder servir después a otros desarrolladores con un nivel y una necesidad similares.
+The primary user is a web developer with hands-on experience preparing for senior or tech lead interviews, especially in React and Rails. The product was born from Félix's personal workflow and must be able to serve other developers with a similar level and similar need afterwards.
 
 ## Product Purpose
 
-Learning Workspace convierte una preparación amplia y desordenada para entrevistas en una ruta de estudio activa. Permite recuperar y consolidar un modelo mental de conceptos técnicos, practicar cómo explicarlos con palabras propias y llegar con seguridad a conversaciones de arquitectura, implementación y trade-offs.
+Learning Workspace turns broad, scattered interview preparation into an active study route. It lets you recover and consolidate a mental model of technical concepts, practice explaining them in your own words, and walk into architecture, implementation, and trade-off conversations with confidence.
 
-El éxito no es solo "leer" una card: es poder explicar el concepto con cobertura suficiente, detectar qué falta y avanzar con una señal de dominio comprensible.
+Success is not just "reading" a card: it is being able to explain the concept with sufficient coverage, detect what is missing, and move forward with an understandable mastery signal.
 
 ## Positioning
 
-El producto combina un grafo explícito de dependencias conceptuales con coaching iterativo basado en parafraseo. Cada nodo define el surface conceptual que hace falta cubrir; un evaluador LLM da feedback priorizado, puntaje y próximos pasos, sin convertir los prerrequisitos en bloqueos rígidos.
+The product combines an explicit graph of conceptual dependencies with iterative paraphrase-based coaching. Each node defines the conceptual surface that needs to be covered; an LLM evaluator provides prioritized feedback, a score, and next steps, without turning prerequisites into hard blockers.
 
-El umbral de 100/120 representa cobertura completa de lo esencial. El tramo de 101 a 120 representa profundidad o excelencia opcional: es una oportunidad de ir más allá, no una condición para poder continuar.
+The 100/120 threshold represents complete coverage of the essential material. The 101–120 range represents optional depth or excellence: it is an opportunity to go further, not a requirement to continue.
 
 ## Operating Context
 
-La persona estudia por sesiones, usualmente cerca de una entrevista o mientras refresca experiencia profesional acumulada. Alterna entre un mapa de conceptos, cards didácticas, práctica escrita con un coach, evaluaciones completas, historial de intentos y flashcards.
+The person studies in sessions, usually close to an interview or while refreshing accumulated professional experience. They alternate between a concept map, didactic cards, written practice with a coach, full evaluations, attempt history, and flashcards.
 
-El producto incluye dos mapas principales: React para entrevistas frontend senior/tech lead y Rails para entrevistas fullstack/backend. Puede crecer para incluir otros dominios de aprendizaje.
+The product includes two main maps: React for senior/tech lead frontend interviews and Rails for fullstack/backend interviews. It can grow to include other learning domains.
 
 ## Capabilities and Constraints
 
-- Grafos independientes con nodos, categorías, dependencias, prioridades, milestones y rutas sugeridas.
-- Cards autocontenidas con explicación, ejemplos, código, pasos, trade-offs, errores frecuentes, diagramas y fuentes.
-- Progreso local por grafo; las dependencias guían el aprendizaje pero no bloquean completar un nodo.
-- Coaching y evaluación por LLM a través de un gateway local: MiniMax es el proveedor principal y FreeLLMAPI funciona como fallback.
-- Persistencia local de borradores e intentos en IndexedDB y del progreso de mapa en almacenamiento local.
-- Flashcards con el parafraseo evaluado del usuario y su score representativo.
-- Lectura por voz mediante SpeechSynthesis del sistema.
-- La experiencia debe funcionar en web y como aplicación Electron para escritorio; el runtime desktop conserva la misma aplicación React, inicia el gateway local cuando hace falta y no empaqueta claves.
-- Es una aplicación local-first. No debe exponer claves ni el gateway de IA al navegador ni asumir una cuenta o backend remoto propio.
+- Independent graphs with nodes, categories, dependencies, priorities, milestones, and suggested routes.
+- Self-contained cards with explanation, examples, code, steps, trade-offs, common mistakes, diagrams, and sources.
+- Local progress per graph; dependencies guide learning but do not block completing a node.
+- LLM coaching and evaluation through a local gateway: MiniMax is the primary provider and FreeLLMAPI works as fallback.
+- Local persistence of drafts and attempts in IndexedDB and of map progress in local storage.
+- Flashcards with the user's evaluated paraphrase and its representative score.
+- Read-aloud via the system's SpeechSynthesis.
+- The experience must work on the web and as an Electron desktop application; the desktop runtime keeps the same React app, starts the local gateway when needed, and does not bundle keys.
+- It is a local-first application. It must not expose keys or the AI gateway to the browser, nor assume its own account or remote backend.
 
 ## Brand Commitments
 
-El nombre de producto es Learning Workspace. La voz debe ser directa, didáctica y técnicamente precisa: trata al usuario como un desarrollador capaz, evita simplificaciones vacías y explica el porqué, los límites y los trade-offs cuando aportan comprensión.
+The product name is Learning Workspace. The voice must be direct, didactic, and technically precise: it treats the user as a capable developer, avoids empty simplifications, and explains the why, the limits, and the trade-offs when they add understanding.
 
-La interfaz es una herramienta de trabajo y aprendizaje sostenido, no una experiencia de marketing ni un quiz superficial. El puntaje de excelencia debe sentirse especial, pero la cobertura completa debe comunicar una meta alcanzable y suficiente.
+The interface is a tool for sustained work and learning, not a marketing experience or a superficial quiz. The excellence score should feel special, but full coverage must communicate an achievable and sufficient goal.
 
 ## Evidence on Hand
 
-- Los grafos, las cards, preguntas, fuentes, relaciones y contenido de estudio viven en `src/`.
-- La auditoría de React valida contenido y relaciones con `npm run audit:react`.
-- El gateway LLM, sus prompts, validación y streaming viven en `server/`.
-- La guía técnica de la aplicación desktop está en `docs/DESKTOP_APP.md`.
-- El plan de la experiencia LLM está en `docs/LLM_LEARNING_EXPERIENCE_PLAN.md`.
-- No hay investigación de usuarios externa, métricas públicas, testimonios ni claims comerciales que deban inventarse.
+- The graphs, cards, questions, sources, relationships, and study content live in `src/`.
+- The React audit validates content and relationships with `npm run audit:react`.
+- The LLM gateway, its prompts, validation, and streaming live in `server/`.
+- The desktop app technical guide is in `docs/DESKTOP_APP.md`.
+- The LLM experience plan is in `docs/LLM_LEARNING_EXPERIENCE_PLAN.md`.
+- There is no external user research, public metrics, testimonials, or commercial claims that need to be invented.
 
 ## Product Principles
 
-1. Aprender en orden conceptual sin perder autonomía sobre por dónde empezar.
-2. Hacer visible qué falta para poder explicarlo, no solo si una respuesta parece correcta.
-3. Favorecer práctica activa, iteración y recuperación de memoria por encima del consumo pasivo.
-4. Distinguir cobertura necesaria de profundidad opcional para evitar perfeccionismo que frene el avance.
-5. Mantener el control y los datos de aprendizaje en local mientras se integra IA de forma segura.
+1. Learn in conceptual order without losing autonomy over where to start.
+2. Make visible what is missing in order to explain it, not just whether an answer looks correct.
+3. Favor active practice, iteration, and memory retrieval over passive consumption.
+4. Distinguish required coverage from optional depth to avoid perfectionism that stalls progress.
+5. Keep control and learning data local while integrating AI safely.
 
 ## Accessibility & Inclusion
 
-La interfaz debe ser legible en sesiones largas, usable con teclado y compatible con lectores de pantalla. Los controles de navegación, evaluación, streaming y lectura por voz deben comunicar su estado sin depender únicamente del color o de animaciones. La versión desktop no sustituye los fundamentos de accesibilidad de la versión web.
+The interface must be legible in long sessions, usable with the keyboard, and compatible with screen readers. Navigation, evaluation, streaming, and read-aloud controls must communicate their state without relying solely on color or animations. The desktop version does not replace the accessibility foundations of the web version.

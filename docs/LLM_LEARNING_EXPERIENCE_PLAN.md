@@ -1,22 +1,22 @@
-# Plan de integración LLM: parafraseo, tutoría y flashcards
+# LLM integration plan: paraphrase, tutoring, and flashcards
 
-> Estado: plan de diseño + bitácora de implementación de v1.
+> Status: design plan + v1 implementation log.
 >
-> Fecha: 2026-08-06.
+> Date: 2026-08-06.
 
-## 1. Objetivo
+## 1. Goal
 
-Reemplazar el quiz de opciones múltiples por una experiencia de recuperación activa con menos fricción:
+Replace the multiple-choice quiz with a lower-friction active recall experience:
 
-1. El usuario estudia una card.
-2. Escribe con sus propias palabras qué entendió.
-3. Un LLM evalúa precisión, razonamiento, ejemplos y trade-offs contra el contenido de la card.
-4. La UI muestra un puntaje explicable, fortalezas, vacíos, errores conceptuales y una consigna concreta para reintentar.
-5. Cada intento queda guardado localmente y puede revisarse después.
-6. Una vista de flashcards permite repasar el último parafraseo evaluado de cada nodo.
-7. (v2) El usuario puede preguntar dudas sobre una card con búsqueda web y citas verificables.
+1. The user studies a card.
+2. They write in their own words what they understood.
+3. An LLM evaluates accuracy, reasoning, examples, and trade-offs against the card's content.
+4. The UI shows an explainable score, strengths, gaps, misconceptions, and a concrete prompt to retry.
+5. Every attempt is stored locally and can be reviewed later.
+6. A flashcards view makes it possible to review the latest evaluated paraphrase of each node.
+7. (v2) The user can ask questions about a card with web search and verifiable citations.
 
-El LLM sirve como tutor y espejo de calidad. **No** bloquea marcar un nodo como entendido.
+The LLM acts as a tutor and quality mirror. It does **not** block marking a node as understood.
 
 ## 2. Endpoint
 
@@ -24,17 +24,17 @@ El LLM sirve como tutor y espejo de calidad. **No** bloquea marcar un nodo como 
 http://127.0.0.1:31415/v1
 ```
 
-Es una instancia local de [FreeLLMAPI](https://github.com/tashfeenahmed/freellmapi) (proxy OpenAI-compatible). El usuario aporta su token unificado en `server/.env` (ver §3).
+It is a local instance of [FreeLLMAPI](https://github.com/tashfeenahmed/freellmapi) (OpenAI-compatible proxy). The user provides their unified token in `server/.env` (see §3).
 
-## 3. Arquitectura: gateway local obligatorio
+## 3. Architecture: mandatory local gateway
 
-**El browser no debe llamar directo a `127.0.0.1:31415`.** Razones:
+**The browser must not call `127.0.0.1:31415` directly.** Reasons:
 
-- `VITE_FREELLMAPI_API_KEY` empaquetaría la key en el bundle JS.
-- FreeLLMAPI no garantiza `Access-Control-Allow-Origin`.
-- Querés centralizar prompts, schemas, timeouts, parseo, tool loop y errores.
+- `VITE_FREELLMAPI_API_KEY` would bundle the key into the JS bundle.
+- FreeLLMAPI does not guarantee `Access-Control-Allow-Origin`.
+- You want prompts, schemas, timeouts, parsing, the tool loop, and errors centralized.
 
-**MVP tradeoff (v1):** el gateway recibe el contenido de la card desde el navegador en el body de `/api/ai/evaluate`. Es aceptable para uso local single-user; la frontera "limpia" —el gateway resuelve el nodo por id desde una fuente compartida, sin que el browser envíe contenido editorial— queda como mejora futura. El body tiene tamaño limitado (200 KB total, `answer` cap 4000 chars) y los campos se filtran en `buildEvaluationUserPayload` antes de mandarse al modelo.
+**MVP tradeoff (v1):** the gateway receives the card content from the browser in the body of `/api/ai/evaluate`. This is acceptable for local single-user use; the "clean" boundary —the gateway resolves the node by id from a shared source, with no editorial content sent by the browser— is left as a future improvement. The body is size-limited (200 KB total, `answer` capped at 4000 chars) and fields are filtered in `buildEvaluationUserPayload` before being sent to the model.
 
 ```mermaid
 flowchart LR
@@ -47,7 +47,7 @@ flowchart LR
   Browser -->|intentos| IndexedDB
 ```
 
-### Estructura de archivos
+### File structure
 
 ```
 server/
@@ -79,9 +79,9 @@ src/components/
   ViewModeToggle.jsx
 ```
 
-## 4. Configuración segura
+## 4. Secure configuration
 
-`server/.env` (gitignored, **nunca** `VITE_*`):
+`server/.env` (gitignored, **never** `VITE_*`):
 
 ```dotenv
 FREELLMAPI_BASE_URL=http://127.0.0.1:31415/v1
@@ -93,21 +93,21 @@ GATEWAY_PORT=4317
 GATEWAY_HOST=127.0.0.1
 ```
 
-`server/.env.example` solo con placeholders, commiteado.
+`server/.env.example` with placeholders only, committed.
 
 ### ngrok
 
-Si la app se expone por túnel, el gateway queda accesible públicamente. Opciones:
+If the app is exposed through a tunnel, the gateway becomes publicly reachable. Options:
 
-- v1: el gateway **solo escucha en 127.0.0.1**, así ngrok no lo ve (Vite proxy tampoco).
-- v2: si hace falta IA desde ngrok, passcode simple o feature flag.
+- v1: the gateway **listens on 127.0.0.1 only**, so ngrok does not see it (neither does the Vite proxy).
+- v2: if AI is needed through ngrok, a simple passcode or feature flag.
 
-## 5. Persistencia
+## 5. Persistence
 
-- **Progreso** (set de IDs entendidos, filtros, vista): `localStorage` (ya existente).
-- **Intentos y borradores**: IndexedDB via `idb`.
+- **Progress** (set of understood IDs, filters, view): `localStorage` (already existing).
+- **Attempts and drafts**: IndexedDB via `idb`.
 
-### Schema IndexedDB (v1)
+### IndexedDB schema (v1)
 
 ```js
 // attempts
@@ -146,7 +146,7 @@ Si la app se expone por túnel, el gateway queda accesible públicamente. Opcion
 }
 ```
 
-**Política**: 12 intentos por nodo, FIFO. Borrador independiente del último intento. Si cambia el contenido de la card, intentos previos muestran "evaluado con versión anterior".
+**Policy**: 12 attempts per node, FIFO. The draft is independent of the latest attempt. If the card content changes, previous attempts show "evaluado con versión anterior".
 
 ## 6. Endpoint `/api/ai/evaluate`
 
@@ -194,19 +194,19 @@ Content-Type: application/json
 }
 ```
 
-## 7. Diseño del LLM: lo crítico
+## 7. LLM design: the critical parts
 
-### 7.1 JSON Schema separado de Zod
+### 7.1 JSON Schema separate from Zod
 
-**Regla**: `schema._def` es API interna de Zod. No usar para `response_format`.
+**Rule**: `schema._def` is internal Zod API. Do not use it for `response_format`.
 
-- `EvaluationZod` (Zod): para validar runtime lo que devolvió el modelo.
-- `EvaluationJsonSchema` (objeto plano, hand-written): para `response_format: { type: "json_schema", json_schema: { schema: EvaluationJsonSchema, strict: true } }`.
-- Test: `expect(toJsonSchema(EvaluationZod)).toEqual(EvaluationJsonSchema)` (o sync manual con comentario).
+- `EvaluationZod` (Zod): to validate at runtime what the model returned.
+- `EvaluationJsonSchema` (hand-written plain object): for `response_format: { type: "json_schema", json_schema: { schema: EvaluationJsonSchema, strict: true } }`.
+- Test: `expect(toJsonSchema(EvaluationZod)).toEqual(EvaluationJsonSchema)` (or a manual sync check with a comment).
 
-### 7.2 Score recomputado server-side
+### 7.2 Server-side recomputed score
 
-El **modelo no envía** `score` total. Solo las 4 dimensiones. El gateway suma:
+The **model does not send** the total `score`. Only the 4 dimensions. The gateway sums:
 
 ```js
 function computeTotal(rubric) {
@@ -216,9 +216,9 @@ function computeTotal(rubric) {
 }
 ```
 
-Si el modelo "se inventa" un 95 en el JSON, se ignora. La UI muestra la suma, no lo que dijo el modelo.
+If the model "makes up" a 95 in the JSON, it is ignored. The UI shows the sum, not what the model said.
 
-### 7.3 Estrategia de parseo en 3 niveles
+### 7.3 Three-level parsing strategy
 
 ```text
 1) response_format: json_schema
@@ -233,22 +233,22 @@ Si el modelo "se inventa" un 95 en el JSON, se ignora. La UI muestra la suma, no
    error tipado SchemaMismatchError, la UI muestra error y conserva el borrador.
 ```
 
-No usamos `looksLikeJson` con heurísticas de `{` porque el modelo puede envolver el JSON en prosa. **Cualquier fallo de parseo dispara repair** (corrección de codex #2).
+We do not use `looksLikeJson` with `{` heuristics because the model can wrap the JSON in prose. **Any parse failure triggers repair** (codex fix #2).
 
 ### 7.4 Tool rounds vs final round (v2)
 
-En el tutor con búsqueda, la última llamada fuerza `response_format: json_schema` y omite `tools`. Las rondas previas permiten `tool_calls` sin `response_format`. No se mezclan ambas restricciones en la misma request (corrección de codex #3).
+In the tutor with search, the last call forces `response_format: json_schema` and omits `tools`. Earlier rounds allow `tool_calls` without `response_format`. Both restrictions are never mixed in the same request (codex fix #3).
 
-### 7.5 Citas verificables (v2)
+### 7.5 Verifiable citations (v2)
 
-El gateway guarda los `searchResults` originales. Cada citation referencia un `sourceIndex`. La UI muestra:
+The gateway keeps the original `searchResults`. Each citation references a `sourceIndex`. The UI shows:
 
-- **Fuentes consultadas** (lista con título, URL y snippet).
-- **Citas usadas** (cada una con qué afirmación respalda y a qué fuente apunta).
+- **Sources consulted** (list with title, URL, and snippet).
+- **Citations used** (each with which claim it supports and which source it points to).
 
-Aunque el modelo invente que una URL respalda X, el `sourceIndex` apunta a un snippet real que el usuario puede abrir.
+Even if the model invents that a URL supports X, the `sourceIndex` points to a real snippet the user can open.
 
-## 8. UI: feedback y navegación
+## 8. UI: feedback and navigation
 
 ### 8.1 `EvaluationFeedback`
 
@@ -276,35 +276,35 @@ Aunque el modelo invente que una URL respalda X, el `sourceIndex` apunta a un sn
 └──────────────────────────────────────────────────────────┘
 ```
 
-`RubricBars` usa `<progress>` nativo con `aria-label`, no barras div ad-hoc.
+`RubricBars` uses the native `<progress>` with `aria-label`, not ad-hoc div bars.
 
-### 8.2 Cancelación
+### 8.2 Cancellation
 
-`AbortController` propagado end-to-end: `ParaphraseReview` → `aiClient.js` → `fetch` → `llmClient.js`. Cancelar en UI aborta la request HTTP y la llamada al LLM. Un requestId permite correlacionar logs.
+`AbortController` propagated end-to-end: `ParaphraseReview` → `aiClient.js` → `fetch` → `llmClient.js`. Cancelling in the UI aborts the HTTP request and the LLM call. A requestId makes it possible to correlate logs.
 
-### 8.3 Markdown del tutor (v2)
+### 8.3 Tutor markdown (v2)
 
-`react-markdown` + `remark-gfm` + `rehype-sanitize` (con `defaultSchema`). Bloquea `<script>`, `onclick`, `<iframe>`, javascript: URIs.
+`react-markdown` + `remark-gfm` + `rehype-sanitize` (with `defaultSchema`). Blocks `<script>`, `onclick`, `<iframe>`, javascript: URIs.
 
-## 9. Vista de flashcards
+## 9. Flashcards view
 
-Toggle `[ Grafo | Flashcards ]` en la superficie principal.
+Toggle `[ Grafo | Flashcards ]` on the main surface.
 
-**Cara frontal**: categoría, prioridad, nombre del concepto, estado (sin respuesta / con borrador / evaluado), score si existe.
+**Front face**: category, priority, concept name, state (no answer / with draft / evaluated), score if any.
 
-**Cara posterior**: último parafraseo evaluado, badge de score, fecha, "Ver feedback", "Abrir card completa" (mismo modal que desde el grafo), "Reescribir respuesta".
+**Back face**: latest evaluated paraphrase, score badge, date, "Ver feedback", "Abrir card completa" (same modal as from the graph), "Reescribir respuesta".
 
-**Filtros**: sin evaluar, score < 80, aleatorias, por categoría. Mismo grafo y categorías que la vista de grafo.
+**Filters**: unevaluated, score < 80, random, by category. Same graph and categories as the graph view.
 
-## 10. Tutor con búsqueda (v2)
+## 10. Tutor with search (v2)
 
 Endpoint `POST /api/ai/ask`. Request: `{ graphId, nodeId, question, history, useSearch }`. Response: `{ answerMarkdown, shortAnswer, usedSearch, citations, searchResults, followUps, uncertaintyNote }`.
 
-Tool loop: 2 rondas máx, 5 resultados máx, query 3-200 chars, timeout 45s, rate limit 6 preguntas/min.
+Tool loop: 2 rounds max, 5 results max, query 3-200 chars, timeout 45s, rate limit 6 questions/min.
 
-Cada citation: `{ label, url, supports, sourceIndex }`. El gateway filtra `citations` contra `searchResults` por `sourceIndex` antes de devolver al browser.
+Each citation: `{ label, url, supports, sourceIndex }`. The gateway filters `citations` against `searchResults` by `sourceIndex` before returning to the browser.
 
-## 11. Manejo de errores
+## 11. Error handling
 
 ```js
 // server/ai/errors.js
@@ -312,9 +312,9 @@ NOT_CONFIGURED, UNAUTHORIZED, RATE_LIMIT, TIMEOUT, SCHEMA_MISMATCH,
 TOOL_NOT_ALLOWED, TOOL_ROUND_LIMIT, SEARCH_PROVIDER_ERROR, UPSTREAM, ABORTED
 ```
 
-Cada uno tiene mensaje user-facing en español y HTTP status:
+Each has a user-facing Spanish message and an HTTP status:
 
-| Code | Status | Mensaje UI |
+| Code | Status | UI message |
 | --- | ---: | --- |
 | `not_configured` | 503 | La IA no está configurada. Podés escribir igual. |
 | `unauthorized` | 401 | El gateway no tiene token válido. |
@@ -324,60 +324,60 @@ Cada uno tiene mensaje user-facing en español y HTTP status:
 | `upstream` | 502 | El modelo falló. Reintentá. |
 | `aborted` | — | Cancelado. |
 
-**Nunca** inventar score en el cliente. **Nunca** perder el borrador por un error.
+**Never** invent a score on the client. **Never** lose the draft due to an error.
 
-## 12. Fases
+## 12. Phases
 
-### v1 (esta implementación)
+### v1 (this implementation)
 
-- [x] Doc consolidado
-- [ ] Gateway local con `GET /api/ai/status` y `POST /api/ai/evaluate`
-- [ ] Zod schemas + JSON Schema separados y sincronizados
-- [ ] Cliente LLM con abort+timeout
-- [ ] Parse strategy 3 niveles
-- [ ] Score recomputado server-side
-- [ ] Errores tipados
-- [ ] Cliente React: `client.js`, `learningStore.js`, `contentHash.js`
-- [ ] `ParaphraseReview` con textarea, borrador, submit, cancel
-- [ ] `EvaluationFeedback` con `RubricBars` y secciones
-- [ ] `AttemptHistory` con navegación anterior/siguiente y volver al borrador
-- [ ] `FlashcardView` con cara frontal limpia y cara posterior con último score
+- [x] Consolidated doc
+- [ ] Local gateway with `GET /api/ai/status` and `POST /api/ai/evaluate`
+- [ ] Zod schemas + JSON Schema separate and synchronized
+- [ ] LLM client with abort+timeout
+- [ ] 3-level parse strategy
+- [ ] Server-side recomputed score
+- [ ] Typed errors
+- [ ] React client: `client.js`, `learningStore.js`, `contentHash.js`
+- [ ] `ParaphraseReview` with textarea, draft, submit, cancel
+- [ ] `EvaluationFeedback` with `RubricBars` and sections
+- [ ] `AttemptHistory` with previous/next navigation and return to draft
+- [ ] `FlashcardView` with a clean front face and a back face with the latest score
 - [ ] `ViewModeToggle` Grafo/Flashcards
-- [ ] Reemplazar quiz de opciones múltiples por `ParaphraseReview` en `App.jsx`
+- [ ] Replace the multiple-choice quiz with `ParaphraseReview` in `App.jsx`
 - [ ] Vite proxy `/api/ai` → gateway
-- [ ] Estilos para nuevos componentes
-- [ ] README con instrucciones del gateway
+- [ ] Styles for the new components
+- [ ] README with gateway instructions
 
-### v2 (después)
+### v2 (later)
 
-- [ ] `tutor.js` con tool loop
-- [ ] Search provider (Brave o SearXNG)
-- [ ] `NodeTutor` panel dentro de la card
-- [ ] Conversaciones por nodo en IndexedDB
-- [ ] Cache de evaluaciones
-- [ ] Métricas locales opcionales
-- [ ] Tests de contract para schemas
+- [ ] `tutor.js` with tool loop
+- [ ] Search provider (Brave or SearXNG)
+- [ ] `NodeTutor` panel inside the card
+- [ ] Per-node conversations in IndexedDB
+- [ ] Evaluation cache
+- [ ] Optional local metrics
+- [ ] Contract tests for schemas
 
-## 13. Decisiones tomadas
+## 13. Decisions made
 
-- **Modelo**: empezar con `auto:reliable` para priorizar respuestas consistentes. Probar otros modelos después con prompts reales.
-- **Search**: fuera de v1.
-- **Persistencia**: IndexedDB via `idb`.
-- **Frontend**: vanilla `idb` (no Dexie) para mantener dependencias chicas.
+- **Model**: start with `auto:reliable` to prioritize consistent responses. Try other models later with real prompts.
+- **Search**: out of v1.
+- **Persistence**: IndexedDB via `idb`.
+- **Frontend**: vanilla `idb` (no Dexie) to keep dependencies small.
 - **Markdown**: `react-markdown` + `rehype-sanitize` (v2).
-- **No bloqueante**: el feedback del LLM nunca bloquea "marcar como entendido".
+- **Non-blocking**: LLM feedback never blocks "marcar como entendido".
 
-## 14. Fuera de alcance (todas las versiones)
+## 14. Out of scope (all versions)
 
-- Cuentas de usuario o sync entre dispositivos.
-- Base de datos remota.
-- Edición automática del grafo a partir del feedback.
-- "Navegación autónoma" del agente o herramientas fuera de búsqueda web controlada.
-- Streaming en v1 (opcional para v2).
+- User accounts or cross-device sync.
+- Remote database.
+- Automatic graph editing based on feedback.
+- Agent "autonomous navigation" or tools beyond controlled web search.
+- Streaming in v1 (optional for v2).
 
-## 15. Decisiones que requieren confirmación
+## 15. Decisions requiring confirmation
 
-1. **Token**: rotar el token actual (estuvo expuesto en chat) y configurar el nuevo en `server/.env`.
-2. **Modelo**: aceptar `auto:reliable` y revisar después.
+1. **Token**: rotate the current token (it was exposed in chat) and configure the new one in `server/.env`.
+2. **Model**: accept `auto:reliable` and review later.
 3. **Search provider** (v2): Brave vs SearXNG.
-4. **ngrok**: gateway solo en 127.0.0.1 resuelve el caso más común.
+4. **ngrok**: gateway on 127.0.0.1 only covers the most common case.

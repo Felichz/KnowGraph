@@ -3,7 +3,7 @@
 **Master Workflow Entrypoint Document for `/goal`**  
 **Reference**: [ADR 0010 — Spec-Driven Visual Design Engineering](./adr/0010-spec-driven-visual-design-and-continuous-review-workflow.md)  
 **Governing Criteria**: [docs/DESIGN_CRITERIA.md](./DESIGN_CRITERIA.md)  
-**System Foundations**: [DESIGN.md](../DESIGN.md) *(Generado en Fase 0)*  
+**System Foundations**: [DESIGN.md](../DESIGN.md) *(Generated in Phase 0)*  
 **Input Specification**: `specs/<feature>/spec.md`  
 **Target Output Artifact**: `specs/<feature>/design-spec.md`  
 
@@ -36,18 +36,18 @@ When invoking `/goal` with this workflow, the orchestrating agent executes the *
     │                               ▼                                        │
     │                 Emits [Gap Report on Disk]                             │
     │                               │                                        │
-    │                     ¿Existen brechas / Gaps > 0?                       │
+    │                     Are there gaps (Gaps > 0)?                         │
     │                              /        \                                │
-    │                           [SÍ]        [NO (Gaps = 0 & Score ≥ 9.5)]    │
+    │                         [YES]       [NO (Gaps = 0 & Score ≥ 9.5)]      │
     │                            │                      │                    │
-    │  [Re-invocar Creator] ◄────┘                      ▼                    │
-    │   (Objetivo: parchear gaps)               [SELLO DE FASE]             │
+    │  [Re-invoke Creator]  ◄────┘                      ▼                    │
+    │   (Goal: patch gaps)                      [PHASE SEAL]                │
     │                                                   │                    │
     └───────────────────────────────────────────────────┼────────────────────┘
                                                         │
                    ┌────────────────────────────────────┴────────────────────┐
                    ▼                                                         ▼
-              [Avanzar a Siguiente Fase]                    [FASE 3 CERTIFICADA: GOAL_COMPLETE]
+              [Advance to Next Phase]                      [PHASE 3 CERTIFIED: GOAL_COMPLETE]
 ```
 
 ---
@@ -90,10 +90,10 @@ The workflow fuses 43 specialized visual design skills into 4 authoritative Mast
 - **Constituent Skills (9)**: `information-architecture`, `gestalt-ui-organisation`, `ui-density`, `layout-paradigms-and-consistency`, `responsive-paradigms`, `visual-emphasis-and-hierarchy`, `ui-context-and-scope`, `user-flows-and-guided-paths`, `dembrandt`.
 - **Mandatory Output Sections in `specs/<feature>/design-spec.md`**:
   1. **Section A: Exhaustive Information Inventory Matrix (Data & Affordance Manifest)**:
-     - Numbered inventory table (`INF-01` to `INF-N`) covering every single data point, label, counter, status dot, and button required across all User Stories. Cero omissions.
+     - Numbered inventory table (`INF-01` to `INF-N`) covering every single data point, label, counter, status dot, and button required across all User Stories. Zero omissions.
   2. **Section B: Grouping, Hierarchy & Surface Architecture Matrix**:
      - Mapping of inventory items into unified visual organisms.
-     - Enforcement of Gestalt proximity over divider lines; complete eradication of nested carditis (*cajas dentro de cajas*).
+     - Enforcement of Gestalt proximity over divider lines; complete eradication of nested carditis (*boxes within boxes*).
      - Partitioning into 3 Attention Levels: Glanceable (<1s), Operational (1-5s), and On-demand (>5s).
   3. **Section C: Comparative Layout Evaluations & Trade-offs (Landscape vs Portrait)**:
      - For every macro organism, formulation and side-by-side comparison of 2–3 structural layout paradigms for both **Landscape (Desktop 1440×900)** and **Portrait (Mobile 390×844)**.

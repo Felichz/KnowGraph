@@ -1,12 +1,12 @@
-# Guía de handoff: Learning Graph Logic API
+# Handoff guide: Learning Graph Logic API
 
-## Propósito
+## Purpose
 
-Este proyecto separa el sistema de aprendizaje de su representación visual. La capa de lógica contiene el catálogo de grafos, reglas de navegación, progreso, drafts, intentos, scoring, evaluación con IA, streaming, audio y persistencia. La capa presentacional debe decidir cómo se ve todo: layout, componentes, CSS, animaciones, transiciones, accesibilidad visual y event handlers de UI.
+This project separates the learning system from its visual representation. The logic layer contains the graph catalog, navigation rules, progress, drafts, attempts, scoring, AI evaluation, streaming, audio, and persistence. The presentation layer decides how everything looks: layout, components, CSS, animations, transitions, visual accessibility, and UI event handlers.
 
-La presentación visual original fue restaurada en `src/App.jsx` y `src/components/`. El núcleo headless sigue disponible para futuras iteraciones o para una presentación alternativa: el entrypoint actual monta la UI original y también puede exponer el controller desde una integración separada.
+The original visual presentation was restored in `src/App.jsx` and `src/components/`. The headless core remains available for future iterations or an alternative presentation: the current entrypoint mounts the original UI and can also expose the controller from a separate integration.
 
-## Frontera de capas
+## Layer boundary
 
 ```text
 Datos de contenido + adapters externos
@@ -22,9 +22,9 @@ Presentación reemplazable
   React, CSS, canvas, SVG, mobile, etc.
 ```
 
-La lógica no debe importar JSX, CSS, `ReactDOM`, Mermaid, D3 ni APIs de layout. La presentación no debe recalcular scores, consultar IndexedDB directamente, llamar al gateway de IA directamente ni duplicar reglas de navegación.
+The logic must not import JSX, CSS, `ReactDOM`, Mermaid, D3, or layout APIs. The presentation must not recalculate scores, query IndexedDB directly, call the AI gateway directly, or duplicate navigation rules.
 
-## API pública
+## Public API
 
 ```js
 import { createLearningController, getGraph, listGraphs } from "./logic/index.js";
@@ -37,43 +37,43 @@ const unsubscribe = controller.subscribe((snapshot) => {
 await controller.hydrate();
 ```
 
-### Catálogo
+### Catalog
 
-- `listGraphs()` devuelve los grafos disponibles sin exponer los índices internos de búsqueda.
-- `getGraph(graphId)` devuelve el catálogo normalizado para uso del controller; puede incluir índices internos `Map`/`Set` que la presentación no necesita tocar.
-- Cada grafo contiene `id`, `label`, `title`, `subtitle`, `categories`, `nodes`, `edges`, `milestones` y `seniorityBands`.
-- Cada nodo contiene `id`, `label`, `cat`, `lesson`, `priority` y `prerequisites`.
+- `listGraphs()` returns the available graphs without exposing internal search indexes.
+- `getGraph(graphId)` returns the normalized catalog for controller use; it may include internal `Map`/`Set` indexes that the presentation does not need to touch.
+- Each graph contains `id`, `label`, `title`, `subtitle`, `categories`, `nodes`, `edges`, `milestones`, and `seniorityBands`.
+- Each node contains `id`, `label`, `cat`, `lesson`, `priority`, and `prerequisites`.
 
-Los prerequisitos son información pedagógica y de navegación sugerida. No bloquean completar ni abrir un nodo.
+Prerequisites are pedagogical information and suggested navigation. They do not block completing or opening a node.
 
 ### Controller
 
-`createLearningController` devuelve un objeto estable con estas operaciones:
+`createLearningController` returns a stable object with these operations:
 
-| Operación | Responsabilidad |
+| Operation | Responsibility |
 | --- | --- |
-| `getSnapshot()` | Lee el estado actual y todos los view models derivados. |
-| `subscribe(listener)` | Suscribe una presentación a cambios; devuelve cleanup. |
-| `hydrate()` | Carga intentos y drafts desde el adapter de persistencia. |
-| `setGraph(graphId)` | Cambia de tema y vuelve a hidratar sus datos. |
-| `selectNode(nodeId, options)` | Selecciona y opcionalmente abre el detalle. |
-| `closeNode()` | Cierra el detalle sin borrar selección. |
-| `setViewMode("graph" \| "flashcards")` | Cambia la proyección principal. |
-| `setGroups(ids)` | Reemplaza el filtro de grupos. Una lista vacía significa todos. |
-| `toggleGroup(id)` | Agrega o quita un grupo sin obligar a deseleccionar los demás. |
-| `selectOnlyGroup(id)` | Atajo para enfocar un grupo. `null` vuelve a todos. |
-| `navigate(direction)` | Mueve al nodo anterior o siguiente dentro del filtro activo. |
-| `navigateToSuggested()` | Selecciona el mejor próximo nodo visible. |
-| `updateDraft(nodeId, text)` | Actualiza el borrador y lo persiste. |
-| `submitParaphrase(nodeId, answer)` | Ejecuta la evaluación streaming y guarda el intento terminado. |
-| `cancelEvaluation()` | Cancela la request activa y limpia el estado transitorio. |
-| `selectAttempt(nodeId, index)` | Cambia el intento mostrado. |
-| `getNode(nodeId)` | Devuelve el view model de un nodo puntual. |
-| `destroy()` | Cancela trabajo pendiente y elimina listeners. |
+| `getSnapshot()` | Reads current state and all derived view models. |
+| `subscribe(listener)` | Subscribes a presentation to changes; returns cleanup. |
+| `hydrate()` | Loads attempts and drafts from the persistence adapter. |
+| `setGraph(graphId)` | Switches topic and rehydrates its data. |
+| `selectNode(nodeId, options)` | Selects and optionally opens the detail. |
+| `closeNode()` | Closes the detail without clearing the selection. |
+| `setViewMode("graph" \| "flashcards")` | Switches the main projection. |
+| `setGroups(ids)` | Replaces the group filter. An empty list means all. |
+| `toggleGroup(id)` | Adds or removes a group without forcing the others to be deselected. |
+| `selectOnlyGroup(id)` | Shortcut to focus one group. `null` returns to all. |
+| `navigate(direction)` | Moves to the previous or next node within the active filter. |
+| `navigateToSuggested()` | Selects the best next visible node. |
+| `updateDraft(nodeId, text)` | Updates the draft and persists it. |
+| `submitParaphrase(nodeId, answer)` | Runs the streaming evaluation and saves the finished attempt. |
+| `cancelEvaluation()` | Cancels the active request and clears transient state. |
+| `selectAttempt(nodeId, index)` | Switches the displayed attempt. |
+| `getNode(nodeId)` | Returns the view model for a single node. |
+| `destroy()` | Cancels pending work and removes listeners. |
 
 ### Snapshot
 
-El snapshot es la fuente de verdad para la presentación. Sus partes principales son:
+The snapshot is the source of truth for the presentation. Its main parts are:
 
 ```js
 {
@@ -97,18 +97,18 @@ El snapshot es la fuente de verdad para la presentación. Sus partes principales
 }
 ```
 
-`selectedNode`, `graphView.nodes` y `flashcards` ya incluyen `progress`, `draft` y `narrationSegments`. La presentación no necesita volver a consultar la base ni reconstruir ese dato.
+`selectedNode`, `graphView.nodes`, and `flashcards` already include `progress`, `draft`, and `narrationSegments`. The presentation does not need to query the database again or rebuild that data.
 
-## Progreso y score
+## Progress and score
 
-El score tiene dos significados distintos:
+The score has two distinct meanings:
 
-- `coveragePercent` representa cobertura conceptual de la card, de 0 a 100.
-- `displayScore` representa cobertura más profundidad opcional, de 0 a 120.
+- `coveragePercent` represents conceptual coverage of the card, from 0 to 100.
+- `displayScore` represents coverage plus optional depth, from 0 to 120.
 
-Un nodo se considera completo cuando la cobertura alcanza 100. Los puntos 101–120 son excelencia opcional y nunca bloquean navegación.
+A node is considered complete when coverage reaches 100. Points 101–120 are optional excellence and never block navigation.
 
-`getNodeProgress` expone:
+`getNodeProgress` exposes:
 
 ```js
 {
@@ -120,11 +120,11 @@ Un nodo se considera completo cuando la cobertura alcanza 100. Los puntos 101–
 }
 ```
 
-El `score` ya está normalizado por `src/ai/types.js`; no debe reinterpretarse visualmente en otra capa.
+The `score` is already normalized by `src/ai/types.js`; it must not be reinterpreted visually in another layer.
 
-## Evaluación streaming
+## Streaming evaluation
 
-`activeEvaluation` representa únicamente el trabajo transitorio:
+`activeEvaluation` represents only the transient work:
 
 ```js
 {
@@ -137,7 +137,7 @@ El `score` ya está normalizado por `src/ai/types.js`; no debe reinterpretarse v
 }
 ```
 
-Los bloques de score llegan primero con ids como:
+Score blocks arrive first with ids like:
 
 ```text
 scoreSummary.rubric.accuracy.score
@@ -146,7 +146,7 @@ scoreSummary.rubric.completeness.score
 ...
 ```
 
-Los textos llegan después con ids como:
+Texts arrive later with ids like:
 
 ```text
 feedback.rubricNotes.accuracy
@@ -155,13 +155,13 @@ feedback.gaps[0].explanation
 feedback.conciseVerdict
 ```
 
-La UI debería mostrar skeletons de bloques, barras individuales apenas estén disponibles y un score provisional derivado cuando ya se puedan calcular los subscores. Al recibir el evento final, el gateway valida el JSON, normaliza el formato y calcula el score definitivo.
+The UI should show block skeletons, individual bars as soon as they are available, and a derived provisional score once subscores can be computed. On the final event, the gateway validates the JSON, normalizes the format, and computes the definitive score.
 
-La presentación no debe persistir un resultado parcial como intento terminado. Solo `submitParaphrase` guarda cuando recibe `done` con una evaluación válida.
+The presentation must not persist a partial result as a finished attempt. Only `submitParaphrase` saves, when it receives `done` with a valid evaluation.
 
-## Persistencia y adapters
+## Persistence and adapters
 
-El controller usa IndexedDB a través de `src/ai/learningStore.js`. Para tests o una futura base local se pueden inyectar adapters:
+The controller uses IndexedDB through `src/ai/learningStore.js`. For tests or a future local database, adapters can be injected:
 
 ```js
 createLearningController({
@@ -181,64 +181,64 @@ createLearningController({
 });
 ```
 
-La vista no debe conocer IndexedDB, claves de storage ni detalles de `AbortController`.
+The view must not know about IndexedDB, storage keys, or `AbortController` details.
 
-## Reglas que la presentación debe respetar
+## Rules the presentation must follow
 
-1. No bloquear un nodo por prerequisitos.
-2. No mostrar 101–120 como si fueran cobertura obligatoria.
-3. No reemplazar el último intento por el mejor intento sin indicarlo.
-4. No perder un draft al cerrar o cambiar de nodo.
-5. No iniciar dos evaluaciones simultáneas desde el mismo controller.
-6. No guardar un stream incompleto como evaluación válida.
-7. No enviar la API key al navegador; el cliente solo llama `/api/ai`.
-8. No hacer que los nombres visuales de grupos sean parte de la lógica de scoring.
-9. Mantener una forma clara de volver del detalle al nodo anterior.
-10. Hacer visible cuándo un score es provisional y cuándo fue confirmado.
+1. Do not block a node by prerequisites.
+2. Do not show 101–120 as if it were required coverage.
+3. Do not replace the latest attempt with the best attempt without indicating it.
+4. Do not lose a draft when closing or switching nodes.
+5. Do not start two simultaneous evaluations from the same controller.
+6. Do not save an incomplete stream as a valid evaluation.
+7. Do not send the API key to the browser; the client only calls `/api/ai`.
+8. Do not make visible group names part of the scoring logic.
+9. Keep a clear way to return from the detail to the previous node.
+10. Make visible when a score is provisional and when it has been confirmed.
 
-## Brief para el LLM especialista en diseño
+## Brief for the design-specialist LLM
 
-Diseñá una experiencia de aprendizaje para un grafo de conceptos técnicos. El grafo es la vista principal; el detalle de un nodo es una superficie de estudio profunda; flashcards es una vista alternativa. Deben existir estados visibles para: carga inicial, grupo activo, nodo sugerido, nodo completo, nodo con profundidad extra, draft, evaluación streaming, error recuperable, historial de intentos y navegación anterior/siguiente.
+Design a learning experience for a graph of technical concepts. The graph is the main view; a node's detail is a deep study surface; flashcards is an alternative view. Visible states must exist for: initial loading, active group, suggested node, complete node, node with extra depth, draft, streaming evaluation, recoverable error, attempt history, and previous/next navigation.
 
-Usá el controller como única fuente de verdad. La presentación puede convertir eventos de click, teclado, drag, hover o shortcuts en llamadas al controller, pero no debe mutar el snapshot ni inventar reglas. Si una decisión visual necesita datos nuevos, agregá un selector o un campo al contrato de lógica; no leas directamente módulos de storage o AI desde un componente.
+Use the controller as the single source of truth. The presentation can turn click, keyboard, drag, hover, or shortcut events into controller calls, but it must not mutate the snapshot or invent rules. If a visual decision needs new data, add a selector or a field to the logic contract; do not read storage or AI modules directly from a component.
 
-### Instrucciones específicas para Kimi K3
+### Specific instructions for Kimi K3
 
-Kimi K3 debe encargarse de dos tareas: pensar la experiencia visual completa y luego implementarla en React. Debe leer primero este documento, `README.md`, `src/logic/index.js`, `src/logic/learningController.js`, `src/logic/selectors.js` y los grafos antes de escribir componentes.
+Kimi K3 is responsible for two tasks: thinking through the complete visual experience and then implementing it in React. It must first read this document, `README.md`, `src/logic/index.js`, `src/logic/learningController.js`, `src/logic/selectors.js`, and the graphs before writing components.
 
-El objetivo visual no es mostrar un dashboard genérico. Es comunicar una ruta de aprendizaje viva y hacer que el usuario entienda en todo momento:
+The visual goal is not to show a generic dashboard. It is to communicate a living learning route and make the user understand at all times:
 
-1. qué concepto está estudiando;
-2. cuál es el siguiente concepto recomendado y por qué;
-3. qué parte de su comprensión ya cubrió;
-4. qué feedback está llegando mientras evalúa su respuesta;
-5. qué es cobertura suficiente para completar el nodo;
-6. qué es profundidad opcional y excepcional.
+1. which concept they are studying;
+2. which concept is recommended next and why;
+3. which part of their understanding is already covered;
+4. what feedback is arriving while their answer is being evaluated;
+5. what sufficient coverage to complete the node is;
+6. what optional and exceptional depth is.
 
-El score debe tener dos lecturas visuales claramente distintas:
+The score must have two clearly distinct visual readings:
 
-- `0–100`: cobertura conceptual. Llegar a 100 significa que la respuesta cubrió la superficie necesaria de la card y permite considerar el nodo completo.
-- `101–120`: excelencia opcional. No debe parecer una continuación obligatoria de la barra normal. Debe sentirse como una zona especial —por ejemplo, con un tratamiento dorado, brillo sutil o una transición celebratoria contenida— que comunique profundidad adicional sin generar ansiedad por no alcanzarla.
+- `0–100`: conceptual coverage. Reaching 100 means the answer covered the card's required surface and the node can be considered complete.
+- `101–120`: optional excellence. It must not look like a mandatory continuation of the normal bar. It should feel like a special zone —for example, with a gold treatment, a subtle glow, or a contained celebratory transition— that communicates additional depth without creating anxiety about not reaching it.
 
-La evaluación streaming debe diseñarse como una transición progresiva, no como un bloque que aparece de golpe. La UI debe poder mostrar skeletons inmediatamente, revelar primero las barras de cada rúbrica cuando llegan sus scores, derivar un score provisional claramente etiquetado y completar después las explicaciones textuales. El estado provisional nunca debe confundirse con un intento confirmado.
+The streaming evaluation must be designed as a progressive transition, not a block that appears all at once. The UI must be able to show skeletons immediately, reveal each rubric's bars first when their scores arrive, derive a clearly labeled provisional score, and fill in the textual explanations afterwards. The provisional state must never be confused with a confirmed attempt.
 
-La presentación puede implementar libremente layout, tipografía, color, animaciones, canvas/SVG, responsive design, microinteracciones, tooltips, accesibilidad y controles de audio. No puede cambiar las reglas de scoring, declarar completo un nodo por su cuenta, bloquear por prerequisitos ni llamar directamente a IndexedDB o al gateway.
+The presentation can freely implement layout, typography, color, animations, canvas/SVG, responsive design, microinteractions, tooltips, accessibility, and audio controls. It cannot change the scoring rules, declare a node complete on its own, block by prerequisites, or call IndexedDB or the gateway directly.
 
-Antes de implementar, Kimi debe producir una propuesta breve que describa:
+Before implementing, Kimi must produce a short proposal describing:
 
-- jerarquía visual de la pantalla principal;
-- tratamiento de grupos y filtros;
-- estados visuales de nodo pendiente, sugerido, activo, completo y excelente;
-- transición entre grafo, detalle y flashcards;
-- flujo de evaluación desde draft hasta feedback confirmado;
-- comportamiento responsive para escritorio y móvil;
-- estrategia de accesibilidad y reducción de movimiento.
+- visual hierarchy of the main screen;
+- treatment of groups and filters;
+- visual states for pending, suggested, active, complete, and excellent nodes;
+- transition between graph, detail, and flashcards;
+- evaluation flow from draft to confirmed feedback;
+- responsive behavior for desktop and mobile;
+- accessibility and reduced-motion strategy.
 
-Después debe implementar esa propuesta consumiendo únicamente el controller y el snapshot. Si detecta que falta información para representar un estado importante, debe señalar el hueco y proponer una extensión pequeña del contrato antes de duplicar lógica en la UI.
+It must then implement that proposal consuming only the controller and the snapshot. If it detects that information is missing to represent an important state, it must flag the gap and propose a small contract extension before duplicating logic in the UI.
 
-## Validación
+## Validation
 
-Los comandos mínimos son:
+The minimum commands are:
 
 ```bash
 npm run test:logic
@@ -247,4 +247,4 @@ npm run build
 npm run audit:react
 ```
 
-El build actual valida la presentación original y el núcleo headless. La guía sigue funcionando como contrato para cualquier rediseño futuro, pero la UI activa no está obligada a consumir todavía el controller.
+The current build validates the original presentation and the headless core. The guide still works as a contract for any future redesign, but the active UI is not yet obligated to consume the controller.
