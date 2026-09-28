@@ -3,6 +3,7 @@ import { liveReviewStream, userFacingAiError } from "../../../ai/client.js";
 import { getLiveReview, saveLiveReview } from "../../../ai/learningStore.js";
 import { hashAnswer } from "../../../ai/contentHash.js";
 import { normalizeLiveReviewState } from "../../../ai/liveReview.js";
+import { t } from "../../../i18n/translate.js";
 
 // Revisión en vivo del borrador: pista siguiente + cobertura del checklist (a pedido).
 export function useLiveReview(graphId, node, data) {
@@ -38,7 +39,7 @@ export function useLiveReview(graphId, node, data) {
       saveLiveReview({ graphId, nodeId: node.id, answerHash, contentHash: data.contentHash, review: result.review }).catch(() => {});
     } catch (err) {
       if (err?.name === "AbortError") return;
-      setError(userFacingAiError(err, "No se pudo revisar el borrador.")); setStatus("error");
+      setError(userFacingAiError(err, t("study.paraphrase.reviewError"))); setStatus("error");
     }
   }, [graphId, node, data.draft, data.contentHash, data.provider]);
 

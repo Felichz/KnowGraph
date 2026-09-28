@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Layers, Play } from "lucide-react";
+import { useT } from "../../i18n/react.js";
 import { Button } from "../primitives/Button.jsx";
 import { Segmented } from "../primitives/Segmented.jsx";
 import { EmptyState } from "../primitives/Feedback.jsx";
@@ -7,10 +8,10 @@ import { Flashcard } from "./Flashcard.jsx";
 import { PracticeDialog } from "./PracticeDialog.jsx";
 
 const FILTERS = [
-  { value: "all", label: "Todas" },
-  { value: "pending", label: "Sin intento" },
-  { value: "below", label: "Base < 100" },
-  { value: "mastery", label: "Dominadas" },
+  { value: "all", labelKey: "flashcards.filters.all" },
+  { value: "pending", labelKey: "flashcards.filters.pending" },
+  { value: "below", labelKey: "flashcards.filters.below" },
+  { value: "mastery", labelKey: "flashcards.filters.mastery" },
 ];
 
 function matches(filter, p) {
@@ -22,6 +23,7 @@ function matches(filter, p) {
 
 // Flashcards (US6): repaso rápido de las cards del foco con volteo y práctica autoevaluada.
 export function FlashcardsView({ model }) {
+  const t = useT();
   const { graph, visible, progress } = model;
   const [filter, setFilter] = useState("all");
   const [practice, setPractice] = useState(false);
@@ -32,16 +34,16 @@ export function FlashcardsView({ model }) {
     <div className="flash">
       <header className="view-head">
         <div>
-          <h2 className="view-head__title">Repaso</h2>
-          <p className="t2">Tocá una card para darla vuelta. En práctica, respondé mentalmente y autoevaluate.</p>
+          <h2 className="view-head__title">{t("flashcards.view.title")}</h2>
+          <p className="t2">{t("flashcards.view.help")}</p>
         </div>
-        <Button variant="primary" icon={Play} onClick={() => setPractice(true)} disabled={!cards.length}>Practicar {cards.length}</Button>
+        <Button variant="primary" icon={Play} onClick={() => setPractice(true)} disabled={!cards.length}>{t("flashcards.view.practice", { n: cards.length })}</Button>
       </header>
-      <Segmented label="Filtrar flashcards" value={filter} onChange={setFilter} className="flash__filters"
-        options={FILTERS.map((f) => ({ ...f, label: `${f.label} · ${counts[f.value]}` }))} />
+      <Segmented label={t("flashcards.filters.label")} value={filter} onChange={setFilter} className="flash__filters"
+        options={FILTERS.map((f) => ({ value: f.value, label: `${t(f.labelKey)} · ${counts[f.value]}` }))} />
       {cards.length === 0 ? (
-        <EmptyState icon={Layers} title="No hay cards en este filtro" action={filter !== "all" ? <Button onClick={() => setFilter("all")}>Ver todas</Button> : null}>
-          Cambiá el filtro o el foco para ver otras cards.
+        <EmptyState icon={Layers} title={t("flashcards.view.emptyTitle")} action={filter !== "all" ? <Button onClick={() => setFilter("all")}>{t("flashcards.view.showAll")}</Button> : null}>
+          {t("flashcards.view.emptyBody")}
         </EmptyState>
       ) : (
         <ul className="flash__grid">

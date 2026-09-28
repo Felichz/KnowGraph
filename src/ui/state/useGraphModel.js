@@ -8,7 +8,8 @@ import { useWorkspace } from "./useWorkspace.js";
 export function useGraphModel() {
   const graphId = useWorkspace((s) => s.graphId);
   const focusCat = useWorkspace((s) => s.focusCat);
-  const graph = getGraph(graphId);
+  const locale = useWorkspace((s) => s.locale);
+  const graph = getGraph(graphId, locale);
   const progress = useProgress(graph);
   const model = useMemo(() => {
     const catIds = Object.keys(graph.categories);
@@ -17,5 +18,5 @@ export function useGraphModel() {
     const visible = graph.nodes.filter((node) => activeCats.has(node.cat));
     return { catIds, activeCats, guidance, visible };
   }, [graph, focusCat, progress.checked]);
-  return { graph, graphId, focusCat, progress, ...model };
+  return { graph, graphId, focusCat, locale, progress, ...model };
 }

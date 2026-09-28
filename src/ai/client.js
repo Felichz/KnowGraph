@@ -1,3 +1,12 @@
+import { getLocale, isLocale } from "../i18n/locale.js";
+import { t } from "../i18n/translate.js";
+
+// Every AI request carries the UI language (validated by the gateway) so the mentor,
+// paraphrase coaching and evaluation answer in it. An explicit `locale` param wins.
+function jsonBody(payload, locale) {
+  return JSON.stringify({ ...payload, locale: isLocale(locale) ? locale : getLocale() });
+}
+
 export class AiError extends Error {
   constructor(code, message, details) {
     super(message);
@@ -19,14 +28,14 @@ export function isCancel(err) {
   return err?.name === "AbortError" || err?.code === "aborted" || err?.code === "aborted_from_abortcontroller";
 }
 
-export function userFacingAiError(error, fallback = "No se pudo completar la solicitud.") {
+export function userFacingAiError(error, fallback = t("common.errors.requestFailed")) {
   const message = String(error?.message ?? "").trim();
   if (!message) return fallback;
 
   // A raw transport error is useful in DevTools but does not tell the
   // learner what to do. Keep deliberate provider/gateway messages intact.
   if (/^(HTTP 5\d\d|Failed to fetch|NetworkError|Load failed|fetch failed)$/i.test(message)) {
-    return "No se pudo conectar con el servicio de IA. Verificá que el gateway esté iniciado y que el provider esté disponible; después reintentá.";
+    return t("common.errors.gatewayUnreachable");
   }
 
   return message;
@@ -37,11 +46,11 @@ export async function fetchAiStatus({ signal } = {}) {
   return handle(res);
 }
 
-export async function testAiProvider({ provider, signal } = {}) {
+export async function testAiProvider({ locale, provider, signal } = {}) {
   const res = await fetch(aiUrl("/api/ai/providers/test"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ provider }),
+    body: jsonBody({ provider }, locale),
     signal,
   });
   return handle(res);
@@ -52,21 +61,21 @@ export async function fetchAiProviderCatalog({ signal, refresh = false } = {}) {
   return handle(res);
 }
 
-export async function fetchAiProviderModels({ provider, signal } = {}) {
+export async function fetchAiProviderModels({ locale, provider, signal } = {}) {
   const res = await fetch(aiUrl("/api/ai/providers/models"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ provider }),
+    body: jsonBody({ provider }, locale),
     signal,
   });
   return handle(res);
 }
 
-export async function evaluateParaphrase({ graphId, nodeId, answer, contentHash, node, provider, signal } = {}) {
+export async function evaluateParaphrase({ locale, graphId, nodeId, answer, contentHash, node, provider, signal } = {}) {
   const res = await fetch(aiUrl("/api/ai/evaluate"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node, provider }),
+    body: jsonBody({ graphId, nodeId, answer, contentHash, node, provider }, locale),
     signal,
   });
   return handle(res);
@@ -77,6 +86,7 @@ export async function evaluateParaphrase({ graphId, nodeId, answer, contentHash,
  * progreso y propiedades completas para poder renderizar un preview seguro.
  */
 export async function evaluateParaphraseStream({
+  locale,
   graphId,
   nodeId,
   answer,
@@ -92,7 +102,7 @@ export async function evaluateParaphraseStream({
   const res = await fetch(aiUrl("/api/ai/evaluate/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node, provider }),
+    body: jsonBody({ graphId, nodeId, answer, contentHash, node, provider }, locale),
     signal,
   });
 
@@ -124,7 +134,7 @@ export async function evaluateParaphraseStream({
         try {
           payload = JSON.parse(event.data);
         } catch {
-          throw new AiError("upstream", "El gateway envió un evento inválido", null);
+          throw new AiError("upstream", t("common.errors.invalidEvent"), null);
         }
 
         if (event.name === "progress" && typeof onProgress === "function") {
@@ -138,7 +148,7 @@ export async function evaluateParaphraseStream({
         } else if (event.name === "done") {
           finalPayload = payload;
         } else if (event.name === "error") {
-          throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
+          throw new AiError(payload.code ?? "upstream", payload.message ?? t("common.errors.gateway"), payload.details);
         }
       }
     }
@@ -148,12 +158,13 @@ export async function evaluateParaphraseStream({
   }
 
   if (!finalPayload?.attempt?.evaluation) {
-    throw new AiError("upstream", "Stream terminó sin una evaluación válida", null);
+    throw new AiError("upstream", t("common.errors.noEvaluation"), null);
   }
   return finalPayload;
 }
 
 export async function liveReviewStream({
+  locale,
   graphId,
   nodeId,
   answer,
@@ -168,7 +179,7 @@ export async function liveReviewStream({
   const res = await fetch(aiUrl("/api/ai/live-review/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node, provider }),
+    body: jsonBody({ graphId, nodeId, answer, contentHash, node, provider }, locale),
     signal,
   });
 
@@ -195,24 +206,25 @@ export async function liveReviewStream({
         if (!event.data) continue;
         let payload;
         try { payload = JSON.parse(event.data); } catch {
-          throw new AiError("upstream", "El gateway envió un evento inválido", null);
+          throw new AiError("upstream", t("common.errors.invalidEvent"), null);
         }
         if (event.name === "progress") onProgress?.(payload.length ?? 0, payload.stage ?? "live_review");
         else if (event.name === "section") onSection?.(payload.field, payload.value);
         else if (event.name === "reset") onReset?.(payload);
         else if (event.name === "done") finalPayload = payload;
-        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
+        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? t("common.errors.gateway"), payload.details);
       }
     }
   } finally {
     await reader.cancel().catch(() => {});
   }
 
-  if (!finalPayload?.review) throw new AiError("upstream", "La revisión viva terminó sin un resultado válido", null);
+  if (!finalPayload?.review) throw new AiError("upstream", t("common.errors.noLiveReview"), null);
   return finalPayload;
 }
 
 export async function coachChatStream({
+  locale,
   graphId,
   nodeId,
   answer,
@@ -229,7 +241,7 @@ export async function coachChatStream({
   const res = await fetch(aiUrl("/api/ai/live-review/chat/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ graphId, nodeId, answer, contentHash, node, review, history, question, provider }),
+    body: jsonBody({ graphId, nodeId, answer, contentHash, node, review, history, question, provider }, locale),
     signal,
   });
 
@@ -256,12 +268,12 @@ export async function coachChatStream({
         if (!event.data) continue;
         let payload;
         try { payload = JSON.parse(event.data); } catch {
-          throw new AiError("upstream", "El gateway envió un evento de chat inválido", null);
+          throw new AiError("upstream", t("common.errors.invalidChatEvent"), null);
         }
         if (event.name === "progress") onProgress?.(payload.length ?? 0, payload.stage ?? "coach_chat");
         else if (event.name === "delta") onDelta?.(payload.text ?? "", payload.length ?? 0);
         else if (event.name === "done") finalPayload = payload;
-        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
+        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? t("common.errors.gateway"), payload.details);
       }
     }
   } finally {
@@ -269,22 +281,23 @@ export async function coachChatStream({
   }
 
   if (!finalPayload?.message?.content) {
-    throw new AiError("upstream", "El chat terminó sin una respuesta válida", null);
+    throw new AiError("upstream", t("common.errors.noChatAnswer"), null);
   }
   return finalPayload;
 }
 
-export async function generateParaphrase({ node, provider, signal } = {}) {
+export async function generateParaphrase({ locale, node, provider, signal } = {}) {
   const res = await fetch(aiUrl("/api/ai/paraphrase"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ node, provider }),
+    body: jsonBody({ node, provider }, locale),
     signal,
   });
   return handle(res);
 }
 
 export async function generateParaphraseStream({
+  locale,
   node,
   provider,
   signal,
@@ -294,7 +307,7 @@ export async function generateParaphraseStream({
   const res = await fetch(aiUrl("/api/ai/paraphrase/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ node, provider }),
+    body: jsonBody({ node, provider }, locale),
     signal,
   });
 
@@ -321,12 +334,12 @@ export async function generateParaphraseStream({
         if (!event.data) continue;
         let payload;
         try { payload = JSON.parse(event.data); } catch {
-          throw new AiError("upstream", "El gateway envió un evento inválido", null);
+          throw new AiError("upstream", t("common.errors.invalidEvent"), null);
         }
         if (event.name === "progress") onProgress?.(payload.length ?? 0, payload.stage ?? "generating");
         else if (event.name === "delta") onDelta?.(payload.text ?? "", payload.length ?? 0);
         else if (event.name === "done") finalPayload = payload;
-        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
+        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? t("common.errors.gateway"), payload.details);
       }
     }
   } finally {
@@ -334,22 +347,23 @@ export async function generateParaphraseStream({
   }
 
   if (!finalPayload?.text) {
-    throw new AiError("upstream", "La generación terminó sin un texto válido", null);
+    throw new AiError("upstream", t("common.errors.noGeneration"), null);
   }
   return finalPayload;
 }
 
-export async function improveParaphrase({ node, currentDraft, focusTitle, focusDetail, provider, signal } = {}) {
+export async function improveParaphrase({ locale, node, currentDraft, focusTitle, focusDetail, provider, signal } = {}) {
   const res = await fetch(aiUrl("/api/ai/paraphrase/improve"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ node, currentDraft, focusTitle, focusDetail, provider }),
+    body: jsonBody({ node, currentDraft, focusTitle, focusDetail, provider }, locale),
     signal,
   });
   return handle(res);
 }
 
 export async function improveParaphraseStream({
+  locale,
   node,
   currentDraft,
   focusTitle,
@@ -362,7 +376,7 @@ export async function improveParaphraseStream({
   const res = await fetch(aiUrl("/api/ai/paraphrase/improve/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ node, currentDraft, focusTitle, focusDetail, provider }),
+    body: jsonBody({ node, currentDraft, focusTitle, focusDetail, provider }, locale),
     signal,
   });
 
@@ -389,12 +403,12 @@ export async function improveParaphraseStream({
         if (!event.data) continue;
         let payload;
         try { payload = JSON.parse(event.data); } catch {
-          throw new AiError("upstream", "El gateway envió un evento inválido", null);
+          throw new AiError("upstream", t("common.errors.invalidEvent"), null);
         }
         if (event.name === "progress") onProgress?.(payload.length ?? 0, payload.stage ?? "generating");
         else if (event.name === "delta") onDelta?.(payload.text ?? "", payload.length ?? 0);
         else if (event.name === "done") finalPayload = payload;
-        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
+        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? t("common.errors.gateway"), payload.details);
       }
     }
   } finally {
@@ -402,12 +416,13 @@ export async function improveParaphraseStream({
   }
 
   if (!finalPayload?.text) {
-    throw new AiError("upstream", "La mejora terminó sin un texto válido", null);
+    throw new AiError("upstream", t("common.errors.noImprovement"), null);
   }
   return finalPayload;
 }
 
 export async function reconcileParaphraseStream({
+  locale,
   node,
   currentDraft,
   messages,
@@ -419,7 +434,7 @@ export async function reconcileParaphraseStream({
   const res = await fetch(aiUrl("/api/ai/paraphrase/reconcile/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ node, currentDraft, messages, provider }),
+    body: jsonBody({ node, currentDraft, messages, provider }, locale),
     signal,
   });
 
@@ -446,12 +461,12 @@ export async function reconcileParaphraseStream({
         if (!event.data) continue;
         let payload;
         try { payload = JSON.parse(event.data); } catch {
-          throw new AiError("upstream", "El gateway envió un evento inválido", null);
+          throw new AiError("upstream", t("common.errors.invalidEvent"), null);
         }
         if (event.name === "progress") onProgress?.(payload.length ?? 0, payload.stage ?? "generating");
         else if (event.name === "delta") onDelta?.(payload.text ?? "", payload.length ?? 0);
         else if (event.name === "done") finalPayload = payload;
-        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
+        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? t("common.errors.gateway"), payload.details);
       }
     }
   } finally {
@@ -459,12 +474,13 @@ export async function reconcileParaphraseStream({
   }
 
   if (!finalPayload?.text) {
-    throw new AiError("upstream", "La reconciliación terminó sin un texto válido", null);
+    throw new AiError("upstream", t("common.errors.noReconcile"), null);
   }
   return finalPayload;
 }
 
 export async function polishParaphraseStream({
+  locale,
   node,
   currentDraft,
   provider,
@@ -475,7 +491,7 @@ export async function polishParaphraseStream({
   const res = await fetch(aiUrl("/api/ai/paraphrase/polish/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ node, currentDraft, provider }),
+    body: jsonBody({ node, currentDraft, provider }, locale),
     signal,
   });
 
@@ -502,12 +518,12 @@ export async function polishParaphraseStream({
         if (!event.data) continue;
         let payload;
         try { payload = JSON.parse(event.data); } catch {
-          throw new AiError("upstream", "El gateway envió un evento inválido", null);
+          throw new AiError("upstream", t("common.errors.invalidEvent"), null);
         }
         if (event.name === "progress") onProgress?.(payload.length ?? 0, payload.stage ?? "generating");
         else if (event.name === "delta") onDelta?.(payload.text ?? "", payload.length ?? 0);
         else if (event.name === "done") finalPayload = payload;
-        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
+        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? t("common.errors.gateway"), payload.details);
       }
     }
   } finally {
@@ -515,16 +531,16 @@ export async function polishParaphraseStream({
   }
 
   if (!finalPayload?.text) {
-    throw new AiError("upstream", "La mejora pedagógica terminó sin un texto válido", null);
+    throw new AiError("upstream", t("common.errors.noPolish"), null);
   }
   return finalPayload;
 }
 
-export async function judgePedagogy({ node, draft, provider, signal } = {}) {
+export async function judgePedagogy({ locale, node, draft, provider, signal } = {}) {
   const res = await fetch(aiUrl("/api/ai/paraphrase/judge"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ node, draft, provider }),
+    body: jsonBody({ node, draft, provider }, locale),
     signal,
   });
   if (!res.ok) {
@@ -536,6 +552,7 @@ export async function judgePedagogy({ node, draft, provider, signal } = {}) {
 }
 
 export async function refinePedagogyStream({
+  locale,
   node,
   draft,
   critique = [],
@@ -548,7 +565,7 @@ export async function refinePedagogyStream({
   const res = await fetch(aiUrl("/api/ai/paraphrase/refine/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ node, draft, critique, currentScore, provider }),
+    body: jsonBody({ node, draft, critique, currentScore, provider }, locale),
     signal,
   });
 
@@ -575,12 +592,12 @@ export async function refinePedagogyStream({
         if (!event.data) continue;
         let payload;
         try { payload = JSON.parse(event.data); } catch {
-          throw new AiError("upstream", "El gateway envió un evento inválido", null);
+          throw new AiError("upstream", t("common.errors.invalidEvent"), null);
         }
         if (event.name === "progress") onProgress?.(payload.length ?? 0, payload.stage ?? "refining");
         else if (event.name === "delta") onDelta?.(payload.text ?? "", payload.length ?? 0);
         else if (event.name === "done") finalPayload = payload;
-        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
+        else if (event.name === "error") throw new AiError(payload.code ?? "upstream", payload.message ?? t("common.errors.gateway"), payload.details);
       }
     }
   } finally {
@@ -588,12 +605,13 @@ export async function refinePedagogyStream({
   }
 
   if (!finalPayload?.text) {
-    throw new AiError("upstream", "El refinamiento pedagógico terminó sin un texto válido", null);
+    throw new AiError("upstream", t("common.errors.noRefine"), null);
   }
   return finalPayload;
 }
 
 export async function polishPedagogyHarnessStream({
+  locale,
   node,
   currentDraft,
   maxIterations = 3,
@@ -604,7 +622,7 @@ export async function polishPedagogyHarnessStream({
   const res = await fetch(aiUrl("/api/ai/paraphrase/polish-loop/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ node, currentDraft, maxIterations, provider }),
+    body: jsonBody({ node, currentDraft, maxIterations, provider }, locale),
     signal,
   });
 
@@ -631,13 +649,13 @@ export async function polishPedagogyHarnessStream({
         if (!event.data) continue;
         let payload;
         try { payload = JSON.parse(event.data); } catch {
-          throw new AiError("upstream", "El gateway envió un evento inválido", null);
+          throw new AiError("upstream", t("common.errors.invalidEvent"), null);
         }
         if (event.name === "done") {
           finalPayload = payload;
           onEvent?.({ type: "done", ...payload });
         } else if (event.name === "error") {
-          throw new AiError(payload.code ?? "upstream", payload.message ?? "Error del gateway", payload.details);
+          throw new AiError(payload.code ?? "upstream", payload.message ?? t("common.errors.gateway"), payload.details);
         } else {
           onEvent?.({ type: event.name, ...payload });
         }
@@ -648,7 +666,7 @@ export async function polishPedagogyHarnessStream({
   }
 
   if (!finalPayload?.text) {
-    throw new AiError("upstream", "El harness pedagógico terminó sin un texto válido", null);
+    throw new AiError("upstream", t("common.errors.noHarness"), null);
   }
   return finalPayload;
 }

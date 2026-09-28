@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ArrowLeft, BookOpen, ClipboardCheck, Maximize2, MessagesSquare, Minimize2, PenLine, X } from "lucide-react";
+import { useT } from "../../i18n/react.js";
 import { Button, IconButton } from "../primitives/Button.jsx";
 import { CategoryLabel } from "../primitives/CategoryDot.jsx";
 import { ScoreValue } from "../primitives/Score.jsx";
@@ -15,21 +16,22 @@ import { ParaphraseStage } from "./paraphrase/ParaphraseStage.jsx";
 import { EvaluateStage } from "./evaluate/EvaluateStage.jsx";
 
 export const STAGES = [
-  { id: "read", num: "01", label: "Leer", icon: BookOpen, Component: ReadStage },
-  { id: "mentor", num: "02", label: "Mentor IA", icon: MessagesSquare, Component: MentorStage },
-  { id: "paraphrase", num: "03", label: "Parafrasear", icon: PenLine, Component: ParaphraseStage },
-  { id: "evaluate", num: "04", label: "Evaluar", icon: ClipboardCheck, Component: EvaluateStage },
+  { id: "read", num: "01", labelKey: "common.stages.read", icon: BookOpen, Component: ReadStage },
+  { id: "mentor", num: "02", labelKey: "common.stages.mentor", icon: MessagesSquare, Component: MentorStage },
+  { id: "paraphrase", num: "03", labelKey: "common.stages.paraphrase", icon: PenLine, Component: ParaphraseStage },
+  { id: "evaluate", num: "04", labelKey: "common.stages.evaluate", icon: ClipboardCheck, Component: EvaluateStage },
 ];
 
 // Sesión de estudio: capa a pantalla completa sobre el shell (US2).
 export default function StudySession({ model, study }) {
+  const t = useT();
   const { graph, graphId } = model;
   const node = graph.nodeById?.get(study.nodeId) ?? graph.nodes.find((n) => n.id === study.nodeId);
   if (!node) {
     return (
       <div className="study study--missing">
-        <EmptyState title="No encontramos esta card" action={<Button variant="primary" onClick={actions.closeCard}>Volver al mapa</Button>}>
-          Puede que el enlace sea de otro mapa o que la card haya cambiado de nombre.
+        <EmptyState title={t("study.session.notFoundTitle")} action={<Button variant="primary" onClick={actions.closeCard}>{t("study.backToMap")}</Button>}>
+          {t("study.session.notFoundBody")}
         </EmptyState>
       </div>
     );
@@ -38,6 +40,7 @@ export default function StudySession({ model, study }) {
 }
 
 function Session({ model, study, node, graphId }) {
+  const t = useT();
   const { graph } = model;
   const data = useStudyData(graphId, node);
   const bodyRef = useRef(null);
@@ -65,10 +68,10 @@ function Session({ model, study, node, graphId }) {
   const Stage = stage.Component;
 
   return (
-    <div className={`study ${study.zen ? "is-zen" : ""}`} style={{ "--lesson-color": color }} role="region" aria-label={`Estudiar: ${node.label}`}>
+    <div className={`study ${study.zen ? "is-zen" : ""}`} style={{ "--lesson-color": color }} role="region" aria-label={t("study.session.regionLabel", { label: node.label })}>
       <header className="study__bar">
         <Button variant="ghost" icon={ArrowLeft} onClick={prevNode ? actions.back : actions.closeCard} className="study__back">
-          <span className="clamp-1">{prevNode ? `Volver a ${prevNode.label}` : "Mapa"}</span>
+          <span className="clamp-1">{prevNode ? t("study.session.backTo", { label: prevNode.label }) : t("study.session.map")}</span>
         </Button>
         <div className="study__heading">
           <CategoryLabel graph={graph} cat={node.cat} className="study__cat" />
@@ -76,20 +79,20 @@ function Session({ model, study, node, graphId }) {
         </div>
         <div className="study__meta">
           <ScoreValue score={p.displayScore} size="md" />
-          <IconButton icon={study.zen ? Minimize2 : Maximize2} label={study.zen ? "Salir del modo Zen (Esc)" : "Modo Zen"} pressed={study.zen} onClick={() => actions.setZen(!study.zen)} />
-          <IconButton icon={X} label="Cerrar (Esc)" onClick={actions.closeCard} />
+          <IconButton icon={study.zen ? Minimize2 : Maximize2} label={study.zen ? t("study.session.zenExit") : t("study.session.zenEnter")} pressed={study.zen} onClick={() => actions.setZen(!study.zen)} />
+          <IconButton icon={X} label={t("study.session.close")} onClick={actions.closeCard} />
         </div>
       </header>
-      <nav className="study__tabs" role="tablist" aria-label="Etapas de estudio" onKeyDown={onTabKey}>
+      <nav className="study__tabs" role="tablist" aria-label={t("study.session.tabsLabel")} onKeyDown={onTabKey}>
         {STAGES.map((s) => {
           const selected = s.id === stage.id;
-          const badge = s.id === "paraphrase" && data.draft.trim() ? "Borrador" : s.id === "evaluate" && running && data.task.type === "evaluation" ? "Evaluando…"
-            : s.id === "mentor" && running && data.task.type === "pedagogical_harness" ? "Trabajando…" : s.id === "evaluate" && data.attempts.length ? `${data.attempts.length} intento${data.attempts.length > 1 ? "s" : ""}` : null;
+          const badge = s.id === "paraphrase" && data.draft.trim() ? t("study.session.badge.draft") : s.id === "evaluate" && running && data.task.type === "evaluation" ? t("study.session.badge.evaluating")
+            : s.id === "mentor" && running && data.task.type === "pedagogical_harness" ? t("study.session.badge.working") : s.id === "evaluate" && data.attempts.length ? t("study.session.badge.attempts", { n: data.attempts.length }) : null;
           return (
             <button key={s.id} id={`study-tab-${s.id}`} role="tab" aria-selected={selected} aria-controls="study-stage" tabIndex={selected ? 0 : -1}
               className={`study-tab ${selected ? "is-active" : ""}`} onClick={() => go(s.id)}>
               <span className="study-tab__num mono">{s.num}</span>
-              <span className="study-tab__label">{s.label}</span>
+              <span className="study-tab__label">{t(s.labelKey)}</span>
               {badge && <span className="study-tab__badge">{badge}</span>}
             </button>
           );

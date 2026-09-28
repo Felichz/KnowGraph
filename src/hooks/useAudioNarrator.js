@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { getLocale, SPEECH_LANG } from "../i18n/locale.js";
 
 export function useAudioNarrator() {
   const [speaking, setSpeaking] = useState(false);
@@ -28,7 +29,7 @@ export function useAudioNarrator() {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = speed;
-    utterance.lang = "es-ES";
+    utterance.lang = SPEECH_LANG[getLocale()] ?? SPEECH_LANG.en;
 
     utterance.onstart = () => {
       setSpeaking(true);

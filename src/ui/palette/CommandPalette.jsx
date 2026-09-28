@@ -1,21 +1,25 @@
 import { useMemo, useRef, useState } from "react";
-import { ArrowRight, BarChart3, Layers, Map, Network, Search, Settings2, Shuffle } from "lucide-react";
+import { ArrowRight, BarChart3, Languages, Layers, Map, Network, Search, Settings2, Shuffle } from "lucide-react";
 import { Overlay } from "../primitives/Overlay.jsx";
 import { CategoryDot } from "../primitives/CategoryDot.jsx";
 import { ScoreValue } from "../primitives/Score.jsx";
 import { actions } from "../state/useWorkspace.js";
+import { LOCALES } from "../../i18n/locale.js";
+import { useLocale, useT } from "../../i18n/react.js";
 
 const norm = (s = "") => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-function buildActions(graphId) {
+function buildActions(graphId, locale, t) {
   const other = graphId === "react" ? "rails" : "react";
+  const nextLocale = LOCALES.find((item) => item !== locale) ?? locale;
   return [
-    { id: "a-map", label: "Ir al mapa", icon: Map, run: () => actions.setView("map") },
-    { id: "a-flash", label: "Ir a flashcards", icon: Layers, run: () => actions.setView("flashcards") },
-    { id: "a-progress", label: "Ver progreso", icon: BarChart3, run: () => actions.setView("progress") },
-    { id: "a-graph", label: "Ver el mapa como grafo", icon: Network, run: () => { actions.setView("map"); actions.setPref("mapMode", "graph"); } },
-    { id: "a-switch", label: `Cambiar a ${other === "react" ? "React" : "Rails"}`, icon: Shuffle, run: () => actions.setGraph(other) },
-    { id: "a-settings", label: "Conexiones de IA y respaldo", icon: Settings2, run: () => actions.openOverlay("settings") },
+    { id: "a-map", label: t("palette.actions.map"), icon: Map, run: () => actions.setView("map") },
+    { id: "a-flash", label: t("palette.actions.flashcards"), icon: Layers, run: () => actions.setView("flashcards") },
+    { id: "a-progress", label: t("palette.actions.progress"), icon: BarChart3, run: () => actions.setView("progress") },
+    { id: "a-graph", label: t("palette.actions.graphView"), icon: Network, run: () => { actions.setView("map"); actions.setPref("mapMode", "graph"); } },
+    { id: "a-switch", label: t("palette.actions.switchGraph", { name: other === "react" ? "React" : "Rails" }), icon: Shuffle, run: () => actions.setGraph(other) },
+    { id: "a-settings", label: t("palette.actions.settings"), icon: Settings2, run: () => actions.openOverlay("settings") },
+    { id: "a-locale", label: t("palette.actions.switchLanguage", { language: t(`common.language.${nextLocale}`) }), icon: Languages, run: () => actions.setLocale(nextLocale) },
   ];
 }
 
@@ -24,11 +28,13 @@ export function CommandPalette({ model, open, onClose }) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const listRef = useRef(null);
+  const t = useT();
+  const locale = useLocale();
   const { graph, progress } = model;
 
   const results = useMemo(() => {
     const q = norm(query.trim());
-    const acts = buildActions(graph.id).filter((a) => !q || norm(a.label).includes(q)).map((a) => ({ ...a, kind: "action" }));
+    const acts = buildActions(graph.id, locale, t).filter((a) => !q || norm(a.label).includes(q)).map((a) => ({ ...a, kind: "action" }));
     const cards = graph.nodes
       .map((node) => {
         const label = norm(node.label);
@@ -41,7 +47,7 @@ export function CommandPalette({ model, open, onClose }) {
       .slice(0, q ? 12 : 6)
       .map(({ node }) => ({ id: node.id, kind: "card", node, run: () => actions.openCard(node.id) }));
     return q ? [...cards, ...acts] : [...acts, ...cards];
-  }, [query, graph]);
+  }, [query, graph, locale, t]);
 
   const close = () => { setQuery(""); setActive(0); onClose(); };
   const choose = (item) => { close(); item.run(); };
@@ -55,15 +61,15 @@ export function CommandPalette({ model, open, onClose }) {
   };
 
   return (
-    <Overlay open={open} onClose={close} kind="palette" label="Buscar">
+    <Overlay open={open} onClose={close} kind="palette" label={t("palette.dialogLabel")}>
       <div className="palette" onKeyDown={onKeyDown}>
         <label className="palette__search">
           <Search size={16} strokeWidth={1.5} aria-hidden="true" />
-          <input autoFocus value={query} onChange={(e) => { setQuery(e.target.value); setActive(0); }} placeholder={`Buscar en ${graph.label} o escribir un comando…`}
+          <input autoFocus value={query} onChange={(e) => { setQuery(e.target.value); setActive(0); }} placeholder={t("palette.placeholder", { graph: graph.label })}
             role="combobox" aria-expanded="true" aria-controls="palette-list" aria-activedescendant={results[active] ? `pal-${results[active].id}` : undefined} />
         </label>
-        <ul id="palette-list" ref={listRef} className="palette__list" role="listbox" aria-label="Resultados">
-          {results.length === 0 && <li className="palette__empty t2">Sin resultados para “{query}”.</li>}
+        <ul id="palette-list" ref={listRef} className="palette__list" role="listbox" aria-label={t("palette.resultsLabel")}>
+          {results.length === 0 && <li className="palette__empty t2">{t("palette.empty", { query })}</li>}
           {results.map((item, i) => {
             const Icon = item.icon;
             return (

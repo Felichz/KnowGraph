@@ -5,7 +5,9 @@ import {
   getProviderPreset,
   isProviderId,
   normalizeProviderAdapter,
+  presetText,
 } from "../../shared/providerCatalog.js";
+import { t } from "../i18n/translate.js";
 
 const SESSION_KEY = "learning-workspace:provider-connections:v4";
 const LEGACY_SESSION_KEYS = [
@@ -14,7 +16,7 @@ const LEGACY_SESSION_KEYS = [
   "learning-workspace:provider-profile:v1",
 ];
 
-export { PROVIDER_ADAPTERS, PROVIDER_LIBRARY, PROVIDER_PRESETS, getProviderPreset, isProviderId, normalizeProviderAdapter };
+export { PROVIDER_ADAPTERS, PROVIDER_LIBRARY, PROVIDER_PRESETS, getProviderPreset, isProviderId, normalizeProviderAdapter, presetText };
 
 export const EMPTY_PROVIDER_PROFILE = Object.freeze({
   id: "",
@@ -107,7 +109,7 @@ export async function setActiveProviderProfile(profileId) {
   }
   const profile = stored.profiles.find((candidate) => candidate.id === id);
   const ready = normalizeProviderProfile(profile);
-  if (!ready) throw new Error("La conexión debe tener endpoint, API key y modelo antes de usarse.");
+  if (!ready) throw new Error(t("ai.providers.notReady"));
   stored.activeProfileId = ready.id;
   await writeStoredState(stored);
   return ready;
@@ -134,8 +136,8 @@ export async function clearProviderProfile() {
 
 export function providerStorageDescription() {
   return window.learningDesktop?.providerSettings
-    ? "La clave se guarda cifrada en este dispositivo."
-    : "La clave se conserva solo mientras esta pestaña permanezca abierta.";
+    ? t("ai.providers.storageDesktop")
+    : t("ai.providers.storageSession");
 }
 
 export async function exportProviderSettings() {
@@ -171,8 +173,8 @@ async function upsertProvider(value, { activate, requireModel }) {
   const normalized = normalizeProviderProfile(value, { requireModel });
   if (!normalized) {
     throw new Error(requireModel
-      ? "Completá endpoint, API key y modelo."
-      : "Completá endpoint y API key.");
+      ? t("ai.providers.missingAll")
+      : t("ai.providers.missingEndpointAndKey"));
   }
   const stored = await readStoredState();
   const index = stored.profiles.findIndex((profile) => profile.id === normalized.id);

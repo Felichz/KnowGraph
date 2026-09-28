@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useT } from "../../i18n/react.js";
 import { getCategoryColor } from "../theme/categoryPalette.js";
 import { NODE_H, NODE_W, splitLabel, truncate } from "./graphUtils.js";
 
@@ -6,20 +7,21 @@ const RAIL_W = NODE_W - 24;
 
 // Nodo del grafo 236×88 (design-spec D.9 + F.6a).
 export const GraphNode = memo(function GraphNode({ node, graph, pos, p, level, state, aiActive, tabIndex, stage, onOpen, onHover, onFocusNode }) {
+  const t = useT();
   const color = getCategoryColor(graph.id, node.cat, graph.categories[node.cat]?.color);
   const lines = splitLabel(node.label);
   const score = typeof p.displayScore === "number" ? Math.round(p.displayScore) : null;
   const base = score == null ? 0 : (Math.min(score, 100) / 120) * RAIL_W;
   const extra = score > 100 ? ((Math.min(score, 120) - 100) / 120) * RAIL_W : 0;
-  const scoreText = score == null ? "Sin evaluar" : `${score > 100 ? "★ " : score === 100 ? "✓ " : ""}${score}/120`;
-  const label = [node.label, `etapa ${stage}`, score == null ? "sin evaluar" : `puntaje ${score} de 120`,
-    level === 1 ? "mejor siguiente" : level ? `nivel ${level} de la ruta sugerida` : null, aiActive ? "IA trabajando en esta card" : null].filter(Boolean).join(". ");
+  const scoreText = score == null ? t("common.status.unscored") : `${score > 100 ? "★ " : score === 100 ? "✓ " : ""}${score}/120`;
+  const label = [node.label, t("graph.node.stage", { stage }), score == null ? t("map.card.aria.unscored") : t("map.card.aria.score", { score, max: 120 }),
+    level === 1 ? t("map.card.aria.bestNext") : level ? t("map.card.aria.level", { level }) : null, aiActive ? t("map.card.aria.aiActive") : null].filter(Boolean).join(". ");
   return (
     <g className={`gnode ${state}`} transform={`translate(${pos.x} ${pos.y})`} role="button" tabIndex={tabIndex}
       aria-label={label} aria-hidden={state.includes("is-inactive") || undefined} data-node={node.id}
       onClick={() => onOpen(node)} onPointerEnter={() => onHover(node.id)} onPointerLeave={() => onHover(null)}
       onFocus={() => onFocusNode(node.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpen(node, true); } }}>
-      <title>{`${node.label}. Etapa ${stage}. ${scoreText}`}</title>
+      <title>{t("graph.node.title", { label: node.label, stage, score: scoreText })}</title>
       <rect className="gnode__focus" x={-3} y={-3} width={NODE_W + 6} height={NODE_H + 6} rx={15} />
       <g clipPath="url(#gnode-clip)">
         <rect className="gnode__rect node-rect" width={NODE_W} height={NODE_H} rx={12} />
@@ -39,10 +41,10 @@ export const GraphNode = memo(function GraphNode({ node, graph, pos, p, level, s
       </g>
       {level === 1 && (
         <g transform={`translate(${NODE_W - 108} -12)`} className="gnode__badge">
-          <rect width={108} height={20} rx={10} /><text x={54} y={14} textAnchor="middle">Mejor siguiente</text>
+          <rect width={108} height={20} rx={10} /><text x={54} y={14} textAnchor="middle">{t("map.card.bestNext")}</text>
         </g>
       )}
-      {level > 1 && <text className="gnode__level" x={NODE_W} y={-8} textAnchor="end">Nivel {level}</text>}
+      {level > 1 && <text className="gnode__level" x={NODE_W} y={-8} textAnchor="end">{t("map.card.level", { level })}</text>}
     </g>
   );
 });

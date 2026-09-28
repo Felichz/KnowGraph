@@ -7,6 +7,7 @@ import { actions, usePopstate, useWorkspace } from "../state/useWorkspace.js";
 import { useGraphModel } from "../state/useGraphModel.js";
 import { CommandPalette } from "../palette/CommandPalette.jsx";
 import { TaskHud } from "../hud/TaskHud.jsx";
+import { useT } from "../../i18n/react.js";
 
 const StudySession = lazy(() => import("../study/StudySession.jsx"));
 const SettingsDrawer = lazy(() => import("../settings/SettingsDrawer.jsx"));
@@ -14,6 +15,7 @@ const SettingsDrawer = lazy(() => import("../settings/SettingsDrawer.jsx"));
 // Raíz de la UI v3: shell, sesión de estudio (capa no modal), overlays y capas globales.
 export function Workspace() {
   usePopstate();
+  const t = useT();
   const model = useGraphModel();
   const study = useWorkspace((s) => s.study);
   const overlay = useWorkspace((s) => s.overlay);
@@ -33,7 +35,7 @@ export function Workspace() {
 
   return (
     <>
-      <SkipLink target={study ? "study-stage" : "main"}>{study ? "Saltar al contenido de la etapa" : "Saltar al contenido"}</SkipLink>
+      <SkipLink target={study ? "study-stage" : "main"}>{t(study ? "app.skipLink.stageContent" : "app.skipLink.content")}</SkipLink>
       <AppShell model={model} inert={Boolean(study)} />
       {study && (
         <Suspense fallback={<div className="study study--loading" aria-busy="true" />}>

@@ -1,10 +1,12 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { AlertCircle, CheckCircle2, Info, AlertTriangle, X } from "lucide-react";
 import { dismissToast, getToasts, subscribeToasts, undoLast } from "../state/toastStore.js";
+import { useT } from "../../i18n/react.js";
 
 const ICONS = { error: AlertCircle, success: CheckCircle2, info: Info, warn: AlertTriangle };
 
 function ToastItem({ item }) {
+  const t = useT();
   const timer = useRef(null);
   const start = () => { if (!item.sticky) timer.current = setTimeout(() => dismissToast(item.id), item.duration); };
   const stop = () => clearTimeout(timer.current);
@@ -20,7 +22,7 @@ function ToastItem({ item }) {
           <span className="btn__label">{item.action}</span>
         </button>
       ) : null}
-      <button type="button" className="icon-btn icon-btn--sm" aria-label="Cerrar aviso" onClick={() => dismissToast(item.id)}>
+      <button type="button" className="icon-btn icon-btn--sm" aria-label={t("primitives.toaster.dismiss")} onClick={() => dismissToast(item.id)}>
         <X size={16} strokeWidth={1.5} aria-hidden="true" />
       </button>
     </div>
@@ -29,6 +31,7 @@ function ToastItem({ item }) {
 
 // Región de toasts: F6 lleva el foco aquí; ⌘/Ctrl+Z deshace fuera de campos editables.
 export function Toaster() {
+  const t = useT();
   const items = useSyncExternalStore(subscribeToasts, getToasts, getToasts);
   const region = useRef(null);
   useEffect(() => {
@@ -43,7 +46,7 @@ export function Toaster() {
     return () => window.removeEventListener("keydown", onKey);
   }, [items.length]);
   return (
-    <section ref={region} className="toaster" aria-label="Avisos" aria-live="polite">
+    <section ref={region} className="toaster" aria-label={t("primitives.toaster.region")} aria-live="polite">
       {items.map((item) => <ToastItem key={item.id} item={item} />)}
     </section>
   );

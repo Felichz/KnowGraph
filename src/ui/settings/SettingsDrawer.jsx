@@ -9,9 +9,12 @@ import { toast } from "../state/toastStore.js";
 import { ProviderPicker } from "./ProviderPicker.jsx";
 import { ProviderEditor } from "./ProviderEditor.jsx";
 import { BackupSection } from "./BackupSection.jsx";
+import { LanguageSection } from "./LanguageSection.jsx";
+import { useT } from "../../i18n/react.js";
 
 // Conexiones de IA (lista · catálogo · editor) y respaldo local (US5).
 export default function SettingsDrawer({ open, onClose, initialView }) {
+  const t = useT();
   const [view, setView] = useState(initialView === "picker" ? "picker" : "list");
   const [editing, setEditing] = useState(null);
   const [state, setState] = useState({ profiles: [], activeProfileId: null });
@@ -25,15 +28,15 @@ export default function SettingsDrawer({ open, onClose, initialView }) {
   };
   const remove = async (profile) => {
     await removeProviderProfile(profile.id); await reload(); notifyProviderChanged();
-    toast({ tone: "info", message: `Se eliminó “${profile.label}”.` });
+    toast({ tone: "info", message: t("settings.drawer.removed", { label: profile.label }) });
   };
   const back = () => { setView("list"); setEditing(null); reload(); };
 
-  const title = view === "picker" ? "Nueva conexión" : view === "editor" ? (editing?.label || "Conexión") : "Conexiones de IA";
+  const title = view === "picker" ? t("settings.drawer.newConnection") : view === "editor" ? (editing?.label || t("settings.drawer.connection")) : t("settings.drawer.title");
   return (
     <Overlay open={open} onClose={onClose} kind="drawer" labelledBy="settings-title">
       <OverlayHeader id="settings-title" title={title} subtitle={view === "list" ? providerStorageDescription() : undefined} onClose={onClose}
-        actions={view !== "list" ? <IconButton icon={ArrowLeft} label="Volver" onClick={back} /> : null} />
+        actions={view !== "list" ? <IconButton icon={ArrowLeft} label={t("common.actions.back")} onClick={back} /> : null} />
       <div className="settings">
         {view === "picker" && <ProviderPicker onPick={(draft) => { setEditing(draft); setView("editor"); }} />}
         {view === "editor" && editing && <ProviderEditor draft={editing} onSaved={back} />}
@@ -41,24 +44,25 @@ export default function SettingsDrawer({ open, onClose, initialView }) {
           <>
             {error && <Notice tone="error">{error}</Notice>}
             <section className="settings__section">
-              <div role="radiogroup" aria-label="Conexión activa" className="conn-list">
+              <div role="radiogroup" aria-label={t("settings.drawer.activeConnection")} className="conn-list">
                 <label className={`conn ${!state.activeProfileId ? "is-active" : ""}`}>
                   <input type="radio" name="conn" checked={!state.activeProfileId} onChange={() => activate(null)} />
-                  <span className="conn__text"><strong>Gateway del proyecto</strong><span className="t3">Usa los modelos configurados en el servidor local.</span></span>
+                  <span className="conn__text"><strong>{t("settings.drawer.gatewayTitle")}</strong><span className="t3">{t("settings.drawer.gatewayHint")}</span></span>
                 </label>
                 {state.profiles.map((p) => (
                   <div key={p.id} className={`conn ${state.activeProfileId === p.id ? "is-active" : ""}`}>
                     <label className="conn__main">
                       <input type="radio" name="conn" checked={state.activeProfileId === p.id} onChange={() => activate(p.id)} />
-                      <span className="conn__text"><strong className="clamp-1">{p.label}</strong><span className="t3 mono clamp-1">{p.model || "sin modelo"}</span></span>
+                      <span className="conn__text"><strong className="clamp-1">{p.label}</strong><span className="t3 mono clamp-1">{p.model || t("settings.drawer.noModel")}</span></span>
                     </label>
-                    <IconButton icon={Pencil} label={`Editar ${p.label}`} onClick={() => { setEditing(p); setView("editor"); }} />
-                    <IconButton icon={Trash2} label={`Eliminar ${p.label}`} onClick={() => remove(p)} />
+                    <IconButton icon={Pencil} label={t("settings.drawer.editConnection", { label: p.label })} onClick={() => { setEditing(p); setView("editor"); }} />
+                    <IconButton icon={Trash2} label={t("settings.drawer.deleteConnection", { label: p.label })} onClick={() => remove(p)} />
                   </div>
                 ))}
               </div>
-              <Button variant="secondary" icon={Plus} onClick={() => setView("picker")}>Agregar conexión</Button>
+              <Button variant="secondary" icon={Plus} onClick={() => setView("picker")}>{t("settings.drawer.addConnection")}</Button>
             </section>
+            <LanguageSection />
             <BackupSection onRestored={reload} />
           </>
         )}

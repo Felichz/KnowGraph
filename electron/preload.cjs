@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld("learningDesktop", Object.freeze({
     clear: () => ipcRenderer.invoke("provider-settings:clear"),
   }),
   backup: Object.freeze({
-    save: (content, defaultFilename) => ipcRenderer.invoke("backup:save", { content, defaultFilename }),
-    load: () => ipcRenderer.invoke("backup:load"),
+    save: (content, defaultFilename, locale) => ipcRenderer.invoke("backup:save", { content, defaultFilename, locale }),
+    load: (locale) => ipcRenderer.invoke("backup:load", { locale }),
   }),
 }));

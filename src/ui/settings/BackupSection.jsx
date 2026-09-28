@@ -7,21 +7,23 @@ import { Notice } from "../primitives/Feedback.jsx";
 import { toast } from "../state/toastStore.js";
 import { refreshProgress } from "../state/progressStore.js";
 import { notifyProviderChanged } from "../hooks/useProviderLabel.js";
+import { useT } from "../../i18n/react.js";
 
 // Respaldo local: exportar/importar progreso, borradores y conexiones (incluye API keys).
 export function BackupSection({ onRestored }) {
+  const t = useT();
   const input = useRef(null);
   const [pending, setPending] = useState(null);
   const [error, setError] = useState(null);
 
   const exportNow = async () => {
-    try { await downloadBackup(await createBackup()); toast({ tone: "success", message: "Respaldo descargado." }); } catch (e) { setError(e.message); }
+    try { await downloadBackup(await createBackup()); toast({ tone: "success", message: t("settings.backup.downloaded") }); } catch (e) { setError(e.message); }
   };
   const onFile = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    try { setPending(parseBackup(await file.text())); setError(null); } catch (e) { setError(e.message || "El archivo no es un respaldo válido."); }
+    try { setPending(parseBackup(await file.text())); setError(null); } catch (e) { setError(e.message || t("settings.backup.invalidFile")); }
   };
   const restore = async () => {
     try {
@@ -29,22 +31,22 @@ export function BackupSection({ onRestored }) {
       setPending(null);
       ["react", "rails"].forEach((g) => refreshProgress(g));
       notifyProviderChanged(); onRestored?.();
-      toast({ tone: "success", message: "Respaldo restaurado." });
+      toast({ tone: "success", message: t("settings.backup.restored") });
     } catch (e) { setPending(null); setError(e.message); }
   };
 
   return (
     <section className="settings__section">
-      <h3 className="settings__h">Respaldo</h3>
-      <p className="t2">Guarda tu progreso, borradores e intentos en un archivo JSON. <strong>El archivo incluye las API keys de tus conexiones</strong>: guardalo en un lugar privado.</p>
+      <h3 className="settings__h">{t("settings.backup.title")}</h3>
+      <p className="t2">{t("settings.backup.intro")} <strong>{t("settings.backup.secretsWarning")}</strong>{t("settings.backup.secretsTail")}</p>
       {error && <Notice tone="error">{error}</Notice>}
       <div className="settings__row">
-        <Button variant="secondary" icon={Download} onClick={exportNow}>Exportar</Button>
-        <Button variant="ghost" icon={Upload} onClick={() => input.current?.click()}>Importar…</Button>
+        <Button variant="secondary" icon={Download} onClick={exportNow}>{t("settings.backup.export")}</Button>
+        <Button variant="ghost" icon={Upload} onClick={() => input.current?.click()}>{t("settings.backup.import")}</Button>
         <input ref={input} type="file" accept="application/json,.json" hidden onChange={onFile} />
       </div>
-      <ConfirmDialog open={Boolean(pending)} title="¿Restaurar este respaldo?" destructive confirmLabel="Restaurar"
-        body="Reemplaza el progreso, los borradores y las conexiones de este navegador por los del archivo. No se puede deshacer."
+      <ConfirmDialog open={Boolean(pending)} title={t("settings.backup.confirmTitle")} destructive confirmLabel={t("settings.backup.confirmLabel")}
+        body={t("settings.backup.confirmBody")}
         onConfirm={restore} onCancel={() => setPending(null)} />
     </section>
   );

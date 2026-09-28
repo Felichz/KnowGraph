@@ -77,3 +77,7 @@
 .dock__item { display: grid; place-items: center; align-content: center; gap: 2px; color: var(--text-3); font-size: var(--fs-xs); font-weight: 500; }
 .dock__item.is-active { color: var(--text-1); }
 .dock__item.is-active svg { color: var(--accent); }
+
+/* Language switcher (EN / ES) */
+.topbar__lang { margin-left: auto; }
+.lang-toggle { font-size: var(--fs-xs); font-weight: 600; letter-spacing: .04em; color: var(--text-2); }

@@ -1,17 +1,21 @@
 import { getScoreView } from "../../../ai/types.js";
+import { useLocale, useT } from "../../../i18n/react.js";
+import { formatDate } from "../../../i18n/translate.js";
 import { ScoreValue } from "../../primitives/Score.jsx";
 
 // Historial de intentos con mini gráfico de evolución (más reciente arriba).
 export function AttemptHistory({ attempts, selectedId, onSelect }) {
+  const t = useT();
+  const locale = useLocale();
   const points = attempts.map((a) => getScoreView(a.evaluation)?.displayScore ?? 0);
   const w = 240, h = 64, step = points.length > 1 ? w / (points.length - 1) : 0;
   const y = (v) => h - (v / 120) * h;
   const path = points.map((v, i) => `${i ? "L" : "M"}${(i * step).toFixed(1)} ${y(v).toFixed(1)}`).join(" ");
   return (
-    <aside className="history" aria-label="Historial de intentos">
-      <h2 className="eyebrow">Historial · {attempts.length}</h2>
+    <aside className="history" aria-label={t("study.evaluate.history.label")}>
+      <h2 className="eyebrow">{t("study.evaluate.history.title", { n: attempts.length })}</h2>
       {points.length > 1 && (
-        <svg className="history__chart" viewBox={`-4 -4 ${w + 8} ${h + 8}`} role="img" aria-label={`Evolución: ${points.join(", ")}`}>
+        <svg className="history__chart" viewBox={`-4 -4 ${w + 8} ${h + 8}`} role="img" aria-label={t("study.evaluate.history.chartLabel", { points: points.join(", ") })}>
           <line x1="0" x2={w} y1={y(100)} y2={y(100)} className="history__threshold" />
           <path d={path} className="history__line" />
           {points.map((v, i) => <circle key={i} cx={i * step} cy={y(v)} r={attempts[i].id === selectedId ? 4 : 2.5} className={attempts[i].id === selectedId ? "is-selected" : ""} />)}
@@ -22,7 +26,7 @@ export function AttemptHistory({ attempts, selectedId, onSelect }) {
           <li key={a.id}>
             <button type="button" className={`history__item ${a.id === selectedId ? "is-active" : ""}`} aria-current={a.id === selectedId || undefined} onClick={() => onSelect(a.id)}>
               <span className="t3 mono">#{attempts.length - i}</span>
-              <span className="history__date">{new Date(a.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}{a.isAiGenerated ? " · IA" : ""}</span>
+              <span className="history__date">{formatDate(a.createdAt, { day: "numeric", month: "short" }, locale)}{a.isAiGenerated ? ` · ${t("study.evaluate.history.ai")}` : ""}</span>
               <ScoreValue score={getScoreView(a.evaluation)?.displayScore} />
             </button>
           </li>

@@ -1,4 +1,5 @@
 import { loadPrefs, savePrefs } from "./prefs.js";
+import { getLocale, setLocale, subscribeLocale } from "../../i18n/locale.js";
 import { buildPath, historyState, parseLocation, pushRoute, replaceRoute } from "./routing.js";
 
 // Store único de la UI (useSyncExternalStore). Datos de dominio: logic/ y ai/.
@@ -10,7 +11,7 @@ function init() {
   const prefs = loadPrefs();
   const prev = typeof window !== "undefined" ? historyState() : null;
   state = {
-    graphId: route.graphId, view: route.view, focusCat: null, prefs,
+    graphId: route.graphId, view: route.view, focusCat: null, prefs, locale: getLocale(),
     study: route.nodeId ? { nodeId: route.nodeId, stage: "read", history: prev?.previousNodeIds ?? [], zen: false, attemptId: null } : null,
     overlay: null, lastOpenedNodeId: null,
   };
@@ -18,6 +19,8 @@ function init() {
 }
 
 export function getState() { if (!state) init(); return state; }
+// The locale lives in i18n/locale.js (also used outside React); the store mirrors it for selectors.
+subscribeLocale((locale) => { if (state && state.locale !== locale) set({ locale }); });
 export function subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 function set(patch) {
   state = { ...getState(), ...patch };
@@ -35,6 +38,7 @@ export const actions = {
     pushRoute({ graphId: getState().graphId, view });
   },
   setFocus(focusCat) { set({ focusCat }); },
+  setLocale(locale) { setLocale(locale); },
   setPref(key, value) {
     const prefs = { ...getState().prefs, [key]: value };
     savePrefs(prefs);

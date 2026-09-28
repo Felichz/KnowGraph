@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useT } from "../../i18n/react.js";
 import { CategoryDot } from "../primitives/CategoryDot.jsx";
 import { useIsMobile } from "../hooks/useMediaQuery.js";
 import { actions, useWorkspace } from "../state/useWorkspace.js";
@@ -7,6 +8,7 @@ import { ConceptCard, ConceptRow } from "./ConceptCard.jsx";
 // Grupos por categoría con cabecera sticky (INF-030…038). ←/→ mueven el foco entre cards.
 export function ConceptGroups({ model, activeTaskNodeIds }) {
   const mobile = useIsMobile();
+  const t = useT();
   const lastOpened = useWorkspace((s) => s.lastOpenedNodeId);
   const root = useRef(null);
   const { graph, activeCats, progress, guidance } = model;
@@ -17,8 +19,8 @@ export function ConceptGroups({ model, activeTaskNodeIds }) {
     if (!el) return;
     el.scrollIntoView({ block: "nearest" });
     el.classList.add("is-highlight");
-    const t = setTimeout(() => el.classList.remove("is-highlight"), 1200);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => el.classList.remove("is-highlight"), 1200);
+    return () => clearTimeout(timer);
   }, [lastOpened]);
 
   function onKeyDown(event) {
@@ -42,7 +44,7 @@ export function ConceptGroups({ model, activeTaskNodeIds }) {
               <h2 id={`group-${cat}`} className="group__title">
                 <CategoryDot graph={graph} cat={cat} /> {graph.categories[cat].label}
               </h2>
-              <span className="group__count mono">{progress.status === "error" ? "—" : `${stats.done}/${stats.total}`} dominadas</span>
+              <span className="group__count mono">{t("map.groups.mastered", { count: progress.status === "error" ? "—" : `${stats.done}/${stats.total}` })}</span>
               {graph.categoryContext?.[cat] ? <p className="group__context clamp-1">{graph.categoryContext[cat]}</p> : null}
             </header>
             <div className={mobile ? "rows" : "grid"}>

@@ -1,7 +1,8 @@
 ﻿{
-  "name": "Mapas de entrevista — React y Rails",
+  "name": "Learning Workspace: React and Rails interview maps",
   "short_name": "KnowGraph",
-  "description": "Grafo de conocimiento para entrevistas técnicas de React y Rails",
+  "description": "Knowledge graph for React and Rails technical interviews",
+  "lang": "en",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b0d13",

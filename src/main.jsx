@@ -7,8 +7,10 @@ import "./ui/theme/tokens.css";
 import "./ui/theme/base.css";
 import "./ui/theme/styles.css";
 import App from "./App.jsx";
+import { applyDocumentLocale } from "./i18n/locale.js";
 
 document.documentElement.dataset.runtime = window.learningDesktop?.isElectron ? "electron" : "web";
+applyDocumentLocale();
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>

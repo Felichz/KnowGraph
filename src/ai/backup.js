@@ -6,6 +6,8 @@ import {
   exportProviderSettings,
   importProviderSettings,
 } from "./providerSettings.js";
+import { t } from "../i18n/translate.js";
+import { getLocale } from "../i18n/locale.js";
 
 export const BACKUP_APP_ID = "learning-workspace";
 export const BACKUP_KIND = "state-backup";
@@ -30,7 +32,7 @@ export async function createBackup() {
 export function parseBackup(text) {
   const value = JSON.parse(text);
   if (!value || typeof value !== "object" || value.app !== BACKUP_APP_ID || value.kind !== BACKUP_KIND || value.version !== BACKUP_VERSION) {
-    throw new Error("El archivo no es un respaldo válido de Learning Workspace.");
+    throw new Error(t("ai.backup.invalid"));
   }
   return value;
 }
@@ -47,10 +49,10 @@ export async function downloadBackup(backup) {
   const defaultFilename = `learning-workspace-backup-${new Date().toISOString().slice(0, 10)}.json`;
 
   if (typeof window !== "undefined" && window.learningDesktop?.backup?.save) {
-    const result = await window.learningDesktop.backup.save(jsonContent, defaultFilename);
+    const result = await window.learningDesktop.backup.save(jsonContent, defaultFilename, getLocale());
     if (result?.canceled) return;
     if (!result?.success) {
-      throw new Error(result?.error || "Error al guardar el archivo en disco.");
+      throw new Error(result?.error || t("ai.backup.saveFailed"));
     }
     return;
   }

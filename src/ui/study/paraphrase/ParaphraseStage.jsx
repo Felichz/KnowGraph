@@ -1,21 +1,24 @@
 import { useRef } from "react";
 import { ArrowRight, Mic, MicOff, ScanSearch, Sparkles } from "lucide-react";
+import { useT } from "../../../i18n/react.js";
 import { Button } from "../../primitives/Button.jsx";
 import { Notice } from "../../primitives/Feedback.jsx";
 import { useSpeechRecognition } from "../../../hooks/useSpeechRecognition.js";
 import { CoachPanel } from "./CoachPanel.jsx";
 import { useLiveReview } from "./useLiveReview.js";
 
-const SAVE_LABEL = { idle: "", saving: "Guardando…", saved: "Guardado", error: "No se pudo guardar" };
+const SAVE_KEY = { saving: "study.paraphrase.save.saving", saved: "study.paraphrase.save.saved", error: "study.paraphrase.save.error" };
 
 // 03 Parafrasear: explicación propia con autosave, dictado y coaching a pedido.
 export function ParaphraseStage({ node, graph, data, go }) {
+  const t = useT();
   const speech = useSpeechRecognition();
   const live = useLiveReview(graph.id, node, data);
   const latest = useRef(data.draft);
   latest.current = data.draft;
   const words = data.draft.trim() ? data.draft.trim().split(/\s+/).length : 0;
   const canReview = data.draft.trim().length >= 20;
+  const saveLabel = SAVE_KEY[data.saveState] ? t(SAVE_KEY[data.saveState]) : "";
 
   const dictate = () => speech.toggleListening((text) => {
     const current = latest.current;
@@ -27,32 +30,32 @@ export function ParaphraseStage({ node, graph, data, go }) {
     <div className="stage stage--paraphrase">
       <section className="editor-col">
         <header className="editor-col__head">
-          <h2 className="stage__title">Explicalo con tus palabras</h2>
-          <p className="t2">Como si se lo contaras a alguien en una entrevista: qué es, por qué existe, cómo lo aplicás y qué puede salir mal.</p>
+          <h2 className="stage__title">{t("study.paraphrase.title")}</h2>
+          <p className="t2">{t("study.paraphrase.intro")}</p>
         </header>
         {data.draftMeta?.isAiGenerated && (
-          <Notice tone="info" icon={Sparkles}>Este borrador lo generó la IA. Reescribilo con tus palabras antes de evaluarte para que el puntaje refleje lo que sabés.</Notice>
+          <Notice tone="info" icon={Sparkles}>{t("study.paraphrase.aiDraftNotice")}</Notice>
         )}
         <textarea
           className="editor"
           value={data.draft}
           onChange={(e) => data.updateDraft(e.target.value)}
-          placeholder={`Por ejemplo: "${node.label} sirve para…"`}
-          aria-label="Tu explicación"
+          placeholder={t("study.paraphrase.placeholder", { label: node.label })}
+          aria-label={t("study.paraphrase.editorLabel")}
           spellCheck
         />
         <div className="editor__bar">
-          <span className="t3 mono" aria-live="polite">{words} palabras{SAVE_LABEL[data.saveState] ? ` · ${SAVE_LABEL[data.saveState]}` : ""}</span>
+          <span className="t3 mono" aria-live="polite">{t("study.paraphrase.words", { n: words })}{saveLabel ? ` · ${saveLabel}` : ""}</span>
           <div className="editor__actions">
             {speech.isSupported && (
               <Button variant={speech.isListening ? "danger" : "ghost"} icon={speech.isListening ? MicOff : Mic} onClick={dictate} aria-pressed={speech.isListening}>
-                {speech.isListening ? "Detener dictado" : "Dictar"}
+                {speech.isListening ? t("study.paraphrase.stopDictation") : t("study.paraphrase.dictate")}
               </Button>
             )}
-            <Button variant="secondary" icon={ScanSearch} onClick={live.run} loading={live.status === "loading"} loadingLabel="Revisando…"
-              disabled={!canReview} disabledReason={!canReview ? "Escribí al menos un par de oraciones" : undefined}>Revisar con IA</Button>
-            <Button variant="primary" iconRight={ArrowRight} onClick={() => go("evaluate")} disabled={!canReview} disabledReason={!canReview ? "Escribí tu explicación primero" : undefined}>
-              Evaluar
+            <Button variant="secondary" icon={ScanSearch} onClick={live.run} loading={live.status === "loading"} loadingLabel={t("study.paraphrase.reviewing")}
+              disabled={!canReview} disabledReason={!canReview ? t("study.paraphrase.minSentences") : undefined}>{t("study.paraphrase.review")}</Button>
+            <Button variant="primary" iconRight={ArrowRight} onClick={() => go("evaluate")} disabled={!canReview} disabledReason={!canReview ? t("study.paraphrase.writeFirst") : undefined}>
+              {t("common.stages.evaluate")}
             </Button>
           </div>
         </div>

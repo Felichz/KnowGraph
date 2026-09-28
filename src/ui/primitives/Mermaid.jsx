@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { CodeBlock } from "./CodeBlock.jsx";
 import { Skeleton } from "./Feedback.jsx";
+import { useT } from "../../i18n/react.js";
 
 let loader;
 function loadMermaid() {
@@ -23,6 +24,7 @@ function loadMermaid() {
 
 // Diagrama Mermaid lazy con fallback al código fuente (design-spec E.3).
 export function Mermaid({ chart }) {
+  const t = useT();
   const id = `mmd-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const [state, setState] = useState({ status: "loading", svg: "" });
   useEffect(() => {
@@ -37,8 +39,8 @@ export function Mermaid({ chart }) {
   if (state.status === "error") {
     return (
       <div className="diagram diagram--fallback">
-        <p className="diagram__note">No se pudo dibujar el diagrama; este es su texto.</p>
-        <CodeBlock code={chart} language="markup" label="Diagrama (Mermaid)" />
+        <p className="diagram__note">{t("primitives.mermaid.error")}</p>
+        <CodeBlock code={chart} language="markup" label={t("primitives.mermaid.sourceLabel")} />
       </div>
     );
   }
@@ -46,7 +48,7 @@ export function Mermaid({ chart }) {
     return (
       <div className="diagram diagram--loading" aria-busy="true">
         <Skeleton height={240} radius="var(--r-md)" />
-        <span className="diagram__note">Preparando diagrama…</span>
+        <span className="diagram__note">{t("primitives.mermaid.loading")}</span>
       </div>
     );
   }

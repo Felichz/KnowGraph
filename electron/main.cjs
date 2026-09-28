@@ -162,15 +162,23 @@ function registerProviderSettingsIpc() {
   });
 }
 
+// Native dialog texts follow the UI language sent by the renderer (English by default).
+const DIALOG_TEXT = {
+  en: { save: "Save learning backup", open: "Select backup file", json: "JSON files", all: "All files" },
+  es: { save: "Guardar respaldo de aprendizaje", open: "Seleccionar archivo de respaldo", json: "Archivos JSON", all: "Todos los archivos" },
+};
+const dialogText = (locale) => DIALOG_TEXT[locale] ?? DIALOG_TEXT.en;
+
 function registerBackupIpc() {
-  ipcMain.handle("backup:save", async (_event, { content, defaultFilename }) => {
+  ipcMain.handle("backup:save", async (_event, { content, defaultFilename, locale }) => {
+    const text = dialogText(locale);
     try {
       const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
-        title: "Guardar respaldo de aprendizaje",
+        title: text.save,
         defaultPath: defaultFilename || `learning-workspace-backup-${new Date().toISOString().slice(0, 10)}.json`,
         filters: [
-          { name: "Archivos JSON", extensions: ["json"] },
-          { name: "Todos los archivos", extensions: ["*"] },
+          { name: text.json, extensions: ["json"] },
+          { name: text.all, extensions: ["*"] },
         ],
       });
       if (canceled || !filePath) return { canceled: true };
@@ -181,14 +189,15 @@ function registerBackupIpc() {
     }
   });
 
-  ipcMain.handle("backup:load", async () => {
+  ipcMain.handle("backup:load", async (_event, { locale } = {}) => {
+    const text = dialogText(locale);
     try {
       const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
-        title: "Seleccionar archivo de respaldo",
+        title: text.open,
         properties: ["openFile"],
         filters: [
-          { name: "Archivos JSON", extensions: ["json"] },
-          { name: "Todos los archivos", extensions: ["*"] },
+          { name: text.json, extensions: ["json"] },
+          { name: text.all, extensions: ["*"] },
         ],
       });
       if (canceled || !filePaths || !filePaths[0]) return { canceled: true };

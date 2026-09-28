@@ -1,32 +1,35 @@
 import { AlertTriangle, PenLine, Sparkles } from "lucide-react";
+import { useT } from "../../i18n/react.js";
 import { ScoreRail, ScoreValue } from "../primitives/Score.jsx";
 import { CategoryDot } from "../primitives/CategoryDot.jsx";
 import { Skeleton } from "../primitives/Feedback.jsx";
 
-function statusText(p) {
-  if (typeof p.displayScore !== "number") return "sin evaluar";
-  return `puntaje ${Math.round(p.displayScore)} de 120${p.isComplete ? ", dominada" : ""}`;
+function statusText(t, p) {
+  if (typeof p.displayScore !== "number") return t("map.card.aria.unscored");
+  return t(p.isComplete ? "map.card.aria.scoreMastered" : "map.card.aria.score", { score: Math.round(p.displayScore), max: 120 });
 }
 
-function ariaFor({ node, p, level, missing, aiActive }) {
-  const parts = [node.label, `prioridad ${node.priority}`, statusText(p)];
-  if (level === 1) parts.push("mejor siguiente"); else if (level) parts.push(`nivel ${level} de la ruta sugerida`);
-  if (missing.length) parts.push(`prerrequisitos pendientes: ${missing.join(", ")}`);
-  if (aiActive) parts.push("IA trabajando en esta card");
+function ariaFor(t, { node, p, level, missing, aiActive }) {
+  const parts = [node.label, t("map.card.aria.priority", { priority: node.priority }), statusText(t, p)];
+  if (level === 1) parts.push(t("map.card.aria.bestNext")); else if (level) parts.push(t("map.card.aria.level", { level }));
+  if (missing.length) parts.push(t("map.card.aria.missing", { list: missing.join(", ") }));
+  if (aiActive) parts.push(t("map.card.aria.aiActive"));
   return parts.join(". ");
 }
 
 function RouteMark({ level }) {
-  if (level === 1) return <span className="pill pill--accent">Mejor siguiente</span>;
-  if (level) return <span className="concept__level">Nivel {level}</span>;
+  const t = useT();
+  if (level === 1) return <span className="pill pill--accent">{t("map.card.bestNext")}</span>;
+  if (level) return <span className="concept__level">{t("map.card.level", { level })}</span>;
   return null;
 }
 
 // Card de concepto de 140px fijos (design-spec D.9).
 export function ConceptCard(props) {
   const { node, p, level, missing, aiActive, onOpen, loading } = props;
+  const t = useT();
   return (
-    <button type="button" className="concept card" data-node={node.id} aria-label={ariaFor(props)} onClick={onOpen}>
+    <button type="button" className="concept card" data-node={node.id} aria-label={ariaFor(t, props)} onClick={onOpen}>
       <span className="concept__meta">
         <span className="mono t3">#{node.priority}</span>
         <span className="concept__meta-right">
@@ -39,9 +42,9 @@ export function ConceptCard(props) {
       <span className="concept__foot">
         {loading ? <Skeleton width={40} height={12} /> : <ScoreValue score={p.displayScore} />}
         {missing.length ? (
-          <span className="concept__warn"><AlertTriangle size={12} strokeWidth={1.75} aria-hidden="true" /> {missing.length} prerreq.</span>
+          <span className="concept__warn"><AlertTriangle size={12} strokeWidth={1.75} aria-hidden="true" /> {t("map.card.missingCount", { n: missing.length })}</span>
         ) : p.hasDraft && !p.representative ? (
-          <span className="concept__draft"><PenLine size={12} strokeWidth={1.5} aria-hidden="true" /> Borrador</span>
+          <span className="concept__draft"><PenLine size={12} strokeWidth={1.5} aria-hidden="true" /> {t("map.card.draft")}</span>
         ) : null}
       </span>
     </button>
@@ -51,12 +54,13 @@ export function ConceptCard(props) {
 // Fila de 64px para móvil (design-spec D.9).
 export function ConceptRow(props) {
   const { node, graph, p, level, aiActive, onOpen, loading } = props;
+  const t = useT();
   return (
-    <button type="button" className="concept-row" data-node={node.id} aria-label={ariaFor(props)} onClick={onOpen}>
+    <button type="button" className="concept-row" data-node={node.id} aria-label={ariaFor(t, props)} onClick={onOpen}>
       <CategoryDot graph={graph} cat={node.cat} />
       <span className="concept-row__text">
         <span className="concept-row__title clamp-2">{node.label}</span>
-        {level === 1 ? <span className="concept-row__mark">Mejor siguiente</span> : null}
+        {level === 1 ? <span className="concept-row__mark">{t("map.card.bestNext")}</span> : null}
       </span>
       <span className="concept-row__score">
         {aiActive && <Sparkles size={12} strokeWidth={1.5} className="ai-pulse" aria-hidden="true" />}

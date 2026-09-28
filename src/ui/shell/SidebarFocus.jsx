@@ -3,14 +3,16 @@ import { Filter, LayoutGrid } from "lucide-react";
 import { CategoryDot } from "../primitives/CategoryDot.jsx";
 import { actions } from "../state/useWorkspace.js";
 import { FocusPopover } from "./FocusPicker.jsx";
+import { useT } from "../../i18n/react.js";
 
 // Lista de focos (single-select). En colapsada: botón Filtro que abre un popover.
 export function SidebarFocus({ model, collapsed }) {
   const [open, setOpen] = useState(false);
   const anchor = useRef(null);
+  const t = useT();
   const { graph, focusCat, progress } = model;
   if (collapsed) {
-    const label = focusCat ? `Foco: ${graph.categories[focusCat].label}` : "Foco: todos";
+    const label = focusCat ? t("shell.topbar.focusLabel", { name: graph.categories[focusCat].label }) : t("shell.topbar.focusAll");
     return (
       <div className="sidebar__focus">
         <button ref={anchor} type="button" className={`icon-btn icon-btn--md ${focusCat ? "is-selected" : ""}`} aria-label={label}
@@ -24,9 +26,9 @@ export function SidebarFocus({ model, collapsed }) {
   const total = progress.total;
   return (
     <div className="sidebar__focus">
-      <p className="eyebrow sidebar__eyebrow" data-tip="Elegí un grupo para aislarlo">Foco</p>
-      <div role="radiogroup" aria-label="Foco de estudio" className="focus-list">
-        <FocusRow checked={!focusCat} onSelect={() => actions.setFocus(null)} label="Todos"
+      <p className="eyebrow sidebar__eyebrow" data-tip={t("shell.focus.hint")}>{t("shell.focus.eyebrow")}</p>
+      <div role="radiogroup" aria-label={t("shell.focus.groupLabel")} className="focus-list">
+        <FocusRow checked={!focusCat} onSelect={() => actions.setFocus(null)} label={t("shell.focus.all")}
           icon={<LayoutGrid size={16} strokeWidth={1.5} aria-hidden="true" />} count={`${progress.done}/${total}`} status={progress.status} />
         {Object.entries(graph.categories).map(([cat, info]) => (
           <FocusRow key={cat} checked={focusCat === cat} onSelect={() => actions.setFocus(cat)} label={info.label}

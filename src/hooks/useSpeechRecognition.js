@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getLocale, SPEECH_LANG } from "../i18n/locale.js";
 
 export function useSpeechRecognition() {
   const [isListening, setIsListening] = useState(false);
@@ -33,7 +34,7 @@ export function useSpeechRecognition() {
 
     try {
       const recognition = new SpeechRec();
-      recognition.lang = "es-ES";
+      recognition.lang = SPEECH_LANG[getLocale()] ?? SPEECH_LANG.en;
       recognition.continuous = true;
       recognition.interimResults = false;
 

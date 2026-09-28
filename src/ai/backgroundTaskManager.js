@@ -9,6 +9,7 @@ import {
 } from "./client.js";
 import { saveAttempt, saveCoachIteration, setDraft } from "./learningStore.js";
 import { hashAnswer, hashCardContent } from "./contentHash.js";
+import { t } from "../i18n/translate.js";
 
 // Global in-memory map of tasks keyed by `${graphId}:${nodeId}`
 const tasksMap = new Map();
@@ -170,7 +171,7 @@ if (taskSyncChannel) {
           {
             status: "cancelled",
             stage: "cancelled",
-            message: "Cancelado por el usuario",
+            message: t("ai.tasks.cancelledByUser"),
             completedAt: Date.now(),
           },
           false
@@ -242,7 +243,7 @@ export function cancelTask(graphId, nodeId) {
       {
         status: "cancelled",
         stage: "cancelled",
-        message: "Cancelado por el usuario",
+        message: t("ai.tasks.cancelledByUser"),
         completedAt: Date.now(),
       },
       true
@@ -287,7 +288,7 @@ export async function startPedagogicalHarness({
     type: "pedagogical_harness",
     status: "running",
     stage: "init",
-    message: "Iniciando Harness Pedagógico...",
+    message: t("ai.tasks.harnessStarting"),
     progress: 0,
     draft: initialDraft,
     initialDraft,
@@ -316,7 +317,7 @@ export async function startPedagogicalHarness({
       if (!currentDraft || currentDraft.length < 15) {
         task = updateTaskState(cardKey, task, {
           stage: "generating_initial",
-          message: "🪄 Generando borrador inicial con IA...",
+          message: t("ai.tasks.generatingDraft"),
         });
         onUpdate?.(task);
 
@@ -352,7 +353,7 @@ export async function startPedagogicalHarness({
       task = updateTaskState(cardKey, task, {
         stage: "judging",
         iteration: 0,
-        message: "⚖️ Evaluando calidad pedagógica inicial con Juez...",
+        message: t("ai.tasks.judgingInitial"),
       });
       onUpdate?.(task);
 
@@ -381,8 +382,8 @@ export async function startPedagogicalHarness({
         passedThreshold: judgeResult.passedThreshold,
         history: initialHistory,
         message: judgeResult.passedThreshold
-          ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
-          : `⚖️ Juez asignó ${judgeResult.score}/100 (Meta: 95+)`,
+          ? t("ai.tasks.mastery", { score: judgeResult.score })
+          : t("ai.tasks.judgeScore", { score: judgeResult.score }),
       });
       onUpdate?.(task);
 
@@ -414,7 +415,7 @@ export async function startPedagogicalHarness({
         task = updateTaskState(cardKey, task, {
           iteration: iter,
           stage: "refining",
-          message: `🪄 Refinando explicación según crítica del Juez (Iteración ${iter}/${maxIterations})...`,
+          message: t("ai.tasks.refining", { iter, max: maxIterations }),
         });
         onUpdate?.(task);
 
@@ -450,7 +451,7 @@ export async function startPedagogicalHarness({
         // Re-judge
         task = updateTaskState(cardKey, task, {
           stage: "judging",
-          message: `⚖️ Re-evaluando calidad pedagógica (Iteración ${iter}/${maxIterations})...`,
+          message: t("ai.tasks.rejudging", { iter, max: maxIterations }),
         });
         onUpdate?.(task);
 
@@ -480,8 +481,8 @@ export async function startPedagogicalHarness({
           passedThreshold: judgeResult.passedThreshold,
           history: historyList,
           message: judgeResult.passedThreshold
-            ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
-            : `⚖️ Juez asignó ${judgeResult.score}/100 en Iteración ${iter} (Meta: 95+)`,
+            ? t("ai.tasks.mastery", { score: judgeResult.score })
+            : t("ai.tasks.judgeScoreIteration", { score: judgeResult.score, iter }),
         });
         onUpdate?.(task);
 
@@ -524,8 +525,8 @@ export async function startPedagogicalHarness({
         stage: "done",
         completedAt: Date.now(),
         message: judgeResult.passedThreshold
-          ? `✨ ¡Maestría pedagógica alcanzada (${judgeResult.score}/100)!`
-          : `Límite de ${maxIterations} iteraciones alcanzado (Puntaje: ${judgeResult.score}/100)`,
+          ? t("ai.tasks.mastery", { score: judgeResult.score })
+          : t("ai.tasks.iterationLimit", { max: maxIterations, score: judgeResult.score }),
       });
       onUpdate?.(task);
     } catch (err) {
@@ -533,11 +534,11 @@ export async function startPedagogicalHarness({
         task = updateTaskState(cardKey, task, {
           status: "cancelled",
           stage: "cancelled",
-          message: "Cancelado por el usuario",
+          message: t("ai.tasks.cancelledByUser"),
           completedAt: Date.now(),
         });
       } else {
-        const errorMsg = userFacingAiError(err, "No se pudo completar el perfeccionamiento pedagógico.");
+        const errorMsg = userFacingAiError(err, t("ai.tasks.harnessFailed"));
         task = updateTaskState(cardKey, task, {
           status: "error",
           stage: "error",
@@ -580,7 +581,7 @@ export async function startEvaluation({
     type: "evaluation",
     status: "running",
     stage: "evaluating",
-    message: "🧠 Evaluando tu explicación con IA...",
+    message: t("ai.tasks.evaluating"),
     progress: 0,
     draft: answer,
     streamingSections: {},
@@ -651,7 +652,7 @@ export async function startEvaluation({
         status: "completed",
         stage: "done",
         completedAt: Date.now(),
-        message: "Evaluación completada",
+        message: t("ai.tasks.evaluationDone"),
       });
       onUpdate?.(task);
       onAttemptSaved?.(attempt);
@@ -660,11 +661,11 @@ export async function startEvaluation({
         task = updateTaskState(cardKey, task, {
           status: "cancelled",
           stage: "cancelled",
-          message: "Evaluación cancelada",
+          message: t("ai.tasks.evaluationCancelled"),
           completedAt: Date.now(),
         });
       } else {
-        const errorMsg = userFacingAiError(err, "No se pudo completar la evaluación.");
+        const errorMsg = userFacingAiError(err, t("ai.tasks.evaluationFailed"));
         task = updateTaskState(cardKey, task, {
           status: "error",
           stage: "error",

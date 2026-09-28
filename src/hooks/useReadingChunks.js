@@ -1,13 +1,21 @@
 import { useCallback, useMemo, useState } from "react";
+import { getLocale, INTL_LOCALE } from "../i18n/locale.js";
+import { useLocale } from "../i18n/react.js";
 
-const sentenceSegmenter = typeof Intl !== "undefined" && typeof Intl.Segmenter === "function"
-  ? new Intl.Segmenter("es", { granularity: "sentence" })
-  : null;
+// One sentence segmenter per locale, created on first use.
+const segmenters = new Map();
+function getSentenceSegmenter(locale = getLocale()) {
+  if (typeof Intl === "undefined" || typeof Intl.Segmenter !== "function") return null;
+  const tag = INTL_LOCALE[locale] ?? INTL_LOCALE.en;
+  if (!segmenters.has(tag)) segmenters.set(tag, new Intl.Segmenter(tag, { granularity: "sentence" }));
+  return segmenters.get(tag);
+}
 
-export function splitParagraph(paragraph) {
+export function splitParagraph(paragraph, locale = getLocale()) {
   if (!paragraph) return [];
   if (looksLikeStructuredText(paragraph)) return [paragraph];
 
+  const sentenceSegmenter = getSentenceSegmenter(locale);
   const sentences = sentenceSegmenter
     ? [...sentenceSegmenter.segment(paragraph)].map(({ segment }) => segment.trim()).filter(Boolean)
     : paragraph.match(/[^.!?]+(?:[.!?]+|$)/g)?.map((sentence) => sentence.trim()).filter(Boolean) ?? [paragraph];
@@ -31,13 +39,13 @@ export function looksLikeStructuredText(text) {
   return /(^|\n)\s*(?:[-*+] |\d+[.)] )/.test(text) || text.includes("\n");
 }
 
-export function splitReadingChunks(value) {
+export function splitReadingChunks(value, locale = getLocale()) {
   const text = String(value ?? "").trim();
   if (!text) return [];
 
   return text
     .split(/\n\s*\n/)
-    .flatMap((paragraph) => splitParagraph(paragraph.trim()))
+    .flatMap((paragraph) => splitParagraph(paragraph.trim(), locale))
     .filter(Boolean);
 }
 
@@ -48,10 +56,11 @@ export function splitReadingChunks(value) {
 export function useReadingChunks(text, options = {}) {
   const { initialActiveIndex = null } = options;
   const [activeChunkIndex, setActiveChunkIndex] = useState(initialActiveIndex);
+  const locale = useLocale();
 
   const chunks = useMemo(() => {
-    return splitReadingChunks(text);
-  }, [text]);
+    return splitReadingChunks(text, locale);
+  }, [text, locale]);
 
   const stats = useMemo(() => {
     const raw = String(text ?? "").trim();

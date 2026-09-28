@@ -6,6 +6,7 @@ import { useFocusTrap } from "../hooks/useFocusTrap.js";
 import { useScrollLock } from "../hooks/useScrollLock.js";
 import { ESC_PRIORITY } from "../state/escStack.js";
 import { IconButton } from "./Button.jsx";
+import { useT } from "../../i18n/react.js";
 
 const PRIORITY = { dialog: ESC_PRIORITY.modal, alert: ESC_PRIORITY.modal, drawer: ESC_PRIORITY.drawer,
   sheet: ESC_PRIORITY.sheet, "side-sheet": ESC_PRIORITY.sheet, palette: ESC_PRIORITY.palette };
@@ -39,7 +40,8 @@ export function Overlay({ open, onClose, kind = "dialog", label, labelledBy, des
 }
 
 // Cabecera estándar de hoja/drawer con título y cerrar.
-export function OverlayHeader({ id, title, subtitle, onClose, actions, closeLabel = "Cerrar" }) {
+export function OverlayHeader({ id, title, subtitle, onClose, actions, closeLabel }) {
+  const t = useT();
   return (
     <header className="overlay-header">
       <div className="overlay-header__text">
@@ -47,7 +49,7 @@ export function OverlayHeader({ id, title, subtitle, onClose, actions, closeLabe
         {subtitle ? <p className="overlay-header__subtitle">{subtitle}</p> : null}
       </div>
       {actions}
-      <IconButton icon={X} label={closeLabel} onClick={onClose} className="overlay-header__close" data-close />
+      <IconButton icon={X} label={closeLabel ?? t("common.actions.close")} onClick={onClose} className="overlay-header__close" data-close />
     </header>
   );
 }

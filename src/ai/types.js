@@ -1,20 +1,33 @@
+import { getLocale } from "../i18n/locale.js";
+import { t, translate } from "../i18n/translate.js";
+
 export const RAW_SCORE_MAX = 100;
 export const DISPLAY_SCORE_MAX = 120;
 export const MASTERY_RAW_SCORE = 80;
 export const EXTRA_RAW_SCORE_START = 80;
 
-export const STATUS_LABEL = {
-  strong: "Base cubierta",
-  exceptional: "Profundización extra",
-  developing: "En progreso",
-  review: "Conviene revisar",
-};
+// Labels resolve against the current locale when read (common.status.* / common.severity.*).
+// Kept as objects for compatibility; prefer statusLabel()/severityLabel() in new code.
+export const STATUS_LABEL = Object.freeze({
+  get strong() { return t("common.status.strong"); },
+  get exceptional() { return t("common.status.exceptional"); },
+  get developing() { return t("common.status.developing"); },
+  get review() { return t("common.status.review"); },
+});
 
-export const SEVERITY_LABEL = {
-  high: "alto",
-  medium: "medio",
-  low: "bajo",
-};
+export const SEVERITY_LABEL = Object.freeze({
+  get high() { return t("common.severity.high"); },
+  get medium() { return t("common.severity.medium"); },
+  get low() { return t("common.severity.low"); },
+});
+
+export function statusLabel(status, locale = getLocale()) {
+  return translate(locale, `common.status.${status in STATUS_LABEL ? status : "unscored"}`);
+}
+
+export function severityLabel(severity, locale = getLocale()) {
+  return severity in SEVERITY_LABEL ? translate(locale, `common.severity.${severity}`) : String(severity ?? "");
+}
 
 export function displayScoreFromRaw(rawScore) {
   const raw = clamp(Math.round(Number(rawScore) || 0), 0, RAW_SCORE_MAX);
