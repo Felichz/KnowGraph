@@ -15,9 +15,10 @@
     "desktop:dist": "npm run build && npm run build:gateway && electron-builder",
     "preview": "vite preview",
     "audit:react": "node scripts/audit-react-graph.mjs",
-    "test:logic": "node tests/logic/learning-controller.mjs && node tests/logic/topological-layout.mjs && node tests/logic/provider-settings.mjs && node tests/logic/paraphrase-ai.mjs && node tests/logic/background-tasks.mjs && node tests/logic/reading-chunks.mjs && node tests/logic/seniority-and-interview.mjs && node tests/logic/fixtures-contract.test.mjs",
+    "test:logic": "node tests/logic/learning-controller.mjs && node tests/logic/topological-layout.mjs && node tests/logic/provider-settings.mjs && node tests/logic/paraphrase-ai.mjs && node tests/logic/background-tasks.mjs && node tests/logic/reading-chunks.mjs && node tests/logic/seniority-and-interview.mjs && node tests/logic/fixtures-contract.test.mjs && node tests/logic/i18n.mjs",
     "test:e2e": "playwright test",
-    "check": "npm run audit:react && npm run build"
+    "check": "npm run audit:react && npm run check:i18n && npm run build",
+    "check:i18n": "node scripts/i18n/check-i18n.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",

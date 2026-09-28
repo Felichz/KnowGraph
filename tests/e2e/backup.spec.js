@@ -1,4 +1,10 @@
 import { test, expect } from "@playwright/test";
+
+// These specs assert the Spanish interface: English is the default, so select Spanish first
+// (tests/e2e/i18n.spec.js covers the English default and the switcher).
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("learning-workspace:locale", "es"));
+});
 import fs from "node:fs";
 
 test.describe("Backup & BYOK Provider Settings (User Story 3)", () => {

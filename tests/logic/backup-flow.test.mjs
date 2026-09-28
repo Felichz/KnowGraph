@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { parseBackup, downloadBackup } from "../../src/ai/backup.js";
+import { setLocale } from "../../src/i18n/locale.js";
 
 test("parseBackup validates structure correctly", () => {
   const validJson = JSON.stringify({
@@ -19,7 +20,13 @@ test("parseBackup validates structure correctly", () => {
   assert.equal(parsed.version, 1);
 
   assert.throws(() => parseBackup("not-json"), /JSON/);
-  assert.throws(() => parseBackup(JSON.stringify({ app: "other-app" })), /El archivo no es un respaldo válido/);
+  assert.throws(() => parseBackup(JSON.stringify({ app: "other-app" })), /not a valid Learning Workspace backup/);
+  setLocale("es");
+  try {
+    assert.throws(() => parseBackup(JSON.stringify({ app: "other-app" })), /El archivo no es un respaldo válido/);
+  } finally {
+    setLocale("en");
+  }
 });
 
 test("downloadBackup invokes native desktop save API when running in Electron", async () => {

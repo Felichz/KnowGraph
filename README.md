@@ -8,7 +8,7 @@ A study workspace for senior React and Rails interviews: 142 concepts in a depen
 
 ## What it is
 
-I built KnowGraph to prepare for my own senior interviews. The curriculum is two graphs: React (101 concepts, 212 prerequisite links, 11 focus areas, 16 milestones, 4 seniority levels) and Rails (41 concepts, 54 links). A link means one concept gives you the mental model for the next; it suggests an order but never blocks you from studying something out of sequence. The interface is in Spanish and still uses the project's working title, Learning Workspace.
+I built KnowGraph to prepare for my own senior interviews. The curriculum is two graphs: React (101 concepts, 212 prerequisite links, 11 focus areas, 16 milestones, 4 seniority levels) and Rails (41 concepts, 54 links). A link means one concept gives you the mental model for the next; it suggests an order but never blocks you from studying something out of sequence. The interface is in English by default, with a Spanish version (EN / ES switcher; the curriculum and the AI answers follow the selected language), and still uses the project's working title, Learning Workspace.
 
 Every concept opens a four-stage session: **Read** the card (explanation, naive vs. senior code, pitfalls, sources, optional read-aloud), talk it through with a Socratic **Mentor**, **Paraphrase** it from memory with dictation and a live coach, then **Evaluate**: an LLM grades the explanation against a four-part rubric (accuracy, causality and trade-offs, application, completeness). Scores run from 0 to 120. Up to 100 measures coverage of the essential material; 101-120 is a separate excellence tier that only opens after full coverage, to push back on the grade inflation LLMs tend toward ([ADR 0006](docs/adr/0006-dual-tier-evaluation-scale-0-120.md)). Everything is local-first and bring-your-own-key.
 
@@ -62,7 +62,7 @@ cp .env.example .env
 npm start          # http://127.0.0.1:4317
 ```
 
-No API key is required to start the gateway. Open **Conexiones de IA** in the app and add a provider (OpenAI, OpenRouter, Groq, MiniMax, Ollama, LM Studio or any OpenAI-compatible endpoint); the key is kept in your browser and sent with each request. Optional variables in `server/.env`:
+No API key is required to start the gateway. Open **AI connections** in the app and add a provider (OpenAI, OpenRouter, Groq, MiniMax, Ollama, LM Studio or any OpenAI-compatible endpoint); the key is kept in your browser and sent with each request. Optional variables in `server/.env`:
 
 | Variable | Purpose |
 | --- | --- |
@@ -78,8 +78,8 @@ For a deployed frontend, `VITE_AI_API_URL` (root `.env.example`) points at a gat
 | Command | What it does |
 | --- | --- |
 | `npm run test:logic` | Headless tests for the controller, layout, provider settings, background tasks and more. |
-| `npm run build && npm run test:e2e` | 33 Playwright tests across 6 specs, run against the built app with the gateway. |
-| `npm run check` | Content audit of the React graph (`npm run audit:react`) plus a production build. |
+| `npm run build && npm run test:e2e` | 37 Playwright tests across 7 specs, run against the built app with the gateway. |
+| `npm run check` | Content audit of the React graph (`npm run audit:react`), the i18n parity check (`npm run check:i18n`) and a production build. |
 | `npm run desktop:dev` | Opens the app in Electron, starting the gateway if it isn't running. |
 | `npm run desktop:dist` | Builds the Windows installer. |
 
@@ -101,7 +101,7 @@ specs/          product and design specs for each UI iteration
 docs/           guides and architecture decision records
 ```
 
-To add a React concept, start in `src/reactGraph.js`, with sources in `src/reactSources.js` and interview questions in `src/reactInterviewQuestions.js`; `npm run check` fails if a node is missing its explanation, code sample, steps, failure modes, HTTPS sources or valid prerequisites. Rails content lives in `src/lessons.js` and is registered in `src/logic/railsGraph.js`.
+To add a React concept, start in `src/reactGraph.js`, with sources in `src/reactSources.js` and interview questions in `src/reactInterviewQuestions.js`; `npm run check` fails if a node is missing its explanation, code sample, steps, failure modes, HTTPS sources or valid prerequisites, or if its English text under `src/i18n/content/en/` is missing or out of date (`node scripts/i18n/extract-content.mjs` lists what to translate). Rails content lives in `src/lessons.js` and is registered in `src/logic/railsGraph.js`.
 
 ## Documentation
 

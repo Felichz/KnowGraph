@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseBackup } from "../../src/ai/backup.js";
 import { GRAPH_REGISTRY } from "../../src/logic/graphRegistry.js";
+import { setLocale } from "../../src/i18n/locale.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,11 +20,15 @@ for (const file of fixtureFiles) {
 
   // Degraded state fixtures must be rejected by runtime parser
   if (file.includes("degraded")) {
+    // English is the default UI language; the Spanish message is still produced under "es".
     assert.throws(
       () => parseBackup(rawText),
-      /no es un respaldo válido/,
+      /not a valid Learning Workspace backup/,
       `${file}: degraded fixture must be rejected by runtime parser`
     );
+    setLocale("es");
+    assert.throws(() => parseBackup(rawText), /no es un respaldo válido/, `${file}: Spanish message`);
+    setLocale("en");
     continue;
   }
   

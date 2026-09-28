@@ -12,6 +12,8 @@ globalThis.window = {
     setItem: (key, value) => storage.set(key, String(value)),
     removeItem: (key) => storage.delete(key),
   },
+  // src/i18n/locale.js subscribes to cross-tab "storage" events on import.
+  addEventListener: () => {},
 };
 
 storage.set("learning-workspace:provider-profiles:v3", JSON.stringify({
