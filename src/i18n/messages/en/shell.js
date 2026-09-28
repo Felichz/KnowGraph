@@ -1,0 +1,43 @@
+// App shell: sidebar, top bars, mobile dock, focus picker.
+export default {
+  nav: {
+    label: "Main navigation",
+    views: "Views",
+    mobileLabel: "Mobile main navigation",
+    map: "Map",
+    flashcards: "Flashcards",
+    progress: "Progress",
+    progressWithPct: "Progress · {pct}",
+    search: "Search",
+    settings: "Settings",
+  },
+  sidebar: {
+    expand: "Expand sidebar",
+    collapse: "Collapse sidebar",
+    chooseMap: "Choose map",
+    mapTrigger: "Map: {label}",
+    changeMap: "Switch map",
+    knowledgeMap: "Knowledge map",
+    searchWithKey: "Search ({key}+K)",
+    searchButton: "Search…",
+    aiConnections: "AI connections",
+  },
+  topbar: {
+    allFocus: "All focus areas",
+    mapMode: "Map mode",
+    list: "List",
+    graph: "Graph",
+    viewAsList: "View as list",
+    viewAsGraph: "View as graph",
+    focusLabel: "Focus: {name}",
+    focusAll: "Focus: all",
+  },
+  focus: {
+    eyebrow: "Focus",
+    hint: "Pick a group to isolate it",
+    groupLabel: "Study focus",
+    all: "All",
+    choose: "Choose focus",
+    sheetTitle: "Study focus",
+  },
+};

@@ -1,0 +1,43 @@
+// Shell de la app: sidebar, barras superiores, dock móvil, selector de foco.
+export default {
+  nav: {
+    label: "Navegación principal",
+    views: "Vistas",
+    mobileLabel: "Navegación principal móvil",
+    map: "Mapa",
+    flashcards: "Flashcards",
+    progress: "Progreso",
+    progressWithPct: "Progreso · {pct}",
+    search: "Buscar",
+    settings: "Ajustes",
+  },
+  sidebar: {
+    expand: "Expandir barra lateral",
+    collapse: "Colapsar barra lateral",
+    chooseMap: "Elegir mapa",
+    mapTrigger: "Mapa: {label}",
+    changeMap: "Cambiar de mapa",
+    knowledgeMap: "Mapa de conocimiento",
+    searchWithKey: "Buscar ({key}+K)",
+    searchButton: "Buscar…",
+    aiConnections: "Conexiones de IA",
+  },
+  topbar: {
+    allFocus: "Todos los focos",
+    mapMode: "Modo del mapa",
+    list: "Lista",
+    graph: "Grafo",
+    viewAsList: "Ver como lista",
+    viewAsGraph: "Ver como grafo",
+    focusLabel: "Foco: {name}",
+    focusAll: "Foco: todos",
+  },
+  focus: {
+    eyebrow: "Foco",
+    hint: "Elegí un grupo para aislarlo",
+    groupLabel: "Foco de estudio",
+    all: "Todos",
+    choose: "Elegir foco",
+    sheetTitle: "Foco de estudio",
+  },
+};

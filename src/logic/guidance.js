@@ -1,4 +1,6 @@
 // Ruta sugerida y contexto de card (portado de legacy/App.jsx; spec 002 §4.3–4.4).
+import { DEFAULT_LOCALE } from "../i18n/locale.js";
+import { translate } from "../i18n/translate.js";
 
 // 3 niveles: 1 + 4 + 4 candidatos no dominados del foco cuyos prerrequisitos están
 // dominados o fuera de foco, ordenados por prioridad.
@@ -23,15 +25,13 @@ export function getGuidance(nodes, checked, activeCats) {
   return { levels, levelById, primary: levels[0]?.[0] ?? null };
 }
 
-export function getLessonContext(node, prerequisites, missingPrerequisites, categoryContext = {}) {
+export function getLessonContext(node, prerequisites, missingPrerequisites, categoryContext = {}, locale = DEFAULT_LOCALE) {
   const phase = categoryContext[node.cat] ?? "";
   const lead = phase ? `${phase} ` : "";
-  if (!prerequisites.length) return `${lead}Este es el punto de partida: no presupone ningún nodo anterior.`;
-  const names = prerequisites.map((item) => item.label).join(" y ");
-  if (missingPrerequisites.length) {
-    return `${lead}Antes de estudiar este nodo necesitás completar: ${missingPrerequisites.map((item) => item.label).join(" y ")}. Esos conceptos aparecen aquí como base, no como detalle opcional.`;
-  }
-  return `${lead}Llegaste acá después de ${names}; este nodo usa esas ideas y agrega una decisión nueva.`;
+  const list = (items) => items.map((item) => item.label).join(translate(locale, "guidance.and"));
+  if (!prerequisites.length) return translate(locale, "guidance.start", { lead });
+  if (missingPrerequisites.length) return translate(locale, "guidance.missing", { lead, names: list(missingPrerequisites) });
+  return translate(locale, "guidance.after", { lead, names: list(prerequisites) });
 }
 
 // Antes / Después / siguiente en foco para el riel de contexto.

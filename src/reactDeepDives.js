@@ -1,3 +1,5 @@
+import EN_DEEP_DIVES from "./i18n/content/en/deepDives.js";
+
 const source = (label, href) => ({ label, href });
 
 export const REACT_DEEP_DIVES = {
@@ -264,10 +266,42 @@ export const REACT_DEEP_DIVES = {
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-export function findDeepDiveMatches(text, nodeId, limit = 3) {
+const DEEP_DIVE_OVERLAYS = { en: EN_DEEP_DIVES };
+const localizedDeepDives = new Map();
+
+function mergeDeepDive(dive, overlay) {
+  if (!overlay) return dive;
+  return {
+    ...dive,
+    title: overlay.title ?? dive.title,
+    aliases: overlay.aliases ?? dive.aliases,
+    answer: overlay.answer ?? dive.answer,
+    example: overlay.example ?? dive.example,
+    nuance: overlay.nuance ?? dive.nuance,
+    sources: dive.sources.map((item, index) => ({ ...item, label: overlay.sources?.[index]?.label ?? item.label })),
+  };
+}
+
+/**
+ * Deep dives for a UI locale. Spanish returns REACT_DEEP_DIVES itself; other
+ * locales merge their text overlay onto the Spanish dive, which keeps nodeIds
+ * and source hrefs as the single source of truth.
+ */
+export function getDeepDives(locale = "es") {
+  const overlays = DEEP_DIVE_OVERLAYS[locale];
+  if (!overlays) return REACT_DEEP_DIVES;
+  if (!localizedDeepDives.has(locale)) {
+    localizedDeepDives.set(locale, Object.fromEntries(
+      Object.entries(REACT_DEEP_DIVES).map(([id, dive]) => [id, mergeDeepDive(dive, overlays[id])]),
+    ));
+  }
+  return localizedDeepDives.get(locale);
+}
+
+export function findDeepDiveMatches(text, nodeId, limit = 3, locale = "es") {
   if (!text || typeof text !== "string") return [];
 
-  const candidates = Object.entries(REACT_DEEP_DIVES)
+  const candidates = Object.entries(getDeepDives(locale))
     .filter(([, dive]) => !dive.nodeIds || dive.nodeIds.includes(nodeId))
     .flatMap(([id, dive]) => dive.aliases.map((alias) => ({ id, alias })))
     .sort((a, b) => b.alias.length - a.alias.length);

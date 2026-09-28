@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { createLearningController } from "../logic/learningController.js";
+import { getLocale, subscribeLocale } from "../i18n/locale.js";
 
 // Singleton default controller instance
 let globalController = null;
 function getGlobalController(initialGraphId = "react") {
   if (!globalController) {
-    globalController = createLearningController({ graphId: initialGraphId });
+    globalController = createLearningController({ graphId: initialGraphId, locale: getLocale() });
+    subscribeLocale((locale) => globalController.setLocale(locale));
     globalController.hydrate().catch(console.error);
   }
   return globalController;
@@ -38,6 +40,7 @@ export function useController(initialGraphId = "react") {
 
     // Actions
     switchGraph: (graphId) => controller.setGraph(graphId),
+    setLocale: (locale) => controller.setLocale(locale),
     selectNode: (nodeId, options) => controller.selectNode(nodeId, options),
     openNode: (nodeId) => controller.selectNode(nodeId, { openModal: true }),
     closeModal: () => controller.closeNode(),

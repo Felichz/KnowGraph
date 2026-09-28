@@ -9,6 +9,7 @@ import {
 import { hashCardContent } from "../ai/contentHash.js";
 import { evaluateParaphraseStream, isCancel } from "../ai/client.js";
 import { getGraph } from "./graphRegistry.js";
+import { DEFAULT_LOCALE, isLocale } from "../i18n/locale.js";
 import {
   getAdjacentNode,
   getFlashcards,
@@ -24,14 +25,15 @@ function clone(value) {
   return structuredClone(value);
 }
 
-export function createLearningController({ graphId = "react", storage = null, ai = null } = {}) {
+export function createLearningController({ graphId = "react", storage = null, ai = null, locale = DEFAULT_LOCALE } = {}) {
   const persistence = storage ?? { getDraft, setDraft, deleteDraft, listAttempts, listAllAttempts, saveAttempt };
   const aiClient = ai ?? { evaluateParaphraseStream, isCancel };
-  let graph = getGraph(graphId);
+  let graph = getGraph(graphId, locale);
   let listeners = new Set();
   let request = null;
   let state = {
     graphId,
+    locale,
     graph,
     viewMode: "graph",
     selectedGroupIds: [],
@@ -97,8 +99,15 @@ export function createLearningController({ graphId = "react", storage = null, ai
     }
   }
 
+  // Only text changes with the locale: ids, progress, drafts and attempts stay as they are.
+  function setLocale(nextLocale) {
+    if (!isLocale(nextLocale) || nextLocale === state.locale) return snapshot();
+    graph = getGraph(graph.id, nextLocale);
+    return patch({ locale: nextLocale, graph });
+  }
+
   function setGraph(nextGraphId) {
-    graph = getGraph(nextGraphId);
+    graph = getGraph(nextGraphId, state.locale);
     state = {
       ...state,
       graphId: nextGraphId,
@@ -178,6 +187,7 @@ export function createLearningController({ graphId = "react", storage = null, ai
         answer,
         contentHash: hashCardContent(node),
         node,
+        locale: state.locale,
         signal: controller.signal,
         onProgress: (chars) => {
           if (request?.requestId !== requestId) return;
@@ -245,6 +255,7 @@ export function createLearningController({ graphId = "react", storage = null, ai
     hydrate,
     destroy,
     setGraph,
+    setLocale,
     selectNode,
     closeNode,
     setViewMode,

@@ -5,6 +5,8 @@
  */
 export function hashCardContent(node) {
   if (!node) return "sha256:empty";
+  // Localized nodes carry the hash of their authored (Spanish) content: see logic/graphRegistry.js.
+  if (typeof node.contentHash === "string") return node.contentHash;
   const lesson = node.lesson ?? {};
   const canonical = JSON.stringify({
     id: node.id,

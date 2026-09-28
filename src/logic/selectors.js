@@ -54,7 +54,7 @@ export function getNodeView(graph, attemptsByNode, draftsByNode, nodeId) {
     progress: getNodeProgress(attemptsByNode, nodeId),
     draft: draftsByNode?.[nodeId] ?? "",
     narrationSegments: node.lesson
-      ? buildLessonNarrationSegments(node, { graphLabel: graph.label })
+      ? buildLessonNarrationSegments(node, graph.label, graph.locale)
       : [],
   };
 }

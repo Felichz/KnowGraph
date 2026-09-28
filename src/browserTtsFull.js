@@ -1,5 +1,5 @@
 import { buildLessonNarrationSegments } from "./ttsSegments.js";
 
-export function buildBrowserSpeechSegments(node, context) {
-  return buildLessonNarrationSegments(node, context);
+export function buildBrowserSpeechSegments(node, context, locale = "es") {
+  return buildLessonNarrationSegments(node, context, locale);
 }
