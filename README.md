@@ -4,7 +4,10 @@ A study workspace for senior React and Rails interviews: 142 concepts in a depen
 
 **[Live app](https://know-graph.vercel.app)** · [Case study](https://anderssonfelix.com/work/knowgraph/) · Author: [Felix Andersson](https://anderssonfelix.com)
 
-<img src="docs/screenshots/knowgraph-main.webp" alt="KnowGraph map view. A left sidebar switches between the React and Rails graphs and lists eleven focus areas with mastered counts. The main column shows the suggested route, with the current concept 'Mental model: UI as a function of state' and the concepts it unlocks next, followed by concept cards with score bars, two of them scored 105 and 115 out of 120." width="100%">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-demo-dark.webp">
+  <img src="docs/screenshots/knowgraph-demo-light.webp" alt="Recording of the KnowGraph map view filtering by focus area (State and data, then Effects and async, then All) as the suggested route and the concept cards change. KnowGraph map view. A left sidebar switches between the React and Rails graphs and lists eleven focus areas with mastered counts. The main column shows the suggested route, with the current concept 'Mental model: UI as a function of state' and the concepts it unlocks next, followed by concept cards with score bars, two of them scored 105 and 115 out of 120." width="100%">
+</picture>
 
 ## What it is
 
@@ -15,17 +18,26 @@ Every concept opens a four-stage session: **Read** the card (explanation, naive 
 <table>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/screenshots/knowgraph-card.webp" alt="Study session on the Read stage for the concept 'Mental model: UI as a function of state'. Tabs for the four stages (Read, AI mentor, Paraphrase, Evaluate) run across the top next to a score of 85 out of 120. The reading column has a serif summary, a 'why it matters' callout, body text and a Counter component code sample; a side rail lists where the concept fits, what it needs, what it unlocks and related interview questions." width="100%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-card-dark.webp">
+        <img src="docs/screenshots/knowgraph-card-light.webp" alt="Study session on the Read stage for the concept 'Mental model: UI as a function of state'. Tabs for the four stages (Read, AI mentor, Paraphrase, Evaluate) run across the top next to a score of 85 out of 120. The reading column has a serif summary, a 'why it matters' callout, body text and a Counter component code sample; a side rail lists where the concept fits, what it needs, what it unlocks and related interview questions." width="100%">
+      </picture>
       <br><sub>Study session, Read stage. Tabs for the other three stages sit above the text.</sub>
     </td>
     <td width="50%" valign="top">
-      <img src="docs/screenshots/knowgraph-graph.webp" alt="Graph view of the React curriculum laid out in columns by dependency depth. Hovering 'Lifting state and source of truth' highlights its prerequisite edge from 'useState vs useReducer' and the edges to the two concepts it unlocks; a tooltip names both, and a legend at the bottom explains the suggested route, prerequisite and mastery markers." width="100%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-graph-demo-dark.webp">
+        <img src="docs/screenshots/knowgraph-graph-demo-light.webp" alt="Recording of the graph view of the React curriculum, laid out in columns by dependency depth. The pointer moves across several concepts; each hover brings its prerequisites and the concepts it unlocks forward, dims the rest and names them in a tooltip. A legend at the bottom explains the suggested route, prerequisite and mastery markers." width="100%">
+      </picture>
       <br><sub>Dependency graph. Hovering a concept brings its prerequisites and dependents forward.</sub>
     </td>
   </tr>
   <tr>
     <td colspan="2" align="center">
-      <img src="docs/screenshots/knowgraph-progress.webp" alt="Progress view for the React graph: 2 of 101 cards mastered, a note that a card counts as mastered at 100 out of 120, four seniority levels (Professional React, Senior frontend, Senior Design Systems, Frontend Lead) with per-level counts, and a list of milestones, each with its next suggested concept." width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-progress-dark.webp">
+        <img src="docs/screenshots/knowgraph-progress-light.webp" alt="Progress view for the React graph: 2 of 101 cards mastered, a note that a card counts as mastered at 100 out of 120, four seniority levels (Professional React, Senior frontend, Senior Design Systems, Frontend Lead) with per-level counts, and a list of milestones, each with its next suggested concept." width="50%">
+      </picture>
       <br><sub>Progress by seniority level and milestone.</sub>
     </td>
   </tr>
@@ -42,7 +54,7 @@ Every concept opens a four-stage session: **Read** the card (explanation, naive 
 
 ## Stack
 
-React 19 and Vite 6 in plain JavaScript (no TypeScript) · hand-written CSS on design tokens (`src/ui/theme/tokens.css`) · Geist and Newsreader · Mermaid (lazy-loaded) and Prism for diagrams and code · Node gateway with Zod and server-sent events · IndexedDB via `idb` · Web Speech API for read-aloud and dictation · Playwright · Electron for the optional desktop build · Vercel for hosting.
+React 19 and Vite 6 in plain JavaScript (no TypeScript) · hand-written CSS on design tokens (`src/ui/theme/tokens.css`, with the light edition in `light.css`; the system setting picks one until you choose) · Geist and Newsreader · Mermaid (lazy-loaded) and Prism for diagrams and code · Node gateway with Zod and server-sent events · IndexedDB via `idb` · Web Speech API for read-aloud and dictation · Playwright · Electron for the optional desktop build · Vercel for hosting.
 
 ## Getting started
 
