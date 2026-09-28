@@ -4,7 +4,7 @@ A study workspace for senior React and Rails interviews: 142 concepts in a depen
 
 **[Live app](https://know-graph.vercel.app)** · [Case study](https://anderssonfelix.com/work/knowgraph/) · Author: [Felix Andersson](https://anderssonfelix.com)
 
-<img src="docs/screenshots/knowgraph-main.webp" alt="KnowGraph map view. A left sidebar switches between the React and Rails graphs and lists eleven focus areas with mastered counts. The main column shows the suggested route, with the current concept 'Modelo mental: UI como función del estado' and the concepts it unlocks next, followed by concept cards with score bars, two of them scored 105 and 115 out of 120." width="100%">
+<img src="docs/screenshots/knowgraph-main.webp" alt="KnowGraph map view. A left sidebar switches between the React and Rails graphs and lists eleven focus areas with mastered counts. The main column shows the suggested route, with the current concept 'Mental model: UI as a function of state' and the concepts it unlocks next, followed by concept cards with score bars, two of them scored 105 and 115 out of 120." width="100%">
 
 ## What it is
 
@@ -15,17 +15,17 @@ Every concept opens a four-stage session: **Read** the card (explanation, naive 
 <table>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/screenshots/knowgraph-card.webp" alt="Study session on the Read stage for the concept 'Modelo mental: UI como función del estado'. Tabs for the four stages (Leer, Mentor IA, Parafrasear, Evaluar) run across the top next to a score of 85 out of 120. The reading column has a serif summary, a 'why it matters' callout, body text and a Counter component code sample; a side rail lists where the concept fits, what it needs, what it unlocks and related interview questions." width="100%">
+      <img src="docs/screenshots/knowgraph-card.webp" alt="Study session on the Read stage for the concept 'Mental model: UI as a function of state'. Tabs for the four stages (Read, AI mentor, Paraphrase, Evaluate) run across the top next to a score of 85 out of 120. The reading column has a serif summary, a 'why it matters' callout, body text and a Counter component code sample; a side rail lists where the concept fits, what it needs, what it unlocks and related interview questions." width="100%">
       <br><sub>Study session, Read stage. Tabs for the other three stages sit above the text.</sub>
     </td>
     <td width="50%" valign="top">
-      <img src="docs/screenshots/knowgraph-graph.webp" alt="Graph view of the React curriculum laid out in columns by dependency depth. Hovering 'Lifting state y fuente de verdad' highlights its prerequisite edge from 'useState vs useReducer' and the edges to the two concepts it unlocks; a tooltip names both, and a legend at the bottom explains the suggested route, prerequisite and mastery markers." width="100%">
+      <img src="docs/screenshots/knowgraph-graph.webp" alt="Graph view of the React curriculum laid out in columns by dependency depth. Hovering 'Lifting state and source of truth' highlights its prerequisite edge from 'useState vs useReducer' and the edges to the two concepts it unlocks; a tooltip names both, and a legend at the bottom explains the suggested route, prerequisite and mastery markers." width="100%">
       <br><sub>Dependency graph. Hovering a concept brings its prerequisites and dependents forward.</sub>
     </td>
   </tr>
   <tr>
     <td colspan="2" align="center">
-      <img src="docs/screenshots/knowgraph-progress.webp" alt="Progress view for the React graph: 2 of 101 cards mastered, a note that a card counts as mastered at 100 out of 120, four seniority levels (React profesional, Senior frontend, Senior Design Systems, Frontend Lead) with per-level counts, and a list of milestones, each with its next suggested concept." width="50%">
+      <img src="docs/screenshots/knowgraph-progress.webp" alt="Progress view for the React graph: 2 of 101 cards mastered, a note that a card counts as mastered at 100 out of 120, four seniority levels (Professional React, Senior frontend, Senior Design Systems, Frontend Lead) with per-level counts, and a list of milestones, each with its next suggested concept." width="50%">
       <br><sub>Progress by seniority level and milestone.</sub>
     </td>
   </tr>
