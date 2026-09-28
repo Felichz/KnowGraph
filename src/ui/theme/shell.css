@@ -78,6 +78,7 @@
 .dock__item.is-active { color: var(--text-1); }
 .dock__item.is-active svg { color: var(--accent); }
 
-/* Language switcher (EN / ES) */
-.topbar__lang { margin-left: auto; }
+/* Language switcher (EN / ES) + theme toggle: one preference group at the end of the bar */
+.topbar__prefs { margin-left: auto; display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0; }
+.topbar__theme { width: var(--ctl-md); height: var(--ctl-md); border-radius: var(--r-group); background: var(--well); border: 1px solid var(--line-subtle); }
 .lang-toggle { font-size: var(--fs-xs); font-weight: 600; letter-spacing: .04em; color: var(--text-2); }

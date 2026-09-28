@@ -5,6 +5,7 @@ import { BrandGlyph } from "../primitives/BrandGlyph.jsx";
 import { actions, useWorkspace } from "../state/useWorkspace.js";
 import { useT } from "../../i18n/react.js";
 import { LanguageSwitch } from "./LanguageSwitch.jsx";
+import { ThemeToggle } from "./ThemeToggle.jsx";
 
 const TITLES = { map: null, flashcards: "shell.nav.flashcards", progress: "shell.nav.progress" };
 const MODES = [{ value: "list", labelKey: "shell.topbar.list", icon: LayoutList }, { value: "graph", labelKey: "shell.topbar.graph", icon: Workflow }];
@@ -38,7 +39,10 @@ export function TopBar({ model, scrollRef }) {
       {view === "map" && (
         <Segmented label={t("shell.topbar.mapMode")} options={modes} value={mapMode} onChange={(value) => actions.setPref("mapMode", value)} />
       )}
-      <LanguageSwitch className="topbar__lang" />
+      <div className="topbar__prefs">
+        <LanguageSwitch className="topbar__lang" />
+        <ThemeToggle className="topbar__theme" />
+      </div>
     </header>
   );
 }

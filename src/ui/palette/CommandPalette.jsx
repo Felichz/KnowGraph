@@ -1,17 +1,20 @@
 import { useMemo, useRef, useState } from "react";
-import { ArrowRight, BarChart3, Languages, Layers, Map, Network, Search, Settings2, Shuffle } from "lucide-react";
+import { ArrowRight, BarChart3, Languages, Layers, Map, Moon, Network, Search, Settings2, Shuffle, Sun } from "lucide-react";
 import { Overlay } from "../primitives/Overlay.jsx";
 import { CategoryDot } from "../primitives/CategoryDot.jsx";
 import { ScoreValue } from "../primitives/Score.jsx";
 import { actions } from "../state/useWorkspace.js";
+import { useTheme } from "../hooks/useTheme.js";
+import { toggleTheme } from "../theme/theme.js";
 import { LOCALES } from "../../i18n/locale.js";
 import { useLocale, useT } from "../../i18n/react.js";
 
 const norm = (s = "") => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-function buildActions(graphId, locale, t) {
+function buildActions(graphId, locale, theme, t) {
   const other = graphId === "react" ? "rails" : "react";
   const nextLocale = LOCALES.find((item) => item !== locale) ?? locale;
+  const nextTheme = theme === "dark" ? "light" : "dark";
   return [
     { id: "a-map", label: t("palette.actions.map"), icon: Map, run: () => actions.setView("map") },
     { id: "a-flash", label: t("palette.actions.flashcards"), icon: Layers, run: () => actions.setView("flashcards") },
@@ -20,6 +23,7 @@ function buildActions(graphId, locale, t) {
     { id: "a-switch", label: t("palette.actions.switchGraph", { name: other === "react" ? "React" : "Rails" }), icon: Shuffle, run: () => actions.setGraph(other) },
     { id: "a-settings", label: t("palette.actions.settings"), icon: Settings2, run: () => actions.openOverlay("settings") },
     { id: "a-locale", label: t("palette.actions.switchLanguage", { language: t(`common.language.${nextLocale}`) }), icon: Languages, run: () => actions.setLocale(nextLocale) },
+    { id: "a-theme", label: t(`common.theme.switchTo.${nextTheme}`), icon: nextTheme === "light" ? Sun : Moon, run: toggleTheme },
   ];
 }
 
@@ -30,11 +34,12 @@ export function CommandPalette({ model, open, onClose }) {
   const listRef = useRef(null);
   const t = useT();
   const locale = useLocale();
+  const { theme } = useTheme();
   const { graph, progress } = model;
 
   const results = useMemo(() => {
     const q = norm(query.trim());
-    const acts = buildActions(graph.id, locale, t).filter((a) => !q || norm(a.label).includes(q)).map((a) => ({ ...a, kind: "action" }));
+    const acts = buildActions(graph.id, locale, theme, t).filter((a) => !q || norm(a.label).includes(q)).map((a) => ({ ...a, kind: "action" }));
     const cards = graph.nodes
       .map((node) => {
         const label = norm(node.label);
@@ -47,7 +52,7 @@ export function CommandPalette({ model, open, onClose }) {
       .slice(0, q ? 12 : 6)
       .map(({ node }) => ({ id: node.id, kind: "card", node, run: () => actions.openCard(node.id) }));
     return q ? [...cards, ...acts] : [...acts, ...cards];
-  }, [query, graph, locale, t]);
+  }, [query, graph, locale, theme, t]);
 
   const close = () => { setQuery(""); setActive(0); onClose(); };
   const choose = (item) => { close(); item.run(); };

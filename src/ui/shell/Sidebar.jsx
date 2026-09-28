@@ -10,6 +10,7 @@ import { SidebarFocus } from "./SidebarFocus.jsx";
 import { useProviderLabel } from "../hooks/useProviderLabel.js";
 import { useT } from "../../i18n/react.js";
 import { LanguageSwitch } from "./LanguageSwitch.jsx";
+import { ThemeToggle } from "./ThemeToggle.jsx";
 
 const NAV = [
   { view: "map", labelKey: "shell.nav.map", icon: Map },
@@ -74,6 +75,7 @@ export function Sidebar({ model, collapsed, canExpand }) {
             <IconButton icon={Search} size="md" label={t("shell.sidebar.searchWithKey", { key: MOD_KEY })} data-tip-side="right" onClick={() => actions.openOverlay("palette")} />
             <IconButton icon={Settings2} size="md" label={t("shell.sidebar.aiConnections")} data-tip-side="right" onClick={() => actions.openOverlay("settings")} />
             <LanguageSwitch compact />
+            <ThemeToggle size="md" tipSide="right" />
           </>
         ) : (
           <>

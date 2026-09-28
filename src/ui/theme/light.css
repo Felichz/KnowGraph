@@ -1,0 +1,26 @@
+/* Tema claro "Estudio diurno" (DESIGN.md §1.9). Solo redefine colores y sombras; el resto de tokens vive en tokens.css.
+   Mismo sistema que el oscuro: papel cálido (nunca blanco puro), tinta grafito, un solo acento iris, sage para dominio y oro para excelencia.
+   Todo texto semántico ≥ 4.5:1 sobre --bg-app, --surface-1 y su propio --*-soft. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  /* neutros */ --bg-sidebar:#EFEBE4; --bg-app:#F7F4EF; --surface-1:#FCFAF7; --surface-2:#FDFBF8; --surface-3:#FEFCFA; --surface-inset:#F1EEE8;
+  --line-subtle:rgba(58,46,28,.07); --line:rgba(58,46,28,.11); --line-strong:rgba(58,46,28,.18); --line-control:#8D8881;
+  --scrim:rgba(38,32,24,.24); --bar-glass:rgba(247,244,239,.86); --selection:#D9DBF5;
+  --hover-overlay:rgba(58,46,28,.045); --press-overlay:rgba(58,46,28,.08); --pill-neutral:rgba(58,46,28,.06); --skeleton:rgba(58,46,28,.07);
+  --well:rgba(58,46,28,.04); --fill-secondary:rgba(255,253,249,.72); --fill-disabled:rgba(58,46,28,.06); --scrollbar-thumb:rgba(58,46,28,.22);
+  --node-hover:#F3F0EA; --node-selected:#ECEDF8; --diagram-border:#CFC9BF;
+  /* texto (tinta) */ --text-1:#211D1A; --text-2:#544F49; --text-3:#6D6861; --text-4:#AEAAA4; --text-on-paper:#F9F6F2;
+  /* acento y semántica */ --paper:#26221E; --paper-hover:#393530; --paper-active:#4A4541;
+  --accent:#4F53BE; --accent-strong:#3E3CAA; --accent-soft:rgba(79,83,190,.10);
+  --mastery:#1A7244; --mastery-soft:rgba(26,114,68,.10); --gold:#8A5D01; --gold-fill:#AD7C0E; --gold-soft:rgba(138,93,1,.10);
+  --warn:#A84B07; --warn-soft:rgba(168,75,7,.10); --danger:#B53530; --danger-soft:rgba(181,53,48,.10); --rail-base:#8A857E;
+  /* código */ --code-inline-bg:rgba(58,46,28,.06);
+  --syn-keyword:#6B46A0; --syn-string:#416B25; --syn-number:#9B4805; --syn-function:#006692; --syn-tag:#9C365D; --syn-attr:#7E5904; --syn-type:#006D69;
+  /* categorías: mismos tonos OKLCH que el oscuro, L .53 (≥ 4.5:1 sobre --bg-app) */
+  --cat-cyan:#007C87; --cat-tan:#90601F; --cat-lavender:#6B61A1; --cat-olive:#64742B; --cat-jade:#137E63; --cat-orchid:#8F5483;
+  --cat-sky:#14769A; --cat-rose:#9A5169; --cat-ochre:#826817; --cat-clay:#9B5738; --cat-violet:#7E5A97;
+  /* elevación: en claro la profundidad la dan sombras tintadas de tinta, no la luminosidad */
+  --shadow-card:0 1px 2px rgba(48,36,20,.05); --shadow-raised:0 1px 2px rgba(48,36,20,.10);
+  --shadow-pop:0 1px 2px rgba(48,36,20,.08),0 8px 24px -6px rgba(48,36,20,.18);
+  --shadow-modal:0 2px 4px rgba(48,36,20,.06),0 12px 32px -8px rgba(48,36,20,.16),0 32px 80px -24px rgba(48,36,20,.24);
+}

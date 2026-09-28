@@ -25,7 +25,7 @@ export const GraphNode = memo(function GraphNode({ node, graph, pos, p, level, s
       <rect className="gnode__focus" x={-3} y={-3} width={NODE_W + 6} height={NODE_H + 6} rx={15} />
       <g clipPath="url(#gnode-clip)">
         <rect className="gnode__rect node-rect" width={NODE_W} height={NODE_H} rx={12} />
-        <rect width={NODE_W} height={2} fill={color} />
+        <rect width={NODE_W} height={2} style={{ fill: color }} />
       </g>
       <rect className="gnode__border" x={0.5} y={0.5} width={NODE_W - 1} height={NODE_H - 1} rx={11.5} />
       <text className="gnode__cat" x={12} y={22}>{truncate(graph.categories[node.cat]?.label ?? node.cat)}</text>

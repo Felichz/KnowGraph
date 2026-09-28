@@ -3,6 +3,9 @@ export default {
   language: {
     hint: "Se aplica a la interfaz, al temario y a las respuestas de IA (mentor, coaching y evaluación). Los intentos guardados conservan el idioma en que se escribieron.",
   },
+  theme: {
+    hint: "Sigue la configuración del sistema hasta que elijas claro u oscuro. La elección se guarda en este dispositivo.",
+  },
   drawer: {
     title: "Conexiones de IA",
     newConnection: "Nueva conexión",

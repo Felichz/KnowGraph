@@ -10,6 +10,7 @@ import { ProviderPicker } from "./ProviderPicker.jsx";
 import { ProviderEditor } from "./ProviderEditor.jsx";
 import { BackupSection } from "./BackupSection.jsx";
 import { LanguageSection } from "./LanguageSection.jsx";
+import { ThemeSection } from "./ThemeSection.jsx";
 import { useT } from "../../i18n/react.js";
 
 // Conexiones de IA (lista · catálogo · editor) y respaldo local (US5).
@@ -63,6 +64,7 @@ export default function SettingsDrawer({ open, onClose, initialView }) {
               <Button variant="secondary" icon={Plus} onClick={() => setView("picker")}>{t("settings.drawer.addConnection")}</Button>
             </section>
             <LanguageSection />
+            <ThemeSection />
             <BackupSection onRestored={reload} />
           </>
         )}

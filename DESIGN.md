@@ -1,9 +1,9 @@
 ---
 system:
   name: "Learning Workspace — Design System v3"
-  version: "3.1.3"
+  version: "3.2.0"
   creative_north_star: "Estudio nocturno"
-  aesthetic: "Oscuro refinado: grafito cálido, papel, un solo acento"
+  aesthetic: "Oscuro refinado: grafito cálido, papel, un solo acento. Edición clara: papel cálido, tinta grafito (Estudio diurno)"
   platform: "Web + Electron (desktop 1440×900 de referencia) · Mobile web (390×844)"
   governing_master_skill: "ui-design-foundations"
   governing_specification: "specs/002-workspace-ui-v3/spec.md"
@@ -16,6 +16,8 @@ system:
 ## 0. Creative north star: *Estudio nocturno* (Night Study)
 
 A study desk at night: the room is warm, quiet graphite; the study material is **paper** (light, warm text, never pure white); and there is **a single work light** —the *iris* accent— marking where your attention is: keyboard focus, selection, the recommended action. **Gold** is reserved for one thing only: excellence (101–120). **Sage** for one thing only: mastery (≥100).
+
+There are two editions of the same desk: **Night Study** (dark, the reference) and **Day Study** (light, §1.9), the same room by daylight, where the surfaces become warm paper and the text becomes graphite ink. The light theme is not an inversion: every role keeps its meaning (iris = attention, sage = mastery, gold = excellence), each color is re-tuned in OKLCH for a light background, and depth moves from surface luminosity to ink-tinted shadows. The default follows the system (`prefers-color-scheme`); the person can pin light or dark (§1.9.6).
 
 Three ideas govern everything:
 
@@ -43,7 +45,7 @@ Three ideas govern everything:
 
 ## 1. Color
 
-All ratios are verified with WCAG 2.2 (culori) against the indicated background.
+All ratios are verified with WCAG 2.2 (culori) against the indicated background. §1.1 to §1.8 describe the dark theme (the `:root` base in `src/ui/theme/tokens.css`); the light theme redefines the same tokens under `:root[data-theme="light"]` in `src/ui/theme/light.css` (§1.9). Components only reference tokens, never hex values.
 
 ### 1.1 Neutrals (warm graphite, OKLCH C ≈ 0.005, hue 70–90°)
 
@@ -167,7 +169,7 @@ Hues optimized to maximize the minimum perceptual distance between each other an
 - **State = icon + text (+ pill or rail).** Never a bare dot (not for severity, coverage, or "IA trabajando" either).
 - Per-category progress bars (sidebar, bands) are filled with `--rail-base`; the category is identified only by the dot next to the name.
 
-OKLCH L = 0.74, C = 0.09. Contrast ≥ 7.0:1 over `--surface-1`. They replace the data hexes at render time (`graph.categories[cat].color`) via `src/ui/theme/categoryPalette.js`; unknown category → `color-mix(in oklch, <dato> 60%, var(--text-2))`.
+OKLCH L = 0.74, C = 0.09. Contrast ≥ 7.0:1 over `--surface-1`. They replace the data hexes at render time (`graph.categories[cat].color`) via `src/ui/theme/categoryPalette.js`, which maps each category to a hue token (`var(--cat-cyan)`, `var(--cat-tan)`, …) so each theme sets its own lightness (light values in §1.9.4); unknown category → `color-mix(in oklch, <dato> 60%, var(--text-2))`.
 
 **React**
 
@@ -184,6 +186,8 @@ OKLCH L = 0.74, C = 0.09. Contrast ≥ 7.0:1 over `--surface-1`. They replace th
 | runtime · Browser & runtime | 90 | `#C1A966` |
 | operations · Producción & reliability | 45 | `#DB997B` |
 | leadership · Producto & liderazgo | 310 | `#BC9BD6` |
+
+Hue tokens: `--cat-cyan` 205 · `--cat-tan` 70 · `--cat-lavender` 290 · `--cat-olive` 120 · `--cat-jade` 170 · `--cat-orchid` 335 · `--cat-sky` 230 · `--cat-rose` 0 · `--cat-ochre` 90 · `--cat-clay` 45 · `--cat-violet` 310.
 
 **Rails**
 
@@ -224,7 +228,7 @@ OKLCH L = 0.74, C = 0.09. Contrast ≥ 7.0:1 over `--surface-1`. They replace th
 
 **Naive vs. production comparison**: two code blocks side by side (desktop ≥ 1100) or stacked. Each carries, in its header, a shape marker + text: `✕ Enfoque ingenuo` (`X` icon in `--danger`) and `✓ Patrón de producción` (`Check` icon in `--mastery`). Below each block, one line of `--text-2` text: "Por qué falla: …" / "Trade-off asumido: …". No colored borders.
 
-**Mermaid** (`mermaid.initialize` → `themeVariables`): `darkMode: true`, `background: #070604`, `primaryColor: #1D1B19`, `primaryTextColor: #EEECE7`, `primaryBorderColor: #474440`, `lineColor: #938F87`, `secondaryColor: #161512`, `tertiaryColor: #100E0C`, `fontFamily: "Geist Variable"`, `fontSize: "14px"`. Container identical to the code block, without the header.
+**Mermaid** (`mermaid.initialize` → `themeVariables`, read from the active theme's tokens right before each render and re-rendered in place when the theme changes): `darkMode` (true only in dark), `background: --surface-inset`, `primaryColor: --surface-2`, `primaryTextColor: --text-1`, `primaryBorderColor: --diagram-border` (dark `#474440`, light `#CFC9BF`), `lineColor: --text-3`, `secondaryColor: --surface-1`, `tertiaryColor: --bg-app`, `fontFamily: "Geist Variable"`, `fontSize: "14px"`. Container identical to the code block, without the header.
 
 ### 1.7 Charts
 
@@ -252,6 +256,111 @@ The series is distinguished by **shape** (filled circle vs. hollow diamond) and 
 | `--expected-marker` | 1px tick `--text-3` + `--fs-xs` 12 mono 500 label "esperado 90 s" | Loader time bar |
 | `--timebar-fill` | `--text-3` up to the expected time; `--warn` past 1.5× | Loader time bar |
 | `--pulse-ai` | opacity .45 ↔ 1, 1.6s | 12–16px `Sparkles` icon `--text-1` for "IA trabajando" + text or `aria-label` "IA trabajando en esta card" (never scales, never a dot) |
+
+
+### 1.9 Light theme: *Day Study*
+
+Same roles, same shape rules, same budgets (§1.3 accent budget, §1.5 shape separation). What changes is the physics of a light surface: the canvas is warm paper, cards are a lighter sheet on it, text is graphite ink, and every semantic color drops to OKLCH L ≈ 0.49 to 0.53 so it holds up as text. Never `#FFFFFF` or `#000000` here either. Ratios: `--bg-app` / `--surface-1` / `--surface-3` / `--surface-inset` / `--bg-sidebar` unless stated.
+
+#### 1.9.1 Neutrals (warm paper, hue ≈ 85°)
+
+| Token | Light | Use (same role as dark) |
+|:--|:--|:--|
+| `--bg-sidebar` | `#EFEBE4` | Sidebar, mobile bar and dock: the desk frame, one step darker than the canvas |
+| `--bg-app` | `#F7F4EF` | Canvas, study session |
+| `--surface-1` | `#FCFAF7` | Cards, nodes, drawer, dialogs (a lighter sheet over the canvas) |
+| `--surface-2` | `#FDFBF8` | Palette, active segment |
+| `--surface-3` | `#FEFCFA` | Popovers, menus, tooltips, toasts, graph panels |
+| `--surface-inset` | `#F1EEE8` | Code, textarea, inputs, rail tracks, diagrams |
+| `--line-subtle` / `--line` / `--line-strong` | `rgba(58,46,28,.07)` / `.11` / `.18` | Hairlines in warm ink, not grey |
+| `--line-control` | `#8D8881` | Form borders: 3.0 vs inset / 3.4 vs s1 / 3.4 vs s2 (1.4.11) |
+| `--hover-overlay` / `--press-overlay` | `rgba(58,46,28,.045)` / `.08` | Same single hover rule as §1.4, darkening instead of lightening |
+| `--pill-neutral` / `--skeleton` / `--well` | `rgba(58,46,28,.06)` / `.07` / `.04` | Neutral pills, skeletons, segmented and kbd wells |
+| `--fill-secondary` / `--fill-disabled` | `rgba(255,253,249,.72)` / `rgba(58,46,28,.06)` | Secondary button fill, disabled primary |
+| `--scrim` | `rgba(38,32,24,.24)` + blur 8px | Behind dialogs, drawer, palette |
+| `--bar-glass` | `rgba(247,244,239,.86)` + blur 8px | Top bar on scroll |
+| `--selection` | `#D9DBF5` | `::selection` (text-1 on top: 12.3:1) |
+| `--node-hover` / `--node-selected` | `#F3F0EA` / `#ECEDF8` | Graph node hover and selected fills (dark: `#1B1A17` / `#272832`) |
+| `--scrollbar-thumb` | `rgba(58,46,28,.22)` | Scrollbars (dark: `rgba(255,248,230,.14)`) |
+
+#### 1.9.2 Text (graphite ink)
+
+| Token | Light | Contrast app / s1 / s3 / inset / sidebar |
+|:--|:--|:--|
+| `--text-1` | `#211D1A` | 15.2 / 16.1 / 16.3 / 14.4 / 14.1 |
+| `--text-2` | `#544F49` | 7.4 / 7.8 / 7.9 / 7.0 / 6.8 |
+| `--text-3` | `#6D6861` | 5.0 / 5.3 / 5.4 / 4.8 / 4.6 (weight ≥ 500, same rule) |
+| `--text-4` | `#AEAAA4` | 2.1 to 2.3 (disabled only, exempt) |
+| `--text-on-paper` | `#F9F6F2` | 14.7 over `--paper` |
+
+#### 1.9.3 Accent, paper and semantics
+
+In light, **paper becomes ink**: the primary button is a graphite fill with paper text, which keeps "one high-contrast primary per region" true on a light canvas.
+
+| Token | Light | Contrast app / s1 / s3 · over its own `-soft` on app | Role |
+|:--|:--|:--|:--|
+| `--paper` / `--paper-hover` / `--paper-active` | `#26221E` / `#393530` / `#4A4541` | n/a | Primary button fill |
+| `--accent` (iris) | `#4F53BE` | 5.8 / 6.1 / 6.2 · 5.0 | Focus ring, selection, links, "Best next" |
+| `--accent-strong` | `#3E3CAA` | 7.9 / 8.3 / 8.4 · 6.7 | Link hover, text over accent-soft |
+| `--accent-soft` | `rgba(79,83,190,.10)` | n/a | Selected rows |
+| `--mastery` (sage) | `#1A7244` | 5.4 / 5.7 / 5.8 · 4.7 | Mastery ≥ 100 |
+| `--gold` | `#8A5D01` | 5.2 / 5.5 / 5.6 · 4.6 | **Text and icons** of excellence 101 to 120 (★, pills, scores) |
+| `--gold-fill` | `#AD7C0E` | 3.2 vs the inset track (1.4.11) | **Fills** of the extra segment (score rail, node rail, rubric). Dark: `= --gold` |
+| `--warn` | `#A84B07` | 5.2 / 5.5 / 5.6 · 4.5 | Warnings, prerequisites |
+| `--danger` (coral) | `#B53530` | 5.4 / 5.7 / 5.8 · 4.7 | Errors; `--text-on-paper` over a `--danger` fill: 5.5 |
+| `--*-soft` | own color at `.10` | n/a | Tints (dark uses `.12` / `.14`); text-2 over gold-soft on s1: 6.8 |
+| `--rail-base` | `#8A857E` | 3.2 vs the inset track | 0 to 100 segment before mastery |
+
+Gold is split in two only because of the light background: a gold dark enough for AA text reads as bronze when it fills a bar, so bars use the brighter `--gold-fill` (non-text, 3:1) and everything that is read uses `--gold`. Gold and warn stay apart by hue (76° vs 48°) and by shape (★ vs triangle).
+
+#### 1.9.4 Categories (light)
+
+Same hues as §1.5 at OKLCH L = 0.53, C = 0.10: ≥ 4.5:1 over `--bg-app` and `--surface-1`, so a category dot never fades on paper.
+
+| Token | Light | Dark |
+|:--|:--|:--|
+| `--cat-cyan` | `#007C87` | `#5DBBC6` |
+| `--cat-tan` | `#90601F` | `#D0A16B` |
+| `--cat-lavender` | `#6B61A1` | `#AAA1E0` |
+| `--cat-olive` | `#64742B` | `#A3B472` |
+| `--cat-jade` | `#137E63` | `#6CBDA2` |
+| `--cat-orchid` | `#8F5483` | `#CF95C1` |
+| `--cat-sky` | `#14769A` | `#6BB6D9` |
+| `--cat-rose` | `#9A5169` | `#DA93A8` |
+| `--cat-ochre` | `#826817` | `#C1A966` |
+| `--cat-clay` | `#9B5738` | `#DB997B` |
+| `--cat-violet` | `#7E5A97` | `#BC9BD6` |
+
+#### 1.9.5 Code, diagrams and elevation (light)
+
+| Token | Light | Contrast over `--surface-inset` |
+|:--|:--|:--|
+| `--syn-keyword` | `#6B46A0` | 6.0 |
+| `--syn-string` | `#416B25` | 5.4 |
+| `--syn-number` | `#9B4805` | 5.5 |
+| `--syn-function` | `#006692` | 5.5 |
+| `--syn-tag` | `#9C365D` | 5.9 |
+| `--syn-attr` | `#7E5904` | 5.5 |
+| `--syn-type` | `#006D69` | 5.3 |
+| `--syn-comment` / `--syn-punct` / `--syn-plain` | text-3 italic / text-2 / text-1 | 4.8 / 7.0 / 14.4 |
+| `--code-inline-bg` | `rgba(58,46,28,.06)` | n/a |
+| `--diagram-border` | `#CFC9BF` | Mermaid node borders |
+
+Elevation in light: the surfaces are only a few steps apart, so **shadows carry the depth**, tinted with warm ink (`rgb(48,36,20)`), never neutral black.
+
+- `--shadow-card`: `0 1px 2px rgba(48,36,20,.05)` (dark: `inset 0 1px 0 rgba(255,248,230,.04)`)
+- `--shadow-raised` (checked segment): `0 1px 2px rgba(48,36,20,.10)` (dark: `inset 0 1px 0 rgba(255,248,230,.06)`)
+- `--shadow-pop`: `0 1px 2px rgba(48,36,20,.08), 0 8px 24px -6px rgba(48,36,20,.18)`
+- `--shadow-modal`: `0 2px 4px rgba(48,36,20,.06), 0 12px 32px -8px rgba(48,36,20,.16), 0 32px 80px -24px rgba(48,36,20,.24)`
+
+#### 1.9.6 Choosing the theme
+
+- **Default: system** (`prefers-color-scheme`), followed live while no choice is saved.
+- **Explicit choice** is saved in `localStorage["knowgraph:theme"]` = `"light"` | `"dark"`; "System" removes the key.
+- **Before first paint**, an inline script in `index.html` sets `<html data-theme>` and `<meta name="theme-color">` (`#F7F4EF` / `#100E0C`), and an inline style paints the matching `html` background. The CSP allows that script by its sha256 hash; `tests/logic/theme.mjs` fails if the script and the hash drift apart. Runtime store: `src/ui/theme/theme.js`.
+- **Controls**: an icon button next to the EN / ES switcher in the top bar (collapsed sidebar: in the footer, under the language toggle), a System / Light / Dark segmented control in Settings, and a command palette action. The icon shows the theme you switch to (`Sun` in dark, `Moon` in light); label and `aria-label` are translated ("Switch to light theme" / "Cambiar a tema claro").
+- **Brand glyph and favicon** do not change: the graphite tile reads as an app icon on both paper and graphite.
+- **Electron** paints the window with the `--bg-app` of the system theme until the renderer is ready.
 
 ---
 
@@ -397,7 +506,7 @@ Rule: **`outer_radius = inner_radius + padding`** when the padding is smaller th
 
 ---
 
-## 5. Elevation and depth (dark mode)
+## 5. Elevation and depth (dark mode; light in §1.9.5)
 
 Depth is communicated through **surface luminosity**. Only overlays cast shadows. Every overlay is **lighter than its host**.
 
@@ -487,9 +596,9 @@ Order by real flow: popovers always open from the active top layer, which is why
 
 ## 11. Accessibility baseline
 - Visible focus: `outline: 2px solid var(--accent); outline-offset: 2px;` only on `:focus-visible` (iris 6.2–7.6:1 against any surface).
-- Scrollbars: `scrollbar-width: thin; scrollbar-color: rgba(255,248,230,.14) transparent;` (WebKit 8px, thumb `--r-full`).
+- Scrollbars: `scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) transparent;` (WebKit 8px, thumb `--r-full`).
 - `::selection { background: var(--selection); color: var(--text-1); }`
-- `color-scheme: dark` on `:root`.
+- `color-scheme: dark` on `:root`, `color-scheme: light` under `:root[data-theme="light"]` (native controls and scrollbars follow the theme).
 
 ## 12. Authentic representation
 Mockups, fixtures, and states use real content. Canonical example set (real nodes from `src/`):
@@ -507,5 +616,6 @@ Mockups, fixtures, and states use real content. Canonical example set (real node
 Lorem ipsum, "Card title", "User 1" are forbidden.
 
 ## Changelog
+- **3.2.0**: Light theme *Day Study* (§1.9): full token set in `light.css`, system default with a saved override (`knowgraph:theme`), pre-paint script, toggle next to the language switcher, Settings section and palette action. New tokens in both themes: `--well`, `--fill-secondary`, `--fill-disabled`, `--scrollbar-thumb`, `--node-hover`, `--node-selected`, `--diagram-border`, `--gold-fill`, `--shadow-card`, `--shadow-raised` and the `--cat-*` hue tokens. Mermaid reads its theme from tokens and re-renders on change. Dark values unchanged.
 - **3.1.3** (Phase 2): `--surface-2` is now used for the active segment of segmented controls (previously "active card tab"; stage tabs use an indicator, no fill). Adds the distance tokens `--move-1…4` (§7).
 - **3.1.2** — Phase 0 seal.

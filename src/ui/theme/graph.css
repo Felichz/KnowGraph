@@ -15,10 +15,10 @@
 .gnode__border { fill: none; stroke: var(--line); stroke-width: 1; }
 .gnode__focus { fill: none; stroke: none; }
 .gnode:focus-visible .gnode__focus { stroke: var(--accent); stroke-width: 2; }
-@media (hover: hover) { .gnode:hover .gnode__rect { fill: #1b1a17; } .gnode:hover .gnode__border { stroke: var(--line-strong); } }
-.gnode:focus-visible .gnode__rect { fill: #1b1a17; }
+@media (hover: hover) { .gnode:hover .gnode__rect { fill: var(--node-hover); } .gnode:hover .gnode__border { stroke: var(--line-strong); } }
+.gnode:focus-visible .gnode__rect { fill: var(--node-hover); }
 .gnode.is-ancestor .gnode__border, .gnode.is-descendant .gnode__border { stroke: var(--line-strong); }
-.gnode.is-selected .gnode__rect { fill: #272832; } .gnode.is-selected .gnode__border { stroke: var(--accent); }
+.gnode.is-selected .gnode__rect { fill: var(--node-selected); } .gnode.is-selected .gnode__border { stroke: var(--accent); }
 .gnode.is-dimmed { opacity: .32; }
 .gnode.is-inactive { pointer-events: none; }
 .gnode__cat { font-family: var(--font-ui); font-size: 12px; font-weight: 500; fill: var(--text-3); }
@@ -27,9 +27,9 @@
 .gnode__label { font-family: var(--font-ui); font-size: 14px; font-weight: 500; fill: var(--text-1); }
 .gnode__track { fill: var(--surface-inset); }
 .gnode__base { fill: var(--rail-base); } .gnode__base.is-mastered { fill: var(--mastery); }
-.gnode__extra { fill: var(--gold); }
+.gnode__extra { fill: var(--gold-fill); }
 .gnode__mark { fill: var(--text-3); }
-.gnode__badge rect { fill: #272832; stroke: var(--accent); stroke-width: 1; }
+.gnode__badge rect { fill: var(--node-selected); stroke: var(--accent); stroke-width: 1; }
 .gnode__badge text { font-family: var(--font-ui); font-size: 12px; font-weight: 500; fill: var(--accent-strong); }
 .gnode__level { font-family: var(--font-ui); font-size: 12px; font-weight: 500; fill: var(--text-3); }
 

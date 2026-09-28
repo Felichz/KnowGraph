@@ -2,40 +2,42 @@ import { useEffect, useId, useState } from "react";
 import { CodeBlock } from "./CodeBlock.jsx";
 import { Skeleton } from "./Feedback.jsx";
 import { useT } from "../../i18n/react.js";
+import { useTheme } from "../hooks/useTheme.js";
 
 let loader;
-function loadMermaid() {
-  if (!loader) {
-    loader = import("mermaid").then(({ default: mermaid }) => {
-      mermaid.initialize({
-        startOnLoad: false, theme: "base", securityLevel: "strict",
-        themeVariables: {
-          darkMode: true, background: "#070604", primaryColor: "#1D1B19", primaryTextColor: "#EEECE7",
-          primaryBorderColor: "#474440", lineColor: "#938F87", secondaryColor: "#161512", tertiaryColor: "#100E0C",
-          fontFamily: "Geist Variable, ui-sans-serif, system-ui", fontSize: "14px",
-        },
-        flowchart: { htmlLabels: true, curve: "basis" },
-      });
-      return mermaid;
-    });
-  }
-  return loader;
+const loadMermaid = () => (loader ??= import("mermaid").then(({ default: mermaid }) => mermaid));
+
+// themeVariables from the active theme's tokens (DESIGN §1.6), so light and dark diagrams match the code blocks.
+function themeConfig(theme) {
+  const css = getComputedStyle(document.documentElement);
+  const v = (name) => css.getPropertyValue(name).trim();
+  return {
+    startOnLoad: false, theme: "base", securityLevel: "strict",
+    themeVariables: {
+      darkMode: theme === "dark", background: v("--surface-inset"), primaryColor: v("--surface-2"), primaryTextColor: v("--text-1"),
+      primaryBorderColor: v("--diagram-border"), lineColor: v("--text-3"), secondaryColor: v("--surface-1"), tertiaryColor: v("--bg-app"),
+      fontFamily: "Geist Variable, ui-sans-serif, system-ui", fontSize: "14px",
+    },
+    flowchart: { htmlLabels: true, curve: "basis" },
+  };
 }
 
 // Diagrama Mermaid lazy con fallback al código fuente (design-spec E.3).
 export function Mermaid({ chart }) {
   const t = useT();
   const id = `mmd-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
-  const [state, setState] = useState({ status: "loading", svg: "" });
+  const { theme } = useTheme();
+  const [state, setState] = useState({ status: "loading", svg: "", chart });
   useEffect(() => {
     let alive = true;
-    setState({ status: "loading", svg: "" });
+    // A theme change re-renders in place (keeps the previous SVG); a new chart shows the skeleton.
+    setState((prev) => (prev.chart === chart ? prev : { status: "loading", svg: "", chart }));
     loadMermaid()
-      .then((mermaid) => mermaid.render(id, chart))
-      .then(({ svg }) => { if (alive) setState({ status: "ready", svg }); })
-      .catch(() => { if (alive) setState({ status: "error", svg: "" }); });
+      .then((mermaid) => { mermaid.initialize(themeConfig(theme)); return mermaid.render(id, chart); })
+      .then(({ svg }) => { if (alive) setState({ status: "ready", svg, chart }); })
+      .catch(() => { if (alive) setState({ status: "error", svg: "", chart }); });
     return () => { alive = false; };
-  }, [chart, id]);
+  }, [chart, id, theme]);
   if (state.status === "error") {
     return (
       <div className="diagram diagram--fallback">

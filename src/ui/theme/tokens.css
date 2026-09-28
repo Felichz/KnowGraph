@@ -1,14 +1,20 @@
-/* Learning Workspace v3 — tokens (DESIGN.md v3.1.3 + design-spec §G.1). No editar valores sin actualizar DESIGN.md. */
+/* Learning Workspace v3 — tokens (DESIGN.md v3.2.0 + design-spec §G.1). No editar valores sin actualizar DESIGN.md.
+   :root es el tema oscuro (Estudio nocturno); light.css redefine los colores bajo :root[data-theme="light"]. */
 :root {
   color-scheme: dark;
   /* neutros */ --bg-sidebar:#090806; --bg-app:#100E0C; --surface-1:#161512; --surface-2:#1D1B19; --surface-3:#242220; --surface-inset:#070604;
   --line-subtle:rgba(255,248,230,.06); --line:rgba(255,248,230,.09); --line-strong:rgba(255,248,230,.16); --line-control:#6B6861;
   --scrim:rgba(4,3,2,.72); --bar-glass:rgba(16,14,12,.88); --selection:#2A2E56;
   --hover-overlay:rgba(255,248,230,.06); --press-overlay:rgba(255,248,230,.10); --pill-neutral:rgba(255,248,230,.06); --skeleton:rgba(255,248,230,.07);
+  --well:rgba(255,248,230,.04); --fill-secondary:rgba(255,248,230,.05); --fill-disabled:rgba(255,248,230,.08); --scrollbar-thumb:rgba(255,248,230,.14);
+  --node-hover:#1B1A17; --node-selected:#272832; --diagram-border:#474440;
+  /* categorías (DESIGN §1.5): solo puntos y trazos; categoryPalette.js las referencia */
+  --cat-cyan:#5DBBC6; --cat-tan:#D0A16B; --cat-lavender:#AAA1E0; --cat-olive:#A3B472; --cat-jade:#6CBDA2; --cat-orchid:#CF95C1;
+  --cat-sky:#6BB6D9; --cat-rose:#DA93A8; --cat-ochre:#C1A966; --cat-clay:#DB997B; --cat-violet:#BC9BD6;
   /* texto */ --text-1:#EEECE7; --text-2:#B7B3AB; --text-3:#938F87; --text-4:#5F5C56; --text-on-paper:#100E0C;
   /* acento y semántica */ --paper:#EEECE7; --paper-hover:#DAD7D0; --paper-active:#C7C4BD;
   --accent:#909CF5; --accent-strong:#A5B1FD; --accent-soft:rgba(144,156,245,.14);
-  --mastery:#74C692; --mastery-soft:rgba(116,198,146,.12); --gold:#E8BE62; --gold-soft:rgba(232,190,98,.12);
+  --mastery:#74C692; --mastery-soft:rgba(116,198,146,.12); --gold:#E8BE62; --gold-fill:var(--gold); --gold-soft:rgba(232,190,98,.12);
   --warn:#F0995B; --warn-soft:rgba(240,153,91,.12); --danger:#E97871; --danger-soft:rgba(233,120,113,.12); --rail-base:#B7B3AB;
   /* código */ --code-bg:var(--surface-inset); --code-inline-bg:rgba(255,248,230,.07); --code-fs:var(--fs-sm); --code-lh:1.5rem; --code-inline-fs:var(--fs-sm);
   --syn-comment:var(--text-3); --syn-keyword:#BAA4E2; --syn-string:#A4C386; --syn-number:#E5A880; --syn-function:#80C1E1; --syn-tag:#E199AF; --syn-attr:#D5BA82; --syn-type:#81C6C1; --syn-punct:var(--text-2); --syn-plain:var(--text-1);
@@ -23,6 +29,7 @@
   --slot-h:3.5rem; /* móvil: se actualiza por ResizeObserver */
   /* radios */ --r-xs:4px; --r-sm:6px; --r-md:8px; --r-group:10px; --r-lg:12px; --r-xl:16px; --r-full:999px;
   /* elevación */ --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 24px -6px rgba(0,0,0,.55); --shadow-modal:0 2px 4px rgba(0,0,0,.35),0 12px 32px -8px rgba(0,0,0,.6),0 32px 80px -24px rgba(0,0,0,.7);
+  --shadow-card:inset 0 1px 0 rgba(255,248,230,.04); --shadow-raised:inset 0 1px 0 rgba(255,248,230,.06);
   /* movimiento */ --dur-1:120ms; --dur-2:180ms; --dur-3:240ms; --dur-flip:420ms; --ease-out:cubic-bezier(.2,0,0,1); --ease-in-out:cubic-bezier(.4,0,.2,1);
   --move-1:4px; --move-2:8px; --move-3:16px; --move-4:24px; --scale-enter:.98;
   /* tiempos de interacción */ --delay-tooltip:600ms; --dur-rail-grow:480ms; --dur-highlight:1200ms; --dur-spotlight:2000ms; --dur-feedback-copy:2000ms; --dur-feedback-saved:1500ms; --dur-feedback-cancel:1400ms; --delay-live-review:5000ms; --dur-toast:5000ms; --dur-undo:5000ms;

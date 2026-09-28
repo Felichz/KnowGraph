@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, session, shell, safeStorage, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, Menu, nativeTheme, session, shell, safeStorage, ipcMain, dialog } = require("electron");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
 const http = require("node:http");
@@ -380,7 +380,8 @@ async function createWindow() {
     minHeight: 720,
     show: false,
     autoHideMenuBar: true,
-    backgroundColor: "#080c12",
+    // --bg-app of the theme the renderer will pick by default (system setting); see src/ui/theme/theme.js.
+    backgroundColor: nativeTheme.shouldUseDarkColors ? "#100E0C" : "#F7F4EF",
     title: "Learning Workspace",
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),

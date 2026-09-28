@@ -9,6 +9,13 @@ export default {
     short: { en: "EN", es: "ES" },
     changed: "Language set to English.",
   },
+  theme: {
+    label: "Theme",
+    system: "System",
+    light: "Light",
+    dark: "Dark",
+    switchTo: { light: "Switch to light theme", dark: "Switch to dark theme" },
+  },
   stages: { read: "Read", mentor: "AI mentor", paraphrase: "Paraphrase", evaluate: "Evaluate" },
   status: {
     strong: "Core covered",

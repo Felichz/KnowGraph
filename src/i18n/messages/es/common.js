@@ -9,6 +9,13 @@ export default {
     short: { en: "EN", es: "ES" },
     changed: "Idioma cambiado a español.",
   },
+  theme: {
+    label: "Tema",
+    system: "Sistema",
+    light: "Claro",
+    dark: "Oscuro",
+    switchTo: { light: "Cambiar a tema claro", dark: "Cambiar a tema oscuro" },
+  },
   stages: { read: "Leer", mentor: "Mentor IA", paraphrase: "Parafrasear", evaluate: "Evaluar" },
   status: {
     strong: "Base cubierta",

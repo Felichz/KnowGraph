@@ -3,6 +3,9 @@ export default {
   language: {
     hint: "Applies to the interface, the curriculum and AI answers (mentor, coaching and evaluation). Saved attempts keep the language they were written in.",
   },
+  theme: {
+    hint: "Follows your system setting until you pick light or dark. The choice is saved on this device.",
+  },
   drawer: {
     title: "AI connections",
     newConnection: "New connection",
