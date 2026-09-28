@@ -261,7 +261,7 @@ async function ensureGateway() {
   gatewayProcess.stdout?.on("data", (chunk) => process.stdout.write(`[gateway] ${chunk}`));
   gatewayProcess.stderr?.on("data", (chunk) => process.stderr.write(`[gateway] ${chunk}`));
   gatewayProcess.once("exit", (code) => {
-    if (!shuttingDown && code !== 0) console.error(`[desktop] gateway finalizó con código ${code}`);
+    if (!shuttingDown && code !== 0) console.error(`[desktop] gateway exited with code ${code}`);
     gatewayProcess = null;
   });
 
@@ -281,7 +281,7 @@ async function ensureDevelopmentRenderer() {
   rendererDevProcess.stdout?.on("data", (chunk) => process.stdout.write(`[vite] ${chunk}`));
   rendererDevProcess.stderr?.on("data", (chunk) => process.stderr.write(`[vite] ${chunk}`));
   rendererDevProcess.once("exit", (code) => {
-    if (!shuttingDown && code !== 0) console.error(`[desktop] Vite finalizó con código ${code}`);
+    if (!shuttingDown && code !== 0) console.error(`[desktop] Vite exited with code ${code}`);
     rendererDevProcess = null;
   });
 

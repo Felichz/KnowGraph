@@ -2,9 +2,9 @@
 system:
   name: "Learning Workspace — Design System v3"
   version: "3.2.0"
-  creative_north_star: "Estudio nocturno"
-  aesthetic: "Oscuro refinado: grafito cálido, papel, un solo acento. Edición clara: papel cálido, tinta grafito (Estudio diurno)"
-  platform: "Web + Electron (desktop 1440×900 de referencia) · Mobile web (390×844)"
+  creative_north_star: "Night Study"
+  aesthetic: "Refined dark: warm graphite, paper, a single accent. Light edition: warm paper, graphite ink (Day Study)"
+  platform: "Web + Electron (reference desktop 1440×900) · Mobile web (390×844)"
   governing_master_skill: "ui-design-foundations"
   governing_specification: "specs/002-workspace-ui-v3/spec.md"
   quality_standard: "docs/DESIGN_CRITERIA.md"
@@ -13,7 +13,7 @@ system:
 
 # Learning Workspace — Design System v3
 
-## 0. Creative north star: *Estudio nocturno* (Night Study)
+## 0. Creative north star: *Night Study*
 
 A study desk at night: the room is warm, quiet graphite; the study material is **paper** (light, warm text, never pure white); and there is **a single work light** —the *iris* accent— marking where your attention is: keyboard focus, selection, the recommended action. **Gold** is reserved for one thing only: excellence (101–120). **Sage** for one thing only: mastery (≥100).
 
@@ -21,7 +21,7 @@ There are two editions of the same desk: **Night Study** (dark, the reference) a
 
 Three ideas govern everything:
 
-1. **The map is a tool; the card is a book.** Operational surfaces (map, filters, metrics, forms) use a technical sans and tabular mono. Study content uses an editorial serif in its reading moments (card title, *En una frase*, flashcard question). That duality is the product's signature.
+1. **The map is a tool; the card is a book.** Operational surfaces (map, filters, metrics, forms) use a technical sans and tabular mono. Study content uses an editorial serif in its reading moments (card title, *In one sentence*, flashcard question). That duality is the product's signature.
 2. **Hierarchy through typography and space, not boxes.** One flat plane per surface. Groups are formed by proximity, headings, and hairlines (1px). Never colored borders around blocks of text.
 3. **Color means something or it does not appear.** Neutrals for structure; iris for interaction; sage for mastery; gold for excellence; coral for error; orange for warning. Category colors exist **only as dots and thin strokes** of identity (see §1.5, shape separation).
 
@@ -112,11 +112,11 @@ All ratios are verified with WCAG 2.2 (culori) against the indicated background.
 
 | State | Pill: background / text | lucide icon | Copy |
 |:--|:--|:--|:--|
-| `exceptional` (101–120) | `--gold-soft` / `--gold` | `Star` | "Profundización extra" |
-| `strong` (100) | `--mastery-soft` / `--mastery` | `Check` | "Base cubierta" |
-| `developing` (60–99) | `--pill-neutral` / `--text-2` | `CircleDashed` | "En progreso" |
-| `review` (<60) | `--warn-soft` / `--warn` | `AlertTriangle` | "Conviene revisar" |
-| no attempt | transparent, border `--line` / `--text-3` | `Circle` | "Sin evaluar" |
+| `exceptional` (101–120) | `--gold-soft` / `--gold` | `Star` | "Extra depth" |
+| `strong` (100) | `--mastery-soft` / `--mastery` | `Check` | "Core covered" |
+| `developing` (60–99) | `--pill-neutral` / `--text-2` | `CircleDashed` | "In progress" |
+| `review` (<60) | `--warn-soft` / `--warn` | `AlertTriangle` | "Worth reviewing" |
+| no attempt | transparent, border `--line` / `--text-3` | `Circle` | "Not scored" |
 
 **Gap severity**
 
@@ -175,17 +175,17 @@ OKLCH L = 0.74, C = 0.09. Contrast ≥ 7.0:1 over `--surface-1`. They replace th
 
 | Category | Hue | Hex |
 |:--|:--:|:--|
-| fundamentals · Modelo mental & componentes | 205 | `#5DBBC6` |
-| state · Estado & datos | 70 | `#D0A16B` |
-| effects · Efectos & asincronía | 290 | `#AAA1E0` |
+| fundamentals · Mental model & components | 205 | `#5DBBC6` |
+| state · State & data | 70 | `#D0A16B` |
+| effects · Effects & async | 290 | `#AAA1E0` |
 | rendering · Render & performance | 120 | `#A3B472` |
-| architecture · Arquitectura web | 170 | `#6CBDA2` |
-| quality · Testing & calidad | 335 | `#CF95C1` |
-| platform · Web, seguridad & deploy | 230 | `#6BB6D9` |
-| designSystem · Design systems & contratos | 0 | `#DA93A8` |
+| architecture · Web architecture | 170 | `#6CBDA2` |
+| quality · Testing & quality | 335 | `#CF95C1` |
+| platform · Web, security & deploy | 230 | `#6BB6D9` |
+| designSystem · Design systems & contracts | 0 | `#DA93A8` |
 | runtime · Browser & runtime | 90 | `#C1A966` |
-| operations · Producción & reliability | 45 | `#DB997B` |
-| leadership · Producto & liderazgo | 310 | `#BC9BD6` |
+| operations · Production & reliability | 45 | `#DB997B` |
+| leadership · Product & leadership | 310 | `#BC9BD6` |
 
 Hue tokens: `--cat-cyan` 205 · `--cat-tan` 70 · `--cat-lavender` 290 · `--cat-olive` 120 · `--cat-jade` 170 · `--cat-orchid` 335 · `--cat-sky` 230 · `--cat-rose` 0 · `--cat-ochre` 90 · `--cat-clay` 45 · `--cat-violet` 310.
 
@@ -195,9 +195,9 @@ Hue tokens: `--cat-cyan` 205 · `--cat-tan` 70 · `--cat-lavender` 290 · `--cat
 |:--|:--|
 | fundamentals · Rails core & request | `#D0A16B` |
 | activerecord · Active Record & DB | `#DA93A8` |
-| patterns · Diseño aplicado | `#6BB6D9` |
-| sti · STI & polimorfismo | `#AAA1E0` |
-| infra · API, seguridad & runtime | `#5DBBC6` |
+| patterns · Applied design | `#6BB6D9` |
+| sti · STI & polymorphism | `#AAA1E0` |
+| infra · API, security & runtime | `#5DBBC6` |
 | assets · Asset pipeline | `#6CBDA2` |
 | testing · Testing (RSpec) | `#A3B472` |
 
@@ -224,9 +224,9 @@ Hue tokens: `--cat-cyan` 205 · `--cat-tan` 70 · `--cat-lavender` 290 · `--cat
 | `--syn-punct` | `--text-2` | Punctuation, operators |
 | `--syn-plain` | `--text-1` | Identifiers |
 
-**Code block**: `--code-bg` background, `--line` border, `--r-lg` 12, 36px header with the language label (`--fs-xs`, `--text-3`) and ghost actions (Copiar, Explicar), body padding 16, its own horizontal scroll.
+**Code block**: `--code-bg` background, `--line` border, `--r-lg` 12, 36px header with the language label (`--fs-xs`, `--text-3`) and ghost actions (Copy, Explain), body padding 16, its own horizontal scroll.
 
-**Naive vs. production comparison**: two code blocks side by side (desktop ≥ 1100) or stacked. Each carries, in its header, a shape marker + text: `✕ Enfoque ingenuo` (`X` icon in `--danger`) and `✓ Patrón de producción` (`Check` icon in `--mastery`). Below each block, one line of `--text-2` text: "Por qué falla: …" / "Trade-off asumido: …". No colored borders.
+**Naive vs. production comparison**: two code blocks side by side (desktop ≥ 1100) or stacked. Each carries, in its header, a shape marker + text: `✕ Naive approach` (`X` icon in `--danger`) and `✓ Production pattern` (`Check` icon in `--mastery`). Below each block, one line of `--text-2` text: "Why it fails: …" / "Accepted trade-off: …". No colored borders.
 
 **Mermaid** (`mermaid.initialize` → `themeVariables`, read from the active theme's tokens right before each render and re-rendered in place when the theme changes): `darkMode` (true only in dark), `background: --surface-inset`, `primaryColor: --surface-2`, `primaryTextColor: --text-1`, `primaryBorderColor: --diagram-border` (dark `#474440`, light `#CFC9BF`), `lineColor: --text-3`, `secondaryColor: --surface-1`, `tertiaryColor: --bg-app`, `fontFamily: "Geist Variable"`, `fontSize: "14px"`. Container identical to the code block, without the header.
 
@@ -372,7 +372,7 @@ Elevation in light: the surfaces are only a few steps apart, so **shadows carry 
 |:--|:--|:--|
 | `--font-ui` | `"Geist Variable", ui-sans-serif, system-ui, sans-serif` | All UI and reading body |
 | `--font-mono` | `"Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace` | Metrics, scores, counters, code, shortcuts |
-| `--font-read` | `"Newsreader Variable", ui-serif, Georgia, serif` | Editorial display: card title, *En una frase*, flashcard question, empty-state headlines |
+| `--font-read` | `"Newsreader Variable", ui-serif, Georgia, serif` | Editorial display: card title, *In one sentence*, flashcard question, empty-state headlines |
 
 `font-variant-numeric: tabular-nums` is mandatory on `--font-mono` and on every figure that changes live.
 
@@ -388,7 +388,7 @@ Elevation in light: the surfaces are only a few steps apart, so **shadows carry 
 | `--fs-md` | 1 | 15.75 | 16 / 1 | 26 | **Reading body**, textarea |
 | `--fs-lg` | 2 | 17.72 | 18 / 1.125 | 26 | Card section titles, panel titles |
 | `--fs-xl` | 3 | 19.93 | 20 / 1.25 | 28 | View titles (Progreso, Flashcards) |
-| `--fs-2xl` | 4 | 22.43 | 22 / 1.375 | 30 | *En una frase* (serif) |
+| `--fs-2xl` | 4 | 22.43 | 22 / 1.375 | 30 | *In one sentence* (serif) |
 | `--fs-3xl` | 5 | 25.23 | 25 / 1.5625 | 32 | Scorecard score (mono) |
 | `--fs-4xl` | 6 | 28.38 | 28 / 1.75 | 36 | Card title (serif) |
 | `--fs-5xl` | 7 | 31.93 | 32 / 2 | 40 | Flashcard question (serif) |
@@ -399,7 +399,7 @@ Elevation in light: the surfaces are only a few steps apart, so **shadows carry 
 |:--|:--:|:--:|
 | `--fs-5xl` (flashcard question) | 32 | 25 (`--fs-3xl`) |
 | `--fs-4xl` (card title) | 28 | 22 (`--fs-2xl`) |
-| `--fs-2xl` (*En una frase*) | 22 | 20 (`--fs-xl`) |
+| `--fs-2xl` (*In one sentence*) | 22 | 20 (`--fs-xl`) |
 | `--fs-3xl` (score) | 25 | 25 |
 | `--fs-2xs` | 11 | 12 (raises to `--fs-xs`; nothing < 12 on mobile) |
 | Rest | same | same |
@@ -570,10 +570,10 @@ The central data piece. A 120-unit track:
 A 68ch column over `--bg-app` with no card; section titles `--fs-lg`, separation `--sp-8`. Only structured pieces (code, table, diagram, comparison) use `--surface-inset`/`--surface-1`.
 
 ## 9. Voice and copy
-- Rioplatense Spanish (vos), direct and technical. *Sentence case*; UPPERCASE only in eyebrows.
-- Numbers in es-AR format; scores always `n/120`; percentages without decimals.
-- AI states say what is happening and what to do: "No se pudo conectar con el servicio de IA. Revisá que el gateway esté iniciado y reintentá."
-- Backup: "El archivo incluye tus API keys. Guardalo en un lugar seguro."
+- English (US), direct and technical. *Sentence case*; UPPERCASE only in eyebrows.
+- Numbers in en-US format; scores always `n/120`; percentages without decimals.
+- AI states say what is happening and what to do: "Could not reach the AI service. Check that the gateway is running and the provider is available, then retry."
+- Backup: "The file includes your connections' API keys. Keep the file somewhere safe."
 - No exclamations or emoji. Excellence is celebrated with ★ and gold.
 
 ## 10. Layers (z-index)
@@ -605,13 +605,13 @@ Mockups, fixtures, and states use real content. Canonical example set (real node
 
 | Case | Graph | Real node | Example state |
 |:--|:--|:--|:--|
-| Excellence | React | "Estado, snapshots y batching" | 112/120, ★ Profundización extra |
-| Exact mastery | React | "Hooks y reglas de uso" | 100/120, ✓ Base cubierta |
-| In progress | React | "useState vs useReducer" | 74/120, En progreso |
-| Review | Rails | "Routing RESTful" | 41/120, Conviene revisar |
-| Unevaluated | Rails | "Request lifecycle & Rack" | Sin evaluar, prerrequisitos pendientes |
-| Longest label | React | "Layout resiliente, contenido e internacionalización" | 2-line truncation test |
-| Starting point | React | "JavaScript moderno para leer React" | Mejor siguiente |
+| Excellence | React | "State, snapshots and batching" | 112/120, ★ Extra depth |
+| Exact mastery | React | "Hooks and their rules" | 100/120, ✓ Core covered |
+| In progress | React | "useState vs useReducer" | 74/120, In progress |
+| Review | Rails | "Routing RESTful" | 41/120, Worth reviewing |
+| Unevaluated | Rails | "Request lifecycle & Rack" | Not scored, pending prerequisites |
+| Longest label | React | "Resilient layout, content and internationalization" | 2-line truncation test |
+| Starting point | React | "Modern JavaScript for reading React" | Best next |
 
 Lorem ipsum, "Card title", "User 1" are forbidden.
 

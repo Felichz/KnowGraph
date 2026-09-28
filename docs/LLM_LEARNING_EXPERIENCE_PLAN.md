@@ -40,35 +40,35 @@ It is a local instance of [FreeLLMAPI](https://github.com/tashfeenahmed/freellma
 flowchart LR
   Browser[React / Vite] -->|same-origin /api/ai| Gateway[Gateway local :4317]
   Gateway -->|Bearer token| FreeLLM[FreeLLMAPI :31415/v1]
-  Gateway -->|cuando el modelo lo pide| Search[Search provider v2]
+  Gateway -->|when the model asks for it| Search[Search provider v2]
   Search --> Gateway
-  Gateway -->|JSON validado con Zod| Browser
-  Browser -->|progreso| localStorage
-  Browser -->|intentos| IndexedDB
+  Gateway -->|Zod-validated JSON| Browser
+  Browser -->|progress| localStorage
+  Browser -->|attempts| IndexedDB
 ```
 
 ### File structure
 
 ```
 server/
-  index.js                    # HTTP local en 127.0.0.1:4317
-  config.js                   # lee .env, valida
+  index.js                    # local HTTP on 127.0.0.1:4317
+  config.js                   # reads .env, validates
   ai/
-    llmClient.js              # fetch OpenAI-compatible con abort+timeout
-    parse.js                  # estrategia 3 niveles: schema → json_object → repair
-    schemas.js                # Zod + JSON Schema (separados, sincronizados)
-    evaluator.js              # evalúa un paraphrase
-    prompts.js                # system prompts versionados
-    errors.js                 # errores tipados → HTTP
+    llmClient.js              # OpenAI-compatible fetch with abort+timeout
+    parse.js                  # 3-level strategy: schema → json_object → repair
+    schemas.js                # Zod + JSON Schema (separate, kept in sync)
+    evaluator.js              # evaluates one paraphrase
+    prompts.js                # versioned system prompts
+    errors.js                 # typed errors → HTTP
   .env.example
   .gitignore
   package.json
 
 src/ai/
-  client.js                   # fetch /api/ai con AbortController
+  client.js                   # fetch /api/ai with AbortController
   learningStore.js            # idb: attempts, drafts
-  contentHash.js              # hash estable del contenido de la card
-  types.js                    # tipos compartidos
+  contentHash.js              # stable hash of the card content
+  types.js                    # shared types
 
 src/components/
   RubricBars.jsx
@@ -116,12 +116,12 @@ If the app is exposed through a tunnel, the gateway becomes publicly reachable. 
   graphId: "react" | "rails" | string,
   nodeId: string,
   createdAt: string,          // ISO
-  answer: string,             // paraphrase del usuario
-  contentHash: string,        // hash estable del contenido de la card
+  answer: string,             // the user's paraphrase
+  contentHash: string,        // stable hash of the card content
   evaluatorVersion: "v1",
   model: string,              // "auto:reliable"
   evaluation: {
-    score: number,            // 0..100, COMPUTADO en el gateway
+    score: number,            // 0..100, COMPUTED in the gateway
     status: "strong" | "developing" | "review",
     rubric: {
       accuracy: { score, max: 40, note },
@@ -146,7 +146,7 @@ If the app is exposed through a tunnel, the gateway becomes publicly reachable. 
 }
 ```
 
-**Policy**: 12 attempts per node, FIFO. The draft is independent of the latest attempt. If the card content changes, previous attempts show "evaluado con versión anterior".
+**Policy**: 12 attempts per node, FIFO. The draft is independent of the latest attempt. If the card content changes, previous attempts show "evaluated against an older version".
 
 ## 6. Endpoint `/api/ai/evaluate`
 
@@ -222,15 +222,15 @@ If the model "makes up" a 95 in the JSON, it is ignored. The UI shows the sum, n
 
 ```text
 1) response_format: json_schema
-   El provider fuerza JSON válido. parsear y validar con Zod.
-   ↓ falla
-2) JSON.parse(text) directo
-   Si el provider devolvió JSON pero sin schema enforcement, parsear manualmente.
-   ↓ falla
+   The provider enforces valid JSON. Parse and validate with Zod.
+   ↓ fails
+2) plain JSON.parse(text)
+   If the provider returned JSON without schema enforcement, parse it manually.
+   ↓ fails
 3) Repair prompt
-   Mandar el texto crudo al modelo con el schema en system, pedir "respondé SOLO el JSON correcto".
-   ↓ falla
-   error tipado SchemaMismatchError, la UI muestra error y conserva el borrador.
+   Send the raw text to the model with the schema in system, asking for "the correct JSON only".
+   ↓ fails
+   typed SchemaMismatchError, the UI shows an error and keeps the draft.
 ```
 
 We do not use `looksLikeJson` with `{` heuristics because the model can wrap the JSON in prose. **Any parse failure triggers repair** (codex fix #2).
@@ -253,26 +253,26 @@ Even if the model invents that a URL supports X, the `sourceIndex` points to a r
 ### 8.1 `EvaluationFeedback`
 
 ```text
-┌ Revisión de tu explicación ─────────────────────────────┐
-│ 82 / 100  ·  Base sólida               Intento 3 de 5  │
-│ [████████░░] Precisión 34/40                            │
-│ [████████░░] Por qué y trade-offs 20/25                 │
-│ [████████░░] Aplicación 16/20                           │
-│ [████████░░] Cobertura 12/15                            │
+┌ Review of your explanation ─────────────────────────────┐
+│ 82 / 100  ·  Strong base              Attempt 3 of 5   │
+│ [████████░░] Accuracy 34/40                             │
+│ [████████░░] Why and trade-offs 20/25                   │
+│ [████████░░] Application 16/20                          │
+│ [████████░░] Coverage 12/15                             │
 │                                                          │
-│ Lo que estuvo bien                                       │
+│ What went well                                           │
 │ • ...                                                    │
 │                                                          │
-│ Para mejorar                                             │
-│ • [alto] ...                                             │
+│ To improve                                               │
+│ • [high] ...                                             │
 │                                                          │
-│ Correcciones                                             │
-│ • "..." → en realidad ...                               │
+│ Corrections                                              │
+│ • "..." → actually ...                                  │
 │                                                          │
-│ Próximo intento                                          │
-│ "Explicá también qué ocurre cuando ..."                 │
+│ Next attempt                                             │
+│ "Also explain what happens when ..."                    │
 │                                                          │
-│ [← Anterior] [Volver al borrador] [Siguiente →]         │
+│ [← Previous] [Back to draft] [Next →]                   │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -292,7 +292,7 @@ Toggle `[ Grafo | Flashcards ]` on the main surface.
 
 **Front face**: category, priority, concept name, state (no answer / with draft / evaluated), score if any.
 
-**Back face**: latest evaluated paraphrase, score badge, date, "Ver feedback", "Abrir card completa" (same modal as from the graph), "Reescribir respuesta".
+**Back face**: latest evaluated paraphrase, score badge, date, "View feedback", "Open full card" (same modal as from the graph), "Rewrite answer".
 
 **Filters**: unevaluated, score < 80, random, by category. Same graph and categories as the graph view.
 
@@ -312,17 +312,17 @@ NOT_CONFIGURED, UNAUTHORIZED, RATE_LIMIT, TIMEOUT, SCHEMA_MISMATCH,
 TOOL_NOT_ALLOWED, TOOL_ROUND_LIMIT, SEARCH_PROVIDER_ERROR, UPSTREAM, ABORTED
 ```
 
-Each has a user-facing Spanish message and an HTTP status:
+Each has a user-facing message and an HTTP status:
 
 | Code | Status | UI message |
 | --- | ---: | --- |
-| `not_configured` | 503 | La IA no está configurada. Podés escribir igual. |
-| `unauthorized` | 401 | El gateway no tiene token válido. |
-| `rate_limit` | 429 | Tope alcanzado. Esperá unos segundos. |
-| `timeout` | 504 | La revisión tardó demasiado. Reintentá. |
-| `schema_mismatch` | 502 | No pudimos interpretar la respuesta. Reintentá. |
-| `upstream` | 502 | El modelo falló. Reintentá. |
-| `aborted` | — | Cancelado. |
+| `not_configured` | 503 | The AI is not configured. You can still write. |
+| `unauthorized` | 401 | The gateway has no valid token. |
+| `rate_limit` | 429 | Rate limit reached. Wait a few seconds. |
+| `timeout` | 504 | The review took too long. Try again. |
+| `schema_mismatch` | 502 | We couldn't interpret the response. Try again. |
+| `upstream` | 502 | The model failed. Try again. |
+| `aborted` | — | Cancelled. |
 
 **Never** invent a score on the client. **Never** lose the draft due to an error.
 
@@ -342,7 +342,7 @@ Each has a user-facing Spanish message and an HTTP status:
 - [ ] `EvaluationFeedback` with `RubricBars` and sections
 - [ ] `AttemptHistory` with previous/next navigation and return to draft
 - [ ] `FlashcardView` with a clean front face and a back face with the latest score
-- [ ] `ViewModeToggle` Grafo/Flashcards
+- [ ] `ViewModeToggle` Graph/Flashcards
 - [ ] Replace the multiple-choice quiz with `ParaphraseReview` in `App.jsx`
 - [ ] Vite proxy `/api/ai` → gateway
 - [ ] Styles for the new components
@@ -365,7 +365,7 @@ Each has a user-facing Spanish message and an HTTP status:
 - **Persistence**: IndexedDB via `idb`.
 - **Frontend**: vanilla `idb` (no Dexie) to keep dependencies small.
 - **Markdown**: `react-markdown` + `rehype-sanitize` (v2).
-- **Non-blocking**: LLM feedback never blocks "marcar como entendido".
+- **Non-blocking**: LLM feedback never blocks "mark as understood".
 
 ## 14. Out of scope (all versions)
 

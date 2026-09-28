@@ -9,16 +9,16 @@ The original visual presentation was restored in `src/App.jsx` and `src/componen
 ## Layer boundary
 
 ```text
-Datos de contenido + adapters externos
+Content data + external adapters
   src/lessons.js, src/reactGraph.js, src/ai/*, src/ttsSegments.js
                          ↓
-Lógica headless pública
+Public headless logic
   src/logic/graphRegistry.js
   src/logic/selectors.js
   src/logic/learningController.js
   src/logic/index.js
                          ↓
-Presentación reemplazable
+Replaceable presentation
   React, CSS, canvas, SVG, mobile, etc.
 ```
 

@@ -7,9 +7,9 @@ This application is not just a concept graph. It is a training system for turnin
 The graph is the map's spatial representation. The real unit of learning is the card/node and its mastery cycle:
 
 ```text
-ubicar el concepto → estudiarlo → explicarlo con palabras propias
-→ recibir una guía rápida → confirmar con una evaluación completa
-→ corregir gaps → volver a intentarlo o avanzar
+locate the concept → study it → explain it in your own words
+→ get a quick hint → confirm it with a full evaluation
+→ fix the gaps → retry or move on
 ```
 
 The UI must make that cycle visible. If the user does not know what they are reading, what they are practicing, what is being measured, or what they can do next, the interface is failing even if every individual component looks polished.
@@ -29,9 +29,9 @@ The user is a developer with hands-on experience who needs to quickly recover a 
 The product's central tension is this:
 
 ```text
-profundidad suficiente para aprender bien
+enough depth to actually learn it
                   ×
-rapidez y baja fricción para iterar muchas veces
+speed and low friction to iterate many times
 ```
 
 The interface must present one main decision at a time. The user can access the detail, but the detail must not compete with the next step.
@@ -170,13 +170,13 @@ If a section does not help answer the view's question, it must move, be summariz
 Use a 4 px base scale, with these preferred values:
 
 ```text
-4   detalle mínimo
-8   separación entre elementos relacionados
-12  padding compacto
-16  separación estándar entre bloques
-24  separación entre secciones
-32  separación de regiones grandes
-40+ respiración de superficie
+4   minimum detail
+8   separation between related elements
+12  compact padding
+16  standard separation between blocks
+24  separation between sections
+32  separation between large regions
+40+ surface breathing room
 ```
 
 Arbitrary values like 17, 19, or 23 must not be introduced unless there is a documented geometric reason. Spatial consistency communicates that two elements belong to the same group.
@@ -243,29 +243,29 @@ It must behave like a tablist:
 Anatomy:
 
 ```text
-estado del coach
-score provisional / cobertura
+coach state
+provisional score / coverage
 editor
-estado debounce/request
-hint único
-acción checkpoint manual
+debounce/request state
+single hint
+manual checkpoint action
 ```
 
-The hint must be actionable and specific. “Te falta explicar X y por qué importa” is useful. “Profundizá más” is not.
+The hint must be actionable and specific. “You're missing X and why it matters” is useful. “Go deeper” is not.
 
 ### 7.4 Evaluation panel
 
 Anatomy:
 
 ```text
-selector de intento
-score canónico destacado
-barra 0–120 con umbral 100
-desglose de rúbricas
-feedback ordenado por prioridad
-respuesta evaluada
-metadata secundaria
-acciones de reintento/navegación
+attempt selector
+prominent canonical score
+0–120 bar with the 100 threshold
+rubric breakdown
+priority-ordered feedback
+evaluated answer
+secondary metadata
+retry/navigation actions
 ```
 
 A score of 100 must read as sufficient coverage. The 100–120 band must look special, but never like a debt required to move on.
@@ -300,24 +300,24 @@ Every interactive component must have at least:
 ### 8.1 Coaching
 
 ```text
-idle       escribí para activar el coach
-waiting    debounce visible, request aún no enviada
-running    request activa, no editar ni ocultar el campo
-ready      hint y cobertura actualizados
-error      error recuperable, el draft se conserva
-stale      el usuario siguió escribiendo, resultado anterior atenuado
+idle       write to wake the coach
+waiting    visible debounce, request not sent yet
+running    request in flight, don't edit or hide the field
+ready      hint and coverage updated
+error      recoverable error, the draft is kept
+stale      the user kept typing, previous result dimmed
 ```
 
 ### 8.2 Evaluation
 
 ```text
-empty      todavía no existe checkpoint
-streaming  score/bloques parciales visibles
-ready      evaluación completa persistida
-cancelled  no se guardó evidencia parcial como intento
-error      reintentar sin perder el draft
-historical intento anterior seleccionado
-extra      score superior a 100 con tratamiento dorado
+empty      no checkpoint exists yet
+streaming  partial score/blocks visible
+ready      full evaluation persisted
+cancelled  partial evidence is not saved as an attempt
+error      retry without losing the draft
+historical previous attempt selected
+extra      score above 100 gets the gold treatment
 ```
 
 ## 9. Layout and responsive

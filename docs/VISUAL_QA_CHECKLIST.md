@@ -15,11 +15,11 @@ Statuses: `Pass` = verified at runtime; `Finding resolved` = it was found, fixed
 
 | ID | Finding | Fix | Follow-up review |
 | --- | --- | --- | --- |
-| V-01 | The initial focus showed a next stage as a partially cut-off column. | `GraphTopologyView` computes how many complete stages fit and adjusts its scale/anchor deterministically. | Screenshots at 1440, 1280 and 1024: only complete cards are visible; the “Próximo foco” control returns to the same framing. |
+| V-01 | The initial focus showed a next stage as a partially cut-off column. | `GraphTopologyView` computes how many complete stages fit and adjusts its scale/anchor deterministically. | Screenshots at 1440, 1280 and 1024: only complete cards are visible; the “Next focus” control returns to the same framing. |
 | V-02 | The flashcard close button appeared empty because the global style hid the `×` character. | It was replaced with an SVG from the same icon system. | Detail screenshot: icon visible, accessible button, working close. |
 | V-03 | At 390 px the progress panel rendered in a row and grew the document to ~5,151 px wide. | The mobile panel now stacks sections, constrains its width, and delegates scrolling only to its internal strips. | `scrollWidth` dropped from 5151 to 375 px; the global horizontal bar disappeared. |
-| V-04 | The empty flashcard filter used a button stretched across the entire canvas and had no hierarchy. | Centered empty state, legible copy, and compact action. | Screenshot with “Con extra dorado”: message and “Ver todas” centered and proportionate. |
-| V-05 | A coaching error could render as barely distinguishable text. | Error panel with contrast, indicator, cause, and Spanish recovery copy. | The visual contract and the error formatter were reviewed; the draft is not discarded. |
+| V-04 | The empty flashcard filter used a button stretched across the entire canvas and had no hierarchy. | Centered empty state, legible copy, and compact action. | Screenshot with the gold-extras filter: message and “Show all” centered and proportionate. |
+| V-05 | A coaching error could render as barely distinguishable text. | Error panel with contrast, indicator, cause, and recovery copy in the UI language. | The visual contract and the error formatter were reviewed; the draft is not discarded. |
 | V-06 | Switching tabs could retain an intermediate scroll position. | The card resets horizontal and vertical scroll when the node or view changes. | Lectura → Coaching → Evaluar was switched at runtime: each surface started from the top. |
 
 ## A. Desktop shell and map
@@ -42,18 +42,18 @@ Statuses: `Pass` = verified at runtime; `Finding resolved` = it was found, fixed
 | B2 | Expanded navigation | Pass | Open rail shows three complete stages and the contextual guide without overlapping. |
 | B3 | Hover and focus | Pass | Hover over “Modelo mental” showed `Necesita 1 · Habilita 2`, high-contrast input/output edges, and the full title via `<title>`. The same state is wired to `onFocus`. |
 | B4 | Node states | Pass + N/A verified | Pending, score `0/120`, selected, and route guide were captured. The classes for partial, base `100/120`, and golden excellence are covered by `getNodeVisual` and CSS; the current store contains none of those scores to capture without altering study data. |
-| B5 | Controls | Pass | Zoom increased the node width from 236.6 to 274.5 px and Alejar restored it. Pan, fit, and next focus preserve the viewport without jumping. |
-| B6 | Full map | Pass | Fit shows the entire DAG as an overview; “Próximo foco” restores the study route. |
-| B7 | Filters | Pass | Isolating “Arquitectura web” left 19 of 101 nodes active and updated the next challenge to Routing SPA. |
+| B5 | Controls | Pass | Zoom increased the node width from 236.6 to 274.5 px and zoom-out restored it. Pan, fit, and next focus preserve the viewport without jumping. |
+| B6 | Full map | Pass | Fit shows the entire DAG as an overview; “Next focus” restores the study route. |
+| B7 | Filters | Pass | Isolating “Web architecture” left 19 of 101 nodes active and updated the next challenge to Routing SPA. |
 
 ## C. Flashcards
 
 | ID | Surface / state | Status | Evidence / result |
 | --- | --- | --- | --- |
 | C1 | Grid | Pass + N/A verified | Three-column grid at 1280 and 1440; long titles truncate consistently. Cards with no attempt and low score were captured. Base/excellence do not exist in the current store; their filters and classes are covered by the attempts selector. |
-| C2 | Filters and random pick | Finding resolved | “Elegir una al azar” marked a single card and scrolled the grid. “Con extra dorado” showed V-04; “Ver todas” recovers the grid. |
+| C2 | Filters and random pick | Finding resolved | “Pick one at random” marked a single card and scrolled the grid. The gold-extras filter showed V-04; “Show all” recovers the grid. |
 | C3 | Detail | Finding resolved | Front, back, model/duration metadata, navigation, and close were tested. V-02 makes the close visible. |
-| C4 | Handoff to lesson | Pass | “Estudiar card” from the modal navigated to `/react/card/js_basics` and closed the flashcard. |
+| C4 | Handoff to lesson | Pass | “Study card” from the modal navigated to `/react/card/js_basics` and closed the flashcard. |
 
 ## D. Card: reading and navigation
 
@@ -86,7 +86,7 @@ Statuses: `Pass` = verified at runtime; `Finding resolved` = it was found, fixed
 | F1 | Empty / draft | Pass | A card without evaluation and a short draft were captured; the existing draft showed count and evaluation CTA. |
 | F2 | Streaming | N/A verified | Skeleton, SSE sections, and cancellation are wired to the same client as coaching. No billable test evaluations were started. |
 | F3 | Result | Pass + N/A verified | Screenshot of a real `0/120` result, canonical score, threshold 100, and excellence lane up to 120. The 100 and >100 states do not exist locally; calculation and classes were reviewed. |
-| F4 | Rubrics | Pass | Expanding Precisión showed detail without increasing the height of the neighboring column's rubric. |
+| F4 | Rubrics | Pass | Expanding Accuracy showed detail without increasing the height of the neighboring column's rubric. |
 | F5 | History | Pass + N/A verified | Real progress line, attempt, date, model `deepseek/deepseek-v4-flash`, and duration `38.0 s` visible. There were no multiple/stale attempts to navigate without fabricating data. |
 | F6 | Error / retry | Finding resolved | V-05 covers recoverable copy and draft preservation. Aborts are treated as cancellation, not as an error. |
 

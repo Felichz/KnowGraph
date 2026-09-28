@@ -33,7 +33,7 @@ https://know-graph.vercel.app/api/ai/status
 
 A `200` confirms the gateway is alive. `gateway.configured: false` is normal
 when you have not defined a default provider: each person provides their
-profile from Configuración de IA.
+profile from the AI connections settings.
 
 ## 2. External gateway (optional)
 
