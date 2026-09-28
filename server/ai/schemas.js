@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { serverText } from "./locale.js";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Constantes de rúbrica (compartidas por Zod y JSON Schema)
@@ -420,112 +421,118 @@ export function buildEvaluationUserPayload({ node, learnerAnswer }) {
   });
 }
 
-export function buildParaphraseUserPayload({ node }) {
+export function buildParaphraseUserPayload({ node, locale }) {
   if (!node) return "";
+  const L = serverText(locale);
   const lesson = node.lesson ?? {};
   const lines = [
-    `TÍTULO DEL CONCEPTO: ${node.label ?? node.title ?? node.id}`,
+    `${L.conceptTitle}: ${node.label ?? node.title ?? node.id}`,
   ];
-  if (lesson.level) lines.push(`NIVEL / AUDIENCIA: ${lesson.level}`);
-  if (lesson.summary) lines.push(`RESUMEN ESENCIAL:\n${lesson.summary}`);
-  if (lesson.why) lines.push(`POR QUÉ IMPORTA:\n${lesson.why}`);
-  if (lesson.explanation) lines.push(`EXPLICACIÓN DETALLADA / MODELO MENTAL:\n${lesson.explanation}`);
+  if (lesson.level) lines.push(`${L.level}: ${lesson.level}`);
+  if (lesson.summary) lines.push(`${L.essentialSummary}:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`${L.why}:\n${lesson.why}`);
+  if (lesson.explanation) lines.push(`${L.explanation}:\n${lesson.explanation}`);
   if (lesson.code) {
-    lines.push(`BLOQUE DE CÓDIGO / EJEMPLO FORMAL (${lesson.codeLabel || "snippet"}):\n\`\`\`\n${lesson.code}\n\`\`\``);
+    lines.push(`${L.codeBlock} (${lesson.codeLabel || "snippet"}):\n\`\`\`\n${lesson.code}\n\`\`\``);
   }
   if (Array.isArray(lesson.steps) && lesson.steps.length > 0) {
-    lines.push(`PRINCIPIOS CLAVE / PASOS:\n${lesson.steps.map((s) => `- ${s}`).join("\n")}`);
+    lines.push(`${L.steps}:\n${lesson.steps.map((s) => `- ${s}`).join("\n")}`);
   }
   if (Array.isArray(lesson.pitfalls) && lesson.pitfalls.length > 0) {
-    lines.push(`ERRORES COMUNES / SÍNTOMAS Y TRADE-OFFS:\n${lesson.pitfalls.map((p) => `- ${p}`).join("\n")}`);
+    lines.push(`${L.pitfalls}:\n${lesson.pitfalls.map((p) => `- ${p}`).join("\n")}`);
   }
-  if (lesson.takeaway) lines.push(`IDEA PARA RECORDAR / REGLA PRÁCTICA:\n${lesson.takeaway}`);
+  if (lesson.takeaway) lines.push(`${L.takeaway}:\n${lesson.takeaway}`);
   if (lesson.table) {
-    lines.push(`TABLA COMPARATIVA (${lesson.tableTitle || ""}):\n${JSON.stringify(lesson.table, null, 2)}`);
+    lines.push(`${L.table} (${lesson.tableTitle || ""}):\n${JSON.stringify(lesson.table, null, 2)}`);
   }
-  if (lesson.prompt) lines.push(`CONSIGNA DE APLICACIÓN:\n${lesson.prompt}`);
+  if (lesson.prompt) lines.push(`${L.applicationPrompt}:\n${lesson.prompt}`);
   if (lesson.docNotes?.length) {
-    lines.push(`NOTAS DE DOCUMENTACIÓN:\n${lesson.docNotes.map((n) => `- ${n}`).join("\n")}`);
+    lines.push(`${L.docNotes}:\n${lesson.docNotes.map((n) => `- ${n}`).join("\n")}`);
   }
   return lines.join("\n\n");
 }
 
-export function buildIncorporateFocusUserPayload({ node, currentDraft, focusTitle, focusDetail }) {
+export function buildIncorporateFocusUserPayload({ node, currentDraft, focusTitle, focusDetail, locale }) {
+  const L = serverText(locale);
   const lesson = node?.lesson ?? {};
   const lines = [
-    `CONCEPTO: ${node?.label ?? node?.title ?? "Tema"}`,
-    `BORRADOR ACTUAL DEL ESTUDIANTE:\n"""\n${String(currentDraft ?? "").trim()}\n"""`,
-    `FOCO ESPECÍFICO A INTEGRAR (HINT DEL COACH):\n- Foco: ${focusTitle ?? ""}\n- Explicación del foco:\n${focusDetail ?? ""}`,
+    `${L.concept}: ${node?.label ?? node?.title ?? L.topicFallback}`,
+    `${L.currentDraft}:\n"""\n${String(currentDraft ?? "").trim()}\n"""`,
+    `${L.focusToIntegrate}:\n${L.focusLabel} ${focusTitle ?? ""}\n${L.focusDetail}\n${focusDetail ?? ""}`,
   ];
-  if (lesson.summary) lines.push(`RESUMEN CANÓNICO DE REFERENCIA:\n${lesson.summary}`);
-  if (lesson.why) lines.push(`POR QUÉ IMPORTA:\n${lesson.why}`);
-  if (lesson.code) lines.push(`CÓDIGO DE REFERENCIA:\n\`\`\`\n${lesson.code}\n\`\`\``);
-  if (lesson.takeaway) lines.push(`REGLA DE CIERRE RECOMENDADA:\n${lesson.takeaway}`);
+  if (lesson.summary) lines.push(`${L.canonicalSummary}:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`${L.why}:\n${lesson.why}`);
+  if (lesson.code) lines.push(`${L.referenceCode}:\n\`\`\`\n${lesson.code}\n\`\`\``);
+  if (lesson.takeaway) lines.push(`${L.closingRule}:\n${lesson.takeaway}`);
   return lines.join("\n\n");
 }
 
-export function buildReconcileChatUserPayload({ node, currentDraft, messages = [] }) {
+export function buildReconcileChatUserPayload({ node, currentDraft, messages = [], locale }) {
+  const L = serverText(locale);
   const lesson = node?.lesson ?? {};
   const formattedChat = (Array.isArray(messages) ? messages : [])
     .filter((m) => m && m.content)
     .map((m, idx) => {
-      const roleLabel = m.role === "assistant" ? "COACH" : "ESTUDIANTE";
-      return `[Mensaje ${idx + 1} - ${roleLabel}]:\n${m.content}`;
+      const roleLabel = m.role === "assistant" ? L.roleCoach : L.roleStudent;
+      return `[${L.message} ${idx + 1} - ${roleLabel}]:\n${m.content}`;
     })
     .join("\n\n");
 
   const lines = [
-    `CONCEPTO: ${node?.label ?? node?.title ?? "Tema"}`,
-    `BORRADOR ACTUAL DEL ESTUDIANTE:\n"""\n${String(currentDraft ?? "").trim()}\n"""`,
-    `CONVERSACIÓN DEL CHAT CON EL COACH (Dudas, aclaraciones y explicaciones):\n"""\n${formattedChat || "Sin mensajes en el chat"}\n"""`,
+    `${L.concept}: ${node?.label ?? node?.title ?? L.topicFallback}`,
+    `${L.currentDraft}:\n"""\n${String(currentDraft ?? "").trim()}\n"""`,
+    `${L.chat}:\n"""\n${formattedChat || L.noMessages}\n"""`,
   ];
-  if (lesson.summary) lines.push(`RESUMEN CANÓNICO DE REFERENCIA:\n${lesson.summary}`);
-  if (lesson.why) lines.push(`POR QUÉ IMPORTA:\n${lesson.why}`);
-  if (lesson.code) lines.push(`CÓDIGO DE REFERENCIA:\n\`\`\`\n${lesson.code}\n\`\`\``);
-  if (lesson.takeaway) lines.push(`REGLA DE CIERRE RECOMENDADA:\n${lesson.takeaway}`);
+  if (lesson.summary) lines.push(`${L.canonicalSummary}:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`${L.why}:\n${lesson.why}`);
+  if (lesson.code) lines.push(`${L.referenceCode}:\n\`\`\`\n${lesson.code}\n\`\`\``);
+  if (lesson.takeaway) lines.push(`${L.closingRule}:\n${lesson.takeaway}`);
   return lines.join("\n\n");
 }
 
-export function buildPolishPedagogyUserPayload({ node, currentDraft }) {
+export function buildPolishPedagogyUserPayload({ node, currentDraft, locale }) {
+  const L = serverText(locale);
   const lesson = node?.lesson ?? {};
   const lines = [
-    `CONCEPTO TÉCNICO: ${node?.label ?? node?.title ?? node?.id ?? "Tema"}`,
+    `${L.technicalConcept}: ${node?.label ?? node?.title ?? node?.id ?? L.topicFallback}`,
   ];
-  if (lesson.summary) lines.push(`RESUMEN ESENCIAL:\n${lesson.summary}`);
-  if (lesson.why) lines.push(`POR QUÉ IMPORTA:\n${lesson.why}`);
-  if (lesson.code) lines.push(`CÓDIGO DE REFERENCIA:\n\`\`\`\n${lesson.code}\n\`\`\``);
-  if (lesson.takeaway) lines.push(`REGLA DE ORO / CIERRE:\n${lesson.takeaway}`);
+  if (lesson.summary) lines.push(`${L.essentialSummary}:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`${L.why}:\n${lesson.why}`);
+  if (lesson.code) lines.push(`${L.referenceCode}:\n\`\`\`\n${lesson.code}\n\`\`\``);
+  if (lesson.takeaway) lines.push(`${L.goldenRuleClosing}:\n${lesson.takeaway}`);
   if (currentDraft && currentDraft.trim()) {
-    lines.push(`BORRADOR PREVIO (Transformalo con verdadera maestría didáctica desarmando cualquier jerga pesada o estructura rígida):\n"""\n${currentDraft.trim()}\n"""`);
+    lines.push(`${L.previousDraft}:\n"""\n${currentDraft.trim()}\n"""`);
   }
   return lines.join("\n\n");
 }
 
-export function buildPedagogicalJudgeUserPayload({ node, draft }) {
+export function buildPedagogicalJudgeUserPayload({ node, draft, locale }) {
+  const L = serverText(locale);
   const lesson = node?.lesson ?? {};
   const lines = [
-    `CONCEPTO A EVALUAR: ${node?.label ?? node?.title ?? node?.id ?? "Tema"}`,
-    `EXPLICACIÓN DEL ESTUDIANTE A JUZGAR:\n"""\n${String(draft ?? "").trim()}\n"""`,
+    `${L.conceptToJudge}: ${node?.label ?? node?.title ?? node?.id ?? L.topicFallback}`,
+    `${L.explanationToJudge}:\n"""\n${String(draft ?? "").trim()}\n"""`,
   ];
-  if (lesson.summary) lines.push(`RESUMEN CANÓNICO DE REFERENCIA:\n${lesson.summary}`);
-  if (lesson.why) lines.push(`POR QUÉ IMPORTA / CASO DE USO:\n${lesson.why}`);
-  if (lesson.code) lines.push(`CÓDIGO / EJEMPLO ESPERADO:\n\`\`\`\n${lesson.code}\n\`\`\``);
-  if (lesson.takeaway) lines.push(`REGLA DE ORO CANÓNICA:\n${lesson.takeaway}`);
+  if (lesson.summary) lines.push(`${L.canonicalSummary}:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`${L.whyUseCase}:\n${lesson.why}`);
+  if (lesson.code) lines.push(`${L.expectedCode}:\n\`\`\`\n${lesson.code}\n\`\`\``);
+  if (lesson.takeaway) lines.push(`${L.canonicalRule}:\n${lesson.takeaway}`);
   return lines.join("\n\n");
 }
 
-export function buildPedagogicalRefinerUserPayload({ node, draft, critique = [], currentScore = 0 }) {
+export function buildPedagogicalRefinerUserPayload({ node, draft, critique = [], currentScore = 0, locale }) {
+  const L = serverText(locale);
   const lesson = node?.lesson ?? {};
   const lines = [
-    `CONCEPTO: ${node?.label ?? node?.title ?? node?.id ?? "Tema"}`,
-    `PUNTAJE PEDAGÓGICO ACTUAL: ${currentScore}/100 (Meta: >= 95)`,
-    `CRÍTICA CONCRETA DEL JUEZ PEDAGÓGICO (SUBSANAR CADA PUNTO):\n${critique.map((c, i) => `${i + 1}. ${c}`).join("\n") || "- Mejorar la fluidez, intuición y desglose progresivo del texto."}`,
-    `BORRADOR ACTUAL A PERFECCIONAR:\n"""\n${String(draft ?? "").trim()}\n"""`,
+    `${L.concept}: ${node?.label ?? node?.title ?? node?.id ?? L.topicFallback}`,
+    L.currentScore(currentScore),
+    `${L.judgeCritique}:\n${critique.map((c, i) => `${i + 1}. ${c}`).join("\n") || L.critiqueFallbackLine}`,
+    `${L.draftToRefine}:\n"""\n${String(draft ?? "").trim()}\n"""`,
   ];
-  if (lesson.summary) lines.push(`RESUMEN ESENCIAL DEL CONCEPTO:\n${lesson.summary}`);
-  if (lesson.why) lines.push(`POR QUÉ IMPORTA:\n${lesson.why}`);
-  if (lesson.code) lines.push(`CÓDIGO DE REFERENCIA:\n\`\`\`\n${lesson.code}\n\`\`\``);
-  if (lesson.takeaway) lines.push(`REGLA PRÁCTICA FINAL:\n${lesson.takeaway}`);
+  if (lesson.summary) lines.push(`${L.conceptSummary}:\n${lesson.summary}`);
+  if (lesson.why) lines.push(`${L.why}:\n${lesson.why}`);
+  if (lesson.code) lines.push(`${L.referenceCode}:\n\`\`\`\n${lesson.code}\n\`\`\``);
+  if (lesson.takeaway) lines.push(`${L.finalRule}:\n${lesson.takeaway}`);
   return lines.join("\n\n");
 }
 

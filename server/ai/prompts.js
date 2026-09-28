@@ -1,3 +1,5 @@
+import * as EN from "./prompts.en.js";
+
 export const EVALUATOR_VERSION = "v5-staged-scores-first";
 
 export const EVALUATOR_SYSTEM_PROMPT = `
@@ -250,3 +252,22 @@ Devolvé ÚNICAMENTE la explicación refinada en Markdown completo, sin preámbu
 
 
 
+
+// The Spanish prompts above are the originals; prompts.en.js holds the same contracts in English.
+const ES = {
+  EVALUATOR_SYSTEM_PROMPT,
+  EVALUATOR_SCORING_SYSTEM_PROMPT,
+  EVALUATOR_FEEDBACK_SYSTEM_PROMPT,
+  REPAIR_SYSTEM_PROMPT,
+  PARAPHRASE_SYSTEM_PROMPT,
+  SOCRATIC_MENTOR_SYSTEM_PROMPT,
+  INCORPORATE_FOCUS_SYSTEM_PROMPT,
+  RECONCILE_CHAT_SYSTEM_PROMPT,
+  POLISH_PEDAGOGY_SYSTEM_PROMPT,
+  PEDAGOGICAL_JUDGE_SYSTEM_PROMPT,
+  PEDAGOGICAL_REFINER_SYSTEM_PROMPT,
+};
+
+export function promptFor(name, locale = "es", spanish = ES[name]) {
+  return (locale === "en" ? EN[name] : null) ?? spanish;
+}

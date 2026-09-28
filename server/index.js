@@ -9,6 +9,7 @@ import { getProviderCatalogModels, getProviderDirectory, mergeModelLists } from 
 import { parseRequestProvider, requestProvider } from "./ai/providers.js";
 import { MAX_LEARNER_ANSWER_CHARS } from "./ai/schemas.js";
 import { GatewayError, ErrorCodes, jsonErrorResponse } from "./ai/errors.js";
+import { parseLocale } from "./ai/locale.js";
 
 export async function gatewayHandler(req, res) {
   // El gateway acepta orígenes locales en desarrollo y orígenes explícitos
@@ -68,7 +69,7 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/providers/test") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const provider = await parseRequestProvider(body?.provider);
       if (!provider) {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta la configuracion del provider");
@@ -86,7 +87,7 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/providers/models") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const provider = await parseRequestProvider(body?.provider, { requireModel: false });
       if (!provider) {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta la configuracion del provider");
@@ -121,7 +122,7 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/evaluate") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { graphId, nodeId, answer, contentHash } = body ?? {};
       if (!graphId || !nodeId || typeof answer !== "string" || !contentHash) {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Faltan campos: graphId, nodeId, answer, contentHash");
@@ -135,7 +136,7 @@ export async function gatewayHandler(req, res) {
       }
 
       const provider = await parseRequestProvider(body?.provider);
-      const result = await evaluateParaphrase({ node, learnerAnswer: answer, contentHash, provider, signal: reqAbortedSignal(req) });
+      const result = await evaluateParaphrase({ locale: req.locale, node, learnerAnswer: answer, contentHash, provider, signal: reqAbortedSignal(req) });
 
       return sendJson(res, 200, {
         attempt: {
@@ -158,7 +159,7 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/evaluate/stream") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { graphId, nodeId, answer, contentHash } = body ?? {};
       if (!graphId || !nodeId || typeof answer !== "string" || !contentHash) {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Faltan campos: graphId, nodeId, answer, contentHash");
@@ -189,7 +190,7 @@ export async function gatewayHandler(req, res) {
       const provider = await parseRequestProvider(body?.provider);
       try {
         writeEvent("progress", { stage: "evaluating", length: 0 });
-        const result = await evaluateParaphrase({
+        const result = await evaluateParaphrase({ locale: req.locale,
           node,
           learnerAnswer: answer,
           contentHash,
@@ -231,7 +232,7 @@ export async function gatewayHandler(req, res) {
         });
         res.end();
       } catch (e) {
-        const { status, body } = jsonErrorResponse(e);
+        const { status, body } = jsonErrorResponse(e, req.locale);
         writeEvent("error", { ...body, httpStatus: status });
         res.end();
       }
@@ -239,7 +240,7 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/live-review/stream") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { graphId, nodeId, answer, contentHash } = body ?? {};
       if (!graphId || !nodeId || typeof answer !== "string" || !contentHash) {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Faltan campos: graphId, nodeId, answer, contentHash");
@@ -269,7 +270,7 @@ export async function gatewayHandler(req, res) {
       const provider = await parseRequestProvider(body?.provider);
       try {
         writeEvent("progress", { stage: "live_review", length: 0 });
-        const result = await reviewLive({
+        const result = await reviewLive({ locale: req.locale,
           node,
           learnerAnswer: answer,
           contentHash,
@@ -288,7 +289,7 @@ export async function gatewayHandler(req, res) {
         writeEvent("done", result);
         res.end();
       } catch (e) {
-        const { status, body: errorBody } = jsonErrorResponse(e);
+        const { status, body: errorBody } = jsonErrorResponse(e, req.locale);
         writeEvent("error", { ...errorBody, httpStatus: status });
         res.end();
       }
@@ -296,7 +297,7 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/live-review/chat/stream") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { graphId, nodeId, answer, contentHash, node, review, history, question } = body ?? {};
       if (!graphId || !nodeId || typeof answer !== "string" || !contentHash || !node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Faltan campos del contexto de coaching");
@@ -328,7 +329,7 @@ export async function gatewayHandler(req, res) {
       const provider = await parseRequestProvider(body?.provider);
       try {
         writeEvent("progress", { stage: "coach_chat", length: 0 });
-        const result = await answerCoachQuestion({
+        const result = await answerCoachQuestion({ locale: req.locale,
           node,
           learnerAnswer: answer,
           review,
@@ -343,7 +344,7 @@ export async function gatewayHandler(req, res) {
         writeEvent("done", result);
         res.end();
       } catch (e) {
-        const { status, body: errorBody } = jsonErrorResponse(e);
+        const { status, body: errorBody } = jsonErrorResponse(e, req.locale);
         writeEvent("error", { ...errorBody, httpStatus: status });
         res.end();
       }
@@ -351,19 +352,19 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/paraphrase") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { node } = body ?? {};
       if (!node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
       }
       const signal = reqAbortedSignal(req);
       const provider = await parseRequestProvider(body?.provider);
-      const result = await generatePedagogicalParaphrase({ node, provider, signal });
+      const result = await generatePedagogicalParaphrase({ locale: req.locale, node, provider, signal });
       return sendJson(res, 200, result);
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/stream") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { node } = body ?? {};
       if (!node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
@@ -386,7 +387,7 @@ export async function gatewayHandler(req, res) {
       const provider = await parseRequestProvider(body?.provider);
       try {
         writeEvent("progress", { stage: "generating", length: 0 });
-        const result = await generatePedagogicalParaphrase({
+        const result = await generatePedagogicalParaphrase({ locale: req.locale,
           node,
           provider,
           signal,
@@ -397,7 +398,7 @@ export async function gatewayHandler(req, res) {
         writeEvent("done", result);
         res.end();
       } catch (e) {
-        const { status, body: errorBody } = jsonErrorResponse(e);
+        const { status, body: errorBody } = jsonErrorResponse(e, req.locale);
         writeEvent("error", { ...errorBody, httpStatus: status });
         res.end();
       }
@@ -405,19 +406,19 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/improve") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { node, currentDraft, focusTitle, focusDetail } = body ?? {};
       if (!node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
       }
       const signal = reqAbortedSignal(req);
       const provider = await parseRequestProvider(body?.provider);
-      const result = await improveParaphraseWithFocus({ node, currentDraft, focusTitle, focusDetail, provider, signal });
+      const result = await improveParaphraseWithFocus({ locale: req.locale, node, currentDraft, focusTitle, focusDetail, provider, signal });
       return sendJson(res, 200, result);
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/improve/stream") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { node, currentDraft, focusTitle, focusDetail } = body ?? {};
       if (!node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
@@ -440,7 +441,7 @@ export async function gatewayHandler(req, res) {
       const provider = await parseRequestProvider(body?.provider);
       try {
         writeEvent("progress", { stage: "generating", length: 0 });
-        const result = await improveParaphraseWithFocus({
+        const result = await improveParaphraseWithFocus({ locale: req.locale,
           node,
           currentDraft,
           focusTitle,
@@ -454,7 +455,7 @@ export async function gatewayHandler(req, res) {
         writeEvent("done", result);
         res.end();
       } catch (e) {
-        const { status, body: errorBody } = jsonErrorResponse(e);
+        const { status, body: errorBody } = jsonErrorResponse(e, req.locale);
         writeEvent("error", { ...errorBody, httpStatus: status });
         res.end();
       }
@@ -462,19 +463,19 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/reconcile") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { node, currentDraft, messages } = body ?? {};
       if (!node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
       }
       const signal = reqAbortedSignal(req);
       const provider = await parseRequestProvider(body?.provider);
-      const result = await reconcileParaphraseWithChat({ node, currentDraft, messages, provider, signal });
+      const result = await reconcileParaphraseWithChat({ locale: req.locale, node, currentDraft, messages, provider, signal });
       return sendJson(res, 200, result);
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/reconcile/stream") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { node, currentDraft, messages } = body ?? {};
       if (!node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
@@ -497,7 +498,7 @@ export async function gatewayHandler(req, res) {
       const provider = await parseRequestProvider(body?.provider);
       try {
         writeEvent("progress", { stage: "generating", length: 0 });
-        const result = await reconcileParaphraseWithChat({
+        const result = await reconcileParaphraseWithChat({ locale: req.locale,
           node,
           currentDraft,
           messages,
@@ -510,7 +511,7 @@ export async function gatewayHandler(req, res) {
         writeEvent("done", result);
         res.end();
       } catch (e) {
-        const { status, body: errorBody } = jsonErrorResponse(e);
+        const { status, body: errorBody } = jsonErrorResponse(e, req.locale);
         writeEvent("error", { ...errorBody, httpStatus: status });
         res.end();
       }
@@ -518,19 +519,19 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/polish") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { node, currentDraft } = body ?? {};
       if (!node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
       }
       const signal = reqAbortedSignal(req);
       const provider = await parseRequestProvider(body?.provider);
-      const result = await polishParaphrasePedagogy({ node, currentDraft, provider, signal });
+      const result = await polishParaphrasePedagogy({ locale: req.locale, node, currentDraft, provider, signal });
       return sendJson(res, 200, result);
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/polish/stream") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { node, currentDraft } = body ?? {};
       if (!node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
@@ -554,7 +555,7 @@ export async function gatewayHandler(req, res) {
       const provider = await parseRequestProvider(body?.provider);
       try {
         writeEvent("progress", { stage: "generating", length: 0 });
-        const result = await polishParaphrasePedagogy({
+        const result = await polishParaphrasePedagogy({ locale: req.locale,
           node,
           currentDraft,
           provider,
@@ -566,7 +567,7 @@ export async function gatewayHandler(req, res) {
         writeEvent("done", result);
         res.end();
       } catch (e) {
-        const { status, body: errorBody } = jsonErrorResponse(e);
+        const { status, body: errorBody } = jsonErrorResponse(e, req.locale);
         writeEvent("error", { ...errorBody, httpStatus: status });
         res.end();
       }
@@ -574,7 +575,7 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/refine/stream") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { node, draft, critique, currentScore } = body ?? {};
       if (!node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
@@ -598,7 +599,7 @@ export async function gatewayHandler(req, res) {
       const provider = await parseRequestProvider(body?.provider);
       try {
         writeEvent("progress", { stage: "refining", length: 0 });
-        const result = await refineParaphrasePedagogy({
+        const result = await refineParaphrasePedagogy({ locale: req.locale,
           node,
           draft,
           critique,
@@ -612,7 +613,7 @@ export async function gatewayHandler(req, res) {
         writeEvent("done", result);
         res.end();
       } catch (e) {
-        const { status, body: errorBody } = jsonErrorResponse(e);
+        const { status, body: errorBody } = jsonErrorResponse(e, req.locale);
         writeEvent("error", { ...errorBody, httpStatus: status });
         res.end();
       }
@@ -620,19 +621,19 @@ export async function gatewayHandler(req, res) {
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/judge") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { node, draft } = body ?? {};
       if (!node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
       }
       const signal = reqAbortedSignal(req);
       const provider = await parseRequestProvider(body?.provider);
-      const result = await judgePedagogy({ node, draft, provider, signal });
+      const result = await judgePedagogy({ locale: req.locale, node, draft, provider, signal });
       return sendJson(res, 200, result);
     }
 
     if (req.method === "POST" && url.pathname === "/api/ai/paraphrase/polish-loop/stream") {
-      const body = await readJsonBody(req);
+      const body = await readRequest(req);
       const { node, currentDraft, maxIterations } = body ?? {};
       if (!node || typeof node !== "object") {
         throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
@@ -654,7 +655,7 @@ export async function gatewayHandler(req, res) {
       const signal = reqAbortedSignal(req);
       const provider = await parseRequestProvider(body?.provider);
       try {
-        const result = await runPedagogicalHarness({
+        const result = await runPedagogicalHarness({ locale: req.locale,
           node,
           initialDraft: currentDraft,
           provider,
@@ -667,7 +668,7 @@ export async function gatewayHandler(req, res) {
         writeEvent("done", result);
         res.end();
       } catch (e) {
-        const { status, body: errorBody } = jsonErrorResponse(e);
+        const { status, body: errorBody } = jsonErrorResponse(e, req.locale);
         writeEvent("error", { ...errorBody, httpStatus: status });
         res.end();
       }
@@ -681,7 +682,7 @@ export async function gatewayHandler(req, res) {
       message: err?.message ?? String(err),
       path: req.url,
     });
-    const { status, body } = jsonErrorResponse(err);
+    const { status, body } = jsonErrorResponse(err, req.locale);
     sendJson(res, status, body);
   }
 }
@@ -722,6 +723,14 @@ function isAllowedOrigin(origin, req) {
   } catch {
     return false;
   }
+}
+
+// Parses the JSON body and the language of the AI answer (validated; absent means Spanish,
+// the behavior of clients that predate the field).
+async function readRequest(req) {
+  const body = await readJsonBody(req);
+  req.locale = parseLocale(body?.locale);
+  return body;
 }
 
 async function readJsonBody(req) {

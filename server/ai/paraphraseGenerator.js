@@ -1,16 +1,17 @@
 import { chatCompletionWithFallback, LLM_REQUEST_TIMEOUT_MS } from "./llmClient.js";
-import { INCORPORATE_FOCUS_SYSTEM_PROMPT, PARAPHRASE_SYSTEM_PROMPT, PEDAGOGICAL_JUDGE_SYSTEM_PROMPT, PEDAGOGICAL_REFINER_SYSTEM_PROMPT, POLISH_PEDAGOGY_SYSTEM_PROMPT, RECONCILE_CHAT_SYSTEM_PROMPT } from "./prompts.js";
+import { promptFor } from "./prompts.js";
+import { serverText } from "./locale.js";
 import { buildIncorporateFocusUserPayload, buildParaphraseUserPayload, buildPedagogicalJudgeUserPayload, buildPedagogicalRefinerUserPayload, buildPolishPedagogyUserPayload, buildReconcileChatUserPayload } from "./schemas.js";
 import { config } from "../config.js";
 import { providerChain } from "./providers.js";
 import { ErrorCodes, GatewayError } from "./errors.js";
 
-export async function generatePedagogicalParaphrase({ node, provider, signal, onChunk }) {
+export async function generatePedagogicalParaphrase({ node, provider, signal, onChunk, locale }) {
   if (!node || typeof node !== "object") {
     throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
   }
 
-  const userPayload = buildParaphraseUserPayload({ node });
+  const userPayload = buildParaphraseUserPayload({ node, locale });
   if (!userPayload.trim()) {
     throw new GatewayError(ErrorCodes.BAD_REQUEST, "El contenido de la card está vacío");
   }
@@ -18,7 +19,7 @@ export async function generatePedagogicalParaphrase({ node, provider, signal, on
   const raw = await chatCompletionWithFallback({
     ...providerChain(config.tutorModel || config.evaluationModel, { provider }),
     messages: [
-      { role: "system", content: PARAPHRASE_SYSTEM_PROMPT },
+      { role: "system", content: promptFor("PARAPHRASE_SYSTEM_PROMPT", locale) },
       { role: "user", content: userPayload },
     ],
     signal,
@@ -52,6 +53,7 @@ export async function improveParaphraseWithFocus({
   provider,
   signal,
   onChunk,
+  locale,
 }) {
   if (!node || typeof node !== "object") {
     throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
@@ -59,7 +61,7 @@ export async function improveParaphraseWithFocus({
 
   const trimmedDraft = String(currentDraft ?? "").trim();
   if (!trimmedDraft) {
-    return generatePedagogicalParaphrase({ node, provider, signal, onChunk });
+    return generatePedagogicalParaphrase({ node, provider, signal, onChunk, locale });
   }
 
   const userPayload = buildIncorporateFocusUserPayload({
@@ -67,12 +69,13 @@ export async function improveParaphraseWithFocus({
     currentDraft: trimmedDraft,
     focusTitle,
     focusDetail,
+    locale,
   });
 
   const raw = await chatCompletionWithFallback({
     ...providerChain(config.tutorModel || config.evaluationModel, { provider }),
     messages: [
-      { role: "system", content: INCORPORATE_FOCUS_SYSTEM_PROMPT },
+      { role: "system", content: promptFor("INCORPORATE_FOCUS_SYSTEM_PROMPT", locale) },
       { role: "user", content: userPayload },
     ],
     signal,
@@ -105,6 +108,7 @@ export async function reconcileParaphraseWithChat({
   provider,
   signal,
   onChunk,
+  locale,
 }) {
   if (!node || typeof node !== "object") {
     throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
@@ -114,19 +118,20 @@ export async function reconcileParaphraseWithChat({
   const validMessages = Array.isArray(messages) ? messages : [];
 
   if (validMessages.length === 0 && !trimmedDraft) {
-    return generatePedagogicalParaphrase({ node, provider, signal, onChunk });
+    return generatePedagogicalParaphrase({ node, provider, signal, onChunk, locale });
   }
 
   const userPayload = buildReconcileChatUserPayload({
     node,
     currentDraft: trimmedDraft,
     messages: validMessages,
+    locale,
   });
 
   const raw = await chatCompletionWithFallback({
     ...providerChain(config.tutorModel || config.evaluationModel, { provider }),
     messages: [
-      { role: "system", content: RECONCILE_CHAT_SYSTEM_PROMPT },
+      { role: "system", content: promptFor("RECONCILE_CHAT_SYSTEM_PROMPT", locale) },
       { role: "user", content: userPayload },
     ],
     signal,
@@ -158,6 +163,7 @@ export async function polishParaphrasePedagogy({
   provider,
   signal,
   onChunk,
+  locale,
 }) {
   if (!node || typeof node !== "object") {
     throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
@@ -165,18 +171,19 @@ export async function polishParaphrasePedagogy({
 
   const trimmedDraft = String(currentDraft ?? "").trim();
   if (!trimmedDraft) {
-    return generatePedagogicalParaphrase({ node, provider, signal, onChunk });
+    return generatePedagogicalParaphrase({ node, provider, signal, onChunk, locale });
   }
 
   const userPayload = buildPolishPedagogyUserPayload({
     node,
     currentDraft: trimmedDraft,
+    locale,
   });
 
   const raw = await chatCompletionWithFallback({
     ...providerChain(config.tutorModel || config.evaluationModel, { provider }),
     messages: [
-      { role: "system", content: POLISH_PEDAGOGY_SYSTEM_PROMPT },
+      { role: "system", content: promptFor("POLISH_PEDAGOGY_SYSTEM_PROMPT", locale) },
       { role: "user", content: userPayload },
     ],
     temperature: 0.5,
@@ -211,6 +218,7 @@ export async function refineParaphrasePedagogy({
   provider,
   signal,
   onChunk,
+  locale,
 }) {
   if (!node || typeof node !== "object") {
     throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
@@ -221,13 +229,14 @@ export async function refineParaphrasePedagogy({
     draft,
     critique,
     currentScore,
+    locale,
   });
 
   let accumulated = "";
   const raw = await chatCompletionWithFallback({
     ...providerChain(config.tutorModel || config.evaluationModel, { provider }),
     messages: [
-      { role: "system", content: PEDAGOGICAL_REFINER_SYSTEM_PROMPT },
+      { role: "system", content: promptFor("PEDAGOGICAL_REFINER_SYSTEM_PROMPT", locale) },
       { role: "user", content: userPayload },
     ],
     temperature: 0.45,
@@ -255,16 +264,17 @@ export async function refineParaphrasePedagogy({
   };
 }
 
-export async function judgePedagogy({ node, draft, provider, signal }) {
+export async function judgePedagogy({ node, draft, provider, signal, locale }) {
+  const L = serverText(locale);
   if (!node || typeof node !== "object") {
     throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
   }
 
-  const userPayload = buildPedagogicalJudgeUserPayload({ node, draft });
+  const userPayload = buildPedagogicalJudgeUserPayload({ node, draft, locale });
   const raw = await chatCompletionWithFallback({
     ...providerChain(config.tutorModel || config.evaluationModel, { provider }),
     messages: [
-      { role: "system", content: PEDAGOGICAL_JUDGE_SYSTEM_PROMPT },
+      { role: "system", content: promptFor("PEDAGOGICAL_JUDGE_SYSTEM_PROMPT", locale) },
       { role: "user", content: userPayload },
     ],
     temperature: 0.1,
@@ -282,8 +292,8 @@ export async function judgePedagogy({ node, draft, provider, signal }) {
       score: 75,
       rubric: { foundationalContext: 15, selfContainedScope: 15, cognitivePacing: 15, causalityAndTradeoffs: 15, applicationAndFailureModes: 15 },
       passedThreshold: false,
-      verdict: "Evaluación completada",
-      pedagogicalCritique: ["Mejorar la fluidez y claridad general."],
+      verdict: L.judgeCompleted,
+      pedagogicalCritique: [L.judgeCritiqueFallback],
     };
   }
 
@@ -303,7 +313,7 @@ export async function judgePedagogy({ node, draft, provider, signal }) {
     score,
     rubric,
     passedThreshold: score >= 95 && (!Array.isArray(parsed.pedagogicalCritique) || parsed.pedagogicalCritique.length === 0),
-    verdict: parsed.verdict || (score >= 95 ? "Maestría pedagógica alcanzada" : "Requiere refinamiento"),
+    verdict: parsed.verdict || (score >= 95 ? L.judgeMastery : L.judgeNeedsRefinement),
     pedagogicalCritique: Array.isArray(parsed.pedagogicalCritique) ? parsed.pedagogicalCritique : [],
   };
 }
@@ -315,7 +325,9 @@ export async function runPedagogicalHarness({
   signal,
   maxIterations = 6,
   onEvent,
+  locale,
 }) {
+  const L = serverText(locale);
   if (!node || typeof node !== "object") {
     throw new GatewayError(ErrorCodes.BAD_REQUEST, "Falta el contenido de la card (node)");
   }
@@ -325,12 +337,13 @@ export async function runPedagogicalHarness({
 
   // Si no hay borrador, generamos uno inicial
   if (!currentDraft) {
-    onEvent?.({ type: "stage", stage: "generating_initial", iteration: 0, message: "Generando borrador inicial con IA..." });
+    onEvent?.({ type: "stage", stage: "generating_initial", iteration: 0, message: L.harnessGenerating });
     let initAcc = "";
     const genRes = await generatePedagogicalParaphrase({
       node,
       provider,
       signal,
+      locale,
       onChunk: (delta, accumulated) => {
         initAcc = accumulated;
         onEvent?.({ type: "delta", stage: "generating_initial", iteration: 0, text: delta, fullText: accumulated });
@@ -345,10 +358,10 @@ export async function runPedagogicalHarness({
     stage: "judging",
     iteration: 0,
     draft: currentDraft,
-    message: "⚖️ Evaluando calidad pedagógica inicial con Juez...",
+    message: L.harnessJudging,
   });
 
-  let judgeResult = await judgePedagogy({ node, draft: currentDraft, provider, signal });
+  let judgeResult = await judgePedagogy({ node, draft: currentDraft, provider, signal, locale });
   history.push({
     iteration: 0,
     score: judgeResult.score,
@@ -371,7 +384,7 @@ export async function runPedagogicalHarness({
 
   let iteration = 0;
   while (!judgeResult.passedThreshold && iteration < maxIterations) {
-    if (signal?.aborted) throw new GatewayError(ErrorCodes.UPSTREAM, "Cancelado por el usuario");
+    if (signal?.aborted) throw new GatewayError(ErrorCodes.UPSTREAM, L.cancelledByUser);
     iteration += 1;
 
     // Fase Refinamiento
@@ -381,7 +394,7 @@ export async function runPedagogicalHarness({
       iteration,
       currentScore: judgeResult.score,
       critique: judgeResult.pedagogicalCritique,
-      message: `🪄 Refinando explicación según crítica del Juez (Iteración ${iteration}/${maxIterations})...`,
+      message: L.harnessRefining(iteration, maxIterations),
     });
 
     const refinerPayload = buildPedagogicalRefinerUserPayload({
@@ -389,13 +402,14 @@ export async function runPedagogicalHarness({
       draft: currentDraft,
       critique: judgeResult.pedagogicalCritique,
       currentScore: judgeResult.score,
+      locale,
     });
 
     let refinedAcc = "";
     const refinerRaw = await chatCompletionWithFallback({
       ...providerChain(config.tutorModel || config.evaluationModel, { provider }),
       messages: [
-        { role: "system", content: PEDAGOGICAL_REFINER_SYSTEM_PROMPT },
+        { role: "system", content: promptFor("PEDAGOGICAL_REFINER_SYSTEM_PROMPT", locale) },
         { role: "user", content: refinerPayload },
       ],
       temperature: 0.45,
@@ -425,10 +439,10 @@ export async function runPedagogicalHarness({
       stage: "judging",
       iteration,
       draft: currentDraft,
-      message: `⚖️ Re-evaluando calidad con Juez (Iteración ${iteration})...`,
+      message: L.harnessRejudging(iteration),
     });
 
-    judgeResult = await judgePedagogy({ node, draft: currentDraft, provider, signal });
+    judgeResult = await judgePedagogy({ node, draft: currentDraft, provider, signal, locale });
     history.push({
       iteration,
       score: judgeResult.score,

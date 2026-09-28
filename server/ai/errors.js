@@ -1,3 +1,5 @@
+import { toEnglishMessage } from "./errorMessages.en.js";
+
 export const ErrorCodes = Object.freeze({
   NOT_CONFIGURED: "not_configured",
   UNAUTHORIZED: "unauthorized",
@@ -57,11 +59,12 @@ export function friendlyMessage(code) {
   return FRIENDLY[code] ?? FRIENDLY[ErrorCodes.INTERNAL];
 }
 
-export function jsonErrorResponse(err) {
+export function jsonErrorResponse(err, locale = "es") {
   const code = err?.code ?? ErrorCodes.INTERNAL;
-  const message = err?.message && typeof err.message === "string"
+  const original = err?.message && typeof err.message === "string"
     ? err.message
     : friendlyMessage(code);
+  const message = locale === "en" ? toEnglishMessage(original, code) : original;
   const body = {
     code,
     message,

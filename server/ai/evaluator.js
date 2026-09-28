@@ -15,13 +15,8 @@ import {
   normalizeEvaluationWire,
   normalizeEvaluationSection,
 } from "./schemas.js";
-import {
-  EVALUATOR_SYSTEM_PROMPT,
-  EVALUATOR_SCORING_SYSTEM_PROMPT,
-  EVALUATOR_FEEDBACK_SYSTEM_PROMPT,
-  REPAIR_SYSTEM_PROMPT,
-  EVALUATOR_VERSION,
-} from "./prompts.js";
+import { EVALUATOR_VERSION, promptFor } from "./prompts.js";
+import { serverText } from "./locale.js";
 import { config } from "../config.js";
 import { providerChain } from "./providers.js";
 import { SchemaMismatchError } from "./errors.js";
@@ -43,7 +38,7 @@ const FeedbackJsonSchema = {
   properties: { feedback: EvaluationJsonSchema.properties.feedback },
 };
 
-export async function evaluateParaphrase({ node, learnerAnswer, contentHash, provider, signal, onChunk, onSection, onBlock, onProviderFallback }) {
+export async function evaluateParaphrase({ node, learnerAnswer, contentHash, provider, signal, onChunk, onSection, onBlock, onProviderFallback, locale }) {
   const userPayload = buildEvaluationUserPayload({ node, learnerAnswer });
   // El score se calcula en una request pequena y sin thinking: la UI no
   // depende de que el modelo termine de redactar el feedback para mostrarlo.
@@ -52,7 +47,7 @@ export async function evaluateParaphrase({ node, learnerAnswer, contentHash, pro
   const scoring = await structuredCompletionWithFallback({
     ...providers,
     messages: [
-      { role: "system", content: EVALUATOR_SCORING_SYSTEM_PROMPT },
+      { role: "system", content: promptFor("EVALUATOR_SCORING_SYSTEM_PROMPT", locale) },
       { role: "user", content: userPayload },
     ],
     responseFormat: {
@@ -72,10 +67,10 @@ export async function evaluateParaphrase({ node, learnerAnswer, contentHash, pro
   const feedback = await structuredCompletionWithFallback({
     ...providers,
     messages: [
-      { role: "system", content: EVALUATOR_FEEDBACK_SYSTEM_PROMPT },
+      { role: "system", content: promptFor("EVALUATOR_FEEDBACK_SYSTEM_PROMPT", locale) },
       {
         role: "user",
-        content: `${userPayload}\n\nRubrica ya calculada (no la modifiques):\n${JSON.stringify(scoreSummary)}`,
+        content: `${userPayload}\n\n${serverText(locale).rubricAlreadyScored}\n${JSON.stringify(scoreSummary)}`,
       },
     ],
     responseFormat: {
@@ -122,14 +117,14 @@ export async function evaluateParaphrase({ node, learnerAnswer, contentHash, pro
   };
 }
 
-async function evaluateParaphraseLegacy({ node, learnerAnswer, contentHash, provider, signal, onChunk, onSection, onBlock, onProviderFallback }) {
+async function evaluateParaphraseLegacy({ node, learnerAnswer, contentHash, provider, signal, onChunk, onSection, onBlock, onProviderFallback, locale }) {
   const userPayload = buildEvaluationUserPayload({ node, learnerAnswer });
   const providers = providerChain(config.evaluationModel, { provider });
 
   const { raw, parsed: { data: wireData, attempts } } = await structuredCompletionWithFallback({
     ...providers,
     messages: [
-      { role: "system", content: EVALUATOR_SYSTEM_PROMPT },
+      { role: "system", content: promptFor("EVALUATOR_SYSTEM_PROMPT", locale) },
       { role: "user", content: userPayload },
     ],
     responseFormat: {
@@ -186,7 +181,7 @@ async function parseEvaluation(raw, userPayload, signal, provider) {
     raw,
     schema: EvaluationWireZod,
     repair: ({ badOutput }) =>
-      repairToJson({ badOutput, system: REPAIR_SYSTEM_PROMPT, userHint: userPayload, signal, provider }),
+      repairToJson({ badOutput, system: promptFor("REPAIR_SYSTEM_PROMPT", locale), userHint: userPayload, signal, provider }),
   });
   return {
     ...parsed,
