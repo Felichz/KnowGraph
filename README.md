@@ -2,7 +2,7 @@
 
 A study workspace for senior React and Rails interviews: 142 concepts in a dependency graph, each studied in a four-stage session with an AI mentor that grades your explanation.
 
-**[Live app](https://know-graph.vercel.app)** · [Case study](https://anderssonfelix.com/work/knowgraph/) · Author: [Felix Andersson](https://anderssonfelix.com)
+**[Live app](https://know-graph.vercel.app)** · [Case study](https://portfolio-felix-teal.vercel.app/work/knowgraph/) · Author: [Felix Andersson](https://portfolio-felix-teal.vercel.app/)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-demo-dark.webp">
