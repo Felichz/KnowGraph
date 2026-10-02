@@ -21,8 +21,9 @@ createRoot(document.getElementById("root")).render(
   </React.StrictMode>,
 );
 
-if ("serviceWorker" in navigator && !window.learningDesktop?.isElectron) {
+// Not when embedded in another page (the portfolio shows the app live in a frame).
+if ("serviceWorker" in navigator && !window.learningDesktop?.isElectron && window === window.top) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
   });
 }
