@@ -1,0 +1,75 @@
+/* Mundo «Rejilla de calor» (DESIGN v4): reglas globales que dan carácter al sistema. Se importa al final. */
+
+/* Títulos con la grotesca display; etiquetas y UI en Figtree */
+h1, h2, h3, .view-head__title, .continue__title, .group__title, .progress__h, .stage__title, .gnpanel__title, .continue__name, .study__title, .route-now__title {
+  font-family: var(--font-display); font-optical-sizing: auto; letter-spacing: -0.02em;
+}
+.eyebrow { font-family: var(--font-ui); letter-spacing: .08em; font-weight: 700; }
+.serif { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.025em; }
+.view-head__title, .continue__title { font-size: var(--fs-4xl); line-height: var(--lh-4xl); font-weight: 800; letter-spacing: -0.03em; }
+.group__title { font-weight: 700; }
+
+/* Interacción en contraste puro tinta/papel: sin acento de marca que compita con los colores de área */
+a { color: var(--text-1); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+@media (hover: hover) { a:hover { color: var(--text-1); text-decoration-color: currentColor; } }
+.pill--accent { background: var(--paper); color: var(--text-on-paper); font-weight: 600; }
+.side-item.is-selected { background: var(--surface-3); border-color: transparent; font-weight: 600; }
+:focus-visible { outline-color: var(--text-1); }
+
+/* Celda de calor: el concepto como cuadrado que se llena del color de su área (DESIGN v4 §8.1) */
+.heat { --heat: 0%; display: inline-block; flex-shrink: 0; width: var(--cell, 14px); height: var(--cell, 14px); border-radius: 3px;
+  background: color-mix(in srgb, var(--area, var(--text-2)) var(--heat), transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--area, var(--text-2)) 35%, transparent); position: relative; }
+.heat.h4 { box-shadow: none; }
+.heat.h0 { background: transparent; box-shadow: inset 0 0 0 1px var(--line-strong); }
+.heat.h1 { --heat: 20%; } .heat.h2 { --heat: 42%; } .heat.h3 { --heat: 66%; } .heat.h4 { --heat: 100%; }
+:root[data-theme="light"] .heat.h1 { --heat: 32%; } :root[data-theme="light"] .heat.h2 { --heat: 55%; } :root[data-theme="light"] .heat.h3 { --heat: 78%; }
+:root[data-theme="light"] .heat.h0 { box-shadow: inset 0 0 0 1px var(--line-control); }
+.heat.is-extra::after { content: ""; position: absolute; inset: 30%; border-radius: 1px; background: var(--bg-app); }
+.heat.is-now, .heat.h4.is-now { box-shadow: 0 0 0 2px var(--surface-1), 0 0 0 4px var(--text-1); }
+.heat.h0.is-now { box-shadow: inset 0 0 0 1px var(--line-strong), 0 0 0 2px var(--surface-1), 0 0 0 4px var(--text-1); }
+.app.is-mobile .continue { order: -1; }
+
+/* Las áreas son dueñas de su color: las muestras de categoría son cuadradas como las celdas */
+.cat-dot { border-radius: 2px; }
+.side-cell { --cell: 14px; }
+.side-cell.h0 { box-shadow: inset 0 0 0 1.5px var(--area); }
+.band__stage { font-weight: 500; }
+.concept__id { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.study { --area: var(--lesson-color); }
+
+/* Dominada (100+) = teñida y bordeada del color de su área; extra solo añade la ★ */
+.concept.tier-mastered, .concept.tier-extra, .fcard.tier-mastered, .fcard.tier-extra {
+  background: color-mix(in oklch, var(--area) 14%, var(--surface-1)); border-color: color-mix(in oklch, var(--area) 60%, transparent); }
+@media (hover: hover) { .fcard.tier-mastered:hover, .fcard.tier-extra:hover, .concept.tier-mastered:hover, .concept.tier-extra:hover { border-color: var(--area); } }
+.concept-row.tier-mastered, .concept-row.tier-extra { background: color-mix(in oklch, var(--area) 12%, transparent); }
+.pill--mastery { background: color-mix(in oklch, var(--area, var(--mastery)) 22%, transparent); color: var(--text-1); }
+.pill--mastery svg, .score-value__check { color: var(--area, var(--mastery)); }
+.rail__base.is-mastered { background: var(--area, var(--mastery)); }
+.study-tab__badge.tier-mastered, .study-tab__badge.tier-extra { background: color-mix(in oklch, var(--area) 22%, transparent); color: var(--text-1); }
+.continue__tile.is-best { border-color: color-mix(in oklch, var(--text-1) 40%, transparent); }
+.pbar > span { background: var(--text-2); } .pbar--mastery > span { background: var(--text-1); }
+
+/* Escala /120 en la rampa de la celda: tinta tenue → tinta llena; el extra es la misma tinta con muesca */
+.scale__seg.is-progress { background: color-mix(in oklch, var(--text-2) 45%, var(--cell-empty)); }
+.scale__seg.is-mastered { background: var(--text-1); min-width: 0; }
+.scale__seg.is-extra { background: var(--text-1); opacity: .55; }
+.scale__legend .is-extra svg { color: var(--text-1); }
+.scale__legend .is-mastered svg { color: var(--text-1); }
+
+/* Grafo: mismas reglas que la rejilla */
+.gnode.is-far.is-mastered .gnode__body, .gnode.is-far.is-extra .gnode__body { fill: var(--area); stroke: var(--area); }
+.gnode.is-far.is-progress .gnode__body { fill: color-mix(in oklch, var(--area) 45%, var(--surface-1)); stroke: color-mix(in oklch, var(--area) 45%, var(--surface-1)); }
+.gnode.is-near.is-mastered .gnode__body, .gnode.is-near.is-extra .gnode__body { fill: color-mix(in oklch, var(--area) 16%, var(--surface-1)); stroke: color-mix(in oklch, var(--area) 70%, transparent); }
+.gnode.is-near.is-progress .gnode__body { fill: color-mix(in oklch, var(--area) 8%, var(--surface-3)); }
+.gnode.is-mastered .gnode__icon, .gnode.is-mastered .gnode__score, .gnode.is-extra .gnode__score { color: var(--area); fill: var(--area); }
+.gnode.is-progress .gnode__score { fill: color-mix(in oklch, var(--area) 60%, var(--rail-base)); }
+.gnode.is-far.is-best .gnode__body { fill: var(--paper); stroke: var(--paper); }
+.gedge.is-chain.is-met { stroke: var(--text-1); } .gedge.is-chain.is-missing { stroke: var(--text-3); }
+.glegend__line { border-top-color: var(--text-1); }
+.glegend__swatch.is-mastered { background: var(--text-2); border-color: var(--text-2); }
+.glegend__swatch.is-best { background: var(--paper); border-color: var(--paper); }
+.gmini.is-mastered, .gmini.is-extra { fill: var(--area); }
+.gmini.is-progress { fill: color-mix(in oklch, var(--area) 45%, var(--surface-3)); opacity: 1; }
+.gmini.is-best { fill: var(--paper); }
+.gruler__tick.is-done .gruler__n, .gruler__tick.is-done .gruler__count { color: var(--text-1); }
+.grel__met { color: var(--text-2); }

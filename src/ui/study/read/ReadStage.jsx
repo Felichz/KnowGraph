@@ -21,7 +21,7 @@ export function ReadStage({ node, graph, model, go }) {
         </div>
         {lesson.summary && <p className="lesson__lead serif">{lesson.summary}</p>}
         {lesson.why && (
-          <p className="lesson__why"><span className="eyebrow">{t("study.read.whyItMatters")}</span><Inline text={lesson.why} /></p>
+          <p className="lesson__why"><Inline text={lesson.why} /></p>
         )}
         {lesson.explanation && <Markdown text={lesson.explanation} className="lesson__body" headingOffset={2} />}
         {lesson.code && (

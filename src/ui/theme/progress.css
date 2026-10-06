@@ -23,7 +23,7 @@
 .milestone__label { font-weight: 600; }
 .milestone__meta { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--sp-3); font-size: var(--fs-xs); }
 .milestone__next { grid-column: 1 / -1; justify-self: start; font-size: var(--fs-sm); color: var(--accent); text-align: left; }
-.milestone__done { grid-column: 1 / -1; font-size: var(--fs-sm); color: var(--mastery); }
+.milestone__done { grid-column: 1 / -1; font-size: var(--fs-sm); font-weight: 600; color: var(--text-1); }
 .cats { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--sp-1) var(--sp-8); }
 .cat-row { display: grid; grid-template-columns: minmax(0, 1fr) 120px 48px; align-items: center; gap: var(--sp-3); font-size: var(--fs-sm); }
 .cat-row .mono { text-align: right; font-size: var(--fs-xs); }

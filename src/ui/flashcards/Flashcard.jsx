@@ -3,6 +3,7 @@ import { useT } from "../../i18n/react.js";
 import { scoreTier } from "../../logic/studyQueue.js";
 import { CategoryLabel } from "../primitives/CategoryDot.jsx";
 import { Pill } from "../primitives/Pill.jsx";
+import { getCategoryColor } from "../theme/categoryPalette.js";
 
 export function answerOf(p) {
   return p.representative?.answer || p.draft?.text || "";
@@ -23,7 +24,7 @@ export function Flashcard({ node, graph, p, onOpen }) {
   const t = useT();
   const tier = scoreTier(p);
   return (
-    <button type="button" className={`fcard tier-${tier}`} onClick={onOpen} aria-haspopup="dialog"
+    <button type="button" className={`fcard tier-${tier}`} onClick={onOpen} aria-haspopup="dialog" style={{ "--area": getCategoryColor(graph.id, node.cat) }}
       aria-label={t("flashcards.card.open", { label: node.label })}>
       <span className="fcard__top"><CategoryLabel graph={graph} cat={node.cat} /><TierBadge p={p} /></span>
       <span className="fcard__title">{node.label}</span>

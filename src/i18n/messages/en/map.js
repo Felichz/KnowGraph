@@ -19,6 +19,18 @@ export default {
       aiActive: "AI is working on this card",
     },
   },
+  heat: {
+    title: "Your map",
+    mastered: "mastered",
+    status: {
+      none: "not started",
+      draft: "draft, not evaluated yet",
+      progress: "{score}/120",
+      mastered: "{score}/120 · mastered",
+      extra: "{score}/120 · extra depth",
+    },
+    legend: { label: "Color scale: an empty cell is not started, a full cell is mastered", less: "Less", more: "Mastered", extra: "Extra" },
+  },
   continue: {
     title: "Continue",
     resume: "Pick up where you left off",

@@ -23,7 +23,7 @@ export const GraphNode = memo(function GraphNode({ node, graph, pos, state, leve
     level === 1 ? t("map.card.aria.bestNext") : level ? t("map.card.aria.level", { level }) : null, aiActive ? t("map.card.aria.aiActive") : null].filter(Boolean).join(". ");
   const cls = ["gnode", `is-${state.kind}`, level === 1 && "is-best", selected && "is-selected", dimmed && "is-dimmed", inactive && "is-inactive", inChain && "is-chain", labeled ? "is-near" : "is-far"].filter(Boolean).join(" ");
   return (
-    <g className={cls} transform={`translate(${pos.x} ${pos.y})`} role="button" tabIndex={tabIndex} aria-label={label} aria-hidden={inactive || undefined} data-node={node.id}
+    <g className={cls} style={{ "--area": color }} transform={`translate(${pos.x} ${pos.y})`} role="button" tabIndex={tabIndex} aria-label={label} aria-hidden={inactive || undefined} data-node={node.id}
       onClick={() => onSelect(node.id)} onDoubleClick={() => onOpen(node.id)} onPointerEnter={() => onHover(node.id)} onPointerLeave={() => onHover(null)}
       onFocus={() => onSelect(node.id, { fromFocus: true })}
       onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpen(node.id); } }}>

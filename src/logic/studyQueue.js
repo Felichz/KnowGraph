@@ -43,6 +43,14 @@ export function reviewCount(nodes, progress) {
   }).length;
 }
 
+// Calor de una celda (DESIGN v4 §8.1): 0 vacía · 1 con borrador · 2 nota < 60 · 3 nota 60–99 · 4 dominada (100+).
+export function heatLevel(p) {
+  const score = p?.displayScore;
+  if (p?.isComplete || (typeof score === "number" && score >= 100)) return 4;
+  if (typeof score === "number") return score >= 60 ? 3 : 2;
+  return p?.attempts?.length || p?.hasDraft ? 1 : 0;
+}
+
 // Estado visual común (lista, grafo, flashcards): mastered incluye 101–120; extra solo añade la ★.
 export function scoreTier(p) {
   const score = p?.displayScore;

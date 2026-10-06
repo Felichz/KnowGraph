@@ -4,7 +4,7 @@
 export const THEMES = Object.freeze(["light", "dark"]);
 export const THEME_STORAGE_KEY = "knowgraph:theme";
 // Mirrors --bg-app of each theme (tokens.css / light.css) for <meta name="theme-color">.
-export const THEME_COLOR = Object.freeze({ light: "#F7F4EF", dark: "#100E0C" });
+export const THEME_COLOR = Object.freeze({ light: "#F6F7F9", dark: "#0E1117" });
 
 const listeners = new Set();
 const isTheme = (value) => THEMES.includes(value);

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lastActivityAt, resumeTarget, reviewCount, reviewOrder, scoreTier } from "../../src/logic/studyQueue.js";
+import { heatLevel, lastActivityAt, resumeTarget, reviewCount, reviewOrder, scoreTier } from "../../src/logic/studyQueue.js";
 
 const node = (id, priority) => ({ id, priority, label: id });
 const nodes = [node("a", 1), node("b", 2), node("c", 3), node("d", 4), node("e", 5)];
@@ -25,4 +25,5 @@ assert.equal(scoreTier(data.a), "extra");
 assert.equal(scoreTier({ displayScore: 100, isComplete: true }), "mastered");
 assert.equal(scoreTier(data.d), "progress");
 assert.equal(scoreTier(progress.of("e")), "none");
+assert.deepEqual(["a", "b", "c", "d", "e"].map((id) => heatLevel(progress.of(id))), [4, 3, 1, 2, 0], "heat levels");
 console.log("study queue: OK");
