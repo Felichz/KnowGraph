@@ -1,7 +1,7 @@
 import { ArrowRight, Lightbulb } from "lucide-react";
 import { useT } from "../../../i18n/react.js";
 import { Button } from "../../primitives/Button.jsx";
-import { Markdown } from "../../primitives/Markdown.jsx";
+import { Inline, Markdown } from "../../primitives/Markdown.jsx";
 import { CodeBlock } from "../../primitives/CodeBlock.jsx";
 import { Pill } from "../../primitives/Pill.jsx";
 import { LessonExtras } from "./LessonExtras.jsx";
@@ -21,7 +21,7 @@ export function ReadStage({ node, graph, model, go }) {
         </div>
         {lesson.summary && <p className="lesson__lead serif">{lesson.summary}</p>}
         {lesson.why && (
-          <p className="lesson__why"><span className="eyebrow">{t("study.read.whyItMatters")}</span>{lesson.why}</p>
+          <p className="lesson__why"><span className="eyebrow">{t("study.read.whyItMatters")}</span><Inline text={lesson.why} /></p>
         )}
         {lesson.explanation && <Markdown text={lesson.explanation} className="lesson__body" headingOffset={2} />}
         {lesson.code && (
@@ -32,26 +32,26 @@ export function ReadStage({ node, graph, model, go }) {
         {lesson.steps?.length > 0 && (
           <section className="lesson__section">
             <h2 className="lesson__h">{t("study.read.howToApply")}</h2>
-            <ol className="lesson__steps">{lesson.steps.map((step, i) => <li key={i}><span className="mono">{String(i + 1).padStart(2, "0")}</span><p>{step}</p></li>)}</ol>
+            <ol className="lesson__steps">{lesson.steps.map((step, i) => <li key={i}><span className="mono">{String(i + 1).padStart(2, "0")}</span><p><Inline text={step} /></p></li>)}</ol>
           </section>
         )}
         {lesson.pitfalls?.length > 0 && (
           <section className="lesson__section">
             <h2 className="lesson__h">{t("study.read.pitfalls")}</h2>
-            <ul className="lesson__pitfalls">{lesson.pitfalls.map((item, i) => <li key={i}>{item}</li>)}</ul>
+            <ul className="lesson__pitfalls">{lesson.pitfalls.map((item, i) => <li key={i}><Inline text={item} /></li>)}</ul>
           </section>
         )}
         <LessonExtras lesson={lesson} graph={graph} />
         {lesson.takeaway && (
           <aside className="lesson__takeaway">
             <Lightbulb size={16} strokeWidth={1.5} aria-hidden="true" />
-            <p><span className="eyebrow">{t("study.read.takeaway")}</span>{lesson.takeaway}</p>
+            <p><span className="eyebrow">{t("study.read.takeaway")}</span><Inline text={lesson.takeaway} /></p>
           </aside>
         )}
         {lesson.prompt && (
           <aside className="lesson__prompt">
             <span className="eyebrow">{t("study.read.practiceQuestion")}</span>
-            <p>{lesson.prompt}</p>
+            <p><Inline text={lesson.prompt} /></p>
           </aside>
         )}
         <footer className="stage__next">
