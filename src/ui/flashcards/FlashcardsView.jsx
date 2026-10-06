@@ -6,6 +6,8 @@ import { Segmented } from "../primitives/Segmented.jsx";
 import { EmptyState } from "../primitives/Feedback.jsx";
 import { Flashcard } from "./Flashcard.jsx";
 import { PracticeDialog } from "./PracticeDialog.jsx";
+import { FlashcardModal } from "./FlashcardModal.jsx";
+import { reviewOrder } from "../../logic/studyQueue.js";
 
 const FILTERS = [
   { value: "all", labelKey: "flashcards.filters.all" },
@@ -21,12 +23,13 @@ function matches(filter, p) {
   return true;
 }
 
-// Flashcards (US6): repaso rápido de las cards del foco con volteo y práctica autoevaluada.
+// Flashcards (US6): rejilla con estado de nota visible, modal navegable y práctica autoevaluada (lo flojo primero).
 export function FlashcardsView({ model }) {
   const t = useT();
   const { graph, visible, progress } = model;
   const [filter, setFilter] = useState("all");
   const [practice, setPractice] = useState(false);
+  const [openIndex, setOpenIndex] = useState(null);
   const cards = useMemo(() => visible.filter((n) => matches(filter, progress.of(n.id))).sort((a, b) => a.priority - b.priority), [visible, filter, progress]);
   const counts = useMemo(() => Object.fromEntries(FILTERS.map((f) => [f.value, visible.filter((n) => matches(f.value, progress.of(n.id))).length])), [visible, progress]);
 
@@ -47,10 +50,13 @@ export function FlashcardsView({ model }) {
         </EmptyState>
       ) : (
         <ul className="flash__grid">
-          {cards.map((node) => <li key={node.id}><Flashcard node={node} graph={graph} p={progress.of(node.id)} /></li>)}
+          {cards.map((node, i) => <li key={node.id}><Flashcard node={node} graph={graph} p={progress.of(node.id)} onOpen={() => setOpenIndex(i)} /></li>)}
         </ul>
       )}
-      {practice && <PracticeDialog cards={cards} graph={graph} progress={progress} onClose={() => setPractice(false)} />}
+      {practice && <PracticeDialog cards={reviewOrder(cards, progress)} graph={graph} progress={progress} onClose={() => setPractice(false)} />}
+      {openIndex !== null && cards[openIndex] && (
+        <FlashcardModal cards={cards} index={openIndex} graph={graph} progress={progress} onIndex={setOpenIndex} onClose={() => setOpenIndex(null)} />
+      )}
     </div>
   );
 }

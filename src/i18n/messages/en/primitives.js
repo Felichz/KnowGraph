@@ -16,6 +16,12 @@ export default {
     region: "Notifications",
     dismiss: "Dismiss notification",
   },
+  scale: {
+    label: "Score scale",
+    progress: "In progress",
+    mastered: "Mastered: the goal",
+    extra: "Extra depth, optional",
+  },
   score: {
     rail: "Score {score} of {max}",
   },

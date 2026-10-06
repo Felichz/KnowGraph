@@ -2,6 +2,7 @@ import { ClipboardCheck, PenLine, RotateCcw } from "lucide-react";
 import { useT } from "../../../i18n/react.js";
 import { Button } from "../../primitives/Button.jsx";
 import { EmptyState } from "../../primitives/Feedback.jsx";
+import { ScaleExplainer } from "../../primitives/ScaleExplainer.jsx";
 import { actions } from "../../state/useWorkspace.js";
 import { TaskStatus } from "../TaskStatus.jsx";
 import { EvaluationResult } from "./EvaluationResult.jsx";
@@ -20,9 +21,12 @@ export function EvaluateStage({ data, study, go }) {
   if (!hasDraft && !attempts.length) {
     return (
       <div className="stage stage--evaluate">
-        <EmptyState icon={PenLine} title={t("study.evaluate.emptyTitle")} action={<Button variant="primary" onClick={() => go("paraphrase")}>{t("study.goParaphrase")}</Button>}>
-          {t("study.evaluate.emptyBody")}
-        </EmptyState>
+        <div className="eval-empty">
+          <EmptyState icon={PenLine} title={t("study.evaluate.emptyTitle")} action={<Button variant="primary" onClick={() => go("paraphrase")}>{t("study.goParaphrase")}</Button>}>
+            {t("study.evaluate.emptyBody")}
+          </EmptyState>
+          <ScaleExplainer compact />
+        </div>
       </div>
     );
   }

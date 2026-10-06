@@ -5,17 +5,14 @@
 .view-head__title { font-size: var(--fs-2xl); line-height: var(--lh-2xl); font-weight: 600; letter-spacing: -0.02em; }
 .flash__filters { justify-self: start; max-width: 100%; overflow-x: auto; }
 .flash__grid { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--sp-3); }
-.fcard { position: relative; height: 100%; }
-.fcard__face { display: flex; flex-direction: column; gap: var(--sp-2); width: 100%; height: 100%; min-height: 188px; padding: var(--sp-4); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface-1); text-align: left; transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
-@media (hover: hover) { .fcard__face:hover { background: var(--surface-2); border-color: var(--line-strong); } }
-.fcard.is-flipped .fcard__face { background: var(--surface-2); padding-bottom: calc(var(--sp-4) + 36px); animation: lw-fade var(--dur-2) var(--ease-out); }
+.fcard { display: flex; flex-direction: column; gap: var(--sp-2); width: 100%; height: 100%; min-height: 168px; padding: var(--sp-4); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface-1); text-align: left; transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
+@media (hover: hover) { .fcard:hover { background: var(--surface-2); border-color: var(--line-strong); } }
+.fcard.tier-mastered, .fcard.tier-extra { background: var(--mastery-soft); border-color: color-mix(in oklch, var(--mastery) 55%, transparent); }
+@media (hover: hover) { .fcard.tier-mastered:hover, .fcard.tier-extra:hover { border-color: var(--mastery); } }
 .fcard__top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); font-size: var(--fs-xs); color: var(--text-2); }
 .fcard__top .cat-label { min-width: 0; }
 .fcard__title { font-size: var(--fs-lg); line-height: var(--lh-lg); font-weight: 600; letter-spacing: -0.01em; flex: 1; }
 .fcard__hint { font-size: var(--fs-xs); }
-.fcard__answer { font-family: var(--font-read); font-size: var(--fs-md); line-height: var(--lh-md); }
-.fcard__mine { font-size: var(--fs-sm); color: var(--text-2); }
-.fcard__study { position: absolute; left: var(--sp-4); bottom: var(--sp-3); display: inline-flex; align-items: center; gap: var(--sp-1); height: var(--ctl-sm); font-size: var(--fs-sm); font-weight: 500; color: var(--accent); }
 .practice { width: min(640px, 100%) !important; }
 .practice__body { display: grid; gap: var(--sp-4); padding: 0 var(--sp-5) var(--sp-6); overflow-y: auto; outline: none; }
 .practice__q { font-size: var(--fs-3xl); line-height: var(--lh-3xl); }

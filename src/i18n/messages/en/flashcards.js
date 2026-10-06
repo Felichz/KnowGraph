@@ -9,13 +9,15 @@ export default {
   },
   view: {
     title: "Review",
-    help: "Click a card to flip it. In practice mode, answer in your head and rate yourself.",
+    help: "Open a card to answer it in your head, then reveal the key idea and your explanation. Practice starts with your weakest cards.",
     practice: "Practice {n}",
     emptyTitle: "No cards match this filter",
     emptyBody: "Change the filter or focus area to see other cards.",
     showAll: "Show all",
   },
   card: {
+    open: "{label}: open flashcard",
+    hasExplanation: "Your explanation is saved",
     showFront: "{label}: show front",
     showAnswer: "{label}: show answer",
     hint: "How would you explain it?",
@@ -23,6 +25,15 @@ export default {
     yourExplanation: "Your explanation",
     improve: "Improve explanation",
     study: "Study",
+  },
+  modal: {
+    position: "{n} / {total}",
+    previous: "Previous card",
+    next: "Next card",
+    reveal: "Show answer",
+    space: "Space",
+    noExplanation: "You haven't written an explanation for this card yet.",
+    keys: "← → move between cards · Space shows the answer",
   },
   practice: {
     title: "Practice",

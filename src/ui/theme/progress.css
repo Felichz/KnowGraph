@@ -5,8 +5,8 @@
 .progress__big-label { font-size: var(--fs-md); font-weight: 400; color: var(--text-2); margin-left: var(--sp-2); }
 .progress__section { display: grid; gap: var(--sp-4); }
 .progress__h { font-size: var(--fs-lg); line-height: var(--lh-lg); font-weight: 600; letter-spacing: -0.015em; }
-.pbar { display: block; height: 6px; border-radius: var(--r-full); background: var(--surface-inset); overflow: hidden; }
-.pbar > span { display: block; height: 100%; border-radius: inherit; background: var(--rail-base); transition: width var(--dur-rail-grow) var(--ease-out); }
+.pbar { display: block; height: 6px; border-radius: var(--r-full); background: var(--surface-inset); box-shadow: inset 0 0 0 1px var(--line-subtle); overflow: hidden; }
+.pbar > span { display: block; height: 100%; border-radius: inherit; background: var(--mastery); transition: width var(--dur-rail-grow) var(--ease-out); }
 .pbar--mastery > span { background: var(--mastery); }
 .bands { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-3); }
 .band { display: grid; gap: var(--sp-2); align-content: start; padding: var(--sp-4); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface-1); }

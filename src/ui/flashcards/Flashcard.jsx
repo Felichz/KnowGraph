@@ -1,42 +1,33 @@
-import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { Check, Star } from "lucide-react";
 import { useT } from "../../i18n/react.js";
+import { scoreTier } from "../../logic/studyQueue.js";
 import { CategoryLabel } from "../primitives/CategoryDot.jsx";
-import { ScoreValue } from "../primitives/Score.jsx";
-import { actions } from "../state/useWorkspace.js";
+import { Pill } from "../primitives/Pill.jsx";
 
 export function answerOf(p) {
   return p.representative?.answer || p.draft?.text || "";
 }
 
-// Card volteable: frente = concepto; dorso = idea central + tu explicación.
-export function Flashcard({ node, graph, p }) {
+// Insignia de nota con el código común: verde = dominada (100+), ★ = extra, neutra = en curso.
+export function TierBadge({ p }) {
   const t = useT();
-  const [flipped, setFlipped] = useState(false);
-  const mine = answerOf(p);
+  const tier = scoreTier(p);
+  const score = Math.round(p.displayScore ?? 0);
+  if (tier === "none") return <Pill tone="outline">{t("common.status.unscored")}</Pill>;
+  if (tier === "progress") return <Pill tone="neutral"><span className="mono">{score}/120</span></Pill>;
+  return <Pill tone="mastery" icon={tier === "extra" ? Star : Check}><span className="mono">{score}/120</span></Pill>;
+}
+
+// Card de la rejilla: abre el modal de flashcards (el contenido largo no cabe en la card).
+export function Flashcard({ node, graph, p, onOpen }) {
+  const t = useT();
+  const tier = scoreTier(p);
   return (
-    <div className={`fcard ${flipped ? "is-flipped" : ""}`}>
-      <button type="button" className="fcard__face" aria-pressed={flipped} onClick={() => setFlipped(!flipped)}
-        aria-label={t(flipped ? "flashcards.card.showFront" : "flashcards.card.showAnswer", { label: node.label })}>
-        {!flipped ? (
-          <>
-            <span className="fcard__top"><CategoryLabel graph={graph} cat={node.cat} /><ScoreValue score={p.displayScore} empty="" /></span>
-            <span className="fcard__title">{node.label}</span>
-            <span className="fcard__hint t3">{t("flashcards.card.hint")}</span>
-          </>
-        ) : (
-          <>
-            <span className="eyebrow">{t("flashcards.card.keyIdea")}</span>
-            <span className="fcard__answer">{node.lesson?.takeaway || node.lesson?.summary}</span>
-            {mine && <span className="fcard__mine clamp-3"><span className="eyebrow">{t("flashcards.card.yourExplanation")}</span> {mine}</span>}
-          </>
-        )}
-      </button>
-      {flipped && (
-        <button type="button" className="fcard__study" onClick={() => actions.openCard(node.id, { stage: mine ? "paraphrase" : "read" })}>
-          {mine ? t("flashcards.card.improve") : t("flashcards.card.study")} <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" />
-        </button>
-      )}
-    </div>
+    <button type="button" className={`fcard tier-${tier}`} onClick={onOpen} aria-haspopup="dialog"
+      aria-label={t("flashcards.card.open", { label: node.label })}>
+      <span className="fcard__top"><CategoryLabel graph={graph} cat={node.cat} /><TierBadge p={p} /></span>
+      <span className="fcard__title">{node.label}</span>
+      <span className="fcard__hint t3">{answerOf(p) ? t("flashcards.card.hasExplanation") : t("flashcards.card.hint")}</span>
+    </button>
   );
 }

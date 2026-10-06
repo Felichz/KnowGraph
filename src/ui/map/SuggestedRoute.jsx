@@ -1,106 +1,84 @@
-import { useEffect, useState } from "react";
-import { ArrowRight, ArrowUpRight, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
-import { useT } from "../../i18n/react.js";
-import { Button, IconButton } from "../primitives/Button.jsx";
-import { ScoreRail } from "../primitives/Score.jsx";
-import { EmptyState } from "../primitives/Feedback.jsx";
+import { ArrowRight, CheckCircle2, Layers } from "lucide-react";
+import { useLocale, useT } from "../../i18n/react.js";
+import { getLessonContext } from "../../logic/guidance.js";
+import { resumeTarget, reviewCount } from "../../logic/studyQueue.js";
+import { Button } from "../primitives/Button.jsx";
 import { CategoryLabel } from "../primitives/CategoryDot.jsx";
-import { useIsMobile } from "../hooks/useMediaQuery.js";
+import { ScoreValue } from "../primitives/Score.jsx";
+import { EmptyState } from "../primitives/Feedback.jsx";
 import { actions } from "../state/useWorkspace.js";
-import { RouteRow } from "./RouteRow.jsx";
-import { useStageOf } from "./useStageOf.js";
+import { HowItWorks, useIntroDismissed } from "./HowItWorks.jsx";
 
-// Ruta sugerida: Ahora / Después / Más adelante (INF-020…026, R2).
+// «Continuar» (specs/004-ui-flow §1): la única respuesta a «¿qué hago ahora?» — retomar, mejor siguiente, repasar.
 export function SuggestedRoute({ model }) {
-  const mobile = useIsMobile();
   const t = useT();
-  const { guidance, graph, progress } = model;
-  const stageOf = useStageOf(graph);
-  if (!guidance.primary) {
-    return (
-      <section className="route route--done" aria-labelledby="route-title">
-        <h2 id="route-title" className="sr-only">{t("map.route.title")}</h2>
-        <EmptyState icon={CheckCircle2} title={t("map.route.doneTitle")} compact
-          action={<Button variant="primary" onClick={() => actions.setView("progress")}>{t("map.route.viewProgress")}</Button>}>
-          {t("map.route.doneBody")}
-        </EmptyState>
-      </section>
-    );
-  }
-  if (mobile) return <MobileRoute model={model} stageOf={stageOf} />;
-  const [, later, after] = guidance.levels;
+  const { guidance, graph, progress, visible } = model;
+  const [introDismissed, dismissIntro] = useIntroDismissed();
+  const resume = resumeTarget(visible, progress);
+  const toReview = reviewCount(visible, progress);
+  const fresh = !resume && progress.done === 0 && toReview === 0;
+  // Si lo que retomarías es también el mejor siguiente, una sola tile con el estado y la etapa de retomar.
+  const merged = resume && resume.node.id === guidance.primary?.id ? resume : null;
   return (
-    <section className="route" aria-labelledby="route-title">
-      <div className="route__head">
-        <h2 id="route-title" className="eyebrow">{t("map.route.title")}</h2>
-        <p className="route__help">{t("map.route.help")} <span className="t3">{graph.subtitle}</span></p>
-        {graph.interviewQuestions?.length ? (
-          <a className="route__ref" href={graph.interviewQuestionSource} target="_blank" rel="noreferrer noopener">
-            {t("map.route.questionsRef", { count: graph.interviewQuestions.length })} <ArrowUpRight size={12} strokeWidth={1.5} aria-hidden="true" />
-          </a>
-        ) : null}
-      </div>
-      <div className="route__grid">
-        <RouteNow node={guidance.primary} graph={graph} progress={progress} stage={stageOf(guidance.primary.id)} />
-        <RouteColumn title={t("map.route.later")} nodes={later} progress={progress} />
-        <RouteColumn title={t("map.route.after")} nodes={after} progress={progress} />
+    <section className="continue" aria-labelledby="continue-title">
+      <h2 id="continue-title" className="continue__title">{t("map.continue.title")}</h2>
+      {fresh && !introDismissed && <HowItWorks onDismiss={dismissIntro} />}
+      <div className="continue__grid">
+        {resume && !merged && <ResumeTile resume={resume} graph={graph} />}
+        {guidance.primary ? <BestNextTile node={guidance.primary} model={model} resume={merged} /> : (
+          <div className="continue__tile">
+            <EmptyState icon={CheckCircle2} title={t("map.route.doneTitle")} compact
+              action={<Button variant="secondary" onClick={() => actions.setView("progress")}>{t("map.route.viewProgress")}</Button>}>
+              {t("map.route.doneBody")}
+            </EmptyState>
+          </div>
+        )}
+        <div className="continue__tile">
+          <span className="eyebrow">{t("map.continue.review")}</span>
+          <p className="continue__name">{toReview ? t("map.continue.reviewCount", { n: toReview }) : t("map.continue.reviewNone")}</p>
+          <p className="t2 continue__why">{toReview ? t("map.continue.reviewHelp") : t("map.continue.reviewNoneHelp")}</p>
+          <Button variant="secondary" icon={Layers} onClick={() => actions.setView("flashcards")}>{t("map.continue.openReview")}</Button>
+        </div>
       </div>
     </section>
   );
 }
 
-function RouteNow({ node, graph, progress, stage, footer }) {
+function ResumeTile({ resume, graph }) {
   const t = useT();
-  const p = progress.of(node.id);
+  const { node, p, stage } = resume;
   return (
-    <article className="route-now card">
-      <div className="route-now__top">
-        <p className="eyebrow">{t("map.route.now")}</p>
-        <CategoryLabel graph={graph} cat={node.cat} className="route-now__cat" />
-      </div>
-      <h3 className="route-now__title clamp-2">{node.label}</h3>
-      <ScoreRail score={p.displayScore} />
-      <div className="route-now__meta">
-        <span className="route-now__stage clamp-1">{t("map.route.stageMeta", { rank: stage.rank, total: stage.total, priority: node.priority })}</span>
-        <Button variant="primary" size="md" iconRight={ArrowRight} minWidth={148} onClick={() => actions.openCard(node.id)}>
-          {footer ? t("map.route.study") : t("map.route.studyNow")}
-        </Button>
-      </div>
-      {footer}
+    <article className="continue__tile">
+      <div className="continue__top"><span className="eyebrow">{t("map.continue.resume")}</span><CategoryLabel graph={graph} cat={node.cat} /></div>
+      <p className="continue__name">{node.label}</p>
+      <ResumeState resume={resume} />
+      <Button variant="secondary" iconRight={ArrowRight} onClick={() => actions.openCard(node.id, { stage })}>{t("map.continue.resumeAction")}</Button>
     </article>
   );
 }
 
-function RouteColumn({ title, nodes, progress }) {
+function ResumeState({ resume }) {
   const t = useT();
   return (
-    <div className="route-col">
-      <h3 className="eyebrow">{title}</h3>
-      {nodes.length ? (
-        <ul className="route-col__list">
-          {nodes.map((node) => <li key={node.id}><RouteRow node={node} p={progress.of(node.id)} onOpen={() => actions.openCard(node.id)} /></li>)}
-        </ul>
-      ) : <p className="route-col__empty">{t("map.route.emptyColumn")}</p>}
-    </div>
+    <p className="t2 continue__why">{t(`map.continue.state.${resume.stage}`)}
+      {typeof resume.p.displayScore === "number" && <> · <ScoreValue score={resume.p.displayScore} /></>}</p>
   );
 }
 
-function MobileRoute({ model, stageOf }) {
+function BestNextTile({ node, model, resume }) {
   const t = useT();
-  const steps = model.guidance.levels.flat().slice(0, 9);
-  const [index, setIndex] = useState(0);
-  useEffect(() => setIndex(0), [model.graphId, model.focusCat]);
-  const node = steps[Math.min(index, steps.length - 1)];
-  const stepper = (
-    <div className="route-now__stepper">
-      <IconButton icon={ChevronLeft} size="md" label={t("map.route.previous")} disabled={index === 0} onClick={() => setIndex((i) => i - 1)} />
-      <span className="mono t2">{index + 1}/{steps.length}</span>
-      <IconButton icon={ChevronRight} size="md" label={t("map.route.next")} disabled={index >= steps.length - 1} onClick={() => setIndex((i) => i + 1)} />
-    </div>
-  );
+  const locale = useLocale();
+  const { graph, progress } = model;
+  const prerequisites = node.prerequisites.map((id) => graph.nodeById.get(id)).filter(Boolean);
+  const why = getLessonContext(node, prerequisites, prerequisites.filter((n) => !progress.checked.has(n.id)), graph.categoryContext, locale);
   return (
-    <section className="route route--mobile" aria-label={t("map.route.title")}>
-      <RouteNow node={node} graph={model.graph} progress={model.progress} stage={stageOf(node.id)} footer={stepper} />
-    </section>
+    <article className="continue__tile is-best">
+      <div className="continue__top"><span className="pill pill--accent">{t("map.card.bestNext")}</span><CategoryLabel graph={graph} cat={node.cat} /></div>
+      <p className="continue__name">{node.label}</p>
+      {resume ? <ResumeState resume={resume} /> : <p className="t2 continue__why clamp-2">{why}</p>}
+      <Button variant="primary" iconRight={ArrowRight} onClick={() => actions.openCard(node.id, { stage: resume?.stage ?? "read" })}>
+        {resume ? t("map.continue.resumeAction") : t("map.route.studyNow")}
+      </Button>
+    </article>
   );
 }

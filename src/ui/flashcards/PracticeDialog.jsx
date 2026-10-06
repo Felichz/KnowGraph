@@ -18,7 +18,8 @@ const RATINGS = [
 // Práctica: una card por vez, revelar, autoevaluar 1–4 y racha (solo de sesión).
 export function PracticeDialog({ cards, graph, progress, onClose }) {
   const t = useT();
-  const deck = useMemo(() => [...cards].sort(() => Math.random() - 0.5), [cards]);
+  // Orden de repaso (lo trabajado y flojo primero) calculado por la vista; se congela al abrir.
+  const deck = useMemo(() => cards, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [streak, setStreak] = useState(0);
