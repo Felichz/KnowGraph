@@ -1,4 +1,5 @@
-import { AlertTriangle, PenLine, Sparkles } from "lucide-react";
+import { Lock, PenLine, Sparkles } from "lucide-react";
+import { scoreTier } from "../../logic/studyQueue.js";
 import { useT } from "../../i18n/react.js";
 import { ScoreRail, ScoreValue } from "../primitives/Score.jsx";
 import { CategoryDot } from "../primitives/CategoryDot.jsx";
@@ -20,7 +21,8 @@ function ariaFor(t, { node, p, level, missing, aiActive }) {
 function RouteMark({ level }) {
   const t = useT();
   if (level === 1) return <span className="pill pill--accent">{t("map.card.bestNext")}</span>;
-  if (level) return <span className="concept__level">{t("map.card.level", { level })}</span>;
+  if (level === 2) return <span className="concept__level">{t("map.route.later")}</span>;
+  if (level === 3) return <span className="concept__level">{t("map.route.after")}</span>;
   return null;
 }
 
@@ -29,7 +31,7 @@ export function ConceptCard(props) {
   const { node, p, level, missing, aiActive, onOpen, loading } = props;
   const t = useT();
   return (
-    <button type="button" className="concept card" data-node={node.id} aria-label={ariaFor(t, props)} onClick={onOpen}>
+    <button type="button" className={`concept card tier-${scoreTier(p)}`} data-node={node.id} aria-label={ariaFor(t, props)} onClick={onOpen}>
       <span className="concept__meta">
         <span className="mono t3">#{node.priority}</span>
         <span className="concept__meta-right">
@@ -42,7 +44,7 @@ export function ConceptCard(props) {
       <span className="concept__foot">
         {loading ? <Skeleton width={40} height={12} /> : <ScoreValue score={p.displayScore} />}
         {missing.length ? (
-          <span className="concept__warn"><AlertTriangle size={12} strokeWidth={1.75} aria-hidden="true" /> {t("map.card.missingCount", { n: missing.length })}</span>
+          <span className="concept__needs"><Lock size={12} strokeWidth={1.75} aria-hidden="true" /> {t("map.card.missingCount", { n: missing.length })}</span>
         ) : p.hasDraft && !p.representative ? (
           <span className="concept__draft"><PenLine size={12} strokeWidth={1.5} aria-hidden="true" /> {t("map.card.draft")}</span>
         ) : null}
@@ -56,7 +58,7 @@ export function ConceptRow(props) {
   const { node, graph, p, level, aiActive, onOpen, loading } = props;
   const t = useT();
   return (
-    <button type="button" className="concept-row" data-node={node.id} aria-label={ariaFor(t, props)} onClick={onOpen}>
+    <button type="button" className={`concept-row tier-${scoreTier(p)}`} data-node={node.id} aria-label={ariaFor(t, props)} onClick={onOpen}>
       <CategoryDot graph={graph} cat={node.cat} />
       <span className="concept-row__text">
         <span className="concept-row__title clamp-2">{node.label}</span>

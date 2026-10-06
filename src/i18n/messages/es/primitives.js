@@ -16,6 +16,12 @@ export default {
     region: "Avisos",
     dismiss: "Cerrar aviso",
   },
+  scale: {
+    label: "Escala de nota",
+    progress: "En curso",
+    mastered: "Dominada: el objetivo",
+    extra: "Profundidad extra, opcional",
+  },
   score: {
     rail: "Puntaje {score} de {max}",
   },
