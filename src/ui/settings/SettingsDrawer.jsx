@@ -36,7 +36,7 @@ export default function SettingsDrawer({ open, onClose, initialView }) {
   const title = view === "picker" ? t("settings.drawer.newConnection") : view === "editor" ? (editing?.label || t("settings.drawer.connection")) : t("settings.drawer.title");
   return (
     <Overlay open={open} onClose={onClose} kind="drawer" labelledBy="settings-title">
-      <OverlayHeader id="settings-title" title={title} subtitle={view === "list" ? providerStorageDescription() : undefined} onClose={onClose}
+      <OverlayHeader id="settings-title" title={title} onClose={onClose}
         actions={view !== "list" ? <IconButton icon={ArrowLeft} label={t("common.actions.back")} onClick={back} /> : null} />
       <div className="settings">
         {view === "picker" && <ProviderPicker onPick={(draft) => { setEditing(draft); setView("editor"); }} />}
@@ -44,7 +44,9 @@ export default function SettingsDrawer({ open, onClose, initialView }) {
         {view === "list" && (
           <>
             {error && <Notice tone="error">{error}</Notice>}
-            <section className="settings__section">
+            <section className="settings__section" aria-labelledby="settings-connections">
+              <h3 id="settings-connections" className="settings__h">{t("settings.drawer.connections")}</h3>
+              <p className="t2">{providerStorageDescription()}</p>
               <div role="radiogroup" aria-label={t("settings.drawer.activeConnection")} className="conn-list">
                 <label className={`conn ${!state.activeProfileId ? "is-active" : ""}`}>
                   <input type="radio" name="conn" checked={!state.activeProfileId} onChange={() => activate(null)} />

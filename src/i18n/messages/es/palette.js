@@ -10,7 +10,7 @@ export default {
     progress: "Ver progreso",
     graphView: "Ver el mapa como grafo",
     switchGraph: "Cambiar a {name}",
-    settings: "Conexiones de IA y respaldo",
+    settings: "Ajustes: conexiones de IA, idioma, tema y respaldo",
     switchLanguage: "Cambiar idioma a {language}",
   },
 };
