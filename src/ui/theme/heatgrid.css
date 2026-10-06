@@ -1,0 +1,30 @@
+/* Rejilla de calor (DESIGN v4 §8.1, specs/005-heat-grid) */
+.hgrid { container-type: inline-size; display: grid; gap: var(--sp-3); padding: var(--sp-4) var(--sp-5); border-radius: var(--r-xl); background: var(--surface-1); border: 1px solid var(--line); }
+.hgrid__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2) var(--sp-5); }
+.hgrid__title { font-size: var(--fs-4xl); line-height: var(--lh-4xl); font-weight: 800; letter-spacing: -0.03em; }
+.hgrid__total { font-size: var(--fs-sm); color: var(--text-2); }
+.hgrid__total .mono:first-child { font-size: var(--fs-xl); font-weight: 600; color: var(--text-1); }
+.hgrid__legend { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; font-size: var(--fs-xs); --cell: 12px; }
+.hgrid__legend .t3 { margin: 0 4px; }
+.hgrid__rows { list-style: none; display: grid; gap: 3px; }
+.hgrid__row { display: grid; grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr); align-items: center; gap: var(--sp-4); border-radius: var(--r-md); }
+.hgrid__area { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; height: 1.625rem; padding: 0 var(--sp-2); border-radius: var(--r-md); text-align: left; }
+@media (hover: hover) { .hgrid__area:hover { background: var(--hover-overlay); } }
+.hgrid__area.is-focus { background: color-mix(in oklch, var(--area) 16%, transparent); }
+.hgrid__swatch { width: 12px; height: 12px; border-radius: 3px; background: var(--area); flex-shrink: 0; }
+.hgrid__name { flex: 1; min-width: 0; font-weight: 500; color: var(--text-1); }
+.hgrid__count { font-size: var(--fs-xs); color: var(--text-3); }
+.hgrid__cells { display: grid; gap: 4px; padding: 1px 0; --cell: clamp(18px, calc((100cqi - 17rem - var(--sp-4) - (var(--cols) - 1) * 4px - 2.5rem) / var(--cols)), 34px); }
+.hgrid__cell { display: grid; place-items: center; border-radius: 4px; }
+.hgrid__cell .heat { width: 100%; height: auto; aspect-ratio: 1; }
+@media (hover: hover) { .hgrid__cell:hover .heat { transform: scale(1.18); } }
+.hgrid__cell .heat { transition: transform var(--dur-1) var(--ease-out); }
+
+.hgrid--bare { padding: var(--sp-4) var(--sp-5); }
+@media (max-width: 47.99em) {
+  .hgrid { padding: var(--sp-4); }
+  .hgrid__legend { margin-left: 0; }
+  .hgrid__row { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .hgrid__cells { grid-template-columns: repeat(auto-fill, 18px) !important; --cell: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .hgrid__cell .heat { transition: none; } }

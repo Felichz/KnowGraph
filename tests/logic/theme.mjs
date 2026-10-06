@@ -55,7 +55,7 @@ const dark = tokens("tokens.css");
 const light = tokens("light.css");
 const missing = [...dark].filter((name) => !light.has(name) && !["--code-bg"].includes(name));
 assert.deepEqual(missing, [], `light.css is missing: ${missing.join(", ")}`);
-assert.match(readFileSync(new URL("../../src/ui/theme/tokens.css", import.meta.url), "utf8"), /--bg-app:#100E0C/);
-assert.match(readFileSync(new URL("../../src/ui/theme/light.css", import.meta.url), "utf8"), /--bg-app:#F7F4EF/);
+assert.match(readFileSync(new URL("../../src/ui/theme/tokens.css", import.meta.url), "utf8"), /--bg-app:#0E1117/);
+assert.match(readFileSync(new URL("../../src/ui/theme/light.css", import.meta.url), "utf8"), /--bg-app:#F6F7F9/);
 
 console.log("theme OK");

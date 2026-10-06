@@ -21,8 +21,11 @@
     "check:i18n": "node scripts/i18n/check-i18n.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/figtree": "^5.3.0",
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource-variable/newsreader": "^5.3.0",
     "dompurify": "^3.4.13",
     "dotenv": "^16.4.5",

@@ -2,7 +2,8 @@ import { Lock, PenLine, Sparkles } from "lucide-react";
 import { scoreTier } from "../../logic/studyQueue.js";
 import { useT } from "../../i18n/react.js";
 import { ScoreRail, ScoreValue } from "../primitives/Score.jsx";
-import { CategoryDot } from "../primitives/CategoryDot.jsx";
+import { HeatCell } from "../primitives/HeatCell.jsx";
+import { getCategoryColor } from "../theme/categoryPalette.js";
 import { Skeleton } from "../primitives/Feedback.jsx";
 
 function statusText(t, p) {
@@ -28,12 +29,13 @@ function RouteMark({ level }) {
 
 // Card de concepto de 140px fijos (design-spec D.9).
 export function ConceptCard(props) {
-  const { node, p, level, missing, aiActive, onOpen, loading } = props;
+  const { node, graph, p, level, missing, aiActive, onOpen, loading } = props;
   const t = useT();
   return (
-    <button type="button" className={`concept card tier-${scoreTier(p)}`} data-node={node.id} aria-label={ariaFor(t, props)} onClick={onOpen}>
+    <button type="button" className={`concept card tier-${scoreTier(p)}`} data-node={node.id} aria-label={ariaFor(t, props)} onClick={onOpen}
+      style={{ "--area": getCategoryColor(graph.id, node.cat) }}>
       <span className="concept__meta">
-        <span className="mono t3">#{node.priority}</span>
+        <span className="concept__id"><HeatCell graph={graph} node={node} p={p} size={12} /><span className="mono t3">#{node.priority}</span></span>
         <span className="concept__meta-right">
           {aiActive && <Sparkles size={12} strokeWidth={1.5} className="ai-pulse" aria-hidden="true" />}
           <RouteMark level={level} />
@@ -58,8 +60,9 @@ export function ConceptRow(props) {
   const { node, graph, p, level, aiActive, onOpen, loading } = props;
   const t = useT();
   return (
-    <button type="button" className={`concept-row tier-${scoreTier(p)}`} data-node={node.id} aria-label={ariaFor(t, props)} onClick={onOpen}>
-      <CategoryDot graph={graph} cat={node.cat} />
+    <button type="button" className={`concept-row tier-${scoreTier(p)}`} data-node={node.id} aria-label={ariaFor(t, props)} onClick={onOpen}
+      style={{ "--area": getCategoryColor(graph.id, node.cat) }}>
+      <HeatCell graph={graph} node={node} p={p} size={14} />
       <span className="concept-row__text">
         <span className="concept-row__title clamp-2">{node.label}</span>
         {level === 1 ? <span className="concept-row__mark">{t("map.card.bestNext")}</span> : null}

@@ -97,7 +97,7 @@ export default function GraphView({ model, activeTaskNodeIds }) {
         <Callouts layout={layout} view={vp.view} labeled={labeled} bestId={bestId} selectedId={selected} hoveredId={hovered} graph={graph} />
         <GraphControls zoom={vp.view.k} onZoom={vp.zoomBy} onFit={() => fit()} onBest={toBest} hasBest={Boolean(bestId)} />
         {!mobile && <GraphLegend />}
-        {!mobile && <GraphMinimap layout={layout} states={states} isActive={isActive} bestId={bestId} view={vp.view} size={vp.size} done={done} total={total} onJump={jump} />}
+        {!mobile && <GraphMinimap layout={layout} graph={graph} states={states} isActive={isActive} bestId={bestId} view={vp.view} size={vp.size} done={done} total={total} onJump={jump} />}
         {layout.hasCycle && <Notice tone="warn" className="graph-notice">{t("graph.cycleWarning")}</Notice>}
       </div>
       {node && (

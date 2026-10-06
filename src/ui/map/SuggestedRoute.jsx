@@ -22,7 +22,6 @@ export function SuggestedRoute({ model }) {
   return (
     <section className="continue" aria-labelledby="continue-title">
       <h2 id="continue-title" className="continue__title">{t("map.continue.title")}</h2>
-      {fresh && !introDismissed && <HowItWorks onDismiss={dismissIntro} />}
       <div className="continue__grid">
         {resume && !merged && <ResumeTile resume={resume} graph={graph} />}
         {guidance.primary ? <BestNextTile node={guidance.primary} model={model} resume={merged} /> : (
@@ -34,12 +33,12 @@ export function SuggestedRoute({ model }) {
           </div>
         )}
         <div className="continue__tile">
-          <span className="eyebrow">{t("map.continue.review")}</span>
           <p className="continue__name">{toReview ? t("map.continue.reviewCount", { n: toReview }) : t("map.continue.reviewNone")}</p>
           <p className="t2 continue__why">{toReview ? t("map.continue.reviewHelp") : t("map.continue.reviewNoneHelp")}</p>
           <Button variant="secondary" icon={Layers} onClick={() => actions.setView("flashcards")}>{t("map.continue.openReview")}</Button>
         </div>
       </div>
+      {fresh && !introDismissed && <HowItWorks onDismiss={dismissIntro} />}
     </section>
   );
 }
@@ -49,7 +48,7 @@ function ResumeTile({ resume, graph }) {
   const { node, p, stage } = resume;
   return (
     <article className="continue__tile">
-      <div className="continue__top"><span className="eyebrow">{t("map.continue.resume")}</span><CategoryLabel graph={graph} cat={node.cat} /></div>
+      <div className="continue__top"><span className="pill">{t("map.continue.resume")}</span><CategoryLabel graph={graph} cat={node.cat} /></div>
       <p className="continue__name">{node.label}</p>
       <ResumeState resume={resume} />
       <Button variant="secondary" iconRight={ArrowRight} onClick={() => actions.openCard(node.id, { stage })}>{t("map.continue.resumeAction")}</Button>

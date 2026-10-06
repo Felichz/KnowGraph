@@ -7,6 +7,7 @@ import { CategoryLabel } from "../primitives/CategoryDot.jsx";
 import { Kbd } from "../primitives/Pill.jsx";
 import { Inline } from "../primitives/Markdown.jsx";
 import { actions } from "../state/useWorkspace.js";
+import { getCategoryColor } from "../theme/categoryPalette.js";
 import { TierBadge, answerOf } from "./Flashcard.jsx";
 
 // Modal de flashcards (specs/004-ui-flow §6): pregunta → revelar → idea clave y tu explicación completa,
@@ -30,7 +31,7 @@ export function FlashcardModal({ cards, index, graph, progress, onIndex, onClose
 
   return (
     <Overlay open onClose={onClose} kind="dialog" labelledBy="fmodal-title" className="fmodal" initialFocus=".fmodal__frame">
-      <div className="fmodal__frame" onKeyDown={onKeyDown} tabIndex={-1}>
+      <div className="fmodal__frame" onKeyDown={onKeyDown} tabIndex={-1} style={{ "--area": getCategoryColor(graph.id, node.cat) }}>
         <header className="fmodal__head">
           <CategoryLabel graph={graph} cat={node.cat} />
           <span className="fmodal__pos mono" aria-live="polite">{t("flashcards.modal.position", { n: index + 1, total: cards.length })}</span>

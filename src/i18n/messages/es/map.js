@@ -19,6 +19,18 @@ export default {
       aiActive: "IA trabajando en esta card",
     },
   },
+  heat: {
+    title: "Tu temario",
+    mastered: "dominadas",
+    status: {
+      none: "sin empezar",
+      draft: "borrador sin evaluar",
+      progress: "{score}/120",
+      mastered: "{score}/120 · dominada",
+      extra: "{score}/120 · profundidad extra",
+    },
+    legend: { label: "Escala de color: una celda vacía está sin empezar, una llena está dominada", less: "Menos", more: "Dominada", extra: "Extra" },
+  },
   continue: {
     title: "Continuar",
     resume: "Retoma donde lo dejaste",

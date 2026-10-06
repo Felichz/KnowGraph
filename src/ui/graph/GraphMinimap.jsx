@@ -1,12 +1,13 @@
 import { useRef } from "react";
 import { useT } from "../../i18n/react.js";
 import { NODE_H, NODE_W } from "./graphUtils.js";
+import { getCategoryColor } from "../theme/categoryPalette.js";
 
 const WIDTH = 248;
 
 // Minimapa (specs/003-graph-view §E): el temario completo coloreado por estado y el recuadro
 // de la vista actual. Pulsar o arrastrar mueve la cámara a ese punto.
-export function GraphMinimap({ layout, states, isActive, bestId, view, size, done, total, onJump }) {
+export function GraphMinimap({ layout, graph, states, isActive, bestId, view, size, done, total, onJump }) {
   const t = useT();
   const dragging = useRef(false);
   const s = WIDTH / layout.width;
@@ -30,7 +31,7 @@ export function GraphMinimap({ layout, states, isActive, bestId, view, size, don
         onPointerMove={(event) => { if (dragging.current) jump(event); }}
         onPointerUp={() => { dragging.current = false; }} onPointerCancel={() => { dragging.current = false; }}>
         {[...layout.positions.values()].map((pos) => (
-          <rect key={pos.node.id} x={pos.x * s} y={pos.y * s} width={Math.max(2, NODE_W * s - 1)} height={Math.max(2, NODE_H * s - 1)} rx={1}
+          <rect key={pos.node.id} style={{ "--area": getCategoryColor(graph.id, pos.node.cat) }} x={pos.x * s} y={pos.y * s} width={Math.max(2, NODE_W * s - 1)} height={Math.max(2, NODE_H * s - 1)} rx={1}
             className={`gmini is-${states.get(pos.node.id)?.kind} ${pos.node.id === bestId ? "is-best" : ""} ${isActive(pos.node.id) ? "" : "is-inactive"}`} />
         ))}
         <rect className="gminimap__view" x={vx} y={vy} width={vw} height={vh} rx={3} />

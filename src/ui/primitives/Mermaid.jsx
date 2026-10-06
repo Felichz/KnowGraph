@@ -16,7 +16,7 @@ function themeConfig(theme) {
     themeVariables: {
       darkMode: theme === "dark", background: v("--surface-inset"), primaryColor: v("--surface-2"), primaryTextColor: v("--text-1"),
       primaryBorderColor: v("--diagram-border"), lineColor: v("--text-3"), secondaryColor: v("--surface-1"), tertiaryColor: v("--bg-app"),
-      fontFamily: "Geist Variable, ui-sans-serif, system-ui", fontSize: "14px",
+      fontFamily: "Figtree Variable, ui-sans-serif, system-ui", fontSize: "14px",
     },
     flowchart: { htmlLabels: true, curve: "basis" },
   };
