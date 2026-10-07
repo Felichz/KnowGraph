@@ -1,7 +1,8 @@
 import { ArrowRight, CheckCircle2, Layers } from "lucide-react";
 import { useLocale, useT } from "../../i18n/react.js";
 import { getLessonContext } from "../../logic/guidance.js";
-import { resumeTarget, reviewCount } from "../../logic/studyQueue.js";
+import { dueNodes, resumeTarget } from "../../logic/studyQueue.js";
+import { useReviews } from "../state/reviewStore.js";
 import { Button } from "../primitives/Button.jsx";
 import { CategoryLabel } from "../primitives/CategoryDot.jsx";
 import { ScoreValue } from "../primitives/Score.jsx";
@@ -15,7 +16,8 @@ export function SuggestedRoute({ model }) {
   const { guidance, graph, progress, visible } = model;
   const [introDismissed, dismissIntro] = useIntroDismissed();
   const resume = resumeTarget(visible, progress);
-  const toReview = reviewCount(visible, progress);
+  const reviews = useReviews(graph.id);
+  const toReview = dueNodes(visible, progress, reviews.entries, reviews.today).length;
   const fresh = !resume && progress.done === 0 && toReview === 0;
   // Si lo que retomarías es también el mejor siguiente, una sola tile con el estado y la etapa de retomar.
   const merged = resume && resume.node.id === guidance.primary?.id ? resume : null;
