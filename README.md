@@ -6,39 +6,39 @@ A study workspace for senior React and Rails interviews: 142 concepts in a depen
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-demo-dark.webp">
-  <img src="docs/screenshots/knowgraph-demo-light.webp" alt="Recording of the KnowGraph map view filtering by focus area (State and data, then Effects and async, then All) as the suggested route and the concept cards change. KnowGraph map view. A left sidebar switches between the React and Rails graphs and lists eleven focus areas with mastered counts. The main column shows the suggested route, with the current concept 'Mental model: UI as a function of state' and the concepts it unlocks next, followed by concept cards with score bars, two of them scored 105 and 115 out of 120." width="100%">
+  <img src="docs/screenshots/knowgraph-demo-light.webp" alt="Recording of the KnowGraph map. The top panel, 'Your map', is a heat grid: one row per focus area (eleven for React) and one square cell per concept, filled with the area's color as the concept is mastered; the Mental model row is fully lit, State and data is partly lit and the rest are empty outlines. The pointer moves over cells and a tooltip names each concept with its score, then a click on the State and data row focuses that area and its concept cards appear below. Under the grid, a Continue section shows the best next concept, 'Controlled and uncontrolled forms' at 72 out of 120 with a Resume button, and the number of flashcards due for review today." width="100%">
 </picture>
 
 ## What it is
 
 I built KnowGraph to prepare for my own senior interviews. The curriculum is two graphs: React (101 concepts, 212 prerequisite links, 11 focus areas, 16 milestones, 4 seniority levels) and Rails (41 concepts, 54 links). A link means one concept gives you the mental model for the next; it suggests an order but never blocks you from studying something out of sequence. The interface is in English by default, with a Spanish version (EN / ES switcher; the curriculum and the AI answers follow the selected language), and still uses the project's working title, Learning Workspace.
 
-Every concept opens a four-stage session: **Read** the card (explanation, naive vs. senior code, pitfalls, sources, optional read-aloud), talk it through with a Socratic **Mentor**, **Paraphrase** it from memory with dictation and a live coach, then **Evaluate**: an LLM grades the explanation against a four-part rubric (accuracy, causality and trade-offs, application, completeness). Scores run from 0 to 120. Up to 100 measures coverage of the essential material; 101-120 is a separate excellence tier that only opens after full coverage, to push back on the grade inflation LLMs tend toward ([ADR 0006](docs/adr/0006-dual-tier-evaluation-scale-0-120.md)). Everything is local-first and bring-your-own-key.
+Every concept opens a four-stage session: **Read** the card (explanation, naive vs. senior code, pitfalls, sources, optional read-aloud), talk it through with a Socratic **Mentor**, **Paraphrase** it from memory with dictation and a live coach, then **Evaluate**: an LLM grades the explanation against a four-part rubric (accuracy, causality and trade-offs, application, completeness). Scores run from 0 to 120. Up to 100 measures coverage of the essential material; 101-120 is a separate excellence tier that only opens after full coverage, to push back on the grade inflation LLMs tend toward ([ADR 0006](docs/adr/0006-dual-tier-evaluation-scale-0-120.md)). Everything is local-first and bring-your-own-key. The map opens on a heat grid where every concept is a cell that fills with its area's color as you master it, and flashcards run on spaced repetition so worked concepts come back right before you would forget them.
 
 <table>
   <tr>
     <td width="50%" valign="top">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-card-dark.webp">
-        <img src="docs/screenshots/knowgraph-card-light.webp" alt="Study session on the Read stage for the concept 'Mental model: UI as a function of state'. Tabs for the four stages (Read, AI mentor, Paraphrase, Evaluate) run across the top next to a score of 85 out of 120. The reading column has a serif summary, a 'why it matters' callout, body text and a Counter component code sample; a side rail lists where the concept fits, what it needs, what it unlocks and related interview questions." width="100%">
+        <img src="docs/screenshots/knowgraph-card-light.webp" alt="Study session on the Read stage for 'Controlled and uncontrolled forms'. The header is tinted in the State and data area color and shows the concept's heat cell and a score of 72 out of 120. Stage tabs (Read, AI mentor, Paraphrase with a Draft badge, Evaluate with 72/120) run across the top. The reading column has a large summary sentence, a tinted 'why it matters' note, body text with inline code and a controlled input code sample; a side rail lists where the concept fits, what it requires, what it unlocks and a related interview question." width="100%">
       </picture>
-      <br><sub>Study session, Read stage. Tabs for the other three stages sit above the text.</sub>
+      <br><sub>Study session, Read stage, tinted in the concept's area color.</sub>
     </td>
     <td width="50%" valign="top">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-graph-demo-dark.webp">
-        <img src="docs/screenshots/knowgraph-graph-demo-light.webp" alt="Recording of the graph view of the React curriculum, laid out in columns by dependency depth. The pointer moves across several concepts; each hover brings its prerequisites and the concepts it unlocks forward, dims the rest and names them in a tooltip. A legend at the bottom explains the suggested route, prerequisite and mastery markers." width="100%">
+        <img src="docs/screenshots/knowgraph-graph-demo-light.webp" alt="Recording of the dependency graph of the React curriculum, laid out in columns by stage with a mastered/total count over each column. Mastered concepts are tinted in their area color with a check, ready ones have a solid outline and blocked ones a dashed outline with a lock. As the pointer moves across concepts, each one lights its full chain of prerequisites and the concepts it unlocks while the rest dims; a side panel explains why the selected concept comes now, what it needs and what it unlocks, with a Study now button. The view then zooms out to the whole map and flies back to the best next concept; a minimap in the corner shows the whole curriculum." width="100%">
       </picture>
-      <br><sub>Dependency graph. Hovering a concept brings its prerequisites and dependents forward.</sub>
+      <br><sub>Dependency graph. Hovering a concept lights its whole prerequisite chain.</sub>
     </td>
   </tr>
   <tr>
     <td colspan="2" align="center">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-progress-dark.webp">
-        <img src="docs/screenshots/knowgraph-progress-light.webp" alt="Progress view for the React graph: 2 of 101 cards mastered, a note that a card counts as mastered at 100 out of 120, four seniority levels (Professional React, Senior frontend, Senior Design Systems, Frontend Lead) with per-level counts, and a list of milestones, each with its next suggested concept." width="50%">
+        <img src="docs/screenshots/knowgraph-progress-light.webp" alt="Progress view for the React graph: 12 of 101 cards mastered, with a note that a card counts as mastered at 100 out of 120, then the heat grid of all areas and four seniority levels (Professional React, Senior frontend, Senior Design Systems, Frontend Lead) with per-level counts." width="50%">
       </picture>
-      <br><sub>Progress by seniority level and milestone.</sub>
+      <br><sub>Progress: the heat grid, seniority levels and milestones.</sub>
     </td>
   </tr>
 </table>
@@ -48,13 +48,13 @@ Every concept opens a four-stage session: **Read** the card (explanation, naive 
 - **Headless core, React as the view.** `src/logic/learningController.js` is a framework-free store that React reads through `useSyncExternalStore` (`src/hooks/useController.js`). It replaced a single 2,642-line `App.jsx` (kept in `legacy/`), and its logic is tested in plain Node under `tests/logic/`. Files in the presentation layer (`src/ui/`) stay under 150 lines each. See [ADR 0005](docs/adr/0005-headless-state-machine-use-sync-external-store.md) and [ADR 0008](docs/adr/0008-strict-150-line-file-limit-and-ci-linter.md).
 - **Rendering JSON while it streams.** The evaluation is structured JSON streamed over SSE. On the gateway, `server/ai/partialJson.js` and `server/ai/streamBlocks.js` scan the incomplete JSON and emit finished fields and growing text leaves as separate events, so rubric bars and feedback fill in while the model is still writing. The score comes from a small request without reasoning, sent before the longer feedback request (`server/ai/evaluator.js`), and Zod validates every final object (`server/ai/schemas.js`). The browser reads the stream with `fetch` and a `ReadableStream` reader in `src/ai/client.js`.
 - **Bring-your-own-key gateway.** One Node handler (`server/index.js`) runs as a local process, as a Vercel function (`api/ai/[...slug].js`) or as a child process of the Electron app. The user's provider profile travels with each request, is validated with Zod and is never written to disk or logged. In production the gateway only accepts HTTPS endpoints that resolve to public IPs (`server/ai/providers.js`). Any OpenAI-compatible Chat Completions endpoint works; the presets live in `shared/providerCatalog.js`. See ADRs [0001](docs/adr/0001-llm-provider-registry.md) to [0004](docs/adr/0004-user-owned-local-harness-and-desktop-electron.md).
-- **Local-first storage.** Attempts, drafts and live reviews are stored in IndexedDB through `idb` (`src/ai/learningStore.js`); preferences and provider connections sit in `localStorage`. There is no account and no remote database. A JSON backup exports and restores all of it, saved provider keys included (`src/ai/backup.js`).
+- **Local-first storage.** Attempts, drafts and live reviews are stored in IndexedDB through `idb` (`src/ai/learningStore.js`); preferences, provider connections and the flashcard review schedule sit in `localStorage`. There is no account and no remote database. A JSON backup exports and restores all of it, saved provider keys included (`src/ai/backup.js`).
 - **Work that outlives the screen.** `src/ai/backgroundTaskManager.js` keeps evaluations running after you leave the card, reports them in a global HUD with open and cancel actions (`src/ui/hud/TaskHud.jsx`), and syncs them across tabs with `BroadcastChannel`.
 - **Graph layout without D3.** `src/logic/topologicalLayout.js` ranks concepts with Kahn's algorithm (tolerating cycles), then runs eight barycenter sweeps to reduce edge crossings. The result is plain SVG with pan and zoom (`src/ui/graph/`).
 
 ## Stack
 
-React 19 and Vite 6 in plain JavaScript (no TypeScript) · hand-written CSS on design tokens (`src/ui/theme/tokens.css`, with the light edition in `light.css`; the system setting picks one until you choose) · Geist and Newsreader · Mermaid (lazy-loaded) and Prism for diagrams and code · Node gateway with Zod and server-sent events · IndexedDB via `idb` · Web Speech API for read-aloud and dictation · Playwright · Electron for the optional desktop build · Vercel for hosting.
+React 19 and Vite 6 in plain JavaScript (no TypeScript) · hand-written CSS on design tokens (`src/ui/theme/tokens.css`, with the light edition in `light.css`; the system setting picks one until you choose) · Bricolage Grotesque, Figtree and JetBrains Mono · Mermaid (lazy-loaded) and Prism for diagrams and code · Node gateway with Zod and server-sent events · IndexedDB via `idb` · Web Speech API for read-aloud and dictation · Playwright · Electron for the optional desktop build · Vercel for hosting.
 
 ## Getting started
 
