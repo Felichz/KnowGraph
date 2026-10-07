@@ -13,9 +13,9 @@ test.describe("Internationalization (EN default, ES via switcher)", () => {
     await expect(nav).toContainText("Map");
     await expect(nav).toContainText("Progress");
     await expect(page.locator(".topbar")).toContainText("React interviews");
-    await expect(page.locator("main")).toContainText("Suggested route", { ignoreCase: true });
+    await expect(page.locator("#continue-title")).toHaveText("Continue");
     await expect(page.locator("main")).toContainText("Mental model & components");
-    await expect(page.locator("main")).not.toContainText("Ruta sugerida", { ignoreCase: true });
+    await expect(page.locator("main")).not.toContainText("Continuar");
   });
 
   test("top-bar switcher changes to Spanish and the choice persists", async ({ page }) => {
@@ -23,7 +23,7 @@ test.describe("Internationalization (EN default, ES via switcher)", () => {
     await page.locator(".topbar__lang").getByRole("radio", { name: "ES", exact: true }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
     await expect(page.locator(".sidebar__nav")).toContainText("Mapa");
-    await expect(page.locator("main")).toContainText("Ruta sugerida", { ignoreCase: true });
+    await expect(page.locator("#continue-title")).toHaveText("Continuar");
     await expect(page.locator("main")).toContainText("Modelo mental & componentes");
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("lang", "es");

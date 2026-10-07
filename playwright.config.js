@@ -15,7 +15,8 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    // PW_CHANNEL=msedge (o chrome) usa un navegador ya instalado en lugar del chromium descargado por Playwright.
+    { name: "chromium", use: { ...devices["Desktop Chrome"], ...(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {}) } },
   ],
   globalSetup: "./tests/e2e/setup.mjs",
 });

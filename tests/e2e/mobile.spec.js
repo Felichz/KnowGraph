@@ -1,87 +1,115 @@
 import { test, expect } from "@playwright/test";
+import { failOnPageError } from "./helpers.js";
 
-// These specs assert the Spanish interface: English is the default, so select Spanish first
-// (tests/e2e/i18n.spec.js covers the English default and the switcher).
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("learning-workspace:locale", "es"));
-});
+// User Story 7: phone ergonomics — bottom dock, Continue first, focus sheet.
+test.describe("Mobile ergonomics & bottom dock (User Story 7)", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
 
-test.describe("Mobile Ergonomics & Bottom Navigation (User Story 7)", () => {
-  test.use({ viewport: { width: 375, height: 667 } }); // Viewport móvil estándar
+  test.beforeEach(async ({ page }) => {
+    failOnPageError(page);
+    await page.goto("/react");
+  });
 
-  test("muestra la barra inferior fija en móvil y permite navegar entre vistas con un toque", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("domcontentloaded");
+  test("shows the bottom dock instead of the sidebar and puts Continue above the grid", async ({ page }) => {
+    const dock = page.getByRole("navigation", { name: "Mobile main navigation" });
+    await expect(dock).toBeVisible();
+    await expect(dock.getByRole("button")).toHaveText(["Map", "Flashcards", "Progress", "Search", "Settings"]);
+    await expect(dock.getByRole("button", { name: "Map" })).toHaveAttribute("aria-current", "page");
+    await expect(page.locator(".sidebar")).toHaveCount(0);
 
-    const bottomNav = page.locator("nav.mobile-bottom-nav");
-    await expect(bottomNav).toBeVisible();
+    const cont = await page.locator(".continue").boundingBox();
+    const grid = await page.locator(".hgrid").boundingBox();
+    expect(cont.y).toBeLessThan(grid.y);
+    // No horizontal page scroll at phone width.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  });
 
-    // 1. Tocar en Flashcards
-    await bottomNav.getByRole("button", { name: "Flashcards" }).click();
-    await expect(page.locator("div").filter({ hasText: /Tocar para ver respuesta/ }).first()).toBeVisible();
+  test("navigates every dock destination with one tap", async ({ page }) => {
+    const dock = page.getByRole("navigation", { name: "Mobile main navigation" });
 
-    // 2. Tocar en Progreso (Seniority)
-    await bottomNav.getByRole("button", { name: "Progreso" }).click();
-    const progressPanel = page.locator('div[aria-label="Panel de Seniority y Milestones"]');
-    await expect(progressPanel).toBeVisible();
-    await progressPanel.locator("button").filter({ hasText: "×" }).click();
-    await expect(progressPanel).not.toBeVisible();
+    await dock.getByRole("button", { name: "Flashcards" }).click();
+    await expect(page).toHaveURL(/\?view=flashcards$/);
+    await expect(page.locator("button.fcard").first()).toBeVisible();
 
-    // 3. Tocar en Buscar (Command Palette)
-    await bottomNav.getByRole("button", { name: "Buscar" }).click();
-    const palette = page.locator('div[role="dialog"]');
+    await dock.getByRole("button", { name: "Progress" }).click();
+    await expect(page.locator(".progress__hero")).toContainText(/0\s*\/101 cards mastered/);
+
+    await dock.getByRole("button", { name: "Search" }).click();
+    const palette = page.getByRole("dialog", { name: "Search" });
     await expect(palette).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(palette).not.toBeVisible();
+    await expect(palette).toHaveCount(0);
 
-    // 4. Tocar en Ajustes (BYOK Modal)
-    await bottomNav.getByRole("button", { name: "Ajustes" }).click();
-    const settingsModal = page.locator('div[role="dialog"]');
-    await expect(settingsModal).toBeVisible();
-    await expect(settingsModal).toContainText("Proveedores de IA y Respaldo");
+    await dock.getByRole("button", { name: "Settings" }).click();
+    const settings = page.getByRole("dialog", { name: "Settings" });
+    await expect(settings).toContainText("AI connections");
     await page.keyboard.press("Escape");
-    await expect(settingsModal).not.toBeVisible();
+    await expect(settings).toHaveCount(0);
 
-    // 5. Volver a Grafo
-    await bottomNav.getByRole("button", { name: "Grafo" }).click();
-    await expect(page.locator("main article").first()).toBeVisible();
+    await dock.getByRole("button", { name: "Map" }).click();
+    await expect(page).toHaveURL(/\/react$/);
+    await expect(page.locator(".hgrid")).toBeVisible();
+  });
+
+  test("the focus sheet picks an area and lists its concepts as rows", async ({ page }) => {
+    await page.getByRole("button", { name: "Focus: all" }).click();
+    const sheet = page.getByRole("dialog", { name: "Study focus" });
+    await sheet.getByRole("radio", { name: /State & data/ }).click();
+    await expect(sheet).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Focus: State & data" })).toBeVisible();
+    await expect(page.locator("button.concept-row")).toHaveCount(11);
+
+    await page.locator('button.concept-row[data-node="state_updates"]').click();
+    await expect(page.getByRole("region", { name: "Study: State, snapshots and batching" })).toBeVisible();
+  });
+
+  test("the top bar toggles graph mode with a compact concept sheet", async ({ page }) => {
+    await page.getByRole("button", { name: "View as graph" }).click();
+    await expect(page.locator(".graph-svg")).toBeVisible();
+    const sheet = page.getByRole("complementary", { name: "Selected concept" });
+    await expect(sheet).toContainText("Modern JavaScript for reading React");
+    await expect(sheet.getByRole("button", { name: "Study now" })).toBeVisible();
+    await page.getByRole("button", { name: "View as list" }).click();
+    await expect(page.locator(".hgrid")).toBeVisible();
   });
 });
 
-test.describe("Bidirectional URL Routing & History (User Story 1 Acceptance 5)", () => {
-  test("abre directamente la card solicitada vía URL /:graph/card/:nodeId", async ({ page }) => {
-    await page.goto("/react/card/state_updates");
-    await page.waitForLoadState("domcontentloaded");
-
-    const modal = page.locator('div[role="dialog"]');
-    await expect(modal).toBeVisible();
-    await expect(modal).toContainText("Estado, snapshots y batching");
-
-    // Cerrar el modal actualiza la URL a /react
-    const closeBtn = modal.getByRole("button", { name: "Cerrar" });
-    await closeBtn.click();
-    await expect(modal).not.toBeVisible();
-    expect(page.url()).toContain("/react");
+// User Story 1 (acceptance 5): every card has a URL and the browser history works.
+test.describe("URL routing & history (User Story 1 Acceptance 5)", () => {
+  test.beforeEach(async ({ page }) => {
+    failOnPageError(page);
   });
 
-  test("soporta navegación de historial popstate (Atrás / Adelante del navegador)", async ({ page }) => {
+  test("opens the requested card directly from /:graph/card/:nodeId and closing returns to /react", async ({ page }) => {
+    await page.goto("/react/card/state_updates");
+    const study = page.getByRole("region", { name: "Study: State, snapshots and batching" });
+    await expect(study).toBeVisible();
+    await study.getByRole("button", { name: "Close (Esc)" }).click();
+    await expect(study).toHaveCount(0);
+    await expect(page).toHaveURL(/\/react$/);
+    await expect(page.locator(".hgrid")).toBeVisible();
+  });
+
+  test("an unknown card URL falls back to the map", async ({ page }) => {
+    await page.goto("/react/card/does_not_exist");
+    await expect(page).toHaveURL(/\/react$/);
+    await expect(page.locator(".study")).toHaveCount(0);
+    await expect(page.locator(".hgrid")).toBeVisible();
+  });
+
+  test("supports browser Back / Forward between the map and a card", async ({ page }) => {
     await page.goto("/react");
-    await page.waitForLoadState("domcontentloaded");
+    await page.locator('.hgrid__cell[data-node="state_updates"]').click();
+    const study = page.getByRole("region", { name: "Study: State, snapshots and batching" });
+    await expect(study).toBeVisible();
+    await expect(page).toHaveURL(/\/react\/card\/state_updates$/);
 
-    // Abrir un nodo
-    const nodeCard = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
-    await nodeCard.click();
-
-    const modal = page.locator('div[role="dialog"]');
-    await expect(modal).toBeVisible();
-    expect(page.url()).toContain("/react/card/state_updates");
-
-    // Botón Atrás del navegador
     await page.goBack();
-    await expect(modal).not.toBeVisible();
+    await expect(study).toHaveCount(0);
+    await expect(page).toHaveURL(/\/react$/);
 
-    // Botón Adelante del navegador
     await page.goForward();
-    await expect(modal).toBeVisible();
+    await expect(study).toBeVisible();
+    await expect(page).toHaveURL(/\/react\/card\/state_updates$/);
   });
 });
