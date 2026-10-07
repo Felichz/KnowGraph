@@ -1,7 +1,7 @@
 ---
 system:
   name: "Learning Workspace — Design System v4"
-  version: "4.0.0"
+  version: "4.1.0"
   creative_north_star: "Heat grid"
   aesthetic: "Cool ink/paper neutrals; eleven owned area hues used as fields; interaction in pure ink/paper contrast, no brand accent. Dark (reference) and light editions"
   platform: "Web + Electron (reference desktop 1440×900) · Mobile web (390×844)"
@@ -357,12 +357,12 @@ Lorem ipsum, "Card title", "User 1" are forbidden.
 
 ## 13. Known divergences (recorded, not canonized)
 These exist in the build but are **not** system rules; new surfaces must not copy them.
-- **Gold fills on extra**: `.rail__extra` and the graph node's extra segment (`.gnode__extra`) still fill with `--gold-fill`; `.gnode.is-extra .gnode__icon`, `.glegend__star`, `.score-value__star` use `--gold` (glyph use is allowed). Coach "partial" icons, lesson takeaway icon, practice streak and the evaluate "optional depth" focus (`--gold-soft`) also use gold outside extra.
-- **Green fallbacks**: Progress view bands (`.band.is-complete` border/icon), `.rail-link__done`, coach "covered" icon and the production code-compare border still use `--mastery`; any rail/pill without an `--area` ancestor falls back to green.
-- **Kicker**: the graph node panel/sheet shows an eyebrow ("Stage n") above the node title.
-- **Display face as reading face**: `--font-read` = Bricolage, so the paraphrase editor and evaluation draft (`--font-read`) set long-form writing in the display face, not Figtree.
+- **Gold outside the study session**: `.rail__extra` and the graph node's extra segment (`.gnode__extra`) still fill with `--gold-fill`; star glyphs (`.score-value__star`, `.glegend__star`, graph extra icon) use `--gold` (glyph use is allowed). Inside `.study` gold/green resolve to the area hue (world.css).
+- **Green as success semantics**: success toasts/notices and the HUD "completed" state use `--mastery` as a status colour, not as mastery fill.
+- **Pills** are fully rounded (`--r-full`), outside the 4–8px radii of cells, cards and buttons.
 
 ## Changelog
+- **4.1.0** (2026-10-06): study session in the identity (area-tinted header with the concept's heat cell; mastery/extra resolve to the area hue inside `.study`); *the cell lights up* — `.heat.is-lit` keyframe flash + toast when an evaluation crosses 100 (opacity-only with reduced motion); `--font-read` = Figtree (long-form writing), Bricolage only for headlines via `.serif`/headings; map shows only the grid and Continue until an area is picked; spaced-repetition review queue in Flashcards ("Due today").
 - **4.0.0** (2026-10-06): *Heat grid* replaces *Night Study*. Warm graphite → cool ink neutrals (hue ≈ 220°) in both themes. Iris accent removed: `--accent` = ink/paper, inverted "Best next" pill, ink links and focus. Eleven area hues (`--cat-cyan…--cat-teal`, new set incl. blue, coral, orange, yellow, lime, green, teal) become fields (cells, square swatches, tints) instead of 8px dots. Mastery is area-tinted; green and gold no longer fill mastery/extra (extra = notch or ★). New heat cell (5 levels, srgb mix), heat grid as the map's first viewport with the NOW ring, `--cell-empty`, ink /120 scale. Geist + Newsreader → Bricolage Grotesque (display) + Figtree (UI/reading) + JetBrains Mono. Radii tightened to the square world (4/6/8, dialogs 12). Mobile shows Continue above the grid.
 - **3.2.0**: light theme *Day Study*, theme choice and pre-paint script (still in force, §1.9).
 - **3.1.x**: segmented `--surface-2`, `--move-1…4`; Phase 0 seal.
