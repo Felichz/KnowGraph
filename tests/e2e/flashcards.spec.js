@@ -1,165 +1,157 @@
 import { test, expect } from "@playwright/test";
+import { REVIEW_KEY, failOnPageError, seedFixture } from "./helpers.js";
 
-// These specs assert the Spanish interface: English is the default, so select Spanish first
-// (tests/e2e/i18n.spec.js covers the English default and the switcher).
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("learning-workspace:locale", "es"));
-});
+const filters = (page) => page.getByRole("radiogroup", { name: "Filter flashcards" });
+const filter = (page, name) => filters(page).getByRole("radio", { name });
 
-test.describe("Flashcards View & Active Recall (User Story 6)", () => {
+// User Story 6: flashcards grid, navigable modal, self-rated practice and spaced repetition.
+test.describe("Flashcards & active recall (User Story 6)", () => {
   test.beforeEach(async ({ page }) => {
-    page.on("pageerror", (err) => {
-      throw new Error(`Uncaught browser exception: ${err.message}\n${err.stack}`);
-    });
-    await page.goto("/");
-    await page.waitForLoadState("domcontentloaded");
-
-    // Conmutar a la vista de Flashcards
-    const flashcardsBtn = page.locator("header button").filter({ hasText: /^Flashcards$/ });
-    await flashcardsBtn.click();
+    failOnPageError(page);
+    await page.goto("/react?view=flashcards");
+    await expect(page.getByRole("heading", { name: "Review" })).toBeVisible();
   });
 
-  test("renderiza la cuadrícula de flashcards con contador y filtros de dominio", async ({ page }) => {
-    // Verificar contador inicial
-    const counter = page.locator("span").filter({ hasText: /Mostrando \d+ de \d+ flashcards/ });
-    await expect(counter).toBeVisible();
+  test("renders the grid with counted filters and an empty state with 'Show all'", async ({ page }) => {
+    // Without progress nothing is due, so the view opens on "All".
+    await expect(filter(page, "All · 101")).toHaveAttribute("aria-checked", "true");
+    await expect(filter(page, "Due today · 0")).toBeVisible();
+    await expect(filter(page, "Not attempted · 101")).toBeVisible();
+    await expect(filter(page, "Below 100 · 0")).toBeVisible();
+    await expect(filter(page, "Mastered · 0")).toBeVisible();
+    await expect(page.locator("button.fcard")).toHaveCount(101);
+    await expect(page.getByRole("button", { name: "Practice 101" })).toBeEnabled();
 
-    // Botones de filtro presentes
-    await expect(page.getByRole("button", { name: "Todas" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Sin intento" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Base < 100" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Base dominada (100+)" })).toBeVisible();
+    await filter(page, "Mastered · 0").click();
+    await expect(page.locator("button.fcard")).toHaveCount(0);
+    await expect(page.getByText("No cards match this filter")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Practice 0" })).toBeDisabled();
+    await page.getByRole("button", { name: "Show all" }).click();
+    await expect(filter(page, "All · 101")).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator("button.fcard")).toHaveCount(101);
 
-    // Al inicio (sin intentos), "Sin intento" debe tener todas o la mayoría
-    await page.getByRole("button", { name: "Sin intento" }).click();
-    await expect(page.locator("div").filter({ hasText: /Tocar para ver respuesta/ }).first()).toBeVisible();
-
-    // "Base dominada (100+)" debe estar vacío inicialmente
-    await page.getByRole("button", { name: "Base dominada (100+)" }).click();
-    await expect(page.locator("body")).toContainText("No hay flashcards que coincidan con este filtro");
-
-    // Restaurar con "Todas"
-    await page.getByRole("button", { name: "Todas" }).click();
-    await expect(page.locator("div").filter({ hasText: /Tocar para ver respuesta/ }).first()).toBeVisible();
+    await filter(page, "Due today · 0").click();
+    await expect(page.getByText("Nothing due today")).toBeVisible();
   });
 
-  test("voltea la tarjeta en 3D mostrando anverso (pregunta) y reverso (respuesta técnica clave)", async ({ page }) => {
-    const firstCard = page.getByTestId("flashcard-card").first();
-    await expect(firstCard).toBeVisible();
+  test("card modal reveals the answer and moves between cards with buttons and keys", async ({ page }) => {
+    const first = page.locator("button.fcard").first();
+    const title = (await first.locator(".fcard__title").textContent()).trim();
+    await first.click();
 
-    // Tocar anverso para voltear
-    await firstCard.click();
+    // The dialog is labelled by the current card's title, which changes while navigating.
+    await expect(page.getByRole("dialog", { name: title })).toBeVisible();
+    const modal = page.getByRole("dialog").filter({ has: page.locator(".fmodal__frame") });
+    await expect(modal.locator(".fmodal__pos")).toHaveText("1 / 101");
+    await expect(modal.getByRole("button", { name: "Previous card" })).toBeDisabled();
 
-    // Verificar contenido del reverso
-    await expect(firstCard.locator("span").filter({ hasText: "RESPUESTA TÉCNICA CLAVE" })).toBeVisible();
-    await expect(firstCard.locator("span").filter({ hasText: "Volver a voltear ↺" })).toBeVisible();
+    await modal.getByRole("button", { name: /Show answer/ }).click();
+    await expect(modal.getByRole("heading", { name: "Key idea" })).toBeVisible();
+    await expect(modal.getByText("You haven't written an explanation for this card yet.")).toBeVisible();
 
-    // Tocar de nuevo para volver al anverso
-    await firstCard.click();
-    await expect(firstCard.locator("span").filter({ hasText: "Tocar para ver respuesta ↺" })).toBeVisible();
+    await modal.getByRole("button", { name: "Next card" }).click();
+    await expect(modal.locator(".fmodal__pos")).toHaveText("2 / 101");
+    await expect(modal.getByRole("heading", { name: "Key idea" })).toHaveCount(0);
+
+    await page.keyboard.press("Space");
+    await expect(modal.getByRole("heading", { name: "Key idea" })).toBeVisible();
+    await page.keyboard.press("Space");
+    await expect(modal.getByRole("heading", { name: "Key idea" })).toHaveCount(0);
+    await page.keyboard.press("ArrowRight");
+    await expect(modal.locator(".fmodal__pos")).toHaveText("3 / 101");
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("ArrowLeft");
+    await expect(modal.locator(".fmodal__pos")).toHaveText("1 / 101");
+    await expect(modal.locator("#fmodal-title")).toHaveText(title);
+
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".fmodal")).toHaveCount(0);
   });
 
-  test("permite saltar directamente al modal de estudio completo desde una tarjeta", async ({ page }) => {
-    // Voltear la primera flashcard
-    const firstCard = page.getByTestId("flashcard-card").first();
-    await firstCard.click();
+  test("'Study' in the card modal opens the study session and closing returns to flashcards", async ({ page }) => {
+    await page.getByRole("button", { name: "State, snapshots and batching: open flashcard" }).click();
+    const modal = page.getByRole("dialog", { name: "State, snapshots and batching" });
+    await modal.getByRole("button", { name: "Study", exact: true }).click();
+    await expect(modal).toHaveCount(0);
+    await expect(page).toHaveURL(/\/react\/card\/state_updates\?view=flashcards$/);
+    await expect(page.locator("#study-tab-read")).toHaveAttribute("aria-selected", "true");
 
-    // Presionar botón "Estudiar card →" dentro de la tarjeta volteada
-    const studyCardBtn = firstCard.getByRole("button", { name: "Estudiar card →" });
-    await expect(studyCardBtn).toBeVisible();
-    await studyCardBtn.click();
-
-    // El StudyModal debe abrirse en la etapa 01 Leer
-    const modal = page.locator('div[role="dialog"]');
-    await expect(modal).toBeVisible();
-    await expect(modal).toContainText("MODAL DE ESTUDIO");
-    await expect(modal).toContainText("01");
-    await expect(modal).toContainText("Leer");
-
-    // Cerrar el modal y verificar que regresa a la vista de Flashcards
-    await modal.getByRole("button", { name: "Cerrar" }).click();
-    await expect(modal).not.toBeVisible();
-    await expect(firstCard).toBeVisible();
+    await page.getByRole("button", { name: "Close (Esc)" }).click();
+    await expect(page.locator(".study")).toHaveCount(0);
+    await expect(page).toHaveURL(/\/react\?view=flashcards$/);
+    await expect(page.locator("button.fcard").first()).toBeVisible();
   });
 
-  test("abre la vista de flashcards mediante acción rápida en la Command Palette (Ctrl+K)", async ({ page }) => {
-    // Volver primero al Grafo
-    await page.locator("header button").filter({ hasText: /^Grafo$/ }).click();
-    await expect(page.locator("main article").first()).toBeVisible();
-
-    // Abrir Command Palette
+  test("the command palette jumps to flashcards from the map", async ({ page }) => {
+    await page.getByRole("navigation", { name: "Views" }).getByRole("button", { name: "Map" }).click();
+    await expect(page.locator(".hgrid")).toBeVisible();
     await page.keyboard.press("Control+k");
-    const input = page.getByPlaceholder(/Buscar concepto o acción/i);
-    await expect(input).toBeVisible();
-
-    // Filtrar la acción de flashcards
-    await input.fill("flashcards");
-    const flashcardOption = page.locator('div[role="dialog"]').getByText(/Ir a modo Flashcards/i);
-    await expect(flashcardOption).toBeVisible();
-    await flashcardOption.click();
-
-    // Verificar que ahora estamos en la vista de Flashcards
-    await expect(page.locator("div").filter({ hasText: /Tocar para ver respuesta/ }).first()).toBeVisible();
+    const palette = page.getByRole("dialog", { name: "Search" });
+    await palette.getByRole("combobox").fill("flashcards");
+    await palette.getByRole("option", { name: "Go to flashcards" }).click();
+    await expect(page).toHaveURL(/\?view=flashcards$/);
+    await expect(page.locator("button.fcard").first()).toBeVisible();
   });
 
-  test("renderiza tarjetas con puntajes numéricos y filtra por maestría con estado hidratado (Universal State 2)", async ({ page }) => {
-    // 1. Sembrar fixture hidratada directamente en IndexedDB
-    const fs = await import("node:fs");
-    const hydratedFixture = JSON.parse(
-      fs.readFileSync(new URL("../fixtures/hydrated-state.json", import.meta.url), "utf8")
-    );
+  test("practice: reveal, rate with keys 1–4 and persist the review schedule", async ({ page }) => {
+    await filter(page, "All · 101").click();
+    await page.getByRole("button", { name: "Practice 101" }).click();
+    const dialog = page.getByRole("dialog", { name: "Practice" });
+    await expect(dialog.locator(".overlay-header__subtitle")).toHaveText("Card 1 of 101");
+    const firstCard = (await dialog.locator(".practice__q").textContent()).trim();
 
-    await page.evaluate((backup) => {
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open("learning-graph-ai", 3);
-        req.onerror = () => reject(req.error);
-        req.onsuccess = () => {
-          const db = req.result;
-          const tx = db.transaction(["attempts", "drafts"], "readwrite");
-          const attemptsStore = tx.objectStore("attempts");
-          const draftsStore = tx.objectStore("drafts");
-          attemptsStore.clear();
-          draftsStore.clear();
-          for (const item of backup.learning.attempts || []) {
-            attemptsStore.put(item);
-          }
-          for (const item of backup.learning.drafts || []) {
-            draftsStore.put(item);
-          }
-          tx.oncomplete = () => resolve();
-          tx.onerror = () => reject(tx.error);
-        };
-      });
-    }, hydratedFixture);
+    // Rating keys do nothing before the answer is shown.
+    await dialog.getByRole("button", { name: "Show answer" }).click();
+    const rates = dialog.getByRole("group", { name: "How well did you know it?" });
+    await expect(rates.getByRole("button")).toHaveText([/Again\s*1/, /Hard\s*2/, /Good\s*3/, /Easy\s*4/]);
+    await page.keyboard.press("1");
+    await expect(dialog.locator(".overlay-header__subtitle")).toHaveText("Card 2 of 101");
 
-    await page.reload();
-    await page.waitForLoadState("domcontentloaded");
+    await page.keyboard.press("Space");
+    await expect(rates).toBeVisible();
+    await page.keyboard.press("3");
+    await expect(dialog.locator(".overlay-header__subtitle")).toHaveText("Card 3 of 101");
 
-    // Conmutar a la vista de Flashcards tras reload
-    const flashcardsBtn = page.locator("header button").filter({ hasText: /^Flashcards$/ });
-    await flashcardsBtn.click();
+    const schedule = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}"), REVIEW_KEY);
+    const entries = Object.values(schedule);
+    expect(entries).toHaveLength(2);
+    expect(entries.map((e) => e.interval).sort()).toEqual([0, 1]);
 
-    // 2. Verificar que las tarjetas con score renderizan texto numérico (105/120 o 85/120) sin lanzar error
-    const scoreBadge = page.locator("span").filter({ hasText: /105\/120/ });
-    await expect(scoreBadge).toBeVisible();
+    await dialog.getByRole("button", { name: "Close" }).click();
+    await expect(dialog).toHaveCount(0);
+    // "Again" brings the first card back today.
+    await expect(filter(page, "Due today · 1")).toBeVisible();
+    await filter(page, "Due today · 1").click();
+    await expect(page.locator("button.fcard")).toHaveCount(1);
+    await expect(page.locator("button.fcard .fcard__title")).toHaveText(firstCard);
+    await expect(page.locator("button.fcard .fcard__hint")).toHaveText("Due today");
+  });
 
-    // 3. Probar filtro "Base dominada (100+)"
-    await page.getByRole("button", { name: "Base dominada (100+)" }).click();
-    const showingMastery = page.locator("span").filter({ hasText: /Mostrando 2 de/ });
-    await expect(showingMastery).toBeVisible();
-    await expect(page.locator("span").filter({ hasText: /105\/120/ })).toBeVisible();
-    await expect(page.locator("span").filter({ hasText: /115\/120/ })).toBeVisible();
+  test("hydrated progress: score badges, mastery filters and the due-today queue (Universal State 2)", async ({ page }) => {
+    await seedFixture(page, "hydrated-state");
 
-    // 4. Probar filtro "Base < 100"
-    await page.getByRole("button", { name: "Base < 100" }).click();
-    const showingDeveloping = page.locator("span").filter({ hasText: /Mostrando 1 de/ });
-    await expect(showingDeveloping).toBeVisible();
-    await expect(page.locator("span").filter({ hasText: /85\/120/ })).toBeVisible();
+    // Three attempts and one draft are "worked" cards due for their first review.
+    await expect(filter(page, "Due today · 4")).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("button", { name: "Review 4 due" })).toBeVisible();
+    await expect(page.locator("button.fcard")).toHaveCount(4);
 
-    // 5. Probar filtro "Sin intento"
-    await page.getByRole("button", { name: "Sin intento" }).click();
-    const showingUnattempted = page.locator("span").filter({ hasText: /Mostrando 98 de/ });
-    await expect(showingUnattempted).toBeVisible();
+    await filter(page, "Mastered · 2").click();
+    await expect(page.locator("button.fcard")).toHaveCount(2);
+    await expect(page.locator("button.fcard .fcard__top")).toContainText([/105\/120/, /115\/120/]);
+
+    await filter(page, "Below 100 · 1").click();
+    await expect(page.locator("button.fcard")).toHaveCount(1);
+    await expect(page.locator("button.fcard")).toContainText("85/120");
+
+    await filter(page, "Not attempted · 98").click();
+    await expect(page.locator("button.fcard")).toHaveCount(98);
+    // A draft without evaluation still says the explanation is saved.
+    await expect(page.getByRole("button", { name: "State, snapshots and batching: open flashcard" })).toContainText("Your explanation is saved");
+
+    await page.getByRole("button", { name: "State, snapshots and batching: open flashcard" }).click();
+    const modal = page.getByRole("dialog", { name: "State, snapshots and batching" });
+    await modal.getByRole("button", { name: /Show answer/ }).click();
+    await expect(modal.locator(".fmodal__mine")).toHaveText(/State updates in React are batched/);
+    await expect(modal.getByRole("button", { name: "Improve explanation" })).toBeVisible();
   });
 });
-

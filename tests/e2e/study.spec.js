@@ -1,278 +1,187 @@
 import { test, expect } from "@playwright/test";
+import { failOnPageError, seedFixture, sse } from "./helpers.js";
 
-// These specs assert the Spanish interface: English is the default, so select Spanish first
-// (tests/e2e/i18n.spec.js covers the English default and the switcher).
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("learning-workspace:locale", "es"));
-});
+const CARD = "State, snapshots and batching";
 
-test.describe("Study Modal Guided Route & Stages (User Story 2)", () => {
+const studyRegion = (page, label = CARD) => page.getByRole("region", { name: `Study: ${label}` });
+const tab = (page, id) => page.locator(`#study-tab-${id}`);
+
+// User Story 2: the study session (Read → AI mentor → Paraphrase → Evaluate) over the map.
+test.describe("Study session stages (User Story 2)", () => {
   test.beforeEach(async ({ page }) => {
-    page.on("pageerror", (err) => {
-      throw new Error(`Uncaught browser exception: ${err.message}\n${err.stack}`);
-    });
-    await page.goto("/");
-    await page.waitForLoadState("domcontentloaded");
+    failOnPageError(page);
   });
 
-  test("abre el modal de estudio en la etapa 01 Leer al hacer clic en un concepto", async ({ page }) => {
-    // Abrir el concepto de estado y batching
-    const nodeCard = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
-    await expect(nodeCard).toBeVisible();
-    await nodeCard.click();
+  test("opens from a heat-grid cell on the Read stage with the four stage tabs", async ({ page }) => {
+    await page.goto("/react");
+    await page.locator('.hgrid__cell[data-node="state_updates"]').click();
+    await expect(page).toHaveURL(/\/react\/card\/state_updates$/);
 
-    // El modal debe abrirse
-    const modal = page.locator('div[role="dialog"]');
-    await expect(modal).toBeVisible();
-    await expect(modal).toContainText("MODAL DE ESTUDIO");
-    await expect(modal).toContainText("Estado, snapshots y batching");
+    const study = studyRegion(page);
+    await expect(study.getByRole("heading", { level: 1 })).toHaveText(CARD);
+    const tabs = study.getByRole("tablist", { name: "Study stages" }).getByRole("tab");
+    await expect(tabs).toHaveText([/01\s*Read/, /02\s*AI mentor/, /03\s*Paraphrase/, /04\s*Evaluate/]);
+    await expect(tab(page, "read")).toHaveAttribute("aria-selected", "true");
 
-    // Debe mostrar las 4 etapas
-    await expect(modal).toContainText("01");
-    await expect(modal).toContainText("Leer");
-    await expect(modal).toContainText("02");
-    await expect(modal).toContainText("Aprender");
-    await expect(modal).toContainText("03");
-    await expect(modal).toContainText("Parafrasear");
-    await expect(modal).toContainText("04");
-    await expect(modal).toContainText("Evaluar");
+    const stage = page.getByRole("tabpanel");
+    await expect(stage.locator(".lesson__lead")).toBeVisible();
+    await expect(stage.getByRole("heading", { name: "Naive vs. production" })).toBeVisible();
+    await expect(stage.getByText("Why it fails.")).toBeVisible();
+    await expect(stage.getByText("Trade-off.")).toBeVisible();
+    await expect(stage.getByRole("heading", { name: "Sources" })).toBeVisible();
+    await expect(stage.locator(".lesson__sources a").first()).toHaveAttribute("href", /^https?:\/\//);
 
-    // Etapa 01 activa por defecto
-    await expect(modal).toContainText("EN UNA FRASE");
-    await expect(modal).toContainText("Por qué importa:");
+    const rail = page.getByRole("complementary", { name: "Card context" });
+    await expect(rail).toContainText("Where it fits");
+    await expect(rail).toContainText("Interview questions");
   });
 
-  test("interactúa con la comparativa pedagógica Naive vs Senior en la etapa 01 Leer", async ({ page }) => {
-    const nodeCard = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
-    await nodeCard.click();
+  test("stage tabs switch with clicks, arrow keys and the in-stage next buttons", async ({ page }) => {
+    await page.goto("/react/card/state_updates");
+    await tab(page, "read").focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(tab(page, "mentor")).toHaveAttribute("aria-selected", "true");
+    await expect(tab(page, "mentor")).toBeFocused();
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("ArrowLeft");
+    await expect(tab(page, "evaluate")).toHaveAttribute("aria-selected", "true");
 
-    const modal = page.locator('div[role="dialog"]');
-    await expect(modal).toBeVisible();
-
-    // Sección de comparativa de código
-    await expect(modal).toContainText("COMPARATIVA PEDAGÓGICA (NAIVE VS SENIOR)");
-
-    // Por defecto el patrón senior está activo
-    await expect(modal).toContainText("TRADE-OFF ASUMIDO");
-
-    // Conmutar al enfoque ingenuo
-    const naiveBtn = modal.getByRole("button", { name: /Enfoque ingenuo/i });
-    await expect(naiveBtn).toBeVisible();
-    await naiveBtn.click();
-
-    // Debe mostrar el callout de fallo en producción
-    await expect(modal).toContainText("CAUSA DE FALLO EN PRODUCCIÓN");
-
-    // Conmutar de vuelta al patrón senior
-    const seniorBtn = modal.getByRole("button", { name: /Patrón Senior/i });
-    await expect(seniorBtn).toBeVisible();
-    await seniorBtn.click();
-    await expect(modal).toContainText("TRADE-OFF ASUMIDO");
+    await tab(page, "read").click();
+    await page.getByRole("tabpanel").getByRole("button", { name: "Talk to the mentor" }).click();
+    await expect(tab(page, "mentor")).toHaveAttribute("aria-selected", "true");
+    await page.getByRole("tabpanel").getByRole("button", { name: "Go to paraphrase" }).click();
+    await expect(tab(page, "paraphrase")).toHaveAttribute("aria-selected", "true");
   });
 
-  test("navega a la etapa 02 Aprender e inspecciona los chips del tutor socrático", async ({ page }) => {
-    const nodeCard = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
-    await nodeCard.click();
+  test("AI mentor shows starter questions and streams an answer (mocked gateway)", async ({ page }) => {
+    await page.route("**/api/ai/live-review/chat/stream", (route) => route.fulfill({
+      status: 200,
+      headers: { "Content-Type": "text/event-stream" },
+      body: sse([
+        ["delta", { text: "Think of state as a ", length: 20 }],
+        ["delta", { text: "photo of one render.", length: 40 }],
+        ["done", { message: { role: "assistant", content: "Think of state as a photo of one render." } }],
+      ]),
+    }));
+    await page.goto("/react/card/state_updates");
+    await tab(page, "mentor").click();
+    const chat = page.getByRole("region", { name: "Conversation with the mentor" });
+    await expect(chat.getByRole("button", { name: "Explain it with an analogy" })).toBeVisible();
+    await expect(chat.getByRole("button", { name: "What would they ask me in an interview?" })).toBeVisible();
 
-    const modal = page.locator('div[role="dialog"]');
-
-    // Cambiar a la etapa 02 Aprender
-    await modal.getByRole("button", { name: /Aprender/ }).click();
-
-    // Verificar el espacio socrático
-    await expect(modal).toContainText("Espacio Socrático con el Tutor");
-    await expect(modal).toContainText("¿Por qué falla el enfoque ingenuo?");
-    await expect(modal).toContainText("¿Podrías explicarlo con una analogía?");
-    await expect(modal).toContainText("¿Cómo diagnostico este error en producción?");
-
-    // Input de chat presente
-    const chatInput = modal.getByPlaceholder("Preguntale al tutor sobre este concepto…");
-    await expect(chatInput).toBeVisible();
+    const input = chat.getByRole("textbox", { name: "Question for the mentor" });
+    await input.fill("Why is state a snapshot?");
+    await input.press("Enter");
+    await expect(chat.locator(".msg--user")).toHaveText("Why is state a snapshot?");
+    await expect(chat.locator(".msg--assistant")).toContainText("Think of state as a photo of one render.");
+    await expect(input).toHaveValue("");
   });
 
-  test("navega a la etapa 03 Parafrasear, redacta una respuesta y alterna vista de Chunks", async ({ page }) => {
-    const nodeCard = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
-    await nodeCard.click();
+  test("Evaluate without a draft shows the empty state; Paraphrase autosaves and unlocks evaluation", async ({ page }) => {
+    await page.goto("/react/card/state_updates");
+    await tab(page, "evaluate").click();
+    const stage = page.getByRole("tabpanel");
+    await expect(stage.getByText("Write your explanation first")).toBeVisible();
+    await stage.getByRole("button", { name: "Go to paraphrase" }).click();
+    await expect(tab(page, "paraphrase")).toHaveAttribute("aria-selected", "true");
 
-    const modal = page.locator('div[role="dialog"]');
-
-    // Cambiar a la etapa 03 Parafrasear
-    await modal.getByRole("button", { name: "03 Parafrasear", exact: true }).click();
-
-    await expect(modal).toContainText("Consigna de parafraseo senior:");
-
-    const textarea = modal.locator("textarea");
-    await expect(textarea).toBeVisible();
-
-    const sampleAnswer = "En React, el estado no es una variable reactiva en memoria directa sino una foto o snapshot del render en curso. Cuando invocamos un setter, agendamos un nuevo ciclo de reconciliación en Fiber.";
-    await textarea.fill(sampleAnswer);
-
-    // Métricas en tiempo real
-    await expect(modal).toContainText(`${sampleAnswer.length} caracteres`);
-
-    // Alternar a vista de Chunks
-    const chunksBtn = modal.getByRole("button", { name: /Chunks/ });
-    await chunksBtn.click();
-    await expect(modal).toContainText("Chunk 1");
-
-    // Volver al editor
-    const editorBtn = modal.getByRole("button", { name: /Editor/ });
-    await editorBtn.click();
-    await expect(textarea).toBeVisible();
-  });
-
-  test("activa el Modo Zen pantalla completa y lo desactiva", async ({ page }) => {
-    const nodeCard = page.locator("main article").first();
-    await nodeCard.click();
-
-    const modal = page.locator('div[role="dialog"]');
-    const zenBtn = modal.getByRole("button", { name: /Modo Zen/ });
-    await expect(zenBtn).toBeVisible();
-
-    // Activar Zen
-    await zenBtn.click();
-    await expect(modal.getByRole("button", { name: /Salir de Zen/ })).toBeVisible();
-
-    // Salir de Zen
-    await modal.getByRole("button", { name: /Salir de Zen/ }).click();
-    await expect(modal.getByRole("button", { name: /Modo Zen/ })).toBeVisible();
-  });
-
-  test("cierra el modal de estudio con la tecla Escape", async ({ page }) => {
-    const nodeCard = page.locator("main article").first();
-    await nodeCard.click();
-
-    const modal = page.locator('div[role="dialog"]');
-    await expect(modal).toBeVisible();
-
-    await page.keyboard.press("Escape");
-    await expect(modal).not.toBeVisible();
-  });
-
-  test("navega por el flujo conceptual Antes -> Ahora -> Después y permite regresar con el botón volver", async ({ page }) => {
-    // Abrir un concepto con prerrequisitos/dependientes como 'state_updates'
-    const nodeCard = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
-    await nodeCard.click();
-
-    const modal = page.locator('div[role="dialog"]');
-    await expect(modal).toBeVisible();
-
-    // Barra de navegación conceptual visible
-    const nav = modal.locator('nav[aria-label="Flujo conceptual y mapa"]');
-    await expect(nav).toBeVisible();
-    await expect(nav).toContainText("ANTES:");
-    await expect(nav).toContainText("DESPUÉS:");
-
-    // Navegar a un nodo en ANTES o DESPUÉS
-    const targetBtn = nav.locator("button").filter({ hasText: /useState|Efectos|Render/ }).first();
-    if (await targetBtn.isVisible()) {
-      await targetBtn.click();
-      // Debe mostrar el botón de regreso
-      const backBtn = nav.locator("button").filter({ hasText: /← Volver a/ });
-      await expect(backBtn).toBeVisible();
-      await backBtn.click();
-      // Regresa al nodo original
-      await expect(modal).toContainText("Estado, snapshots y batching");
-    }
-  });
-
-  test("expande la sección de preguntas FAANG y muestra enlaces a fuentes oficiales", async ({ page }) => {
-    const nodeCard = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
-    await nodeCard.click();
-
-    const modal = page.locator('div[role="dialog"]');
-    await expect(modal).toBeVisible();
-
-    // Sección de preguntas FAANG
-    const faangSummary = modal.locator("summary").filter({ hasText: /PREGUNTAS DE ENTREVISTA FAANG/ });
-    if (await faangSummary.isVisible()) {
-      await faangSummary.click();
-      await expect(modal).toContainText("GreatFrontEnd");
-    }
-
-    // Fuentes oficiales
-    await expect(modal).toContainText("FUENTES OFICIALES");
-  });
-
-  test("activa lectura asistida por voz TTS y conmuta entre reproducir y detener (User Story 4)", async ({ page }) => {
-    const nodeCard = page.locator("main article").filter({ hasText: /Estado, snapshots y batching/ });
-    await nodeCard.click();
-
-    const modal = page.locator('div[role="dialog"]');
-    await expect(modal).toBeVisible();
-
-    // Botón de audio en la sección 'EN UNA FRASE'
-    const audioBtn = modal.locator("button").filter({ hasText: /🔊 Escuchar/ }).first();
-    await expect(audioBtn).toBeVisible();
-
-    // Iniciar lectura
-    await audioBtn.click();
-    await expect(modal.locator("button").filter({ hasText: /⏹ Detener/ }).first()).toBeVisible();
-
-    // Detener lectura
-    const stopBtn = modal.locator("button").filter({ hasText: /⏹ Detener/ }).first();
-    await stopBtn.click();
-    await expect(modal.locator("button").filter({ hasText: /🔊 Escuchar/ }).first()).toBeVisible();
-  });
-
-  test("permite navegar por el historial de evaluaciones con paginación de tiempo (User Story 2 State 3: Boundary)", async ({ page }) => {
-    // 1. Sembrar fixture con múltiples intentos históricos para js_basics
-    const fs = await import("node:fs");
-    const boundaryFixture = JSON.parse(
-      fs.readFileSync(new URL("../fixtures/workspace-boundary.json", import.meta.url), "utf8")
-    );
-
-    await page.evaluate((backup) => {
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open("learning-graph-ai", 3);
-        req.onerror = () => reject(req.error);
-        req.onsuccess = () => {
-          const db = req.result;
-          const tx = db.transaction(["attempts", "drafts"], "readwrite");
-          const attemptsStore = tx.objectStore("attempts");
-          attemptsStore.clear();
-          for (const item of backup.learning.attempts || []) {
-            attemptsStore.put(item);
-          }
-          tx.oncomplete = () => resolve();
-          tx.onerror = () => reject(tx.error);
-        };
-      });
-    }, boundaryFixture);
+    const editor = stage.getByRole("textbox", { name: "Your explanation" });
+    const evaluate = stage.locator(".editor__actions").getByRole("button", { name: "Evaluate" });
+    await expect(evaluate).toHaveAttribute("aria-disabled", "true");
+    const answer = "State in React is a snapshot of one render. Calling a setter schedules a new render and updates are batched.";
+    await editor.fill(answer);
+    await expect(stage.locator(".editor__bar")).toContainText(`${answer.split(/\s+/).length} words`);
+    await expect(stage.locator(".editor__bar")).toContainText("Saved");
+    await expect(tab(page, "paraphrase")).toContainText("Draft");
 
     await page.reload();
-    await page.waitForLoadState("domcontentloaded");
+    await expect(tab(page, "read")).toHaveAttribute("aria-selected", "true");
+    await tab(page, "paraphrase").click();
+    await expect(page.getByRole("textbox", { name: "Your explanation" })).toHaveValue(answer);
+    await page.getByRole("tabpanel").locator(".editor__actions").getByRole("button", { name: "Evaluate" }).click();
+    await expect(tab(page, "evaluate")).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("heading", { name: "Evaluate your explanation" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Evaluate now" })).toBeVisible();
+    await expect(page.locator(".eval-draft")).toContainText(answer);
+  });
 
-    // 2. Abrir card js_basics
-    const jsNode = page.locator("main article").first();
-    await jsNode.click();
+  test("Zen mode toggles; Escape leaves Zen first, then closes the session", async ({ page }) => {
+    await page.goto("/react/card/state_updates");
+    const study = studyRegion(page);
+    await study.getByRole("button", { name: "Zen mode" }).click();
+    await expect(study).toHaveClass(/is-zen/);
+    const exit = study.getByRole("button", { name: "Exit Zen mode (Esc)" });
+    await expect(exit).toHaveAttribute("aria-pressed", "true");
+    await exit.click();
+    await expect(study).not.toHaveClass(/is-zen/);
 
-    const modal = page.locator('div[role="dialog"]');
-    await expect(modal).toBeVisible();
+    await study.getByRole("button", { name: "Zen mode" }).click();
+    await page.keyboard.press("Escape");
+    await expect(study).not.toHaveClass(/is-zen/);
+    await page.keyboard.press("Escape");
+    await expect(study).toHaveCount(0);
+    await expect(page).toHaveURL(/\/react$/);
+  });
 
-    // 3. Ir a la etapa 04 Evaluar
-    await modal.getByRole("button", { name: /04.*Evaluar/i }).click();
+  test("context rail links open the neighbour card and 'Back to' returns", async ({ page }) => {
+    await page.goto("/react/card/state_updates");
+    const rail = page.getByRole("complementary", { name: "Card context" });
+    await rail.getByRole("button", { name: /Hooks and their rules/ }).click();
+    await expect(page.locator(".study__title")).toHaveText("Hooks and their rules");
+    await expect(page).toHaveURL(/\/react\/card\/[a-z_]+$/);
+    await expect(page).not.toHaveURL(/state_updates$/);
 
-    // 4. Verificar que muestra el intento más reciente (Intento 3 de 3 con score 120/120)
-    await expect(modal).toContainText("Intento 3 de 3");
-    await expect(modal).toContainText(/120\s*\/\s*120/);
-    await expect(modal).toContainText("Último resultado");
+    await page.getByRole("button", { name: `Back to ${CARD}` }).click();
+    await expect(page.locator(".study__title")).toHaveText(CARD);
+    await expect(page).toHaveURL(/\/react\/card\/state_updates$/);
+    await page.getByRole("button", { name: "Close (Esc)" }).click();
+    await expect(page.locator(".study")).toHaveCount(0);
+  });
 
-    // 5. Navegar hacia atrás en el tiempo (Intento 2 de 3)
-    const prevBtn = modal.locator("button").filter({ hasText: "←" }).first();
-    await expect(prevBtn).toBeVisible();
-    await prevBtn.click();
+  test("read-aloud narrator toggles play, pause and stop", async ({ page }) => {
+    // Headless browsers have no voices: stub the Web Speech API so the narrator's state is deterministic.
+    await page.addInitScript(() => {
+      const synth = { speak() {}, cancel() {}, pause() {}, resume() {}, getVoices: () => [] };
+      Object.defineProperty(window, "speechSynthesis", { value: synth, configurable: true });
+      window.SpeechSynthesisUtterance = class { constructor(text) { this.text = text; } };
+    });
+    await page.goto("/react/card/state_updates");
+    const narrator = page.getByRole("group", { name: "Read aloud" });
+    await narrator.getByRole("button", { name: "Read aloud" }).click();
+    await narrator.getByRole("button", { name: "Pause reading" }).click();
+    await expect(narrator.getByRole("button", { name: "Resume reading" })).toBeVisible();
+    await narrator.getByRole("button", { name: "Stop reading" }).click();
+    await expect(narrator.getByRole("button", { name: "Read aloud" })).toBeVisible();
+    await expect(narrator.getByRole("button", { name: "Stop reading" })).toHaveCount(0);
+    await narrator.getByRole("button", { name: /^Speed 1x/ }).click();
+    await expect(narrator.getByRole("button", { name: /^Speed 1.25x/ })).toBeVisible();
+  });
 
-    await expect(modal).toContainText("Intento 2 de 3");
-    await expect(modal).toContainText(/90\s*\/\s*120/);
+  test("attempt history navigates between evaluations (User Story 2 State 3: Boundary)", async ({ page }) => {
+    await page.goto("/react");
+    await seedFixture(page, "workspace-boundary");
+    await page.goto("/react/card/js_basics");
+    await tab(page, "evaluate").click();
+    await expect(tab(page, "evaluate")).toContainText("120/120");
 
-    // Debe aparecer el botón para volver a la versión actual
-    const returnBtn = modal.getByRole("button", { name: "Volver a la versión actual" });
-    await expect(returnBtn).toBeVisible();
-    await returnBtn.click();
+    const history = page.getByRole("complementary", { name: "Attempt history" });
+    await expect(history.getByRole("heading", { name: "History · 3" })).toBeVisible();
+    await expect(history.getByRole("img", { name: "Progress: 65, 90, 120" })).toBeVisible();
+    const items = history.locator(".history__item");
+    await expect(items).toHaveCount(3);
+    await expect(items.nth(0)).toHaveAttribute("aria-current", "true");
 
-    // Regresa al intento 3
-    await expect(modal).toContainText("Intento 3 de 3");
-    await expect(modal).toContainText(/120\s*\/\s*120/);
+    const result = page.locator(".result");
+    await expect(result.locator(".score-value--lg")).toHaveAttribute("aria-label", "120 of 120");
+    await expect(result).toContainText("Latest attempt");
+
+    await items.filter({ hasText: "#2" }).click();
+    await expect(items.nth(1)).toHaveAttribute("aria-current", "true");
+    await expect(result.locator(".score-value--lg")).toHaveAttribute("aria-label", "90 of 120");
+    await expect(result).toContainText("Previous attempt");
+
+    await items.filter({ hasText: "#3" }).click();
+    await expect(result.locator(".score-value--lg")).toHaveAttribute("aria-label", "120 of 120");
+    await expect(result).toContainText("Latest attempt");
   });
 });

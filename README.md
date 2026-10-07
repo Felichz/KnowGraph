@@ -90,7 +90,7 @@ For a deployed frontend, `VITE_AI_API_URL` (root `.env.example`) points at a gat
 | Command | What it does |
 | --- | --- |
 | `npm run test:logic` | Headless tests for the controller, layout, provider settings, background tasks and more. |
-| `npm run build && npm run test:e2e` | 37 Playwright tests across 7 specs, run against the built app with the gateway. |
+| `npm run build && npm run test:e2e` | 44 Playwright tests across 7 specs, run against the built app with the gateway. Set `PW_CHANNEL=msedge` (or `chrome`) to use an installed browser instead of Playwright's download. |
 | `npm run check` | Content audit of the React graph (`npm run audit:react`), the i18n parity check (`npm run check:i18n`) and a production build. |
 | `npm run desktop:dev` | Opens the app in Electron, starting the gateway if it isn't running. |
 | `npm run desktop:dist` | Builds the Windows installer. |
