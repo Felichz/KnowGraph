@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Flame, RotateCcw } from "lucide-react";
 import { useT } from "../../i18n/react.js";
 import { Overlay, OverlayHeader } from "../primitives/Overlay.jsx";
@@ -16,7 +16,7 @@ const RATINGS = [
 ];
 
 // Práctica: una card por vez, revelar, autoevaluar 1–4 y racha (solo de sesión).
-export function PracticeDialog({ cards, graph, progress, onClose }) {
+export function PracticeDialog({ cards, graph, progress, onRate, onClose }) {
   const t = useT();
   // Orden de repaso (lo trabajado y flojo primero) calculado por la vista; se congela al abrir.
   const deck = useMemo(() => cards, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -25,9 +25,13 @@ export function PracticeDialog({ cards, graph, progress, onClose }) {
   const [streak, setStreak] = useState(0);
   const [results, setResults] = useState([]);
   const node = deck[index];
+  const body = useRef(null);
+  // Al revelar, el botón desaparece: el foco vuelve al cuerpo para que 1–4 sigan valorando desde el teclado.
+  useEffect(() => { if (revealed) body.current?.focus(); }, [revealed]);
   const done = index >= deck.length;
 
   const rate = (value) => {
+    onRate?.(node.id, value);
     setResults((r) => [...r, value]);
     setStreak((s) => (value >= 3 ? s + 1 : 0));
     setRevealed(false);
@@ -44,7 +48,7 @@ export function PracticeDialog({ cards, graph, progress, onClose }) {
     <Overlay open onClose={onClose} kind="dialog" labelledBy="practice-title" className="practice">
       <OverlayHeader id="practice-title" title={t("flashcards.practice.title")} subtitle={done ? t("flashcards.practice.finished") : t("flashcards.practice.position", { n: index + 1, total: deck.length })} onClose={onClose}
         actions={streak > 1 ? <span className="practice__streak"><Flame size={14} strokeWidth={1.5} aria-hidden="true" /> {streak}</span> : null} />
-      <div className="practice__body" onKeyDown={onKeyDown} tabIndex={-1}>
+      <div className="practice__body" ref={body} onKeyDown={onKeyDown} tabIndex={-1}>
         {done ? (
           <EmptyState title={t("flashcards.practice.result", { good, total: deck.length })} action={<Button icon={RotateCcw} onClick={() => { setIndex(0); setResults([]); setStreak(0); }}>{t("flashcards.practice.restart")}</Button>}>
             {t("flashcards.practice.resultBody")}

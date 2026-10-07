@@ -2,6 +2,7 @@
 export default {
   filters: {
     label: "Filter flashcards",
+    due: "Due today",
     all: "All",
     pending: "Not attempted",
     below: "Below 100",
@@ -9,15 +10,20 @@ export default {
   },
   view: {
     title: "Review",
-    help: "Open a card to answer it in your head, then reveal the key idea and your explanation. Practice starts with your weakest cards.",
+    help: "Spaced repetition: rate each card in practice and it comes back right before you would forget it. Open any card to read its key idea and your explanation.",
     practice: "Practice {n}",
     emptyTitle: "No cards match this filter",
     emptyBody: "Change the filter or focus area to see other cards.",
     showAll: "Show all",
+    reviewDue: "Review {n} due",
+    dueEmptyTitle: "Nothing due today",
+    dueEmptyBody: "Cards you have worked on come back here when they are due. Rate them in practice to schedule the next review.",
   },
   card: {
     open: "{label}: open flashcard",
     hasExplanation: "Your explanation is saved",
+    dueToday: "Due today",
+    nextIn: ({ n }) => `Next review in ${n} ${n === 1 ? "day" : "days"}`,
     showFront: "{label}: show front",
     showAnswer: "{label}: show answer",
     hint: "How would you explain it?",
@@ -41,7 +47,7 @@ export default {
     position: "Card {n} of {total}",
     result: "{good} of {total} rated Good or Easy",
     restart: "Practice again",
-    resultBody: "Cards you found hard are worth rewriting in Paraphrase.",
+    resultBody: "Each card is scheduled again from your rating: Again comes back today, Easy waits the longest.",
     reveal: "Show answer",
     openParaphrase: "Open in Paraphrase →",
     rateLabel: "How well did you know it?",

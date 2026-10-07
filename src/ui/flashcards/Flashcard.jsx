@@ -4,6 +4,7 @@ import { scoreTier } from "../../logic/studyQueue.js";
 import { CategoryLabel } from "../primitives/CategoryDot.jsx";
 import { Pill } from "../primitives/Pill.jsx";
 import { getCategoryColor } from "../theme/categoryPalette.js";
+import { daysUntil } from "../../logic/spacedRepetition.js";
 
 export function answerOf(p) {
   return p.representative?.answer || p.draft?.text || "";
@@ -20,7 +21,7 @@ export function TierBadge({ p }) {
 }
 
 // Card de la rejilla: abre el modal de flashcards (el contenido largo no cabe en la card).
-export function Flashcard({ node, graph, p, onOpen }) {
+export function Flashcard({ node, graph, p, entry, today, onOpen }) {
   const t = useT();
   const tier = scoreTier(p);
   return (
@@ -28,7 +29,8 @@ export function Flashcard({ node, graph, p, onOpen }) {
       aria-label={t("flashcards.card.open", { label: node.label })}>
       <span className="fcard__top"><CategoryLabel graph={graph} cat={node.cat} /><TierBadge p={p} /></span>
       <span className="fcard__title">{node.label}</span>
-      <span className="fcard__hint t3">{answerOf(p) ? t("flashcards.card.hasExplanation") : t("flashcards.card.hint")}</span>
+      <span className="fcard__hint t3">{entry ? (daysUntil(entry, today) > 0 ? t("flashcards.card.nextIn", { n: daysUntil(entry, today) }) : t("flashcards.card.dueToday"))
+        : answerOf(p) ? t("flashcards.card.hasExplanation") : t("flashcards.card.hint")}</span>
     </button>
   );
 }

@@ -2,6 +2,7 @@
 export default {
   filters: {
     label: "Filtrar flashcards",
+    due: "Para hoy",
     all: "Todas",
     pending: "Sin intento",
     below: "Base < 100",
@@ -9,15 +10,20 @@ export default {
   },
   view: {
     title: "Repaso",
-    help: "Abre una card para responderla mentalmente y luego revela la idea clave y tu explicación. La práctica empieza por las más flojas.",
+    help: "Repaso espaciado: valora cada card en la práctica y vuelve justo antes de que la olvides. Abre cualquier card para leer su idea clave y tu explicación.",
     practice: "Practicar {n}",
     emptyTitle: "No hay cards en este filtro",
     emptyBody: "Cambiá el filtro o el foco para ver otras cards.",
     showAll: "Ver todas",
+    reviewDue: "Repasar {n} pendientes",
+    dueEmptyTitle: "Nada para repasar hoy",
+    dueEmptyBody: "Las cards que ya trabajaste vuelven aquí cuando les toca. Valóralas en la práctica para programar el siguiente repaso.",
   },
   card: {
     open: "{label}: abrir flashcard",
     hasExplanation: "Tu explicación está guardada",
+    dueToday: "Toca hoy",
+    nextIn: ({ n }) => `Próximo repaso en ${n} ${n === 1 ? "día" : "días"}`,
     showFront: "{label}: ver frente",
     showAnswer: "{label}: ver respuesta",
     hint: "¿Cómo lo explicarías?",
@@ -41,7 +47,7 @@ export default {
     position: "Card {n} de {total}",
     result: "{good} de {total} bien",
     restart: "Practicar de nuevo",
-    resultBody: "Las que marcaste como difíciles conviene reescribirlas en Parafrasear.",
+    resultBody: "Cada card se reprograma según tu valoración: «Otra vez» vuelve hoy y «Fácil» es la que más espera.",
     reveal: "Mostrar respuesta",
     openParaphrase: "Abrir en Parafrasear →",
     rateLabel: "¿Qué tan bien la sabías?",

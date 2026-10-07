@@ -1,3 +1,5 @@
+import { isDue } from "./spacedRepetition.js";
+
 // «Continuar» y orden de repaso (specs/004-ui-flow): se derivan de borradores e intentos ya guardados,
 // sin estado nuevo que persistir.
 
@@ -33,6 +35,15 @@ export function reviewOrder(nodes, progress) {
     const pb = progress.of(b.id);
     return rank(pa) - rank(pb) || (pa.displayScore ?? -1) - (pb.displayScore ?? -1) || a.priority - b.priority;
   });
+}
+
+// Pendientes de repaso hoy (specs/006): vencidas o trabajadas sin repasar; primero las más atrasadas y flojas.
+export function dueNodes(nodes, progress, entries, today) {
+  const worked = (p) => Boolean(p.attempts?.length || p.hasDraft);
+  return nodes
+    .filter((node) => isDue(entries[node.id], worked(progress.of(node.id)), today))
+    .sort((a, b) => (entries[a.id]?.due ?? "").localeCompare(entries[b.id]?.due ?? "")
+      || (progress.of(a.id).displayScore ?? -1) - (progress.of(b.id).displayScore ?? -1) || a.priority - b.priority);
 }
 
 // Cards trabajadas que aún no llegan a 100: lo que conviene repasar.
