@@ -73,3 +73,22 @@ a { color: var(--text-1); text-decoration: underline; text-decoration-color: var
 .gmini.is-best { fill: var(--paper); }
 .gruler__tick.is-done .gruler__n, .gruler__tick.is-done .gruler__count { color: var(--text-1); }
 .grel__met { color: var(--text-2); }
+
+/* Sesión de estudio: el área es la identidad de la pantalla; verde y dorado heredados pasan al color del área */
+.study { --mastery: var(--lesson-color); --mastery-soft: color-mix(in srgb, var(--lesson-color) 16%, transparent);
+  --gold-soft: color-mix(in srgb, var(--lesson-color) 12%, transparent); }
+.study__bar { background: color-mix(in srgb, var(--lesson-color) 9%, var(--bg-app)); }
+.study__heading { align-items: center; }
+.study__cell { align-self: center; }
+.coach-item.is-partial svg { color: color-mix(in srgb, var(--lesson-color) 60%, var(--text-3)); }
+.lesson__takeaway svg { color: var(--text-2); }
+.practice__streak { color: var(--text-1); }
+.band.is-complete { border-color: var(--line-strong); } .band.is-complete .band__icon { color: var(--text-1); }
+.gnpanel__stage { font-size: var(--fs-xs); }
+
+/* «La celda se enciende»: destello del color del área al dominar un concepto */
+@keyframes heat-light { 0% { transform: scale(.55); box-shadow: 0 0 0 0 color-mix(in srgb, var(--area) 70%, transparent); }
+  45% { transform: scale(1.35); box-shadow: 0 0 0 10px color-mix(in srgb, var(--area) 0%, transparent); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; } }
+.heat.is-lit { animation: heat-light 900ms var(--ease-out) 2; }
+@media (prefers-reduced-motion: reduce) { .heat.is-lit { animation: lw-fade 400ms var(--ease-out); } }

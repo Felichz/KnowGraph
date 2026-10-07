@@ -28,3 +28,5 @@
   .hgrid__cells { grid-template-columns: repeat(auto-fill, 18px) !important; --cell: 18px; }
 }
 @media (prefers-reduced-motion: reduce) { .hgrid__cell .heat { transition: none; } }
+.map__hint { font-size: var(--fs-sm); color: var(--text-3); font-weight: 500; text-align: center; padding: var(--sp-2) 0 var(--sp-8); }
+.hgrid__cell.is-return { outline: 2px solid var(--text-1); outline-offset: 1px; transition: outline-color var(--dur-3) var(--ease-out); }

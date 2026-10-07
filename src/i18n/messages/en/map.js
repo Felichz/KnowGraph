@@ -20,6 +20,7 @@ export default {
     },
   },
   heat: {
+    pickArea: "Pick an area in your map (or in the sidebar) to see its concepts as cards.",
     title: "Your map",
     mastered: "mastered",
     status: {
