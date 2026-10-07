@@ -11,6 +11,8 @@ import { useEscape } from "../hooks/useEscape.js";
 import { ESC_PRIORITY } from "../state/escStack.js";
 import { actions } from "../state/useWorkspace.js";
 import { useStudyData } from "./useStudyData.js";
+import { useLightUp } from "./useLightUp.js";
+import { HeatCell } from "../primitives/HeatCell.jsx";
 import { ReadStage } from "./read/ReadStage.jsx";
 import { MentorStage } from "./mentor/MentorStage.jsx";
 import { ParaphraseStage } from "./paraphrase/ParaphraseStage.jsx";
@@ -66,6 +68,7 @@ function Session({ model, study, node, graphId }) {
     requestAnimationFrame(() => document.getElementById(`study-tab-${next.id}`)?.focus());
   };
   const color = getCategoryColor(graph.id, node.cat, graph.categories[node.cat]?.color);
+  const lit = useLightUp(node, p, t);
   const Stage = stage.Component;
 
   return (
@@ -76,6 +79,7 @@ function Session({ model, study, node, graphId }) {
         </Button>
         <div className="study__heading">
           <CategoryLabel graph={graph} cat={node.cat} className="study__cat" />
+          <HeatCell graph={graph} node={node} p={p} size={16} className={`study__cell ${lit ? "is-lit" : ""}`} />
           <h1 className="study__title clamp-1" tabIndex={-1}>{node.label}</h1>
         </div>
         <div className="study__meta">

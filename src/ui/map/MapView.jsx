@@ -31,7 +31,9 @@ export function MapView({ model, mode }) {
       )}
       <HeatGrid model={model} />
       <SuggestedRoute model={model} />
-      <ConceptGroups model={model} activeTaskNodeIds={activeTaskNodeIds} />
+      {model.focusCat ? <ConceptGroups model={model} activeTaskNodeIds={activeTaskNodeIds} /> : (
+        <p className="map__hint">{t("map.heat.pickArea")}</p>
+      )}
     </div>
   );
 }

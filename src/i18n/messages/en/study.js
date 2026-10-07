@@ -4,6 +4,7 @@ export default {
   goParaphrase: "Go to paraphrase",
   nextFocus: "Next focus",
   session: {
+    mastered: "{label} is mastered. Its cell is now lit on your map.",
     notFoundTitle: "We couldn't find this card",
     notFoundBody: "The link may belong to another map, or the card may have been renamed.",
     regionLabel: "Study: {label}",

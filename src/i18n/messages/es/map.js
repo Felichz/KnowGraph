@@ -20,6 +20,7 @@ export default {
     },
   },
   heat: {
+    pickArea: "Elige un área en tu temario (o en la barra lateral) para ver sus conceptos como cards.",
     title: "Tu temario",
     mastered: "dominadas",
     status: {

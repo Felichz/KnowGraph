@@ -1,8 +1,9 @@
+import { useEffect, useRef } from "react";
 import { useT } from "../../i18n/react.js";
 import { heatLevel, scoreTier } from "../../logic/studyQueue.js";
 import { HeatCell } from "../primitives/HeatCell.jsx";
 import { getCategoryColor } from "../theme/categoryPalette.js";
-import { actions } from "../state/useWorkspace.js";
+import { actions, useWorkspace } from "../state/useWorkspace.js";
 
 function cellLabel(t, node, p, now) {
   const tier = scoreTier(p);
@@ -17,6 +18,16 @@ function cellLabel(t, node, p, now) {
 export function HeatGrid({ model, size = "md", bare = false }) {
   const t = useT();
   const { graph, progress, visible, guidance, focusCat } = model;
+  const root = useRef(null);
+  const lastOpened = useWorkspace((s) => s.lastOpenedNodeId);
+  // Al volver de una card, su celda se marca un momento (sustituye al resaltado de la lista).
+  useEffect(() => {
+    const el = lastOpened && root.current?.querySelector(`[data-node="${lastOpened}"]`);
+    if (!el) return undefined;
+    el.classList.add("is-return");
+    const timer = setTimeout(() => el.classList.remove("is-return"), 1400);
+    return () => clearTimeout(timer);
+  }, [lastOpened]);
   const nowId = guidance.primary?.id;
   const areas = Object.keys(graph.categories)
     .map((cat) => ({ cat, nodes: visible.filter((n) => n.cat === cat).sort((a, b) => a.priority - b.priority) }))
@@ -25,7 +36,7 @@ export function HeatGrid({ model, size = "md", bare = false }) {
   const cols = Math.max(1, ...areas.map((a) => a.nodes.length));
   const track = `repeat(${cols}, var(--cell))`;
   return (
-    <section className={`hgrid hgrid--${size} ${bare ? "hgrid--bare" : ""}`} aria-labelledby={bare ? undefined : "hgrid-title"} aria-label={bare ? t("map.heat.title") : undefined}>
+    <section ref={root} className={`hgrid hgrid--${size} ${bare ? "hgrid--bare" : ""}`} aria-labelledby={bare ? undefined : "hgrid-title"} aria-label={bare ? t("map.heat.title") : undefined}>
       {!bare && <header className="hgrid__head">
         <h2 id="hgrid-title" className="hgrid__title">{t("map.heat.title")}</h2>
         <p className="hgrid__total"><span className="mono">{done}</span><span className="mono t3">/{visible.length}</span> {t("map.heat.mastered")}</p>
@@ -48,7 +59,7 @@ export function HeatGrid({ model, size = "md", bare = false }) {
                   const p = progress.of(node.id);
                   const label = cellLabel(t, node, p, node.id === nowId);
                   return (
-                    <button key={node.id} type="button" className="hgrid__cell" aria-label={label} data-tip={label} onClick={() => actions.openCard(node.id)}>
+                    <button key={node.id} type="button" className="hgrid__cell" data-node={node.id} aria-label={label} data-tip={label} onClick={() => actions.openCard(node.id)}>
                       <HeatCell graph={graph} node={node} p={p} now={node.id === nowId} />
                     </button>
                   );

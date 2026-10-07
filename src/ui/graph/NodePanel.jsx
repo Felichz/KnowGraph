@@ -14,7 +14,7 @@ export function NodePanel({ node, graph, state, stage, unlocks, checked, inView,
   const why = getLessonContext(node, prerequisites, missing, graph.categoryContext, locale);
   const eyebrow = isBest
     ? <span className="pill pill--accent">{t("map.card.bestNext")}</span>
-    : <span className="eyebrow">{t("graph.panel.stage", stage)}</span>;
+    : <span className="t3 gnpanel__stage">{t("graph.panel.stage", stage)}</span>;
   const study = <Button variant="primary" iconRight={ArrowRight} onClick={() => onStudy(node.id)}>{t("graph.panel.study")}</Button>;
 
   if (mobile) {

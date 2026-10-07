@@ -4,6 +4,7 @@ export default {
   goParaphrase: "Ir a parafrasear",
   nextFocus: "Próximo foco",
   session: {
+    mastered: "{label} está dominada. Su celda ya está encendida en tu temario.",
     notFoundTitle: "No encontramos esta card",
     notFoundBody: "Puede que el enlace sea de otro mapa o que la card haya cambiado de nombre.",
     regionLabel: "Estudiar: {label}",
