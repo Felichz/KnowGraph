@@ -94,7 +94,7 @@
 .cat-label { display: inline-flex; align-items: center; gap: var(--sp-2); min-width: 0; color: var(--text-2); font-size: var(--fs-xs); }
 
 /* ---------- Riel de puntaje (DESIGN §8.1) ---------- */
-.rail { position: relative; height: var(--rail-track); border-radius: var(--r-full); background: var(--surface-inset); overflow: visible; width: 100%; }
+.rail { position: relative; height: var(--rail-track); border-radius: var(--r-full); background: var(--surface-inset); box-shadow: inset 0 0 0 1px var(--line-subtle); overflow: visible; width: 100%; }
 .rail--lg { height: var(--rail-track-lg); }
 .rail__base { position: absolute; left: 0; top: 0; bottom: 0; border-radius: var(--r-full); background: var(--rail-base); transition: width var(--dur-rail-grow) var(--ease-out); }
 .rail__base.is-mastered { background: var(--mastery); }

@@ -2,7 +2,7 @@
 .lesson { display: grid; gap: var(--sp-6); min-width: 0; }
 .lesson__top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
 .lesson__lead { font-size: var(--fs-3xl); line-height: var(--lh-3xl); color: var(--text-1); text-wrap: pretty; }
-.lesson__why { display: grid; gap: var(--sp-1); padding-left: var(--sp-4); border-left: 2px solid var(--lesson-color); color: var(--text-2); font-size: var(--fs-md); line-height: var(--lh-md); }
+.lesson__why { display: grid; gap: var(--sp-1); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); background: color-mix(in srgb, var(--lesson-color) 11%, transparent); color: var(--text-2); font-size: var(--fs-md); line-height: var(--lh-md); }
 .lesson__body { font-size: var(--fs-md); line-height: 1.75rem; }
 .lesson__body p { text-wrap: pretty; }
 .lesson__section { display: grid; gap: var(--sp-3); min-width: 0; }

@@ -7,7 +7,8 @@ export default {
     hint: "Follows your system setting until you pick light or dark. The choice is saved on this device.",
   },
   drawer: {
-    title: "AI connections",
+    title: "Settings",
+    connections: "AI connections",
     newConnection: "New connection",
     connection: "Connection",
     activeConnection: "Active connection",

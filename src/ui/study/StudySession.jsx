@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { ArrowLeft, BookOpen, ClipboardCheck, Maximize2, MessagesSquare, Minimize2, PenLine, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ChevronRight, ClipboardCheck, Maximize2, MessagesSquare, Minimize2, PenLine, X } from "lucide-react";
+import { scoreTier } from "../../logic/studyQueue.js";
 import { useT } from "../../i18n/react.js";
 import { Button, IconButton } from "../primitives/Button.jsx";
 import { CategoryLabel } from "../primitives/CategoryDot.jsx";
@@ -84,18 +85,20 @@ function Session({ model, study, node, graphId }) {
         </div>
       </header>
       <nav className="study__tabs" role="tablist" aria-label={t("study.session.tabsLabel")} onKeyDown={onTabKey}>
-        {STAGES.map((s) => {
+        {STAGES.map((s, i) => {
           const selected = s.id === stage.id;
+          const scored = s.id === "evaluate" && data.attempts.length && typeof p.displayScore === "number";
           const badge = s.id === "paraphrase" && data.draft.trim() ? t("study.session.badge.draft") : s.id === "evaluate" && running && data.task.type === "evaluation" ? t("study.session.badge.evaluating")
-            : s.id === "mentor" && running && data.task.type === "pedagogical_harness" ? t("study.session.badge.working") : s.id === "evaluate" && data.attempts.length ? t("study.session.badge.attempts", { n: data.attempts.length }) : null;
-          return (
+            : s.id === "mentor" && running && data.task.type === "pedagogical_harness" ? t("study.session.badge.working") : scored ? `${Math.round(p.displayScore)}/120` : null;
+          return [
+            i > 0 && <ChevronRight key={`sep-${s.id}`} size={14} strokeWidth={1.5} className="study-tab__sep" aria-hidden="true" />,
             <button key={s.id} id={`study-tab-${s.id}`} role="tab" aria-selected={selected} aria-controls="study-stage" tabIndex={selected ? 0 : -1}
               className={`study-tab ${selected ? "is-active" : ""}`} onClick={() => go(s.id)}>
               <span className="study-tab__num mono">{s.num}</span>
               <span className="study-tab__label">{t(s.labelKey)}</span>
-              {badge && <span className="study-tab__badge">{badge}</span>}
-            </button>
-          );
+              {badge && <span className={`study-tab__badge ${scored ? `mono tier-${scoreTier(p)}` : ""}`}>{scored && p.displayScore >= 100 ? <Check size={10} strokeWidth={2.5} aria-hidden="true" /> : null}{badge}</span>}
+            </button>,
+          ];
         })}
       </nav>
       <div id="study-stage" ref={bodyRef} className="study__body" role="tabpanel" aria-labelledby={`study-tab-${stage.id}`} tabIndex={-1}>

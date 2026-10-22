@@ -1,0 +1,26 @@
+/* Modal de flashcards (specs/004-ui-flow §6): cuerpo con scroll propio, cabecera y pie fijos. */
+.fmodal { width: min(760px, 100%) !important; }
+.fmodal__frame { flex: 1; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; outline: none; }
+.fmodal__head { display: flex; align-items: center; gap: var(--sp-1); padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-5); border-bottom: 1px solid var(--line-subtle); }
+.fmodal__head .cat-label { flex: 1; min-width: 0; }
+.fmodal__pos { margin-right: var(--sp-2); font-size: var(--fs-xs); color: var(--text-2); }
+.fmodal__close { margin-left: var(--sp-1); }
+.fmodal__body { display: grid; align-content: start; gap: var(--sp-6); padding: var(--sp-6) var(--sp-6) var(--sp-8); overflow-y: auto; overscroll-behavior: contain; animation: lw-fade var(--dur-2) var(--ease-out); }
+.fmodal__q { display: grid; justify-items: start; gap: var(--sp-3); }
+.fmodal__title { font-size: var(--fs-3xl); line-height: var(--lh-3xl); font-weight: 500; text-wrap: balance; }
+.fmodal__prompt { font-size: var(--fs-md); line-height: var(--lh-md); max-width: 62ch; }
+.fmodal__reveal { justify-self: start; }
+.fmodal__reveal .kbd { margin-left: var(--sp-2); }
+.fmodal__answer { display: grid; gap: var(--sp-6); padding-top: var(--sp-5); border-top: 1px solid var(--line); animation: lw-fade var(--dur-2) var(--ease-out); }
+.fmodal__answer section { display: grid; gap: var(--sp-2); max-width: 68ch; }
+.fmodal__lead { font-size: var(--fs-lg); line-height: var(--lh-lg); color: var(--text-1); }
+.fmodal__mine { white-space: pre-wrap; font-size: var(--fs-md); line-height: var(--lh-md); color: var(--text-1); }
+.fmodal__none { font-size: var(--fs-sm); font-weight: 500; }
+.fmodal__foot { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-2); padding: var(--sp-3) var(--sp-5); border-top: 1px solid var(--line-subtle); }
+.fmodal__keys { margin-right: auto; font-size: var(--fs-xs); font-weight: 500; }
+@media (max-width: 47.99em) {
+  .fmodal__body { padding: var(--sp-5) var(--sp-4) var(--sp-6); }
+  .fmodal__title { font-size: var(--fs-2xl); line-height: var(--lh-2xl); }
+  .fmodal__keys, .fmodal__reveal .kbd { display: none; }
+  .fmodal__foot .btn { flex: 1; }
+}

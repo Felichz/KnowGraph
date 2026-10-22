@@ -2,6 +2,7 @@ import { Check, Circle, CircleDot } from "lucide-react";
 import { buildCoachChecklist, mergeCoachCoverage } from "../../../ai/coverage.js";
 import { useT } from "../../../i18n/react.js";
 import { Notice } from "../../primitives/Feedback.jsx";
+import { Inline } from "../../primitives/Markdown.jsx";
 
 const ICON = { covered: Check, partial: CircleDot, missing: Circle, pending: Circle };
 const STATUS = new Set(["covered", "partial", "missing", "pending"]);
@@ -38,7 +39,7 @@ export function CoachPanel({ node, live }) {
             return (
               <li key={item.id} className={`coach-item is-${item.status}`}>
                 <Icon size={14} strokeWidth={2} aria-hidden="true" />
-                <span>{item.text}<span className="sr-only"> ({STATUS.has(item.status) ? t(`study.paraphrase.coach.status.${item.status}`) : undefined})</span></span>
+                <span><Inline text={item.text} /><span className="sr-only"> ({STATUS.has(item.status) ? t(`study.paraphrase.coach.status.${item.status}`) : undefined})</span></span>
               </li>
             );
           })}

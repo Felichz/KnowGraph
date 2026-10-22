@@ -1,33 +1,33 @@
-/* Learning Workspace v3 — tokens (DESIGN.md v3.2.0 + design-spec §G.1). No editar valores sin actualizar DESIGN.md.
-   :root es el tema oscuro (Estudio nocturno); light.css redefine los colores bajo :root[data-theme="light"]. */
+/* Learning Workspace v4 «Rejilla de calor» — tokens (DESIGN.md v4). No editar valores sin actualizar DESIGN.md.
+   :root es el tema oscuro; light.css redefine los colores bajo :root[data-theme="light"]. */
 :root {
   color-scheme: dark;
-  /* neutros */ --bg-sidebar:#090806; --bg-app:#100E0C; --surface-1:#161512; --surface-2:#1D1B19; --surface-3:#242220; --surface-inset:#070604;
-  --line-subtle:rgba(255,248,230,.06); --line:rgba(255,248,230,.09); --line-strong:rgba(255,248,230,.16); --line-control:#6B6861;
-  --scrim:rgba(4,3,2,.72); --bar-glass:rgba(16,14,12,.88); --selection:#2A2E56;
-  --hover-overlay:rgba(255,248,230,.06); --press-overlay:rgba(255,248,230,.10); --pill-neutral:rgba(255,248,230,.06); --skeleton:rgba(255,248,230,.07);
-  --well:rgba(255,248,230,.04); --fill-secondary:rgba(255,248,230,.05); --fill-disabled:rgba(255,248,230,.08); --scrollbar-thumb:rgba(255,248,230,.14);
-  --node-hover:#1B1A17; --node-selected:#272832; --diagram-border:#474440;
-  /* categorías (DESIGN §1.5): solo puntos y trazos; categoryPalette.js las referencia */
-  --cat-cyan:#5DBBC6; --cat-tan:#D0A16B; --cat-lavender:#AAA1E0; --cat-olive:#A3B472; --cat-jade:#6CBDA2; --cat-orchid:#CF95C1;
-  --cat-sky:#6BB6D9; --cat-rose:#DA93A8; --cat-ochre:#C1A966; --cat-clay:#DB997B; --cat-violet:#BC9BD6;
-  /* texto */ --text-1:#EEECE7; --text-2:#B7B3AB; --text-3:#938F87; --text-4:#5F5C56; --text-on-paper:#100E0C;
-  /* acento y semántica */ --paper:#EEECE7; --paper-hover:#DAD7D0; --paper-active:#C7C4BD;
-  --accent:#909CF5; --accent-strong:#A5B1FD; --accent-soft:rgba(144,156,245,.14);
-  --mastery:#74C692; --mastery-soft:rgba(116,198,146,.12); --gold:#E8BE62; --gold-fill:var(--gold); --gold-soft:rgba(232,190,98,.12);
-  --warn:#F0995B; --warn-soft:rgba(240,153,91,.12); --danger:#E97871; --danger-soft:rgba(233,120,113,.12); --rail-base:#B7B3AB;
+  /* neutros */ --bg-sidebar:#0A0C10; --bg-app:#0E1117; --surface-1:#151922; --surface-2:#1B202B; --surface-3:#232A37; --surface-inset:#080A0E;
+  --line-subtle:rgba(214,226,255,.06); --line:rgba(214,226,255,.10); --line-strong:rgba(214,226,255,.18); --line-control:#5E6779;
+  --scrim:rgba(3,5,9,.72); --bar-glass:rgba(14,17,23,.88); --selection:#2C3A5C;
+  --hover-overlay:rgba(214,226,255,.06); --press-overlay:rgba(214,226,255,.10); --pill-neutral:rgba(214,226,255,.08); --skeleton:rgba(214,226,255,.07);
+  --well:rgba(214,226,255,.035); --fill-secondary:rgba(214,226,255,.05); --fill-disabled:rgba(214,226,255,.08); --scrollbar-thumb:rgba(214,226,255,.16);
+  --node-hover:#1A1F29; --node-selected:#232A37; --diagram-border:#3A4252;
+  /* tonos de área (DESIGN v4 §1.5): campos — celdas, muestras y fondos teñidos; categoryPalette.js los referencia */
+  --cat-cyan:#3DB9EE; --cat-blue:#6C8DFF; --cat-violet:#A08AFF; --cat-orchid:#DE7BEA; --cat-rose:#FF6E9C; --cat-coral:#FF7F5E; --cat-orange:#FFA347; --cat-yellow:#E6CC45; --cat-lime:#A6DB4B; --cat-green:#43D69B; --cat-teal:#2FD0C2;
+  --cell-empty:#1D2330;
+  /* texto */ --text-1:#EEF1F6; --text-2:#AEB6C4; --text-3:#8A93A3; --text-4:#525A69; --text-on-paper:#0E1117;
+  /* acento y semántica */ --paper:#EEF1F6; --paper-hover:#D9DEE7; --paper-active:#C3C9D4;
+  --accent:#EEF1F6; --accent-strong:#FBFCFE; --accent-soft:rgba(238,241,246,.10);
+  --mastery:#4ED69B; --mastery-soft:rgba(78,214,155,.14); --gold:#F5C451; --gold-fill:var(--gold); --gold-soft:rgba(245,196,81,.14);
+  --warn:#F6A55E; --warn-soft:rgba(246,165,94,.13); --danger:#FF6F86; --danger-soft:rgba(255,111,134,.13); --rail-base:#AEB6C4;
   /* código */ --code-bg:var(--surface-inset); --code-inline-bg:rgba(255,248,230,.07); --code-fs:var(--fs-sm); --code-lh:1.5rem; --code-inline-fs:var(--fs-sm);
   --syn-comment:var(--text-3); --syn-keyword:#BAA4E2; --syn-string:#A4C386; --syn-number:#E5A880; --syn-function:#80C1E1; --syn-tag:#E199AF; --syn-attr:#D5BA82; --syn-type:#81C6C1; --syn-punct:var(--text-2); --syn-plain:var(--text-1);
   /* gráficos (DESIGN §1.7) */ --chart-eval:var(--text-1); --chart-eval-line:var(--text-2); --chart-coach:var(--text-3); --chart-band-extra:var(--gold-soft); --chart-guide:var(--line); --chart-threshold:var(--text-3); --chart-cursor:var(--accent); --chart-axis:var(--text-3); --chart-judge:var(--text-1);
   /* streaming y carga (DESIGN §1.8) */ --caret-w:2px; --caret-color:var(--text-2); --caret-dur:1s; --skeleton-dur:1.4s; --pulse-dur:1.6s; --timebar-fill:var(--text-3); --timebar-over:var(--warn); --expected-marker:var(--text-3); --provisional-opacity:.5;
   /* riel de puntaje y categoría */ --rail-track:4px; --rail-track-lg:8px; --lesson-color:var(--text-2); /* se sobrescribe en .study con el color de la categoría */
-  /* tipografía */ --font-ui:"Geist Variable",ui-sans-serif,system-ui,sans-serif; --font-mono:"Geist Mono Variable",ui-monospace,"SF Mono",Menlo,monospace; --font-read:"Newsreader Variable",ui-serif,Georgia,serif;
+  /* tipografía */ --font-ui:"Figtree Variable",ui-sans-serif,system-ui,sans-serif; --font-mono:"JetBrains Mono Variable",ui-monospace,"SF Mono",Menlo,monospace; --font-display:"Bricolage Grotesque Variable","Figtree Variable",ui-sans-serif,sans-serif; --font-read:var(--font-display);
   --fs-2xs:.6875rem; --fs-xs:.75rem; --fs-sm:.875rem; --fs-md:1rem; --fs-lg:1.125rem; --fs-xl:1.25rem; --fs-2xl:1.375rem; --fs-3xl:1.5625rem; --fs-4xl:1.75rem; --fs-5xl:2rem;
   --lh-2xs:1rem; --lh-xs:1rem; --lh-sm:1.25rem; --lh-md:1.625rem; --lh-lg:1.625rem; --lh-xl:1.75rem; --lh-2xl:1.875rem; --lh-3xl:2rem; --lh-4xl:2.25rem; --lh-5xl:2.5rem;
   /* espacio */ --sp-1:.25rem; --sp-2:.5rem; --sp-3:.75rem; --sp-4:1rem; --sp-5:1.25rem; --sp-6:1.5rem; --sp-8:2rem; --sp-10:2.5rem; --sp-12:3rem;
   /* controles */ --ctl-xs:1.5rem; --ctl-sm:1.75rem; --ctl-md:2rem; --ctl-lg:2.5rem; --bar-h:3.25rem; --tabs-h:2.75rem; --dock-h:4rem; --sidebar-w:15.5rem; --sidebar-w-collapsed:3.5rem; --rail-w:20rem; --panel-w:22.5rem; --col-w:45rem; --col-wide:55rem;
   --slot-h:3.5rem; /* móvil: se actualiza por ResizeObserver */
-  /* radios */ --r-xs:4px; --r-sm:6px; --r-md:8px; --r-group:10px; --r-lg:12px; --r-xl:16px; --r-full:999px;
+  /* radios */ --r-xs:3px; --r-sm:4px; --r-md:6px; --r-group:8px; --r-lg:8px; --r-xl:12px; --r-full:999px;
   /* elevación */ --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 24px -6px rgba(0,0,0,.55); --shadow-modal:0 2px 4px rgba(0,0,0,.35),0 12px 32px -8px rgba(0,0,0,.6),0 32px 80px -24px rgba(0,0,0,.7);
   --shadow-card:inset 0 1px 0 rgba(255,248,230,.04); --shadow-raised:inset 0 1px 0 rgba(255,248,230,.06);
   /* movimiento */ --dur-1:120ms; --dur-2:180ms; --dur-3:240ms; --dur-flip:420ms; --ease-out:cubic-bezier(.2,0,0,1); --ease-in-out:cubic-bezier(.4,0,.2,1);

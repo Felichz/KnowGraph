@@ -1,22 +1,30 @@
-// Utilidades del grafo topológico (design-spec D.9 GraphNode).
-export const NODE_W = 236;
-export const NODE_H = 88;
+// Geometría del grafo (specs/003-graph-view §B). Unidades de mundo; la cámara escala.
+// Etapas en columnas de izquierda a derecha: una etapa entera (hasta 14 conceptos) cabe en alto
+// a zoom legible, así que la vista principal muestra ~5 etapas completas con títulos.
+export const NODE_W = 176;
+export const NODE_H = 46;
+export const LAYOUT = { nodeWidth: NODE_W, nodeHeight: NODE_H, columnGap: 44, rowGap: 10, paddingX: 24, paddingTop: 24, paddingBottom: 24, align: "center" };
+export const STEP_X = NODE_W + LAYOUT.columnGap;
+// Zoom semántico: por debajo de LABEL_K las fichas son pastillas sin texto (el minimapa da el conjunto).
+export const LABEL_K = 0.62;
+export const MIN_K = 0.12;
+export const MAX_K = 1.6;
 
-export function splitLabel(label, maxChars = 29) {
+export const rankX = (rank) => LAYOUT.paddingX + rank * STEP_X;
+
+// Dos líneas; la primera deja hueco al icono de estado de la esquina.
+export function splitLabel(label, first = 16, second = 19) {
   const words = label.split(/\s+/).filter(Boolean);
   const lines = [""];
   words.forEach((word) => {
     const current = lines.at(-1);
     const candidate = current ? `${current} ${word}` : word;
-    if (candidate.length <= maxChars || lines.length === 2) lines[lines.length - 1] = candidate;
+    if (candidate.length <= (lines.length === 1 ? first : second) || lines.length === 2) lines[lines.length - 1] = candidate;
     else lines.push(word);
   });
-  if (lines[1]?.length > maxChars) lines[1] = `${lines[1].slice(0, maxChars - 1).trim()}…`;
+  if (lines[0].length > first) lines[0] = `${lines[0].slice(0, first - 1).trim()}…`;
+  if (lines[1]?.length > second) lines[1] = `${lines[1].slice(0, second - 1).trim()}…`;
   return lines.slice(0, 2);
-}
-
-export function truncate(text, max = 19) {
-  return text.length > max ? `${text.slice(0, max - 1).trim()}…` : text;
 }
 
 export function edgePath(source, target) {
@@ -24,32 +32,54 @@ export function edgePath(source, target) {
   const y1 = source.y + NODE_H / 2;
   const x2 = target.x;
   const y2 = target.y + NODE_H / 2;
-  const distance = Math.max(54, (x2 - x1) * 0.46);
+  const distance = Math.max(LAYOUT.columnGap / 2, (x2 - x1) * 0.5);
   return `M ${x1} ${y1} C ${x1 + distance} ${y1}, ${x2 - distance} ${y2}, ${x2} ${y2}`;
 }
 
-// Encuadre inicial: columnas enteras desde el nodo primario (escala ≤ 1.04).
-export function viewForPosition(position, config, viewport) {
-  const inset = Math.min(72, Math.max(24, Math.round(viewport.width * 0.055)));
-  const available = Math.max(config.nodeWidth, viewport.width - inset * 2);
-  const step = config.nodeWidth + config.columnGap;
-  const minScale = viewport.width <= 760 ? 0.84 : 0.88;
-  let columns = 1;
-  while (available / (config.nodeWidth + columns * step) >= minScale) columns += 1;
-  const k = Math.min(1.04, available / (config.nodeWidth + (columns - 1) * step));
-  return { k, x: inset - position.x * k, y: viewport.height / 2 - (position.y + config.nodeHeight / 2) * k };
+const clampK = (k) => Math.min(MAX_K, Math.max(MIN_K, k));
+
+export function boundsOf(positions) {
+  if (!positions.length) return { x: 0, y: 0, width: NODE_W, height: NODE_H };
+  const xs = positions.map((p) => p.x);
+  const ys = positions.map((p) => p.y);
+  const x = Math.min(...xs);
+  const y = Math.min(...ys);
+  return { x, y, width: Math.max(...xs) + NODE_W - x, height: Math.max(...ys) + NODE_H - y };
 }
 
-export function fitView(layout, viewport) {
-  const k = Math.max(0.18, Math.min(1.04, (viewport.width - 48) / layout.width, (viewport.height - 48) / layout.height));
-  return { k, x: (viewport.width - layout.width * k) / 2, y: (viewport.height - layout.height * k) / 2 };
+// Encuadre completo (botón «ver todo»).
+export function fitView(bounds, viewport, inset) {
+  const w = viewport.width - inset.left - inset.right;
+  const h = viewport.height - inset.top - inset.bottom;
+  const k = clampK(Math.min(1, w / bounds.width, h / bounds.height));
+  return { k, x: inset.left + (w - bounds.width * k) / 2 - bounds.x * k, y: inset.top + (h - bounds.height * k) / 2 - bounds.y * k };
+}
+
+// Vista inicial legible: la etapa más alta entra en alto (zoom 0.78–1) y la columna del concepto
+// ancla queda a un tercio, con sus prerrequisitos a la izquierda y lo que sigue a la derecha.
+export function readableView(bounds, anchor, viewport, inset) {
+  const h = viewport.height - inset.top - inset.bottom;
+  const k = Math.min(1, Math.max(0.78, h / bounds.height));
+  const left = inset.left - bounds.x * k;
+  // Nunca se deja hueco a la izquierda de la primera etapa.
+  const x = anchor ? Math.min(left, inset.left + (viewport.width - inset.left - inset.right) * 0.34 - (anchor.x + NODE_W / 2) * k) : left;
+  const contentH = bounds.height * k;
+  const y = contentH <= h ? inset.top + (h - contentH) / 2 - bounds.y * k : inset.top + h / 2 - (anchor ? anchor.y + NODE_H / 2 : bounds.y) * k;
+  return { k, x, y };
 }
 
 export function centerOn(position, viewport, k) {
-  return { k, x: viewport.width / 2 - (position.x + NODE_W / 2) * k, y: viewport.height / 2 - (position.y + NODE_H / 2) * k };
+  const z = clampK(k);
+  return { k: z, x: viewport.width / 2 - (position.x + NODE_W / 2) * z, y: viewport.height / 2 - (position.y + NODE_H / 2) * z };
 }
 
-// Navegación por teclado (F.6a): ←/→ etapa anterior/siguiente (nodo más cercano en Y), ↑/↓ dentro de la etapa.
+export function isOffscreen(position, view, viewport, margin = 32) {
+  const sx = position.x * view.k + view.x;
+  const sy = position.y * view.k + view.y;
+  return sx < margin || sy < margin || sx + NODE_W * view.k > viewport.width - margin || sy + NODE_H * view.k > viewport.height - margin;
+}
+
+// Navegación por teclado: ←/→ etapa anterior/siguiente (nodo más cercano en Y), ↑/↓ dentro de la etapa.
 export function neighborInDirection(layout, fromId, key, isActive) {
   const from = layout.positions.get(fromId);
   if (!from) return null;

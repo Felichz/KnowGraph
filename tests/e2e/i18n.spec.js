@@ -47,6 +47,6 @@ test.describe("Internationalization (EN default, ES via switcher)", () => {
     await page.getByRole("button", { name: "Conexiones de IA" }).click();
     await page.locator(".settings").getByRole("radio", { name: "EN", exact: true }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await expect(page.locator("#settings-title")).toHaveText("AI connections");
+    await expect(page.locator("#settings-title")).toHaveText("Settings");
   });
 });

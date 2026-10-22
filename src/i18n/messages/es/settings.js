@@ -7,7 +7,8 @@ export default {
     hint: "Sigue la configuración del sistema hasta que elijas claro u oscuro. La elección se guarda en este dispositivo.",
   },
   drawer: {
-    title: "Conexiones de IA",
+    title: "Ajustes",
+    connections: "Conexiones de IA",
     newConnection: "Nueva conexión",
     connection: "Conexión",
     activeConnection: "Conexión activa",

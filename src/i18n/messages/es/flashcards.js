@@ -9,13 +9,15 @@ export default {
   },
   view: {
     title: "Repaso",
-    help: "Tocá una card para darla vuelta. En práctica, respondé mentalmente y autoevaluate.",
+    help: "Abre una card para responderla mentalmente y luego revela la idea clave y tu explicación. La práctica empieza por las más flojas.",
     practice: "Practicar {n}",
     emptyTitle: "No hay cards en este filtro",
     emptyBody: "Cambiá el filtro o el foco para ver otras cards.",
     showAll: "Ver todas",
   },
   card: {
+    open: "{label}: abrir flashcard",
+    hasExplanation: "Tu explicación está guardada",
     showFront: "{label}: ver frente",
     showAnswer: "{label}: ver respuesta",
     hint: "¿Cómo lo explicarías?",
@@ -23,6 +25,15 @@ export default {
     yourExplanation: "Tu explicación",
     improve: "Mejorar explicación",
     study: "Estudiar",
+  },
+  modal: {
+    position: "{n} / {total}",
+    previous: "Card anterior",
+    next: "Card siguiente",
+    reveal: "Mostrar respuesta",
+    space: "Espacio",
+    noExplanation: "Aún no escribiste una explicación para esta card.",
+    keys: "← → cambiar de card · Espacio muestra la respuesta",
   },
   practice: {
     title: "Práctica",

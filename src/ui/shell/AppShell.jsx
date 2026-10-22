@@ -22,7 +22,7 @@ export function AppShell({ model, inert }) {
   const collapsed = !desktop || collapsedPref;
   const isGraph = view === "map" && mapMode === "graph";
   return (
-    <div className={`app ${mobile ? "is-mobile" : collapsed ? "is-collapsed" : ""}`} inert={inert ? "" : undefined} aria-hidden={inert || undefined}>
+    <div className={`app ${mobile ? "is-mobile" : collapsed ? "is-collapsed" : ""}`} inert={inert || undefined} aria-hidden={inert || undefined}>
       {!mobile && <Sidebar model={model} collapsed={collapsed} canExpand={desktop} />}
       <main id="main" ref={scrollRef} tabIndex={-1} className={`canvas view-scroll ${isGraph ? "is-graph" : ""}`}>
         {mobile ? <MobileTopBar model={model} narrow={narrow} onOpenFocus={() => setFocusOpen(true)} /> : <TopBar model={model} scrollRef={scrollRef} />}
