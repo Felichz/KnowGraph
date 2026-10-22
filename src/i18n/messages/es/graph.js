@@ -1,38 +1,53 @@
-// Vista Grafo: lienzo, columnas de etapa, nodos y overlays (lectura, controles, leyenda).
+// Vista Grafo: mapa completo por etapas, zoom semántico, cadena de prerrequisitos y panel del concepto.
 export default {
   canvas: {
     roleDescription: "mapa de dependencias",
-    label: ({ graph, stages, edges }) => `Mapa topológico de ${graph}. ${stages} etapas y ${edges} dependencias.`,
+    label: ({ graph, stages, edges }) =>
+      `Mapa de dependencias de ${graph}: ${stages} etapas y ${edges} dependencias. Las flechas del teclado mueven entre conceptos y Enter abre uno.`,
   },
-  stage: {
-    index: "ETAPA {n}",
-    start: "Punto de partida",
-    count: ({ n }) => `${n} conceptos`,
+  node: { stage: "etapa {stage}" },
+  status: {
+    extra: "profundidad extra, {score} de 120",
+    mastered: "dominada",
+    progress: "en curso, {score} de 120",
+    available: "lista para estudiar",
+    blocked: ({ n }) => `necesita ${n} ${n === 1 ? "prerrequisito" : "prerrequisitos"}`,
   },
-  node: {
-    stage: "etapa {stage}",
-    title: "{label}. Etapa {stage}. {score}",
+  ruler: { stage: "Etapa" },
+  minimap: {
+    title: "Mapa completo",
+    mastered: "{done}/{total}",
+    label: ({ done, total }) => `Mapa completo: ${done} de ${total} conceptos dominados. Pulsa o arrastra para mover la vista.`,
   },
-  inspect: {
-    needs: "Necesita",
-    needsNone: "nada: es punto de partida",
-    unlocks: "Habilita",
-    unlocksNone: "ningún concepto directo",
-    help: "Mostramos solo el próximo avance. Pasá por un nodo o seleccionalo para ver sus relaciones directas.",
-  },
-  cycleWarning: "Detectamos un ciclo en las dependencias; algunas flechas pueden verse fuera de orden.",
+  cycleWarning: "Encontramos un ciclo en las dependencias, así que algunas flechas pueden aparecer fuera de orden.",
   controls: {
-    stage: "Etapa {stage} de {total}",
     label: "Controles del mapa",
-    primary: "Próximo foco",
+    bestNext: "Ir al mejor siguiente",
     fit: "Ver el mapa completo",
     zoomOut: "Alejar",
     zoomIn: "Acercar",
   },
   legend: {
     label: "Leyenda",
+    mastered: "Dominada (100+)",
+    extra: "Profundidad extra",
+    available: "Lista",
+    blocked: "Necesita prerrequisitos",
+    best: "Mejor siguiente",
+    chain: "Cadena de prerrequisitos",
+    unlocks: "Desbloquea",
+    hint: "Rueda para hacer zoom, arrastra para moverte. Acerca para leer títulos; doble clic para estudiar.",
+  },
+  panel: {
+    label: "Concepto seleccionado",
+    stage: "Etapa {n} de {total}",
+    whyNow: "Por qué ahora",
     needs: "Necesita",
-    extra: "Extra",
-    questionsRef: "{count}/110 preguntas de referencia",
+    needsNone: "Nada. Es un punto de partida.",
+    unlocks: "Desbloquea",
+    unlocksNone: "Ningún otro concepto depende de él.",
+    study: "Estudiar ahora",
+    backToBest: "Volver al mejor siguiente",
+    outOfFocus: "fuera de este foco",
   },
 };

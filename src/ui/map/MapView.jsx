@@ -5,6 +5,7 @@ import { useT } from "../../i18n/react.js";
 import { Notice } from "../primitives/Feedback.jsx";
 import { Button } from "../primitives/Button.jsx";
 import { SuggestedRoute } from "./SuggestedRoute.jsx";
+import { HeatGrid } from "./HeatGrid.jsx";
 import { ConceptGroups } from "./ConceptGrid.jsx";
 
 const GraphView = lazy(() => import("../graph/GraphView.jsx"));
@@ -28,6 +29,7 @@ export function MapView({ model, mode }) {
           {t("map.loadError")}
         </Notice>
       )}
+      <HeatGrid model={model} />
       <SuggestedRoute model={model} />
       <ConceptGroups model={model} activeTaskNodeIds={activeTaskNodeIds} />
     </div>

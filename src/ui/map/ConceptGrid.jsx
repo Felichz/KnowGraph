@@ -50,12 +50,12 @@ export function ConceptGroups({ model, activeTaskNodeIds }) {
             <div className={mobile ? "rows" : "grid"}>
               {nodes.map((node) => {
                 const props = {
-                  key: node.id, node, graph, p: progress.of(node.id), loading: progress.status === "loading",
+                  node, graph, p: progress.of(node.id), loading: progress.status === "loading",
                   level: guidance.levelById.get(node.id) ?? 0, aiActive: activeTaskNodeIds.has(node.id),
                   missing: node.prerequisites.filter((id) => !progress.checked.has(id)).map((id) => graph.nodeById.get(id)?.label).filter(Boolean),
                   onOpen: () => actions.openCard(node.id),
                 };
-                return mobile ? <ConceptRow {...props} /> : <ConceptCard {...props} />;
+                return mobile ? <ConceptRow key={node.id} {...props} /> : <ConceptCard key={node.id} {...props} />;
               })}
             </div>
           </section>

@@ -7,6 +7,7 @@ const DEFAULTS = {
   paddingTop: 170,
   paddingBottom: 110,
   sweeps: 8,
+  align: "top",
 };
 
 function compareNodes(a, b, categoryOrder) {
@@ -116,8 +117,10 @@ export function createTopologicalLayout(graph, options = {}) {
   const width = config.paddingX * 2 + config.nodeWidth + maxRank * columnStep;
   const positions = new Map();
 
+  // align "center": cada etapa se centra en vertical respecto a la etapa más alta.
   layers.forEach((layer, rank) => {
-    const startY = config.paddingTop;
+    const layerHeight = layer.length * config.nodeHeight + Math.max(0, layer.length - 1) * config.rowGap;
+    const startY = config.paddingTop + (config.align === "center" ? (contentHeight - layerHeight) / 2 : 0);
     layer.forEach((node, index) => {
       positions.set(node.id, {
         node,

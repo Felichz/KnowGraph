@@ -1,39 +1,53 @@
-// Graph view: canvas, stage columns, nodes, overlays (reading panel, controls, legend).
+// Graph view: full stage map, semantic zoom, prerequisite chain and the selected-concept panel.
 export default {
   canvas: {
     roleDescription: "dependency map",
     label: ({ graph, stages, edges }) =>
-      `Topological map of ${graph}: ${stages} ${stages === 1 ? "stage" : "stages"} and ${edges} ${edges === 1 ? "dependency" : "dependencies"}.`,
+      `Dependency map of ${graph}: ${stages} ${stages === 1 ? "stage" : "stages"} and ${edges} ${edges === 1 ? "dependency" : "dependencies"}. Arrow keys move between concepts, Enter opens one.`,
   },
-  stage: {
-    index: "STAGE {n}",
-    start: "Starting point",
-    count: ({ n }) => `${n} ${n === 1 ? "concept" : "concepts"}`,
+  node: { stage: "stage {stage}" },
+  status: {
+    extra: "extra depth, {score} of 120",
+    mastered: "mastered",
+    progress: "in progress, {score} of 120",
+    available: "ready to study",
+    blocked: ({ n }) => `needs ${n} ${n === 1 ? "prerequisite" : "prerequisites"}`,
   },
-  node: {
-    stage: "stage {stage}",
-    title: "{label}. Stage {stage}. {score}",
-  },
-  inspect: {
-    needs: "Needs",
-    needsNone: "nothing, it's a starting point",
-    unlocks: "Unlocks",
-    unlocksNone: "no direct concepts",
-    help: "Only the next step is shown. Hover over or select a concept to see its direct relationships.",
+  ruler: { stage: "Stage" },
+  minimap: {
+    title: "Whole map",
+    mastered: "{done}/{total}",
+    label: ({ done, total }) => `Whole map: ${done} of ${total} concepts mastered. Click or drag to move the view.`,
   },
   cycleWarning: "We found a cycle in the dependencies, so some arrows may appear out of order.",
   controls: {
-    stage: "Stage {stage} of {total}",
     label: "Map controls",
-    primary: "Go to next concept",
-    fit: "Show the full map",
+    bestNext: "Go to best next",
+    fit: "Show the whole map",
     zoomOut: "Zoom out",
     zoomIn: "Zoom in",
   },
   legend: {
     label: "Legend",
+    mastered: "Mastered (100+)",
+    extra: "Extra depth",
+    available: "Ready",
+    blocked: "Needs prerequisites",
+    best: "Best next",
+    chain: "Prerequisite chain",
+    unlocks: "Unlocks",
+    hint: "Scroll to zoom, drag to move. Zoom in to read titles; double-click to study.",
+  },
+  panel: {
+    label: "Selected concept",
+    stage: "Stage {n} of {total}",
+    whyNow: "Why now",
     needs: "Needs",
-    extra: "Extra",
-    questionsRef: "{count}/110 reference questions",
+    needsNone: "Nothing. It's a starting point.",
+    unlocks: "Unlocks",
+    unlocksNone: "No other concept depends on it.",
+    study: "Study now",
+    backToBest: "Back to best next",
+    outOfFocus: "outside this focus",
   },
 };

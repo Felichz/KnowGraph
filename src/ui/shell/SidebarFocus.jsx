@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Filter, LayoutGrid } from "lucide-react";
-import { CategoryDot } from "../primitives/CategoryDot.jsx";
+import { getCategoryColor } from "../theme/categoryPalette.js";
 import { actions } from "../state/useWorkspace.js";
 import { FocusPopover } from "./FocusPicker.jsx";
 import { useT } from "../../i18n/react.js";
@@ -32,7 +32,7 @@ export function SidebarFocus({ model, collapsed }) {
           icon={<LayoutGrid size={16} strokeWidth={1.5} aria-hidden="true" />} count={`${progress.done}/${total}`} status={progress.status} />
         {Object.entries(graph.categories).map(([cat, info]) => (
           <FocusRow key={cat} checked={focusCat === cat} onSelect={() => actions.setFocus(cat)} label={info.label}
-            icon={<CategoryDot graph={graph} cat={cat} />} count={`${progress.byCat[cat]?.done ?? 0}/${progress.byCat[cat]?.total ?? 0}`} status={progress.status} />
+            icon={<AreaCell graph={graph} cat={cat} c={progress.byCat[cat]} />} count={`${progress.byCat[cat]?.done ?? 0}/${progress.byCat[cat]?.total ?? 0}`} status={progress.status} />
         ))}
       </div>
     </div>
@@ -48,4 +48,11 @@ export function FocusRow({ checked, onSelect, label, icon, count, status }) {
         : <span className="side-item__meta mono">{status === "error" ? "—" : count}</span>}
     </button>
   );
+}
+
+// Celda de área: el mismo lenguaje de la rejilla (DESIGN v4 §8.1), llena según la fracción dominada.
+function AreaCell({ graph, cat, c }) {
+  const f = c?.total ? c.done / c.total : 0;
+  const level = f >= 1 ? 4 : f >= 0.66 ? 3 : f >= 0.33 ? 2 : f > 0 ? 1 : 0;
+  return <span aria-hidden="true" className={`heat h${level} side-cell`} style={{ "--area": getCategoryColor(graph.id, cat) }} />;
 }
