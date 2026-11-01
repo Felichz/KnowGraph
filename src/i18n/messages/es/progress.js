@@ -1,5 +1,9 @@
 // Vista Progreso: total, niveles de seniority, hitos y avance por categoría.
 export default {
+  levels: {
+    title: "Niveles e hitos",
+    current: "Camino a {label} · {done}/{total}",
+  },
   complete: "Completo",
   hero: {
     masteredLabel: "cards dominadas",

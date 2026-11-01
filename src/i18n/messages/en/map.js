@@ -19,8 +19,15 @@ export default {
       aiActive: "AI is working on this card",
     },
   },
+  next: {
+    resumeLabel: "Pick up where you left off",
+    startLabel: "Start here",
+    start: "Start studying",
+    review: ({ n }) => `or review ${n} ${n === 1 ? "card" : "cards"} due today`,
+  },
   heat: {
-    pickArea: "Pick an area in your map (or in the sidebar) to see its concepts as cards.",
+    viewGraph: "View as graph",
+    pickArea: "Pick an area in your map to see its concepts as cards.",
     title: "Your map",
     mastered: "mastered",
     status: {

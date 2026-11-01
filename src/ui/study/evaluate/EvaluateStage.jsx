@@ -6,10 +6,11 @@ import { ScaleExplainer } from "../../primitives/ScaleExplainer.jsx";
 import { actions } from "../../state/useWorkspace.js";
 import { TaskStatus } from "../TaskStatus.jsx";
 import { EvaluationResult } from "./EvaluationResult.jsx";
+import { NextAfterEvaluation } from "./NextAfterEvaluation.jsx";
 import { AttemptHistory } from "./AttemptHistory.jsx";
 
 // 04 Evaluar: evaluación 0–120 en background, resultado con rúbrica e historial de intentos.
-export function EvaluateStage({ data, study, go }) {
+export function EvaluateStage({ node, model, data, study, go }) {
   const t = useT();
   const evalTask = data.task?.type === "evaluation" ? data.task : null;
   const running = evalTask?.status === "running";
@@ -59,8 +60,7 @@ export function EvaluateStage({ data, study, go }) {
         )}
         {selected && (
           <div className="eval-next">
-            <Button variant="secondary" icon={PenLine} onClick={() => go("paraphrase")}>{t("study.evaluate.improve")}</Button>
-            <Button variant="ghost" onClick={actions.closeCard}>{t("study.backToMap")}</Button>
+            <NextAfterEvaluation node={node} model={model} go={go} />
           </div>
         )}
       </section>

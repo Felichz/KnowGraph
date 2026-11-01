@@ -1,23 +1,7 @@
 /* Flujo de estudio (specs/004-ui-flow): «Continuar», primer uso, escala /120 y estado común de nota. */
 
-/* «Continuar» */
-.continue { display: grid; gap: var(--sp-4); padding-bottom: var(--sp-8); border-bottom: 1px solid var(--line-subtle); }
-.continue__title { font-size: var(--fs-xl); line-height: var(--lh-xl); font-weight: 600; letter-spacing: -0.015em; }
-.continue__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--sp-3); align-items: stretch; }
-.continue__tile { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; padding: var(--sp-4); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface-1); box-shadow: var(--shadow-card); }
-.continue__tile.is-best { border-color: color-mix(in oklch, var(--accent) 45%, var(--line)); }
-.continue__tile > .btn { align-self: flex-start; margin-top: auto; }
-.continue__tile .empty { padding: 0; }
-.continue__top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 1.375rem; }
-.continue__top .cat-label { min-width: 0; }
-.continue__name { font-size: var(--fs-lg); line-height: var(--lh-lg); font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
-.continue__why { display: block; font-size: var(--fs-sm); line-height: var(--lh-sm); margin-bottom: var(--sp-2); }
-.continue__why svg { vertical-align: -2px; }
 
 /* Primer uso */
-.intro { display: grid; gap: var(--sp-4); padding: var(--sp-5); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface-1); }
-.intro__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
-.intro__title { font-family: var(--font-display); font-size: var(--fs-2xl); line-height: var(--lh-2xl); font-weight: 500; }
 .intro__steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
 .intro__steps li { display: flex; gap: var(--sp-3); font-size: var(--fs-sm); line-height: var(--lh-sm); }
 .intro__num { display: inline-grid; place-items: center; flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: var(--r-full); background: var(--pill-neutral); color: var(--text-1); font-size: var(--fs-xs); font-weight: 600; }
@@ -49,6 +33,5 @@
 
 @media (max-width: 47.99em) {
   .intro__steps { grid-template-columns: minmax(0, 1fr); }
-  .continue__tile > .btn { align-self: stretch; }
   .study-tab__sep, .study-tab__badge { display: none; }
 }

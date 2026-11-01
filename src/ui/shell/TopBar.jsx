@@ -1,14 +1,9 @@
 import { useEffect, useState } from "react";
-import { Filter, LayoutList, List, Network, Workflow } from "lucide-react";
-import { Segmented } from "../primitives/Segmented.jsx";
+import { X } from "lucide-react";
 import { BrandGlyph } from "../primitives/BrandGlyph.jsx";
 import { actions, useWorkspace } from "../state/useWorkspace.js";
 import { useT } from "../../i18n/react.js";
-import { LanguageSwitch } from "./LanguageSwitch.jsx";
-import { ThemeToggle } from "./ThemeToggle.jsx";
-
-const TITLES = { map: null, flashcards: "shell.nav.flashcards", progress: "shell.nav.progress" };
-const MODES = [{ value: "list", labelKey: "shell.topbar.list", icon: LayoutList }, { value: "graph", labelKey: "shell.topbar.graph", icon: Workflow }];
+import { CurriculumMenu } from "./Sidebar.jsx";
 
 function useScrolled(scrollRef) {
   const [scrolled, setScrolled] = useState(false);
@@ -22,58 +17,45 @@ function useScrolled(scrollRef) {
   return scrolled;
 }
 
-// Barra superior del canvas (B.4): título + controles pegados al título, sin space-between.
+// Si hay un área en foco, se nombra y se puede quitar desde aquí: el único filtro del mapa.
+function FocusChip({ model }) {
+  const t = useT();
+  if (!model.focusCat) return null;
+  const name = model.graph.categories[model.focusCat].label;
+  return (
+    <button type="button" className="focus-chip" onClick={() => actions.setFocus(null)} aria-label={t("shell.topbar.showAll")}>
+      <span className="clamp-1">{t("shell.topbar.focusLabel", { name })}</span>
+      <X size={14} strokeWidth={1.75} aria-hidden="true" />
+    </button>
+  );
+}
+
+// Barra superior (specs/007): solo dónde estás y, si lo hay, el área en foco. Idioma y tema viven en Ajustes.
 export function TopBar({ model, scrollRef }) {
   const view = useWorkspace((s) => s.view);
-  const mapMode = useWorkspace((s) => s.prefs.mapMode);
   const scrolled = useScrolled(scrollRef);
   const t = useT();
-  const focusLabel = model.focusCat ? model.graph.categories[model.focusCat].label : t("shell.topbar.allFocus");
-  const modes = MODES.map(({ labelKey, ...mode }) => ({ ...mode, label: t(labelKey) }));
   return (
     <header className={`topbar ${scrolled ? "is-scrolled" : ""}`}>
       <h1 className="topbar__title" tabIndex={-1} data-view-title>
-        {TITLES[view] ? t(TITLES[view]) : model.graph.label}
-        <span className="topbar__sub"> · {view === "map" ? focusLabel : model.graph.label}</span>
+        {view === "flashcards" ? t("shell.nav.flashcards") : t("shell.nav.map")}
+        <span className="topbar__sub"> · {model.graph.label}</span>
       </h1>
-      {view === "map" && (
-        <Segmented label={t("shell.topbar.mapMode")} options={modes} value={mapMode} onChange={(value) => actions.setPref("mapMode", value)} />
-      )}
-      <div className="topbar__prefs">
-        <LanguageSwitch className="topbar__lang" />
-        <ThemeToggle className="topbar__theme" />
-      </div>
+      <FocusChip model={model} />
     </header>
   );
 }
 
-const GRAPH_OPTIONS = [{ value: "react", label: "React" }, { value: "rails", label: "Rails" }];
-
-// Barra móvil (D.1): glifo · selector de grafo · Foco · Lista/Grafo.
-export function MobileTopBar({ model, onOpenFocus, narrow }) {
+// Barra móvil: glifo, temario y área en foco.
+export function MobileTopBar({ model }) {
   const view = useWorkspace((s) => s.view);
-  const mapMode = useWorkspace((s) => s.prefs.mapMode);
   const t = useT();
-  const focusName = model.focusCat ? model.graph.categories[model.focusCat].label : null;
   return (
     <header className="mtopbar">
       <BrandGlyph size={24} />
-      <h1 className="sr-only" tabIndex={-1} data-view-title>{model.graph.label}</h1>
-      <Segmented label={t("shell.sidebar.knowledgeMap")} options={GRAPH_OPTIONS} value={model.graphId} onChange={actions.setGraph} size="md" />
-      {view !== "progress" && (
-        <button type="button" className={`mtopbar__focus ${focusName ? "is-selected" : ""}`} onClick={onOpenFocus}
-          aria-label={focusName ? t("shell.topbar.focusLabel", { name: focusName }) : t("shell.topbar.focusAll")}>
-          <Filter size={16} strokeWidth={1.5} aria-hidden="true" />
-          {focusName && !narrow ? <span className="clamp-1">{focusName}</span> : null}
-        </button>
-      )}
-      {view === "map" && (
-        <button type="button" className="icon-btn icon-btn--md" aria-pressed={mapMode === "graph"}
-          aria-label={mapMode === "graph" ? t("shell.topbar.viewAsList") : t("shell.topbar.viewAsGraph")} onClick={() => actions.setPref("mapMode", mapMode === "graph" ? "list" : "graph")}>
-          {mapMode === "graph" ? <List size={20} strokeWidth={1.5} aria-hidden="true" /> : <Network size={20} strokeWidth={1.5} aria-hidden="true" />}
-        </button>
-      )}
-      {!narrow && <LanguageSwitch compact />}
+      <h1 className="sr-only" tabIndex={-1} data-view-title>{view === "flashcards" ? t("shell.nav.flashcards") : t("shell.nav.map")} · {model.graph.label}</h1>
+      <CurriculumMenu model={model} />
+      <FocusChip model={model} />
     </header>
   );
 }

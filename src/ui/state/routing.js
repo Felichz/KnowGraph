@@ -1,8 +1,8 @@
 import { GRAPH_REGISTRY } from "../../logic/graphRegistry.js";
 
-// Rutas: /:graph, /:graph/card/:nodeId, ?view=flashcards|progress (design-spec D.2).
+// Rutas: /:graph, /:graph/card/:nodeId, ?view=flashcards (specs/007). El antiguo ?view=progress cae en el mapa.
 export const APP_STATE = "learning-workspace-v3";
-const VIEWS = new Set(["map", "flashcards", "progress"]);
+const VIEWS = new Set(["map", "flashcards"]);
 
 export function parseLocation(loc = window.location) {
   const parts = loc.pathname.split("/").filter(Boolean);

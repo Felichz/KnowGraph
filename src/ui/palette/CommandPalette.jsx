@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { ArrowRight, BarChart3, Languages, Layers, Map, Moon, Network, Search, Settings2, Shuffle, Sun } from "lucide-react";
+import { ArrowRight, Languages, Layers, Map, Moon, Network, LayoutGrid, Search, Settings2, Shuffle, Sun } from "lucide-react";
 import { Overlay } from "../primitives/Overlay.jsx";
 import { CategoryDot } from "../primitives/CategoryDot.jsx";
 import { ScoreValue } from "../primitives/Score.jsx";
@@ -18,8 +18,8 @@ function buildActions(graphId, locale, theme, t) {
   return [
     { id: "a-map", label: t("palette.actions.map"), icon: Map, run: () => actions.setView("map") },
     { id: "a-flash", label: t("palette.actions.flashcards"), icon: Layers, run: () => actions.setView("flashcards") },
-    { id: "a-progress", label: t("palette.actions.progress"), icon: BarChart3, run: () => actions.setView("progress") },
     { id: "a-graph", label: t("palette.actions.graphView"), icon: Network, run: () => { actions.setView("map"); actions.setPref("mapMode", "graph"); } },
+    { id: "a-grid", label: t("palette.actions.gridView"), icon: LayoutGrid, run: () => { actions.setView("map"); actions.setPref("mapMode", "list"); } },
     { id: "a-switch", label: t("palette.actions.switchGraph", { name: other === "react" ? "React" : "Rails" }), icon: Shuffle, run: () => actions.setGraph(other) },
     { id: "a-settings", label: t("palette.actions.settings"), icon: Settings2, run: () => actions.openOverlay("settings") },
     { id: "a-locale", label: t("palette.actions.switchLanguage", { language: t(`common.language.${nextLocale}`) }), icon: Languages, run: () => actions.setLocale(nextLocale) },

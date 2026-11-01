@@ -16,7 +16,7 @@ export default {
     dark: "Oscuro",
     switchTo: { light: "Cambiar a tema claro", dark: "Cambiar a tema oscuro" },
   },
-  stages: { read: "Leer", mentor: "Mentor IA", paraphrase: "Parafrasear", evaluate: "Evaluar" },
+  stages: { read: "Leer", mentor: "Mentor IA", paraphrase: "Explicar", evaluate: "Evaluar" },
   status: {
     strong: "Base cubierta",
     exceptional: "Profundización extra",

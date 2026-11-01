@@ -13,7 +13,6 @@ export function CoachPanel({ node, live }) {
   const items = mergeCoachCoverage(buildCoachChecklist(node), live.review?.coverage);
   const hint = live.review?.hint;
   const covered = items.filter((i) => i.status === "covered").length;
-  const [emptyBefore, emptyAfter = ""] = t("study.paraphrase.coach.empty").split("{action}");
   return (
     <aside className="coach" aria-label={t("study.paraphrase.coach.label")}>
       {live.error && <Notice tone="error">{live.error}</Notice>}
@@ -28,7 +27,7 @@ export function CoachPanel({ node, live }) {
       ) : (
         <section className="coach__hint is-empty">
           <span className="eyebrow">{t("study.paraphrase.coach.coaching")}</span>
-          <p className="t2">{emptyBefore}<strong>{t("study.paraphrase.review")}</strong>{emptyAfter}</p>
+          <p className="t2">{live.status === "loading" ? t("study.paraphrase.reviewing") : t("study.paraphrase.coach.empty")}</p>
         </section>
       )}
       <section className="coach__list">

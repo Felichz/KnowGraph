@@ -1,34 +1,33 @@
 import { useMemo } from "react";
-import { Check, Lock } from "lucide-react";
+import { Check, ChevronDown, Lock } from "lucide-react";
 import { getMilestoneProgress, getSeniorityProgress } from "../../logic/seniorityProgress.js";
 import { useT } from "../../i18n/react.js";
-import { HeatGrid } from "../map/HeatGrid.jsx";
 import { actions } from "../state/useWorkspace.js";
 
 function Bar({ value, tone }) {
   return <span className={`pbar ${tone ? `pbar--${tone}` : ""}`} aria-hidden="true"><span style={{ width: `${value}%` }} /></span>;
 }
 
-// Progreso (US7): total, bandas de seniority, milestones y avance por categoría.
-export function ProgressView({ model }) {
+// Niveles e hitos (specs/007): lo que antes era la vista Progreso, plegado bajo la rejilla.
+// Es información para consultar de vez en cuando, no un destino de navegación.
+export function Levels({ model }) {
   const t = useT();
   const { graph, progress } = model;
   const bands = useMemo(() => getSeniorityProgress(graph.seniorityBands ?? [], progress.checked, graph.nodeIds), [graph, progress.checked]);
   const milestones = useMemo(() => getMilestoneProgress(graph.milestones ?? [], progress.checked, graph.nodeIds), [graph, progress.checked]);
-  const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
   const firstPending = (ids) => graph.nodes.filter((n) => ids.includes(n.id) && !progress.checked.has(n.id)).sort((a, b) => a.priority - b.priority)[0];
+  const current = bands.find((b) => !b.complete) ?? bands.at(-1);
 
   return (
-    <div className="progress">
-      <section className="progress__hero">
-        <p className="progress__big"><span className="mono">{progress.done}</span><span className="t3 mono">/{progress.total}</span> <span className="progress__big-label">{t("progress.hero.masteredLabel")}</span></p>
-        <p className="t2">{t("progress.hero.rule")} {pct === 100 ? t("progress.hero.mapComplete") : t("progress.hero.percent", { pct })}</p>
-      </section>
-      <HeatGrid model={model} bare />
-      {bands.length > 0 && (
-        <section className="progress__section">
-          <h2 className="progress__h">{t("progress.bands.title")}</h2>
-          <ol className="bands">
+    <details className="levels">
+      <summary className="levels__summary">
+        <span className="levels__title">{t("progress.levels.title")}</span>
+        {current && <span className="t3 levels__meta">{t("progress.levels.current", { label: current.label, done: current.done, total: current.total })}</span>}
+        <ChevronDown size={16} strokeWidth={1.5} className="levels__chev" aria-hidden="true" />
+      </summary>
+      <div className="levels__body">
+        {bands.length > 0 && (
+          <ol className="bands" aria-label={t("progress.bands.title")}>
             {bands.map((b) => (
               <li key={b.id} className={`band ${b.complete ? "is-complete" : ""} ${!b.requirementsMet ? "is-locked" : ""}`}>
                 <div className="band__head">
@@ -41,10 +40,8 @@ export function ProgressView({ model }) {
               </li>
             ))}
           </ol>
-        </section>
-      )}
-      <section className="progress__section">
-        <h2 className="progress__h">{t("progress.milestones.title")}</h2>
+        )}
+        <h3 className="progress__h">{t("progress.milestones.title")}</h3>
         <ul className="milestones">
           {milestones.map((m) => {
             const next = firstPending(m.nodeIds ?? []);
@@ -57,7 +54,7 @@ export function ProgressView({ model }) {
             );
           })}
         </ul>
-      </section>
-    </div>
+      </div>
+    </details>
   );
 }

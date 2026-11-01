@@ -18,12 +18,13 @@ import { MentorStage } from "./mentor/MentorStage.jsx";
 import { ParaphraseStage } from "./paraphrase/ParaphraseStage.jsx";
 import { EvaluateStage } from "./evaluate/EvaluateStage.jsx";
 
+// El camino es Leer → Explicar → Evaluar (specs/007 §2). El mentor es una ayuda, no un paso: se abre desde la cabecera.
 export const STAGES = [
   { id: "read", num: "01", labelKey: "common.stages.read", icon: BookOpen, Component: ReadStage },
-  { id: "mentor", num: "02", labelKey: "common.stages.mentor", icon: MessagesSquare, Component: MentorStage },
-  { id: "paraphrase", num: "03", labelKey: "common.stages.paraphrase", icon: PenLine, Component: ParaphraseStage },
-  { id: "evaluate", num: "04", labelKey: "common.stages.evaluate", icon: ClipboardCheck, Component: EvaluateStage },
+  { id: "paraphrase", num: "02", labelKey: "common.stages.paraphrase", icon: PenLine, Component: ParaphraseStage },
+  { id: "evaluate", num: "03", labelKey: "common.stages.evaluate", icon: ClipboardCheck, Component: EvaluateStage },
 ];
+const MENTOR = { id: "mentor", labelKey: "common.stages.mentor", Component: MentorStage };
 
 // Sesión de estudio: capa a pantalla completa sobre el shell (US2).
 export default function StudySession({ model, study }) {
@@ -47,8 +48,9 @@ function Session({ model, study, node, graphId }) {
   const { graph } = model;
   const data = useStudyData(graphId, node);
   const bodyRef = useRef(null);
+  const inMentor = study.stage === "mentor";
   const stageIndex = Math.max(0, STAGES.findIndex((s) => s.id === study.stage));
-  const stage = STAGES[stageIndex];
+  const stage = inMentor ? MENTOR : STAGES[stageIndex];
   const p = model.progress.of(node.id);
   const prevId = study.history.at(-1);
   const prevNode = prevId ? graph.nodeById?.get(prevId) : null;
@@ -84,20 +86,24 @@ function Session({ model, study, node, graphId }) {
         </div>
         <div className="study__meta">
           <ScoreValue score={p.displayScore} size="md" />
+          <Button variant={inMentor ? "secondary" : "ghost"} icon={MessagesSquare} aria-pressed={inMentor} className="study__mentor"
+            onClick={() => go(inMentor ? (study.returnStage ?? "read") : "mentor", inMentor ? {} : { returnStage: stage.id })}>
+            <span className="btn__label">{running && data.task.type === "pedagogical_harness" ? t("study.session.badge.working") : t("study.session.askMentor")}</span>
+          </Button>
           <IconButton icon={study.zen ? Minimize2 : Maximize2} label={study.zen ? t("study.session.zenExit") : t("study.session.zenEnter")} pressed={study.zen} onClick={() => actions.setZen(!study.zen)} />
           <IconButton icon={X} label={t("study.session.close")} onClick={actions.closeCard} />
         </div>
       </header>
       <nav className="study__tabs" role="tablist" aria-label={t("study.session.tabsLabel")} onKeyDown={onTabKey}>
         {STAGES.map((s, i) => {
-          const selected = s.id === stage.id;
+          const selected = !inMentor && s.id === stage.id;
           const scored = s.id === "evaluate" && data.attempts.length && typeof p.displayScore === "number";
           const badge = s.id === "paraphrase" && data.draft.trim() ? t("study.session.badge.draft") : s.id === "evaluate" && running && data.task.type === "evaluation" ? t("study.session.badge.evaluating")
-            : s.id === "mentor" && running && data.task.type === "pedagogical_harness" ? t("study.session.badge.working") : scored ? `${Math.round(p.displayScore)}/120` : null;
+            : scored ? `${Math.round(p.displayScore)}/120` : null;
           return [
             i > 0 && <ChevronRight key={`sep-${s.id}`} size={14} strokeWidth={1.5} className="study-tab__sep" aria-hidden="true" />,
-            <button key={s.id} id={`study-tab-${s.id}`} role="tab" aria-selected={selected} aria-controls="study-stage" tabIndex={selected ? 0 : -1}
-              className={`study-tab ${selected ? "is-active" : ""}`} onClick={() => go(s.id)}>
+            <button key={s.id} id={`study-tab-${s.id}`} role="tab" aria-selected={selected} aria-controls="study-stage"
+              className={`study-tab ${selected ? "is-active" : ""}`} tabIndex={selected || (inMentor && i === 0) ? 0 : -1} onClick={() => go(s.id)}>
               <span className="study-tab__num mono">{s.num}</span>
               <span className="study-tab__label">{t(s.labelKey)}</span>
               {badge && <span className={`study-tab__badge ${scored ? `mono tier-${scoreTier(p)}` : ""}`}>{scored && p.displayScore >= 100 ? <Check size={10} strokeWidth={2.5} aria-hidden="true" /> : null}{badge}</span>}
@@ -105,7 +111,7 @@ function Session({ model, study, node, graphId }) {
           ];
         })}
       </nav>
-      <div id="study-stage" ref={bodyRef} className="study__body" role="tabpanel" aria-labelledby={`study-tab-${stage.id}`} tabIndex={-1}>
+      <div id="study-stage" ref={bodyRef} className="study__body" role="tabpanel" aria-labelledby={inMentor ? undefined : `study-tab-${stage.id}`} aria-label={inMentor ? t(MENTOR.labelKey) : undefined} tabIndex={-1}>
         <Stage key={stage.id} node={node} graph={graph} model={model} data={data} study={study} go={go} />
       </div>
     </div>

@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { ArrowRight, Mic, MicOff, ScanSearch, Sparkles } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { ArrowRight, Mic, MicOff, Sparkles } from "lucide-react";
 import { useT } from "../../../i18n/react.js";
 import { Button } from "../../primitives/Button.jsx";
 import { Notice } from "../../primitives/Feedback.jsx";
@@ -9,7 +9,7 @@ import { useLiveReview } from "./useLiveReview.js";
 
 const SAVE_KEY = { saving: "study.paraphrase.save.saving", saved: "study.paraphrase.save.saved", error: "study.paraphrase.save.error" };
 
-// 03 Parafrasear: explicación propia con autosave, dictado y coaching a pedido.
+// 02 Explicar: explicación propia con autosave, dictado y coaching automático al pausar.
 export function ParaphraseStage({ node, graph, data, go }) {
   const t = useT();
   const speech = useSpeechRecognition();
@@ -19,6 +19,14 @@ export function ParaphraseStage({ node, graph, data, go }) {
   const words = data.draft.trim() ? data.draft.trim().split(/\s+/).length : 0;
   const canReview = data.draft.trim().length >= 20;
   const saveLabel = SAVE_KEY[data.saveState] ? t(SAVE_KEY[data.saveState]) : "";
+  // Coaching automático (specs/007 §2): al dejar de escribir unos segundos se revisa el borrador, una vez por versión.
+  const reviewed = useRef(null);
+  useEffect(() => {
+    const draft = data.draft.trim();
+    if (draft.length < 20 || reviewed.current === draft || live.status === "loading") return undefined;
+    const timer = setTimeout(() => { reviewed.current = draft; live.run(); }, 5000);
+    return () => clearTimeout(timer);
+  }, [data.draft, live]);
 
   const dictate = () => speech.toggleListening((text) => {
     const current = latest.current;
@@ -52,9 +60,7 @@ export function ParaphraseStage({ node, graph, data, go }) {
                 {speech.isListening ? t("study.paraphrase.stopDictation") : t("study.paraphrase.dictate")}
               </Button>
             )}
-            <Button variant="secondary" icon={ScanSearch} onClick={live.run} loading={live.status === "loading"} loadingLabel={t("study.paraphrase.reviewing")}
-              disabled={!canReview} disabledReason={!canReview ? t("study.paraphrase.minSentences") : undefined}>{t("study.paraphrase.review")}</Button>
-            <Button variant="primary" iconRight={ArrowRight} onClick={() => go("evaluate")} disabled={!canReview} disabledReason={!canReview ? t("study.paraphrase.writeFirst") : undefined}>
+            <Button variant="primary" size="lg" iconRight={ArrowRight} onClick={() => go("evaluate")} disabled={!canReview} disabledReason={!canReview ? t("study.paraphrase.writeFirst") : undefined}>
               {t("common.stages.evaluate")}
             </Button>
           </div>

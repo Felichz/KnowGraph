@@ -1,4 +1,5 @@
-import { Crosshair, Maximize, Minus, Plus, Star } from "lucide-react";
+import { Crosshair, LayoutGrid, Maximize, Minus, Plus, Star } from "lucide-react";
+import { actions } from "../state/useWorkspace.js";
 import { useT } from "../../i18n/react.js";
 import { IconButton } from "../primitives/Button.jsx";
 import { NODE_W, STEP_X, rankX } from "./graphUtils.js";
@@ -52,6 +53,8 @@ export function GraphControls({ zoom, onZoom, onFit, onBest, hasBest }) {
   const t = useT();
   return (
     <div className="gpanel gpanel--controls" role="toolbar" aria-label={t("graph.controls.label")}>
+      <IconButton icon={LayoutGrid} label={t("graph.controls.grid")} onClick={() => actions.setPref("mapMode", "list")} />
+      <span className="gpanel__sep" aria-hidden="true" />
       <IconButton icon={Crosshair} label={t("graph.controls.bestNext")} onClick={onBest} disabled={!hasBest} />
       <IconButton icon={Maximize} label={t("graph.controls.fit")} onClick={onFit} />
       <span className="gpanel__sep" aria-hidden="true" />
