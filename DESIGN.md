@@ -1,7 +1,7 @@
 ---
 system:
   name: "Learning Workspace — Design System v4"
-  version: "4.1.0"
+  version: "4.2.0"
   creative_north_star: "Heat grid"
   aesthetic: "Cool ink/paper neutrals; eleven owned area hues used as fields; interaction in pure ink/paper contrast, no brand accent. Dark (reference) and light editions"
   platform: "Web + Electron (reference desktop 1440×900) · Mobile web (390×844)"
@@ -182,7 +182,7 @@ Skeleton `--skeleton`, opacity .55 ↔ 1 over `--skeleton-dur` 1.4s, exact geome
 
 | Token | Family | Role |
 |:--|:--|:--|
-| `--font-display` | `"Bricolage Grotesque Variable", "Figtree Variable", ui-sans-serif` | All `h1–h3` and named titles (view, grid, Continue, group, stage, panel, study, flashcard). Optical sizing auto, −0.02em |
+| `--font-display` | `"Bricolage Grotesque Variable", "Figtree Variable", ui-sans-serif` | All `h1–h3` and named titles (view, grid, next step, group, stage, panel, study, flashcard). Optical sizing auto, −0.02em |
 | `--font-ui` | `"Figtree Variable", ui-sans-serif, system-ui` | UI, labels, reading body |
 | `--font-mono` | `"JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo` | Scores, counts, `/120`, code, kbd |
 | `--font-read` | `= var(--font-display)` | `.serif` display moments: lesson lead, flashcard title, verdicts, empty-state titles (weight 500, −0.025em) |
@@ -197,11 +197,11 @@ Skeleton `--skeleton`, opacity .55 ↔ 1 over `--skeleton-dur` 1.4s, exact geome
 | `--fs-xs` | 12 | 16 | Pills, counts, legend, metadata |
 | `--fs-sm` | 14 | 20 | **UI base** |
 | `--fs-md` | 16 | 26 | Reading body, textarea |
-| `--fs-lg` | 18 | 26 | Panel/section titles, Continue tile name |
+| `--fs-lg` | 18 | 26 | Panel/section titles |
 | `--fs-xl` | 20 | 28 | Grid mastered count, empty-state titles |
 | `--fs-2xl` | 22 | 30 | Intro title; lesson lead and flashcard title on mobile |
 | `--fs-3xl` | 25 | 32 | Lesson lead, flashcard dialog title, practice question, scorecard score |
-| `--fs-4xl` | 28 | 36 | View title, grid title, Continue title (weight 800, −0.03em) |
+| `--fs-4xl` | 28 | 36 | View title, grid title, next-step title (weight 800, −0.03em) |
 | `--fs-5xl` | 32 | 40 | Large figures in Progress and Evaluate |
 
 Mobile (< 48em): `--fs-5xl` → 25, `--fs-4xl` → 22, `--fs-2xl` → 20, `--fs-2xs` → 12 (nothing under 12px on mobile).
@@ -210,7 +210,7 @@ Mobile (< 48em): `--fs-5xl` → 25, `--fs-4xl` → 22, `--fs-2xl` → 20, `--fs-
 
 | Style | Family | Weight | Tracking |
 |:--|:--|:--|:--|
-| View / grid / Continue title | display | 800 | −0.03em |
+| View / grid / next-step title | display | 800 | −0.03em |
 | Other headings, group title | display | 600–700 | −0.02em |
 | `.serif` display moments | display | 500 | −0.025em |
 | Labels / buttons | ui | 500 | −0.005em |
@@ -234,7 +234,7 @@ Mobile (< 48em): `--fs-5xl` → 25, `--fs-4xl` → 22, `--fs-2xl` → 20, `--fs-
 | `--sp-4` | 16 | Card/tile padding, grid label ↔ cells, mobile gutter |
 | `--sp-5` | 20 | Grid horizontal padding, group separation |
 | `--sp-6` | 24 | Study column padding, desktop gutter |
-| `--sp-8` | 32 | Between card sections, Continue bottom padding |
+| `--sp-8` | 32 | Between card sections |
 | `--sp-10` | 40 | Between major blocks (maximum void) |
 | `--sp-12` | 48 | Empty states only |
 
@@ -307,9 +307,8 @@ A square of size `--cell` (default 14px), radius 3px, coloured by `--area` at th
 The map's first viewport. A `--surface-1` panel (`--r-xl`, `--line`, padding 16×20). Head: title (display 800, `--fs-4xl`), mastered total (`done` mono `--fs-xl` `--text-1` + `/total` `--text-3`), and a legend pushed right: "Less" h0→h4 "Mastered", plus an extra cell (12px cells). Rows: one per area, gap 3px, `minmax(12rem,16rem) | 1fr`. Left: area button (12px swatch, name, mono `done/total`) that toggles focus (`aria-pressed`, area @ 16% fill). Right: one cell per concept sorted by priority, column track sized to the longest area, `--cell: clamp(18px, 1.75vw, 30px)`, cell gap 4px. Each cell is a button opening the card; `aria-label` = "label · status · Best next".
 - Mobile: rows stack (label above cells), cells fixed 18px `auto-fill`, legend left-aligned.
 
-**First viewport (Map)**: heat grid full width → Continue tiles → concept groups. Continue tiles: `--surface-1`, `--r-lg`, padding 16, `auto-fit minmax(16rem,1fr)`; the best-next tile has an ink border (`--text-1` @ 40%), the "Best next" pill and the single **primary** button; other tiles use secondary.
+**First viewport (Study)**: the **next step** block first (`SuggestedRoute.jsx`, `.next` in `next.css`): area-tinted field (area @ 10% over `--surface-1`, border area @ 35%, `--r-xl`, padding 24), inverted pill ("Pick up where you left off" / "Best next" / "Start here"), the concept's heat cell + title (display 800, `--fs-4xl`), one line of state or *why now*, one **large primary** (Resume / Study now / Start studying) and, when cards are due, a text link "or review N due today". Then the heat grid, then concept cards only for a focused area, then the collapsed *Levels and milestones* (`Levels.jsx`). With no activity only the next step renders (plus the three-step loop). See `specs/007-obvious-path`.
 
-**Cited exception — Continue first on mobile.** `.app.is-mobile .continue { order: -1 }` puts Continue above the grid on phones, because the primary mobile job is "where do I continue"; the grid follows directly.
 
 ### 8.3 Area-tinted mastery
 See §1.4. Applies to map concept cards and rows, flashcards (`.fcard`), study tab badges, graph nodes (far: full area fill; near: area @ 16% fill + area @ 70% stroke; progress: area @ 45% / 8%), minimap cells (mastered full area; best next `--paper`). Mixing for tints is `in oklch` against the surface. Prerequisite chain edges: met `--text-1`, missing `--text-3`.
@@ -362,6 +361,7 @@ These exist in the build but are **not** system rules; new surfaces must not cop
 - **Pills** are fully rounded (`--r-full`), outside the 4–8px radii of cells, cards and buttons.
 
 ## Changelog
+- **4.2.0** (2026-10-31): *One obvious path* (`specs/007-obvious-path`). Two destinations (Study, Review with due count); Progress folded into *Levels and milestones*; one control per job (no sidebar Focus list, no top-bar EN/ES/theme or List/Graph; focus chip; compact curriculum menu); next-step block first with one large primary; study path Read → Explain → Evaluate with the mentor as a header aid; automatic coaching on pause; after evaluation the next concept or "improve" is the primary; flashcards have one mode (open = review and rate). Rule added: alternatives to the primary are text links (`.stage__aside-link`, `.next__review`), never a second filled button.
 - **4.1.0** (2026-10-06): study session in the identity (area-tinted header with the concept's heat cell; mastery/extra resolve to the area hue inside `.study`); *the cell lights up* — `.heat.is-lit` keyframe flash + toast when an evaluation crosses 100 (opacity-only with reduced motion); `--font-read` = Figtree (long-form writing), Bricolage only for headlines via `.serif`/headings; map shows only the grid and Continue until an area is picked; spaced-repetition review queue in Flashcards ("Due today").
 - **4.0.0** (2026-10-06): *Heat grid* replaces *Night Study*. Warm graphite → cool ink neutrals (hue ≈ 220°) in both themes. Iris accent removed: `--accent` = ink/paper, inverted "Best next" pill, ink links and focus. Eleven area hues (`--cat-cyan…--cat-teal`, new set incl. blue, coral, orange, yellow, lime, green, teal) become fields (cells, square swatches, tints) instead of 8px dots. Mastery is area-tinted; green and gold no longer fill mastery/extra (extra = notch or ★). New heat cell (5 levels, srgb mix), heat grid as the map's first viewport with the NOW ring, `--cell-empty`, ink /120 scale. Geist + Newsreader → Bricolage Grotesque (display) + Figtree (UI/reading) + JetBrains Mono. Radii tightened to the square world (4/6/8, dialogs 12). Mobile shows Continue above the grid.
 - **3.2.0**: light theme *Day Study*, theme choice and pre-paint script (still in force, §1.9).

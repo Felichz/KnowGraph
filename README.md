@@ -1,28 +1,28 @@
 # KnowGraph
 
-A study workspace for senior React and Rails interviews: 142 concepts in a dependency graph, each studied in a four-stage session with an AI mentor that grades your explanation.
+A study workspace for senior React and Rails interviews: 142 concepts in a dependency graph, each studied by reading it, explaining it in your own words and having an AI grade the explanation.
 
 **[Live app](https://know-graph.vercel.app)** · [Case study](https://portfolio-felix-teal.vercel.app/work/knowgraph/) · Author: [Felix Andersson](https://portfolio-felix-teal.vercel.app/)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-demo-dark.webp">
-  <img src="docs/screenshots/knowgraph-demo-light.webp" alt="Recording of the KnowGraph map. The top panel, 'Your map', is a heat grid: one row per focus area (eleven for React) and one square cell per concept, filled with the area's color as the concept is mastered; the Mental model row is fully lit, State and data is partly lit and the rest are empty outlines. The pointer moves over cells and a tooltip names each concept with its score, then a click on the State and data row focuses that area and its concept cards appear below. Under the grid, a Continue section shows the best next concept, 'Controlled and uncontrolled forms' at 72 out of 120 with a Resume button, and the number of flashcards due for review today." width="100%">
+  <img src="docs/screenshots/knowgraph-demo-light.webp" alt="Recording of the KnowGraph Study screen. A sidebar has only two destinations, Study and Review, with a badge of cards due today. The screen opens on a single next step tinted in the concept's area color: 'Pick up where you left off: Controlled and uncontrolled forms', the draft's state and a score of 72 out of 120, one large Resume button and a quieter link to review the cards due today. Below it, 'Your map' is a heat grid with one row per focus area and one square cell per concept, filled with the area's color as concepts are mastered. The pointer moves over cells, whose tooltips name each concept with its score; a click on the State and data row focuses that area, its concept cards appear below, and a chip in the top bar clears the focus." width="100%">
 </picture>
 
 ## What it is
 
 I built KnowGraph to prepare for my own senior interviews. The curriculum is two graphs: React (101 concepts, 212 prerequisite links, 11 focus areas, 16 milestones, 4 seniority levels) and Rails (41 concepts, 54 links). A link means one concept gives you the mental model for the next; it suggests an order but never blocks you from studying something out of sequence. The interface is in English by default, with a Spanish version (EN / ES switcher; the curriculum and the AI answers follow the selected language), and still uses the project's working title, Learning Workspace.
 
-Every concept opens a four-stage session: **Read** the card (explanation, naive vs. senior code, pitfalls, sources, optional read-aloud), talk it through with a Socratic **Mentor**, **Paraphrase** it from memory with dictation and a live coach, then **Evaluate**: an LLM grades the explanation against a four-part rubric (accuracy, causality and trade-offs, application, completeness). Scores run from 0 to 120. Up to 100 measures coverage of the essential material; 101-120 is a separate excellence tier that only opens after full coverage, to push back on the grade inflation LLMs tend toward ([ADR 0006](docs/adr/0006-dual-tier-evaluation-scale-0-120.md)). Everything is local-first and bring-your-own-key. The map opens on a heat grid where every concept is a cell that fills with its area's color as you master it, and flashcards run on spaced repetition so worked concepts come back right before you would forget them.
+Every concept is studied along one path: **Read** the card (explanation, naive vs. senior code, pitfalls, sources, optional read-aloud), **Explain** it from memory with dictation and a coach that marks covered ideas when you pause, then **Evaluate**, with a Socratic **Mentor** one click away at any point. The evaluation: an LLM grades the explanation against a four-part rubric (accuracy, causality and trade-offs, application, completeness). Scores run from 0 to 120. Up to 100 measures coverage of the essential material; 101-120 is a separate excellence tier that only opens after full coverage, to push back on the grade inflation LLMs tend toward ([ADR 0006](docs/adr/0006-dual-tier-evaluation-scale-0-120.md)). Everything is local-first and bring-your-own-key. The app has two places, Study and Review: Study opens on one next step (resume what you started or the best next concept) above a heat grid where every concept is a cell that fills with its area's color as you master it, and Review runs flashcards on spaced repetition so worked concepts come back right before you would forget them.
 
 <table>
   <tr>
     <td width="50%" valign="top">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-card-dark.webp">
-        <img src="docs/screenshots/knowgraph-card-light.webp" alt="Study session on the Read stage for 'Controlled and uncontrolled forms'. The header is tinted in the State and data area color and shows the concept's heat cell and a score of 72 out of 120. Stage tabs (Read, AI mentor, Paraphrase with a Draft badge, Evaluate with 72/120) run across the top. The reading column has a large summary sentence, a tinted 'why it matters' note, body text with inline code and a controlled input code sample; a side rail lists where the concept fits, what it requires, what it unlocks and a related interview question." width="100%">
+        <img src="docs/screenshots/knowgraph-card-light.webp" alt="Study session on the Read stage for 'Controlled and uncontrolled forms'. The header is tinted in the State and data area color and shows the concept's heat cell, a score of 72 out of 120 and an 'Ask the mentor' button. Three steps run across the top: Read, Explain (with a Draft badge) and Evaluate (72/120). The reading column has a large summary sentence, a tinted 'why it matters' note, body text with inline code and a code sample; a side rail lists where the concept fits, what it requires, what it unlocks and a related interview question." width="100%">
       </picture>
-      <br><sub>Study session, Read stage, tinted in the concept's area color.</sub>
+      <br><sub>Study session: Read, Explain, Evaluate. The mentor is one click away.</sub>
     </td>
     <td width="50%" valign="top">
       <picture>
@@ -35,10 +35,10 @@ Every concept opens a four-stage session: **Read** the card (explanation, naive 
   <tr>
     <td colspan="2" align="center">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-progress-dark.webp">
-        <img src="docs/screenshots/knowgraph-progress-light.webp" alt="Progress view for the React graph: 12 of 101 cards mastered, with a note that a card counts as mastered at 100 out of 120, then the heat grid of all areas and four seniority levels (Professional React, Senior frontend, Senior Design Systems, Frontend Lead) with per-level counts." width="50%">
+        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-review-dark.webp">
+        <img src="docs/screenshots/knowgraph-review-light.webp" alt="Review: a flashcard for 'useRef, DOM and mutable values' at 64 out of 120, open over the Review screen. After revealing the answer it shows the key idea and the saved explanation, and the footer asks 'How well did you know it?' with Again, Hard, Good and Easy buttons (keys 1 to 4) that schedule the next review, plus a link to improve the explanation." width="50%">
       </picture>
-      <br><sub>Progress: the heat grid, seniority levels and milestones.</sub>
+      <br><sub>Review: reveal the answer, then rate it to schedule the next review.</sub>
     </td>
   </tr>
 </table>
