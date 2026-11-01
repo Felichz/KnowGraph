@@ -21,12 +21,13 @@ export function ParaphraseStage({ node, graph, data, go }) {
   const saveLabel = SAVE_KEY[data.saveState] ? t(SAVE_KEY[data.saveState]) : "";
   // Coaching automático (specs/007 §2): al dejar de escribir unos segundos se revisa el borrador, una vez por versión.
   const reviewed = useRef(null);
+  const { run, status } = live;
   useEffect(() => {
     const draft = data.draft.trim();
-    if (draft.length < 20 || reviewed.current === draft || live.status === "loading") return undefined;
-    const timer = setTimeout(() => { reviewed.current = draft; live.run(); }, 5000);
+    if (draft.length < 20 || reviewed.current === draft || status === "loading") return undefined;
+    const timer = setTimeout(() => { reviewed.current = draft; run(); }, 5000);
     return () => clearTimeout(timer);
-  }, [data.draft, live]);
+  }, [data.draft, run, status]);
 
   const dictate = () => speech.toggleListening((text) => {
     const current = latest.current;

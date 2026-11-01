@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Eye, CheckCircle2, X } from "lucide-react";
 import { useT } from "../../i18n/react.js";
 import { Overlay } from "../primitives/Overlay.jsx";
@@ -23,6 +23,11 @@ export function FlashcardModal({ cards, index, graph, progress, onIndex, onRate,
   const mine = answerOf(p);
   const go = (delta) => onIndex(Math.min(cards.length - 1, Math.max(0, index + delta)));
   useEffect(() => { setRevealed(false); }, [node.id, done]);
+  // Revelar o valorar con el ratón quita el botón pulsado: el foco vuelve al marco para que Espacio, 1–4 y ←/→ sigan funcionando.
+  const frame = useRef(null);
+  useEffect(() => {
+    if (!frame.current?.contains(document.activeElement) || document.activeElement === document.body) frame.current?.focus({ preventScroll: true });
+  }, [node.id, revealed, done]);
 
   const rate = (value) => { onRate(node.id, value); onIndex(index + 1); };
   const onKeyDown = (event) => {
@@ -37,7 +42,7 @@ export function FlashcardModal({ cards, index, graph, progress, onIndex, onRate,
 
   return (
     <Overlay open onClose={onClose} kind="dialog" labelledBy="fmodal-title" className="fmodal" initialFocus=".fmodal__frame">
-      <div className="fmodal__frame" onKeyDown={onKeyDown} tabIndex={-1} style={{ "--area": getCategoryColor(graph.id, node.cat) }}>
+      <div className="fmodal__frame" ref={frame} onKeyDown={onKeyDown} tabIndex={-1} style={{ "--area": getCategoryColor(graph.id, node.cat) }}>
         {done ? <Done t={t} total={cards.length} nextStudy={nextStudy} onClose={onClose} /> : (
           <>
             <header className="fmodal__head">

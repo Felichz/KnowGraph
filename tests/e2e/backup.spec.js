@@ -5,7 +5,7 @@ import { failOnPageError } from "./helpers.js";
 const drawer = (page) => page.getByRole("dialog", { name: "Settings" });
 
 async function openSettings(page) {
-  await page.getByRole("complementary", { name: "Main navigation" }).getByRole("button", { name: /AI connections/ }).click();
+  await page.getByRole("complementary", { name: "Main navigation" }).getByRole("button", { name: "Settings", exact: true }).click();
   await expect(drawer(page)).toBeVisible();
   return drawer(page);
 }
