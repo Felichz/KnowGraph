@@ -34,7 +34,7 @@ test.describe("Background AI tasks & global HUD (User Story 3)", () => {
 
   test("the HUD stays hidden when there are no tasks (Universal State 1: Empty)", async ({ page }) => {
     await page.goto("/react");
-    await expect(page.locator(".hgrid")).toBeVisible();
+    await expect(page.locator(".next")).toBeVisible();
     await expect(hud(page)).toHaveCount(0);
   });
 
@@ -115,6 +115,8 @@ test.describe("Background AI tasks & global HUD (User Story 3)", () => {
     const result = page.locator(".result");
     await expect(result.locator(".score-value--lg")).toHaveAttribute("aria-label", "104 of 120");
     await expect(result).toContainText("Solid model of snapshots and batching.");
+    // 104 masters the card, so the evaluation now points to the next concept.
+    await expect(page.locator(".eval-next").getByRole("button", { name: /^Next: / })).toHaveClass(/btn--primary/);
 
     await hud(page).getByRole("button", { name: "Dismiss" }).click();
     await expect(hud(page)).toHaveCount(0);
