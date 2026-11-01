@@ -1,12 +1,12 @@
 /* Mundo «Rejilla de calor» (DESIGN v4): reglas globales que dan carácter al sistema. Se importa al final. */
 
 /* Títulos con la grotesca display; etiquetas y UI en Figtree */
-h1, h2, h3, .view-head__title, .continue__title, .group__title, .progress__h, .stage__title, .gnpanel__title, .continue__name, .study__title, .route-now__title {
+h1, h2, h3, .view-head__title, .group__title, .progress__h, .stage__title, .gnpanel__title, .study__title, .route-now__title {
   font-family: var(--font-display); font-optical-sizing: auto; letter-spacing: -0.02em;
 }
 .eyebrow { font-family: var(--font-ui); letter-spacing: .08em; font-weight: 700; }
 .serif { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.025em; }
-.view-head__title, .continue__title { font-size: var(--fs-4xl); line-height: var(--lh-4xl); font-weight: 800; letter-spacing: -0.03em; }
+.view-head__title { font-size: var(--fs-4xl); line-height: var(--lh-4xl); font-weight: 800; letter-spacing: -0.03em; }
 .group__title { font-weight: 700; }
 
 /* Interacción en contraste puro tinta/papel: sin acento de marca que compita con los colores de área */
@@ -27,7 +27,7 @@ a { color: var(--text-1); text-decoration: underline; text-decoration-color: var
 .heat.is-extra::after { content: ""; position: absolute; inset: 30%; border-radius: 1px; background: var(--bg-app); }
 .heat.is-now, .heat.h4.is-now { box-shadow: 0 0 0 2px var(--surface-1), 0 0 0 4px var(--text-1); }
 .heat.h0.is-now { box-shadow: inset 0 0 0 1px var(--line-strong), 0 0 0 2px var(--surface-1), 0 0 0 4px var(--text-1); }
-.app.is-mobile .continue { order: -1; }
+
 
 /* Las áreas son dueñas de su color: las muestras de categoría son cuadradas como las celdas */
 .cat-dot { border-radius: 2px; }
@@ -46,7 +46,6 @@ a { color: var(--text-1); text-decoration: underline; text-decoration-color: var
 .pill--mastery svg, .score-value__check { color: var(--area, var(--mastery)); }
 .rail__base.is-mastered { background: var(--area, var(--mastery)); }
 .study-tab__badge.tier-mastered, .study-tab__badge.tier-extra { background: color-mix(in oklch, var(--area) 22%, transparent); color: var(--text-1); }
-.continue__tile.is-best { border-color: color-mix(in oklch, var(--text-1) 40%, transparent); }
 .pbar > span { background: var(--text-2); } .pbar--mastery > span { background: var(--text-1); }
 
 /* Escala /120 en la rampa de la celda: tinta tenue → tinta llena; el extra es la misma tinta con muesca */
@@ -82,7 +81,6 @@ a { color: var(--text-1); text-decoration: underline; text-decoration-color: var
 .study__cell { align-self: center; }
 .coach-item.is-partial svg { color: color-mix(in srgb, var(--lesson-color) 60%, var(--text-3)); }
 .lesson__takeaway svg { color: var(--text-2); }
-.practice__streak { color: var(--text-1); }
 .band.is-complete { border-color: var(--line-strong); } .band.is-complete .band__icon { color: var(--text-1); }
 .gnpanel__stage { font-size: var(--fs-xs); }
 

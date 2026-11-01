@@ -5,10 +5,10 @@ export default {
   resultsLabel: "Resultados",
   empty: "Sin resultados para “{query}”.",
   actions: {
-    map: "Ir al mapa",
-    flashcards: "Ir a flashcards",
-    progress: "Ver progreso",
+    map: "Ir a Estudiar",
+    flashcards: "Ir a Repasar",
     graphView: "Ver el mapa como grafo",
+    gridView: "Ver el mapa como rejilla",
     switchGraph: "Cambiar a {name}",
     settings: "Ajustes: conexiones de IA, idioma, tema y respaldo",
     switchLanguage: "Cambiar idioma a {language}",

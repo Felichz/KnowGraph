@@ -7,10 +7,12 @@ import { Button } from "../primitives/Button.jsx";
 import { SuggestedRoute } from "./SuggestedRoute.jsx";
 import { HeatGrid } from "./HeatGrid.jsx";
 import { ConceptGroups } from "./ConceptGrid.jsx";
+import { Levels } from "./Levels.jsx";
 
 const GraphView = lazy(() => import("../graph/GraphView.jsx"));
 
-// Vista Mapa: Lista (ruta + grupos) o Grafo (design-spec C.2).
+// Estudiar (specs/007): siguiente paso → tu temario (rejilla) → cards del área elegida → niveles e hitos.
+// Con cero actividad solo se ve el siguiente paso: lo demás aparece cuando ya significa algo.
 export function MapView({ model, mode }) {
   const { activeTaskNodeIds } = useBackgroundTasks(model.graphId);
   const t = useT();
@@ -21,19 +23,21 @@ export function MapView({ model, mode }) {
       </Suspense>
     );
   }
+  const { visible, progress } = model;
+  const active = progress.done > 0 || visible.some((n) => { const p = progress.of(n.id); return p.attempts?.length || p.hasDraft; });
   return (
     <div className="map">
-      {model.progress.status === "error" && (
+      {progress.status === "error" && (
         <Notice tone="error" className="map__notice"
-          action={<Button variant="ghost" size="sm" icon={RefreshCw} onClick={model.progress.refresh}>{t("common.actions.retry")}</Button>}>
+          action={<Button variant="ghost" size="sm" icon={RefreshCw} onClick={progress.refresh}>{t("common.actions.retry")}</Button>}>
           {t("map.loadError")}
         </Notice>
       )}
-      <HeatGrid model={model} />
       <SuggestedRoute model={model} />
-      {model.focusCat ? <ConceptGroups model={model} activeTaskNodeIds={activeTaskNodeIds} /> : (
-        <p className="map__hint">{t("map.heat.pickArea")}</p>
-      )}
+      {(active || model.focusCat) && <HeatGrid model={model} />}
+      {model.focusCat && <ConceptGroups model={model} activeTaskNodeIds={activeTaskNodeIds} />}
+      {active && !model.focusCat && <p className="map__hint">{t("map.heat.pickArea")}</p>}
+      {active && <Levels model={model} />}
     </div>
   );
 }

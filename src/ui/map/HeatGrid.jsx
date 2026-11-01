@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Workflow } from "lucide-react";
 import { useT } from "../../i18n/react.js";
 import { heatLevel, scoreTier } from "../../logic/studyQueue.js";
 import { HeatCell } from "../primitives/HeatCell.jsx";
@@ -41,6 +42,9 @@ export function HeatGrid({ model, size = "md", bare = false }) {
         <h2 id="hgrid-title" className="hgrid__title">{t("map.heat.title")}</h2>
         <p className="hgrid__total"><span className="mono">{done}</span><span className="mono t3">/{visible.length}</span> {t("map.heat.mastered")}</p>
         <Legend color={getCategoryColor(graph.id, areas[0]?.cat)} />
+        <button type="button" className="hgrid__graph" onClick={() => actions.setPref("mapMode", "graph")}>
+          <Workflow size={14} strokeWidth={1.5} aria-hidden="true" /> {t("map.heat.viewGraph")}
+        </button>
       </header>}
       <ul className="hgrid__rows">
         {areas.map(({ cat, nodes }) => {

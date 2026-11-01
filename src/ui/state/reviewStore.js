@@ -1,5 +1,6 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { dayKey, schedule } from "../../logic/spacedRepetition.js";
+import { dueNodes } from "../../logic/studyQueue.js";
 
 // Programación de repasos por mapa en localStorage (specs/006). Fuera de IndexedDB para no tocar
 // el esquema ni el formato de respaldo; si el almacenamiento falla, el repaso sigue en memoria.
@@ -29,4 +30,10 @@ export function useReviews(graphId) {
   const entries = useSyncExternalStore(subscribe, () => read(graphId), () => read(graphId));
   const rate = useCallback((nodeId, rating) => rateCard(graphId, nodeId, rating), [graphId]);
   return { entries, rate, today: dayKey() };
+}
+
+// Cuántas cards tocan hoy en el foco visible (barra lateral, dock y «siguiente paso» leen el mismo número).
+export function useDueCount(model) {
+  const { entries, today } = useReviews(model.graph.id);
+  return useMemo(() => dueNodes(model.visible, model.progress, entries, today).length, [model.visible, model.progress, entries, today]);
 }

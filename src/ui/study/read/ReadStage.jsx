@@ -57,8 +57,8 @@ export function ReadStage({ node, graph, model, go }) {
         <footer className="stage__next">
           <p className="t2">{t("study.read.nextPrompt")}</p>
           <div className="stage__next-actions">
-            <Button variant="secondary" onClick={() => go("mentor")}>{t("study.read.talkToMentor")}</Button>
-            <Button variant="primary" iconRight={ArrowRight} onClick={() => go("paraphrase")}>{t("common.stages.paraphrase")}</Button>
+            <Button variant="primary" size="lg" iconRight={ArrowRight} onClick={() => go("paraphrase")}>{t("study.read.explainIt")}</Button>
+            <button type="button" className="stage__aside-link" onClick={() => go("mentor", { returnStage: "read" })}>{t("study.read.talkToMentor")}</button>
           </div>
         </footer>
       </article>

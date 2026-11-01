@@ -16,7 +16,7 @@ export default {
     dark: "Dark",
     switchTo: { light: "Switch to light theme", dark: "Switch to dark theme" },
   },
-  stages: { read: "Read", mentor: "AI mentor", paraphrase: "Paraphrase", evaluate: "Evaluate" },
+  stages: { read: "Read", mentor: "AI mentor", paraphrase: "Explain", evaluate: "Evaluate" },
   status: {
     strong: "Core covered",
     exceptional: "Extra depth",

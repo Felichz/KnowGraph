@@ -1,0 +1,72 @@
+/* Camino obvio (specs/007): siguiente paso, selector de temario, foco, contadores y niveles plegados. */
+
+/* Siguiente paso: el bloque dominante de Estudiar, teñido del área del concepto */
+.next { display: grid; gap: var(--sp-3); justify-items: start; padding: var(--sp-6); border-radius: var(--r-xl);
+  background: color-mix(in srgb, var(--area, var(--text-2)) 10%, var(--surface-1)); border: 1px solid color-mix(in srgb, var(--area, var(--text-2)) 35%, transparent); }
+.next__top { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.next__title { display: flex; align-items: center; gap: var(--sp-3); font-size: var(--fs-4xl); line-height: var(--lh-4xl); font-weight: 800; letter-spacing: -0.03em; text-wrap: balance; }
+.next__why { max-width: 62ch; font-size: var(--fs-md); line-height: var(--lh-md); }
+.next__actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); margin-top: var(--sp-1); }
+.next__actions .btn--lg { min-width: 12rem; }
+.next__review { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: var(--ctl-md); font-size: var(--fs-sm); font-weight: 500; color: var(--text-2); }
+@media (hover: hover) { .next__review:hover { color: var(--text-1); text-decoration: underline; text-underline-offset: 3px; } }
+.next.is-done { justify-items: start; background: var(--surface-1); border-color: var(--line); }
+.next .intro__steps { margin-top: var(--sp-3); padding-top: var(--sp-4); border-top: 1px solid color-mix(in srgb, var(--area, var(--text-2)) 25%, transparent); width: 100%; }
+
+/* Selector de temario compacto */
+.curriculum { display: flex; align-items: center; gap: var(--sp-2); width: 100%; height: var(--ctl-md); padding: 0 var(--sp-2) 0 var(--sp-3); border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface-1); font-weight: 600; text-align: left; }
+.curriculum__name { flex: 1; min-width: 0; }
+.curriculum.is-compact { width: 40px; justify-content: center; padding: 0; font-family: var(--font-mono); font-size: var(--fs-xs); }
+@media (hover: hover) { .curriculum:hover { border-color: var(--line-strong); } }
+.mtopbar .curriculum { width: auto; max-width: 14rem; flex: 0 1 auto; }
+
+/* Área en foco: el único filtro, con su forma de quitarlo */
+.focus-chip { display: inline-flex; align-items: center; gap: var(--sp-1); max-width: 20rem; height: var(--ctl-sm); padding: 0 var(--sp-2) 0 var(--sp-3); border-radius: var(--r-full); background: var(--surface-3); font-size: var(--fs-xs); font-weight: 600; color: var(--text-1); }
+@media (hover: hover) { .focus-chip:hover { background: var(--press-overlay); } }
+
+/* Contadores de «para hoy» */
+.side-item__badge { min-width: 1.25rem; height: 1.25rem; padding: 0 6px; border-radius: var(--r-full); background: var(--paper); color: var(--text-on-paper); font-size: var(--fs-2xs); font-weight: 700; display: inline-grid; place-items: center; }
+.side-item__badge.is-dot { position: absolute; top: 6px; right: 6px; min-width: 8px; height: 8px; padding: 0; }
+.sidebar.is-collapsed .side-item { position: relative; }
+.dock__icon { position: relative; display: inline-grid; }
+.dock__badge { position: absolute; top: -6px; right: -10px; min-width: 1.05rem; height: 1.05rem; padding: 0 4px; border-radius: var(--r-full); background: var(--paper); color: var(--text-on-paper); font-size: 10px; font-weight: 700; display: grid; place-items: center; }
+
+/* Rejilla: entrada al grafo */
+.hgrid__graph { display: inline-flex; align-items: center; gap: 6px; height: var(--ctl-sm); padding: 0 var(--sp-2); border-radius: var(--r-md); font-size: var(--fs-xs); font-weight: 600; color: var(--text-2); }
+@media (hover: hover) { .hgrid__graph:hover { background: var(--hover-overlay); color: var(--text-1); } }
+
+/* Niveles e hitos plegados */
+.levels { border-top: 1px solid var(--line-subtle); padding-top: var(--sp-2); }
+.levels__summary { display: flex; align-items: center; gap: var(--sp-3); min-height: var(--ctl-lg); cursor: pointer; list-style: none; }
+.levels__summary::-webkit-details-marker { display: none; }
+.levels__title { font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 700; }
+.levels__meta { flex: 1; min-width: 0; font-size: var(--fs-sm); }
+.levels__chev { color: var(--text-3); transition: transform var(--dur-2) var(--ease-out); }
+.levels[open] .levels__chev { transform: rotate(180deg); }
+.levels__body { display: grid; gap: var(--sp-5); padding: var(--sp-4) 0 var(--sp-8); }
+
+@media (max-width: 47.99em) {
+  .next { padding: var(--sp-5) var(--sp-4); }
+  .next__title { font-size: var(--fs-2xl); line-height: var(--lh-2xl); }
+  .next__actions { width: 100%; }
+  .next__actions .btn--lg { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .levels__chev { transition: none; } }
+
+/* Enlace discreto para la alternativa (mentor, volver al mapa, abrir la card) junto al primario */
+.stage__aside-link { min-height: var(--ctl-md); font-size: var(--fs-sm); font-weight: 500; color: var(--text-2); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+@media (hover: hover) { .stage__aside-link:hover { color: var(--text-1); text-decoration-color: currentColor; } }
+.stage__next-actions, .eval-next { align-items: center; gap: var(--sp-3) var(--sp-5); }
+.study__mentor { margin-right: var(--sp-1); }
+
+/* Repaso: valorar en el pie del modal */
+.fmodal__foot { flex-wrap: wrap; }
+.fmodal__rates { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-right: auto; }
+.fmodal__rates .kbd { margin-left: var(--sp-1); }
+.fmodal__ask { margin-right: var(--sp-2); font-size: var(--fs-sm); font-weight: 500; }
+.fmodal__done { display: grid; justify-items: center; gap: var(--sp-3); padding: var(--sp-12) var(--sp-6); text-align: center; }
+@media (max-width: 47.99em) {
+  .fmodal__rates { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fmodal__ask { grid-column: 1 / -1; }
+  .study__mentor .btn__label { display: none; }
+}

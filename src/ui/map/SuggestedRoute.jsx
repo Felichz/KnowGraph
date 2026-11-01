@@ -1,85 +1,64 @@
 import { ArrowRight, CheckCircle2, Layers } from "lucide-react";
 import { useLocale, useT } from "../../i18n/react.js";
 import { getLessonContext } from "../../logic/guidance.js";
-import { dueNodes, resumeTarget } from "../../logic/studyQueue.js";
-import { useReviews } from "../state/reviewStore.js";
+import { resumeTarget } from "../../logic/studyQueue.js";
+import { useDueCount } from "../state/reviewStore.js";
 import { Button } from "../primitives/Button.jsx";
 import { CategoryLabel } from "../primitives/CategoryDot.jsx";
+import { HeatCell } from "../primitives/HeatCell.jsx";
 import { ScoreValue } from "../primitives/Score.jsx";
-import { EmptyState } from "../primitives/Feedback.jsx";
+import { getCategoryColor } from "../theme/categoryPalette.js";
 import { actions } from "../state/useWorkspace.js";
-import { HowItWorks, useIntroDismissed } from "./HowItWorks.jsx";
+import { HowItWorks } from "./HowItWorks.jsx";
 
-// «Continuar» (specs/004-ui-flow §1): la única respuesta a «¿qué hago ahora?» — retomar, mejor siguiente, repasar.
+// «Siguiente paso» (specs/007 §1): una sola acción primaria — retomar lo empezado o estudiar el mejor
+// siguiente — y, si hay cards para hoy, un enlace secundario para repasarlas. Nada más compite con ella.
 export function SuggestedRoute({ model }) {
   const t = useT();
-  const { guidance, graph, progress, visible } = model;
-  const [introDismissed, dismissIntro] = useIntroDismissed();
-  const resume = resumeTarget(visible, progress);
-  const reviews = useReviews(graph.id);
-  const toReview = dueNodes(visible, progress, reviews.entries, reviews.today).length;
-  const fresh = !resume && progress.done === 0 && toReview === 0;
-  // Si lo que retomarías es también el mejor siguiente, una sola tile con el estado y la etapa de retomar.
-  const merged = resume && resume.node.id === guidance.primary?.id ? resume : null;
-  return (
-    <section className="continue" aria-labelledby="continue-title">
-      <h2 id="continue-title" className="continue__title">{t("map.continue.title")}</h2>
-      <div className="continue__grid">
-        {resume && !merged && <ResumeTile resume={resume} graph={graph} />}
-        {guidance.primary ? <BestNextTile node={guidance.primary} model={model} resume={merged} /> : (
-          <div className="continue__tile">
-            <EmptyState icon={CheckCircle2} title={t("map.route.doneTitle")} compact
-              action={<Button variant="secondary" onClick={() => actions.setView("progress")}>{t("map.route.viewProgress")}</Button>}>
-              {t("map.route.doneBody")}
-            </EmptyState>
-          </div>
-        )}
-        <div className="continue__tile">
-          <p className="continue__name">{toReview ? t("map.continue.reviewCount", { n: toReview }) : t("map.continue.reviewNone")}</p>
-          <p className="t2 continue__why">{toReview ? t("map.continue.reviewHelp") : t("map.continue.reviewNoneHelp")}</p>
-          <Button variant="secondary" icon={Layers} onClick={() => actions.setView("flashcards")}>{t("map.continue.openReview")}</Button>
-        </div>
-      </div>
-      {fresh && !introDismissed && <HowItWorks onDismiss={dismissIntro} />}
-    </section>
-  );
-}
-
-function ResumeTile({ resume, graph }) {
-  const t = useT();
-  const { node, p, stage } = resume;
-  return (
-    <article className="continue__tile">
-      <div className="continue__top"><span className="pill">{t("map.continue.resume")}</span><CategoryLabel graph={graph} cat={node.cat} /></div>
-      <p className="continue__name">{node.label}</p>
-      <ResumeState resume={resume} />
-      <Button variant="secondary" iconRight={ArrowRight} onClick={() => actions.openCard(node.id, { stage })}>{t("map.continue.resumeAction")}</Button>
-    </article>
-  );
-}
-
-function ResumeState({ resume }) {
-  const t = useT();
-  return (
-    <p className="t2 continue__why">{t(`map.continue.state.${resume.stage}`)}
-      {typeof resume.p.displayScore === "number" && <> · <ScoreValue score={resume.p.displayScore} /></>}</p>
-  );
-}
-
-function BestNextTile({ node, model, resume }) {
-  const t = useT();
   const locale = useLocale();
-  const { graph, progress } = model;
+  const { guidance, graph, progress, visible } = model;
+  const due = useDueCount(model);
+  const resume = resumeTarget(visible, progress);
+  const node = resume?.node ?? guidance.primary;
+  const fresh = !resume && progress.done === 0 && due === 0;
+  const review = due > 0 && (
+    <button type="button" className="next__review" onClick={() => actions.setView("flashcards")}>
+      <Layers size={16} strokeWidth={1.5} aria-hidden="true" /> {t("map.next.review", { n: due })} <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" />
+    </button>
+  );
+
+  if (!node) {
+    return (
+      <section className="next is-done" aria-labelledby="next-title">
+        <CheckCircle2 size={24} strokeWidth={1.5} aria-hidden="true" />
+        <h2 id="next-title" className="next__title">{t("map.route.doneTitle")}</h2>
+        <p className="t2">{t("map.route.doneBody")}</p>
+        {review}
+      </section>
+    );
+  }
+  const p = progress.of(node.id);
   const prerequisites = node.prerequisites.map((id) => graph.nodeById.get(id)).filter(Boolean);
   const why = getLessonContext(node, prerequisites, prerequisites.filter((n) => !progress.checked.has(n.id)), graph.categoryContext, locale);
+  const label = resume ? t("map.next.resumeLabel") : fresh ? t("map.next.startLabel") : t("map.card.bestNext");
   return (
-    <article className="continue__tile is-best">
-      <div className="continue__top"><span className="pill pill--accent">{t("map.card.bestNext")}</span><CategoryLabel graph={graph} cat={node.cat} /></div>
-      <p className="continue__name">{node.label}</p>
-      {resume ? <ResumeState resume={resume} /> : <p className="t2 continue__why clamp-2">{why}</p>}
-      <Button variant="primary" iconRight={ArrowRight} onClick={() => actions.openCard(node.id, { stage: resume?.stage ?? "read" })}>
-        {resume ? t("map.continue.resumeAction") : t("map.route.studyNow")}
-      </Button>
-    </article>
+    <section className="next" aria-labelledby="next-title" style={{ "--area": getCategoryColor(graph.id, node.cat) }}>
+      <div className="next__top">
+        <span className="pill pill--accent">{label}</span>
+        <CategoryLabel graph={graph} cat={node.cat} />
+      </div>
+      <h2 id="next-title" className="next__title"><HeatCell graph={graph} node={node} p={p} size={18} />{node.label}</h2>
+      <p className="t2 next__why">
+        {resume ? t(`map.continue.state.${resume.stage}`) : why}
+        {resume && typeof p.displayScore === "number" && <> · <ScoreValue score={p.displayScore} /></>}
+      </p>
+      <div className="next__actions">
+        <Button variant="primary" size="lg" iconRight={ArrowRight} onClick={() => actions.openCard(node.id, { stage: resume?.stage ?? "read" })}>
+          {resume ? t("map.continue.resumeAction") : fresh ? t("map.next.start") : t("map.route.studyNow")}
+        </Button>
+        {review}
+      </div>
+      {fresh && <HowItWorks />}
+    </section>
   );
 }

@@ -21,6 +21,7 @@ export default {
   },
   cycleWarning: "Encontramos un ciclo en las dependencias, así que algunas flechas pueden aparecer fuera de orden.",
   controls: {
+    grid: "Volver a la rejilla",
     label: "Controles del mapa",
     bestNext: "Ir al mejor siguiente",
     fit: "Ver el mapa completo",

@@ -21,6 +21,7 @@ export default {
   },
   cycleWarning: "We found a cycle in the dependencies, so some arrows may appear out of order.",
   controls: {
+    grid: "Back to the grid",
     label: "Map controls",
     bestNext: "Go to best next",
     fit: "Show the whole map",

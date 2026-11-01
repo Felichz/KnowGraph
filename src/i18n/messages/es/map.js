@@ -19,8 +19,15 @@ export default {
       aiActive: "IA trabajando en esta card",
     },
   },
+  next: {
+    resumeLabel: "Retoma donde lo dejaste",
+    startLabel: "Empieza aquí",
+    start: "Empezar a estudiar",
+    review: ({ n }) => `o repasa ${n} ${n === 1 ? "card" : "cards"} para hoy`,
+  },
   heat: {
-    pickArea: "Elige un área en tu temario (o en la barra lateral) para ver sus conceptos como cards.",
+    viewGraph: "Ver como grafo",
+    pickArea: "Elige un área de tu temario para ver sus conceptos como cards.",
     title: "Tu temario",
     mastered: "dominadas",
     status: {
