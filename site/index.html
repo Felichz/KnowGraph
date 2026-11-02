@@ -47,8 +47,36 @@
     .btn svg { width: 18px; height: 18px; }
     .note { margin-top: 14px; font-size: 14px; color: var(--t3); }
 
-    .window { margin: 36px auto 0; border-radius: 16px; border: 1px solid var(--line); background: var(--bg); overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.55); }
-    .window video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--bg); }
+    /* the demo player */
+    .player { position: relative; margin: 36px auto 0; border-radius: 16px; border: 1px solid var(--line); background: var(--bg); overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.55); outline: none; }
+    .player:focus-visible { box-shadow: 0 0 0 3px var(--cyan), 0 40px 120px rgba(0,0,0,.55); }
+    .player video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--bg); cursor: pointer; }
+    .player__big { position: absolute; left: 50%; top: calc(50% - 27px); width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 1px solid var(--line-s); background: rgba(14,17,23,.82); color: var(--t1); display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .player__big svg { width: 30px; height: 30px; margin-left: 4px; }
+    .player.is-paused .player__big { opacity: 1; pointer-events: auto; }
+    .player__bar { display: flex; align-items: center; gap: 14px; padding: 8px 14px; border-top: 1px solid var(--line); background: var(--app); }
+    .pbtn { flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px; border: 0; background: transparent; color: var(--t1); display: grid; place-items: center; cursor: pointer; }
+    .pbtn:hover { background: rgba(214,226,255,.10); }
+    .pbtn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+    .pbtn svg { width: 20px; height: 20px; }
+    .pbtn .i-pause, .player.is-paused .pbtn .i-play { display: block; }
+    .pbtn .i-play, .player.is-paused .pbtn .i-pause { display: none; }
+    .track { position: relative; flex: 1; height: 26px; cursor: pointer; touch-action: none; }
+    .track__segs { position: absolute; left: 0; right: 0; top: 11px; height: 4px; display: flex; gap: 3px; }
+    .seg { position: relative; height: 4px; border-radius: 2px; background: rgba(214,226,255,.22); overflow: hidden; }
+    .seg i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--cyan); }
+    .track:hover .track__segs { top: 10px; height: 6px; }
+    .track:hover .seg { height: 6px; border-radius: 3px; }
+    .track__tip { position: absolute; bottom: 30px; transform: translateX(-50%); padding: 5px 10px; border-radius: 8px; background: var(--s3); border: 1px solid var(--line-s); font-size: 13px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s; }
+    .track:hover .track__tip { opacity: 1; }
+    .track__tip b { font-family: var(--mono); font-weight: 500; color: var(--t3); margin-right: 6px; }
+    .ptime { flex-shrink: 0; font-family: var(--mono); font-size: 13px; color: var(--t2); font-variant-numeric: tabular-nums; }
+    .chapters { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; list-style: none; }
+    .chapters button { height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--s1); color: var(--t2); font: 500 14px/1 var(--ui); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .chapters button:hover { color: var(--t1); border-color: var(--line-s); }
+    .chapters button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+    .chapters button span { font-family: var(--mono); font-size: 12px; color: var(--t3); }
+    .chapters button[aria-current="true"] { color: var(--t1); border-color: rgba(61,185,238,.55); background: rgba(61,185,238,.10); }
 
     section { padding: 88px 0 0; }
     h2 { font-family: var(--disp); font-size: clamp(30px, 4vw, 44px); line-height: 1.1; letter-spacing: -.03em; font-weight: 720; }
@@ -118,10 +146,24 @@
         </div>
         <p class="note">Windows installer · macOS and Linux run from source · MIT license</p>
 
-        <div class="window">
-                    <video src="/media/knowgraph-demo.mp4" poster="/media/knowgraph-demo-poster.webp" autoplay muted loop playsinline controls preload="metadata"
-            aria-label="Demo: a concept is picked on the map, explained in your own words, coached to 71, questioned with the mentor, revised to 89 and 105, and evaluated at 118 out of 120."></video>
+        <div class="player is-paused" id="player" tabindex="0" role="region" aria-label="Product demo, 67 seconds, no sound. Space plays or pauses, the arrow keys skip 5 seconds.">
+          <video id="pv" src="/media/knowgraph-demo.mp4" poster="/media/knowgraph-demo-poster.webp" muted loop playsinline preload="metadata"
+            aria-label="A model is connected locally with Ollama; a concept is picked on the map, explained in your own words, coached to 71, questioned with the mentor, revised to 89 and 105, and evaluated at 118 out of 120; then the progress is exported and restored from a backup file."></video>
+          <button class="player__big" type="button" data-toggle aria-label="Play the demo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
+          <div class="player__bar">
+            <button class="pbtn" type="button" data-toggle aria-label="Play or pause">
+              <svg class="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg>
+              <svg class="i-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>
+            </button>
+            <div class="track" id="track" role="slider" tabindex="-1" aria-label="Position" aria-valuemin="0" aria-valuemax="67" aria-valuenow="0">
+              <div class="track__segs" id="segs"></div>
+              <div class="track__tip" id="tip"></div>
+            </div>
+            <span class="ptime" id="ptime">0:00 / 1:07</span>
+            <button class="pbtn" type="button" id="fs" aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+          </div>
         </div>
+        <ol class="chapters" id="chapters" aria-label="Chapters"></ol>
       </div>
 
       <section id="how">
@@ -182,5 +224,95 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
       <span><a href="https://github.com/Felichz/KnowGraph">GitHub</a> · <a href="https://portfolio-felix-teal.vercel.app/work/knowgraph/">Case study</a> · Built by <a href="https://portfolio-felix-teal.vercel.app/">Felix Andersson</a></span>
     </footer>
   </div>
+  <script>
+    // The demo player: chapters on the track and as buttons, play and pause, seek, full screen.
+    // It autoplays muted (no sound in the video) unless the visitor prefers reduced motion, and
+    // pauses while it's off screen, unless the visitor paused it themselves.
+    (() => {
+      const CHAPTERS = [
+        [0, 'Connect a model'], [12, 'The map'], [17.2, 'Explain it'], [25.8, 'Ask the mentor'],
+        [37.4, 'Revise'], [48.4, 'Evaluate'], [58, 'Your data'],
+      ];
+      const player = document.getElementById('player');
+      const v = document.getElementById('pv');
+      const track = document.getElementById('track');
+      const tip = document.getElementById('tip');
+      const time = document.getElementById('ptime');
+      const list = document.getElementById('chapters');
+      let dur = 67;
+      let userPaused = false;
+      const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+      const ends = () => CHAPTERS.map((c, i) => [c[0], (CHAPTERS[i + 1] ?? [dur])[0], c[1]]);
+
+      const segs = ends().map(([a, b]) => {
+        const seg = document.createElement('div');
+        seg.className = 'seg'; seg.style.flex = String(b - a);
+        seg.appendChild(document.createElement('i'));
+        document.getElementById('segs').appendChild(seg);
+        return seg.firstChild;
+      });
+      const buttons = CHAPTERS.map(([t, name]) => {
+        const li = document.createElement('li');
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.innerHTML = `<span>${fmt(t)}</span>${name}`;
+        b.addEventListener('click', () => { seek(t); play(); });
+        li.appendChild(b); list.appendChild(li);
+        return b;
+      });
+
+      const play = () => { userPaused = false; v.play().catch(() => {}); };
+      const toggle = () => { if (v.paused) play(); else { userPaused = true; v.pause(); } };
+      const seek = (t) => { v.currentTime = Math.max(0, Math.min(dur - 0.05, t)); draw(); };
+      function draw() {
+        const t = v.currentTime;
+        ends().forEach(([a, b], i) => { segs[i].style.width = `${Math.max(0, Math.min(1, (t - a) / (b - a))) * 100}%`; });
+        const cur = ends().findIndex(([a, b]) => t >= a && t < b);
+        buttons.forEach((b, i) => b.setAttribute('aria-current', String(i === cur)));
+        time.textContent = `${fmt(t)} / ${fmt(dur)}`;
+        track.setAttribute('aria-valuenow', String(Math.round(t)));
+        player.classList.toggle('is-paused', v.paused);
+      }
+      v.addEventListener('loadedmetadata', () => { dur = v.duration || dur; track.setAttribute('aria-valuemax', String(Math.round(dur))); draw(); });
+      for (const e of ['timeupdate', 'play', 'pause', 'seeked']) v.addEventListener(e, draw);
+      (function frame() { if (!v.paused) draw(); requestAnimationFrame(frame); })();
+
+      player.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); toggle(); }));
+      v.addEventListener('click', toggle);
+      const at = (x) => { const r = track.getBoundingClientRect(); return Math.max(0, Math.min(1, (x - r.left) / r.width)) * dur; };
+      let dragging = false;
+      track.addEventListener('pointerdown', (e) => { dragging = true; track.setPointerCapture(e.pointerId); seek(at(e.clientX)); });
+      track.addEventListener('pointermove', (e) => {
+        const t = at(e.clientX);
+        if (dragging) seek(t);
+        const ch = ends().find(([a, b]) => t >= a && t < b) ?? ends().at(-1);
+        tip.innerHTML = `<b>${fmt(t)}</b>${ch[2]}`;
+        tip.style.left = `${(t / dur) * 100}%`;
+      });
+      const stop = () => { dragging = false; };
+      track.addEventListener('pointerup', stop); track.addEventListener('pointercancel', stop);
+      player.addEventListener('keydown', (e) => {
+        if (e.target.closest('.chapters')) return;
+        if (e.key === ' ' || e.key === 'k') { e.preventDefault(); toggle(); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); seek(v.currentTime + 5); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); seek(v.currentTime - 5); }
+        else if (e.key === 'f') document.getElementById('fs').click();
+      });
+      document.getElementById('fs').addEventListener('click', () => {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else if (player.requestFullscreen) player.requestFullscreen();
+        else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+      });
+      if (matchMedia('(hover: none)').matches) player.classList.add('is-touch');
+
+      // Autoplay (muted) unless reduced motion is asked for; pause off screen, resume when back.
+      const auto = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      new IntersectionObserver(([entry]) => {
+        if (!entry.isIntersecting) { if (!v.paused) v.pause(); }
+        else if (auto && !userPaused) v.play().catch(() => {});
+      }, { threshold: 0.25 }).observe(player);
+      draw();
+    })();
+  </script>
 </body>
 </html>
