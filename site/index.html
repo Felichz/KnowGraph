@@ -50,8 +50,21 @@
     /* the demo player */
     .player { position: relative; margin: 36px auto 0; border-radius: 16px; border: 1px solid var(--line); background: var(--bg); overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.55); outline: none; }
     .player:focus-visible { box-shadow: 0 0 0 3px var(--cyan), 0 40px 120px rgba(0,0,0,.55); }
-    .player video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--bg); cursor: pointer; }
-    .player__big { position: absolute; left: 50%; top: calc(50% - 27px); width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 1px solid var(--line-s); background: rgba(14,17,23,.82); color: var(--t1); display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .player video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; background: var(--app); cursor: pointer; }
+    /* The window around it, as the portfolio draws its previews: a bar with the three lights (only the
+       green one acts: full screen) and the app's name. */
+    .win__bar { position: relative; height: 34px; display: grid; place-items: center; background: var(--s1); border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--t3); }
+    .lights { position: absolute; left: 13px; top: 11px; display: flex; gap: 8px; }
+    .light { width: 12px; height: 12px; padding: 0; border: 0; border-radius: 50%; background: rgba(214,226,255,.16); display: grid; place-items: center; color: rgba(0,0,0,.55); }
+    .light--zoom { background: #28c840; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.2); cursor: pointer; transition: scale .2s; }
+    .light--zoom svg { width: 8px; height: 8px; opacity: 0; transition: opacity .15s; }
+    .light--zoom:hover { scale: 1.15; }
+    .light--zoom:hover svg, .light--zoom:focus-visible svg { opacity: 1; }
+    .light--zoom:focus-visible { outline: 2px solid var(--t2); outline-offset: 2px; }
+    .player:fullscreen .win__bar { display: none; }
+    .player:fullscreen { display: flex; flex-direction: column; justify-content: center; border-radius: 0; }
+    .player:fullscreen video { flex: 1; min-height: 0; height: 0; object-fit: contain; }
+    .player__big { position: absolute; left: 50%; top: calc(50% - 10px); width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 1px solid var(--line-s); background: rgba(14,17,23,.82); color: var(--t1); display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s; }
     .player__big svg { width: 30px; height: 30px; margin-left: 4px; }
     .player.is-paused .player__big { opacity: 1; pointer-events: auto; }
     .player__bar { display: flex; align-items: center; gap: 14px; padding: 8px 14px; border-top: 1px solid var(--line); background: var(--app); }
@@ -146,20 +159,21 @@
         </div>
         <p class="note">Windows installer · macOS and Linux run from source · MIT license</p>
 
-        <div class="player is-paused" id="player" tabindex="0" role="region" aria-label="Product demo, 67 seconds, no sound. Space plays or pauses, the arrow keys skip 5 seconds.">
+        <div class="player is-paused" id="player" tabindex="0" role="region" aria-label="Product demo, 49 seconds, no sound. Space plays or pauses, the arrow keys skip 5 seconds.">
+          <div class="win__bar"><span class="lights"><i class="light"></i><i class="light"></i><button class="light light--zoom" type="button" data-fs aria-label="Full screen"><svg viewBox="0 0 10 10" fill="currentColor"><path d="M2.2 6.6V2.2h4.4zM7.8 3.4v4.4H3.4z"/></svg></button></span>KnowGraph</div>
           <video id="pv" src="/media/knowgraph-demo.mp4" poster="/media/knowgraph-demo-poster.webp" muted loop playsinline preload="metadata"
-            aria-label="A model is connected locally with Ollama; a concept is picked on the map, explained in your own words, coached to 71, questioned with the mentor, revised to 89 and 105, and evaluated at 118 out of 120; then the progress is exported and restored from a backup file."></video>
+            aria-label="A concept is picked on the map, explained in your own words, coached to 71, questioned with the mentor, revised to 105, and evaluated at 118 out of 120, and its cell on the map fills in; then a local model is connected through Ollama, and the progress is exported and restored from a backup file."></video>
           <button class="player__big" type="button" data-toggle aria-label="Play the demo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
           <div class="player__bar">
             <button class="pbtn" type="button" data-toggle aria-label="Play or pause">
               <svg class="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg>
               <svg class="i-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>
             </button>
-            <div class="track" id="track" role="slider" tabindex="-1" aria-label="Position" aria-valuemin="0" aria-valuemax="67" aria-valuenow="0">
+            <div class="track" id="track" role="slider" tabindex="-1" aria-label="Position" aria-valuemin="0" aria-valuemax="49" aria-valuenow="0">
               <div class="track__segs" id="segs"></div>
               <div class="track__tip" id="tip"></div>
             </div>
-            <span class="ptime" id="ptime">0:00 / 1:07</span>
+            <span class="ptime" id="ptime">0:00 / 0:49</span>
             <button class="pbtn" type="button" id="fs" aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
           </div>
         </div>
@@ -230,8 +244,8 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
     // pauses while it's off screen, unless the visitor paused it themselves.
     (() => {
       const CHAPTERS = [
-        [0, 'Connect a model'], [12, 'The map'], [17.2, 'Explain it'], [25.8, 'Ask the mentor'],
-        [37.4, 'Revise'], [48.4, 'Evaluate'], [58, 'Your data'],
+        [0, 'The map'], [4.3, 'Explain it'], [10.4, 'Ask the mentor'], [17, 'Revise'],
+        [23.6, 'Evaluate'], [34, 'Your model'], [41.2, 'Your data'],
       ];
       const player = document.getElementById('player');
       const v = document.getElementById('pv');
@@ -239,7 +253,7 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
       const tip = document.getElementById('tip');
       const time = document.getElementById('ptime');
       const list = document.getElementById('chapters');
-      let dur = 67;
+      let dur = 49;
       let userPaused = false;
       const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
       const ends = () => CHAPTERS.map((c, i) => [c[0], (CHAPTERS[i + 1] ?? [dur])[0], c[1]]);
@@ -298,11 +312,13 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
         else if (e.key === 'ArrowLeft') { e.preventDefault(); seek(v.currentTime - 5); }
         else if (e.key === 'f') document.getElementById('fs').click();
       });
-      document.getElementById('fs').addEventListener('click', () => {
+      const fullscreen = () => {
         if (document.fullscreenElement) document.exitFullscreen();
         else if (player.requestFullscreen) player.requestFullscreen();
         else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
-      });
+      };
+      document.getElementById('fs').addEventListener('click', fullscreen);
+      player.querySelector('[data-fs]').addEventListener('click', fullscreen);
       if (matchMedia('(hover: none)').matches) player.classList.add('is-touch');
 
       // Autoplay (muted) unless reduced motion is asked for; pause off screen, resume when back.
