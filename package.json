@@ -1,9 +1,16 @@
 {
-  "name": "rails-interview-graph",
-  "productName": "Learning Workspace",
-  "description": "Desktop learning workspace for guided React and Rails interview preparation.",
-  "private": true,
+  "name": "knowgraph",
+  "productName": "KnowGraph",
+  "description": "Senior React and Rails interview prep: read a concept, explain it in your own words, and an LLM you bring grades it. Desktop app, local-first.",
   "version": "1.0.0",
+  "license": "MIT",
+  "author": "Felix Andersson",
+  "homepage": "https://know-graph.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Felichz/KnowGraph.git"
+  },
+  "private": true,
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -48,7 +55,7 @@
   },
   "build": {
     "appId": "dev.felix.learningworkspace",
-    "productName": "Learning Workspace",
+    "productName": "KnowGraph",
     "asar": true,
     "directories": {
       "output": "release"
@@ -63,11 +70,23 @@
       "target": [
         "nsis",
         "zip"
-      ]
+      ],
+      "artifactName": "KnowGraph-${version}-win-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "KnowGraph-Setup-${version}.${ext}"
+    },
+    "extraResources": [
+      {
+        "from": "electron-dist/gateway.cjs",
+        "to": "gateway.cjs"
+      },
+      {
+        "from": "server/.env.example",
+        "to": "gateway.env.example"
+      }
+    ]
   }
 }

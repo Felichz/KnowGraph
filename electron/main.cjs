@@ -382,7 +382,7 @@ async function createWindow() {
     autoHideMenuBar: true,
     // --bg-app of the theme the renderer will pick by default (system setting); see src/ui/theme/theme.js.
     backgroundColor: nativeTheme.shouldUseDarkColors ? "#100E0C" : "#F7F4EF",
-    title: "Learning Workspace",
+    title: "KnowGraph",
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,

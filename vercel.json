@@ -1,16 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
-  "installCommand": "npm ci",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "functions": {
-    "api/ai/[...slug].js": {
-      "maxDuration": 300
-    }
-  },
-  "rewrites": [
-    { "source": "/api/ai/:path*", "destination": "/api/ai/[...slug]" },
-    { "source": "/((?!api/ai(?:/|$)).*)", "destination": "/index.html" }
+  "framework": null,
+  "installCommand": "echo \"static demo site, nothing to install\"",
+  "buildCommand": "echo \"static demo site, nothing to build\"",
+  "outputDirectory": "site",
+  "cleanUrls": true,
+  "headers": [
+    { "source": "/media/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }] },
+    { "source": "/fonts/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }
   ]
 }

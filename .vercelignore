@@ -1,29 +1,6 @@
-.git
-.github
-.codex
-.claude
-.cursor
-.impeccable
-node_modules
-server/node_modules
-dist
-electron-dist
-release
-test-results
-tmp
-attachments
-*.log
-*.wav
-*.png
-docs
-README.md
-DESIGN.md
-PRODUCT.md
-.styles-split.tmp.css
-tests
-scripts
-electron
-playwright.config.js
-render.yaml
-.env
-.env.local
+# The Vercel project only serves the static demo site in site/. The app itself runs locally
+# (desktop or dev server) with the user's own LLM, so nothing else is uploaded, and api/ in
+# particular must not be deployed as a serverless function.
+/*
+!/site
+!/vercel.json

@@ -1,76 +1,57 @@
-# Learning Workspace as a desktop application
+# KnowGraph as a desktop app
 
-The Electron version keeps the web application as the renderer and adds a secure desktop shell. It does not duplicate the React logic or create a second frontend.
-
-## Interface experience
-
-- The top bar works as a compact command bar: map identity, progress, and access to navigation.
-- The navigation panel stays closed by default to prioritize the canvas.
-- When opened, it gathers the graph selector, Grafo/Flashcards mode, categories, and next challenge.
-- Cards are full-screen SPA routes and work as a separate workspace.
-- A card's contextual navigation opens with `Ruta`; when closed, only the title, score, controls, and the active view remain visible.
-- Lectura, Coaching, and Evaluar remain persistent surfaces in the left rail.
+The Electron app is the main way to run KnowGraph. It keeps the web application as the renderer and adds a desktop shell that also runs the AI gateway, so there is nothing else to start. It does not duplicate the React code.
 
 ## Development
 
-First set up `server/.env` from `server/.env.example`. Then run from the root:
+From the root, after `npm install` and `npm install --prefix server`:
 
 ```bash
 npm run desktop:dev
 ```
 
-The command starts Vite on `127.0.0.1:5173` and opens Electron. Electron checks `127.0.0.1:4317`; if the gateway does not exist, it starts it automatically using `server/.env`. Closing the window also terminates the gateway it started, but it does not touch a gateway that was already running.
+This starts Vite on `127.0.0.1:5173` and opens Electron. Electron checks `127.0.0.1:4317`; if no gateway answers, it starts one from `server/` (reading `server/.env` if it exists). Closing the window stops the gateway it started, and never touches one that was already running.
 
-## Local build and installer
-
-Unpacked build for verification:
+## Installer
 
 ```bash
-npm run desktop:pack
+npm run desktop:pack   # unpacked build in release/win-unpacked, for checking
+npm run desktop:dist   # release/KnowGraph-Setup-<version>.exe and a portable zip
 ```
 
-Windows installer:
+Both build the renderer (`dist/`) and bundle the gateway into one file (`electron-dist/gateway.cjs`), which is shipped next to the app as an extra resource with a template of its settings (`gateway.env.example`).
 
-```bash
-npm run desktop:dist
-```
+The build is not code-signed. Windows SmartScreen asks for confirmation on first run; signing needs a certificate and re-enabling `win.signAndEditExecutable`.
 
-The results land in `release/`. The gateway is compiled as a single Node file before packaging Electron.
+No credentials ship in the installer. Models are added in the app, under **Settings → AI connections**. Optional gateway settings live in `%APPDATA%\KnowGraph\.env` (the first run copies a template next to it as `.env.example`).
 
-The current configuration produces an unsigned local application and avoids the Windows codesigning toolchain. To distribute it publicly, it is advisable to configure a certificate and re-enable `win.signAndEditExecutable`.
+## Publishing a release
 
-Credentials are not included in the installer. On a packaged installation, the first run copies a template to:
+1. Bump `version` in `package.json` and commit.
+2. `npm run desktop:dist`.
+3. Create a GitHub release tagged `v<version>` and attach `release/KnowGraph-Setup-<version>.exe` and `release/KnowGraph-<version>-win-x64.zip`.
 
-```text
-%APPDATA%\Learning Workspace\.env.example
-```
-
-Copy it as `.env` in the same folder and fill in the keys. The packaged gateway uses that directory as its local configuration.
+The demo site and the README link to `releases/latest`, so they pick up the new release without changes.
 
 ## Architecture and security
 
 ```text
 Electron main
 ├── Isolated BrowserWindow
-│   └── React + Vite (renderer with no Node access)
-├── Local HTTP server for assets and SPA fallback
+│   └── React renderer (no Node access)
+├── Local HTTP server for the built renderer, with SPA fallback
 │   └── /api/ai/* → proxy to the gateway
-└── Local gateway process
-    └── Direct MiniMax → FreeLLMAPI as fallback
+└── Local gateway process (the same server/ code)
+    └── the user's provider, chosen per request
 ```
 
-- `contextIsolation` is active.
-- `nodeIntegration` is disabled.
-- The renderer is sandboxed.
-- The preload only exposes runtime, platform, and versions; it does not expose the filesystem, processes, or secrets.
-- Browser permissions are denied by default.
-- External links open in the system browser.
-- Production is served over HTTP loopback to preserve SPA routing and SSE streaming without depending on `file://`.
-- IndexedDB and `localStorage` belong to the Electron profile, separate from the browser profile.
+- `contextIsolation` is on, `nodeIntegration` is off, and the renderer is sandboxed.
+- The preload only exposes runtime, platform and versions: no filesystem, processes or secrets.
+- Browser permissions are denied by default, and external links open in the system browser.
+- The packaged app serves the renderer over HTTP on loopback, which keeps SPA routes and SSE streaming working without `file://`.
+- IndexedDB and `localStorage` belong to the Electron profile, separate from any browser profile.
 
 ## Main files
 
-- `electron/main.cjs`: window, lifecycle, local server, proxy, and gateway.
-- `electron/preload.cjs`: minimal, secure boundary with the renderer.
-- `src/App.jsx`: workspace shell and collapsible contextual navigation.
-- `src/product-ui.css`: desktop composition and responsive styling.
+- `electron/main.cjs`: window, lifecycle, local server, proxy and gateway process.
+- `electron/preload.cjs`: the minimal boundary with the renderer.
