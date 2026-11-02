@@ -18,8 +18,9 @@ function collectFiles(dir) {
   return results;
 }
 
+// The presentation layer (ADR 0008): every file under src/ui, plus the hooks and the app entry.
 const targets = [
-  ...collectFiles("src/components"),
+  ...collectFiles("src/ui"),
   ...collectFiles("src/hooks"),
   { path: "src/App.jsx", lines: fs.readFileSync("src/App.jsx", "utf8").split("\n").length },
 ];
