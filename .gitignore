@@ -27,3 +27,6 @@ scratch/
 tmp-*.png
 *.log
 .impeccable/
+
+# Wrangler local state
+.wrangler/

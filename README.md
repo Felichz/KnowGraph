@@ -2,9 +2,9 @@
 
 A study workspace for senior React and Rails interviews: 142 concepts in a dependency graph, each studied by reading it, explaining it in your own words and having an LLM you bring grade the explanation. Open source, and it runs on your machine.
 
-**[Download for Windows](https://github.com/Felichz/KnowGraph/releases/latest)** · [Demo video](https://know-graph.vercel.app) · [Run from source](#run-it) · [Case study](https://portfolio-felix-teal.vercel.app/work/knowgraph/) · Author: [Felix Andersson](https://portfolio-felix-teal.vercel.app/)
+**[Download for Windows](https://github.com/Felichz/KnowGraph/releases/latest)** · [Demo video](https://knowgraph.medanolabs.com) · [Run from source](#run-it) · [Case study](https://felix.medanolabs.com/work/knowgraph/) · Author: [Felix Andersson](https://felix.medanolabs.com/)
 
-There is no hosted version. The mentor, the coach and the grader all need a language model, and KnowGraph doesn't ship or pay for one: you run the app (as a desktop app or a local dev server) and connect your own provider, or a fully local model through Ollama or LM Studio. [know-graph.vercel.app](https://know-graph.vercel.app) is a demo page with a walkthrough video and the download links.
+There is no hosted version. The mentor, the coach and the grader all need a language model, and KnowGraph doesn't ship or pay for one: you run the app (as a desktop app or a local dev server) and connect your own provider, or a fully local model through Ollama or LM Studio. [knowgraph.medanolabs.com](https://knowgraph.medanolabs.com) is a demo page with a walkthrough video and the download links.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-demo-dark.webp">
@@ -120,7 +120,7 @@ src/
   lessons.js    Rails lesson content (graph in src/logic/railsGraph.js)
 server/         AI gateway: routes, provider registry, prompts, Zod schemas, stream parsers
 api/ai/         serverless mount of the same gateway, for self-hosting
-site/           the static demo page served at know-graph.vercel.app
+site/           the static demo page served at knowgraph.medanolabs.com
 shared/         provider catalog used by both the UI and the gateway
 electron/       desktop shell (window, local renderer server, gateway process)
 tests/          logic suites, Playwright specs and state fixtures

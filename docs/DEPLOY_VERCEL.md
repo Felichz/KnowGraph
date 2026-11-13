@@ -1,6 +1,6 @@
 # The demo site, and self-hosting the web build
 
-## What know-graph.vercel.app serves
+## What knowgraph.medanolabs.com serves
 
 The Vercel project serves only the static demo page in `site/`: a walkthrough video, how the app works, and the links to the Windows release and the source. `vercel.json` publishes `site/` as is (no install, no build), and `.vercelignore` uploads nothing else, so `api/` is never deployed as a function.
 
