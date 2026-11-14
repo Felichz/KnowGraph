@@ -51,10 +51,10 @@
 
     /* the demo player */
     /* The whole window always fits the viewport, with room to breathe: its width is capped so that the
-       bar, the 16:10 video and the controls (92px between them) leave --breath above and below. On a
+       bar, the chapter strip and the 16:10 video (62px of it besides the video) leave --breath above and below. On a
        tall screen the cap is above the column's width and changes nothing; on a short one the window
        narrows, centered. Never under 360px, so a very short landscape screen scrolls instead. */
-    .player { --chrome: 92px; --breath: max(28px, 7vh); --breath: max(28px, 7svh);
+    .player { --chrome: 62px; --breath: max(28px, 7vh); --breath: max(28px, 7svh);
       width: min(100%, max(360px, calc((100vh - 2 * var(--breath) - var(--chrome)) * 1.6)));
       width: min(100%, max(360px, calc((100svh - 2 * var(--breath) - var(--chrome)) * 1.6)));
       position: relative; margin: 36px auto 0; border-radius: 16px; border: 1px solid var(--line); background: var(--bg); overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.55); outline: none; }
@@ -83,33 +83,23 @@
     }
     .player:fullscreen .win__bar { display: none; }
     .player:fullscreen { display: flex; flex-direction: column; justify-content: center; border-radius: 0; }
+    .player:fullscreen .player__big { top: calc(50% + 12px); }
     .player:fullscreen video { flex: 1; min-height: 0; height: 0; object-fit: contain; }
-    .player__big { position: absolute; left: 50%; top: calc(50% - 10px); width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 1px solid var(--line-s); background: rgba(14,17,23,.82); color: var(--t1); display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    /* The chapters: a strip of segments right under the window's bar, which is also the video's progress.
+       A segment is a button that jumps to its chapter; its name shows as a tooltip on hover or focus. */
+    .player__bar { padding: 0 14px; border-bottom: 1px solid var(--line); background: var(--app); }
+    .track { position: relative; height: 24px; }
+    .track__segs { display: flex; gap: 3px; height: 100%; }
+    .seg { display: grid; align-items: center; min-width: 0; padding: 0; border: 0; background: none; cursor: pointer; }
+    .seg span { position: relative; display: block; height: 4px; border-radius: 2px; background: rgba(214,226,255,.22); overflow: hidden; transition: height .15s, border-radius .15s; }
+    .seg i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--cyan); }
+    .seg:hover span, .seg:focus-visible span { height: 6px; border-radius: 3px; }
+    .seg:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; border-radius: 4px; }
+    .track__tip { position: absolute; top: calc(100% + 8px); z-index: 2; transform: translateX(-50%); padding: 5px 10px; border-radius: 8px; background: var(--s3); border: 1px solid var(--line-s); font-size: 13px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .12s; }
+    .track__tip.on { opacity: 1; }
+    .player__big { position: absolute; left: 50%; top: calc(50% + 30px); width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 1px solid var(--line-s); background: rgba(14,17,23,.82); color: var(--t1); display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s; }
     .player__big svg { width: 30px; height: 30px; margin-left: 4px; }
     .player.is-paused .player__big { opacity: 1; pointer-events: auto; }
-    .player__bar { display: flex; align-items: center; gap: 14px; padding: 8px 14px; border-top: 1px solid var(--line); background: var(--app); }
-    .pbtn { flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px; border: 0; background: transparent; color: var(--t1); display: grid; place-items: center; cursor: pointer; }
-    .pbtn:hover { background: rgba(214,226,255,.10); }
-    .pbtn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
-    .pbtn svg { width: 20px; height: 20px; }
-    .pbtn .i-pause, .player.is-paused .pbtn .i-play { display: block; }
-    .pbtn .i-play, .player.is-paused .pbtn .i-pause { display: none; }
-    .track { position: relative; flex: 1; height: 26px; cursor: pointer; touch-action: none; }
-    .track__segs { position: absolute; left: 0; right: 0; top: 11px; height: 4px; display: flex; gap: 3px; }
-    .seg { position: relative; height: 4px; border-radius: 2px; background: rgba(214,226,255,.22); overflow: hidden; }
-    .seg i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--cyan); }
-    .track:hover .track__segs { top: 10px; height: 6px; }
-    .track:hover .seg { height: 6px; border-radius: 3px; }
-    .track__tip { position: absolute; bottom: 30px; transform: translateX(-50%); padding: 5px 10px; border-radius: 8px; background: var(--s3); border: 1px solid var(--line-s); font-size: 13px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s; }
-    .track:hover .track__tip { opacity: 1; }
-    .track__tip b { font-family: var(--mono); font-weight: 500; color: var(--t3); margin-right: 6px; }
-    .ptime { flex-shrink: 0; font-family: var(--mono); font-size: 13px; color: var(--t2); font-variant-numeric: tabular-nums; }
-    .chapters { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; list-style: none; }
-    .chapters button { height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--s1); color: var(--t2); font: 500 14px/1 var(--ui); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
-    .chapters button:hover { color: var(--t1); border-color: var(--line-s); }
-    .chapters button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
-    .chapters button span { font-family: var(--mono); font-size: 12px; color: var(--t3); }
-    .chapters button[aria-current="true"] { color: var(--t1); border-color: rgba(61,185,238,.55); background: rgba(61,185,238,.10); }
 
     section { padding: 88px 0 0; }
     h2 { font-family: var(--disp); font-size: clamp(30px, 4vw, 44px); line-height: 1.1; letter-spacing: -.03em; font-weight: 720; }
@@ -181,23 +171,11 @@
 
         <div class="player is-paused" id="player" tabindex="0" role="region" aria-label="Product demo, 49 seconds, no sound. Space plays or pauses, the arrow keys skip 5 seconds.">
           <div class="win__bar">KnowGraph<span class="lights-pair" data-side="left"><span class="lights lights--left"><button class="light light--close" type="button" aria-label="Close" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><button class="light light--min" type="button" aria-label="Minimize" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button><button class="light light--zoom" type="button" data-fs aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6h9l-9 9zM18 18H9l9-9z" fill="currentColor" stroke="none"/></svg></button></span><span class="lights lights--right" inert><button class="light light--close" type="button" aria-label="Close" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><button class="light light--min" type="button" aria-label="Minimize" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button><button class="light light--zoom" type="button" data-fs aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6h9l-9 9zM18 18H9l9-9z" fill="currentColor" stroke="none"/></svg></button></span></span></div>
+          <div class="player__bar"><div class="track" id="track" role="group" aria-label="Chapters"><div class="track__segs" id="segs"></div><div class="track__tip" id="tip" aria-hidden="true"></div></div></div>
           <video id="pv" src="/media/knowgraph-demo.mp4" poster="/media/knowgraph-demo-poster.webp" muted loop playsinline preload="metadata"
             aria-label="A concept is picked on the map, explained in your own words, coached to 71, questioned with the mentor, revised to 105, and evaluated at 118 out of 120, and its cell on the map fills in; then a local model is connected through Ollama, and the progress is exported and restored from a backup file."></video>
           <button class="player__big" type="button" data-toggle aria-label="Play the demo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
-          <div class="player__bar">
-            <button class="pbtn" type="button" data-toggle aria-label="Play or pause">
-              <svg class="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg>
-              <svg class="i-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>
-            </button>
-            <div class="track" id="track" role="slider" tabindex="-1" aria-label="Position" aria-valuemin="0" aria-valuemax="49" aria-valuenow="0">
-              <div class="track__segs" id="segs"></div>
-              <div class="track__tip" id="tip"></div>
-            </div>
-            <span class="ptime" id="ptime">0:00 / 0:49</span>
-            <button class="pbtn" type="button" id="fs" aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
-          </div>
         </div>
-        <ol class="chapters" id="chapters" aria-label="Chapters"></ol>
       </div>
 
       <section id="how">
@@ -259,7 +237,8 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
     </footer>
   </div>
   <script>
-    // The demo player: chapters on the track and as buttons, play and pause, seek, full screen.
+    // The demo player: a strip of chapters (each segment jumps to its chapter, and names itself on hover),
+    // click to play or pause, the arrow keys to skip, and full screen from the window's green light.
     // It autoplays muted (no sound in the video) unless the visitor prefers reduced motion, and
     // pauses while it's off screen, unless the visitor paused it themselves.
     (() => {
@@ -271,28 +250,30 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
       const v = document.getElementById('pv');
       const track = document.getElementById('track');
       const tip = document.getElementById('tip');
-      const time = document.getElementById('ptime');
-      const list = document.getElementById('chapters');
       let dur = 49;
       let userPaused = false;
       const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
       const ends = () => CHAPTERS.map((c, i) => [c[0], (CHAPTERS[i + 1] ?? [dur])[0], c[1]]);
 
-      const segs = ends().map(([a, b]) => {
-        const seg = document.createElement('div');
-        seg.className = 'seg'; seg.style.flex = String(b - a);
-        seg.appendChild(document.createElement('i'));
-        document.getElementById('segs').appendChild(seg);
-        return seg.firstChild;
-      });
-      const buttons = CHAPTERS.map(([t, name]) => {
-        const li = document.createElement('li');
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.innerHTML = `<span>${fmt(t)}</span>${name}`;
-        b.addEventListener('click', () => { seek(t); play(); });
-        li.appendChild(b); list.appendChild(li);
-        return b;
+      const segsEl = document.getElementById('segs');
+      const parts = ends().map(([a, b, name]) => {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'seg'; btn.style.flex = String(b - a);
+        btn.setAttribute('aria-label', `${name}, ${fmt(a)}`);
+        btn.innerHTML = '<span><i></i></span>';
+        btn.addEventListener('click', () => { seek(a); play(); });
+        // The chapter's name, under its segment and kept inside the strip.
+        const show = () => {
+          tip.textContent = name;
+          const t = track.getBoundingClientRect(), r = btn.getBoundingClientRect(), half = tip.offsetWidth / 2;
+          tip.style.left = `${Math.max(half, Math.min(t.width - half, r.left - t.left + r.width / 2))}px`;
+          tip.classList.add('on');
+        };
+        const hide = () => tip.classList.remove('on');
+        btn.addEventListener('pointerenter', show); btn.addEventListener('pointerleave', hide);
+        btn.addEventListener('focus', () => btn.matches(':focus-visible') && show()); btn.addEventListener('blur', hide);
+        segsEl.appendChild(btn);
+        return { btn, fill: btn.querySelector('i') };
       });
 
       const play = () => { userPaused = false; v.play().catch(() => {}); };
@@ -300,44 +281,29 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
       const seek = (t) => { v.currentTime = Math.max(0, Math.min(dur - 0.05, t)); draw(); };
       function draw() {
         const t = v.currentTime;
-        ends().forEach(([a, b], i) => { segs[i].style.width = `${Math.max(0, Math.min(1, (t - a) / (b - a))) * 100}%`; });
+        ends().forEach(([a, b], i) => { parts[i].fill.style.width = `${Math.max(0, Math.min(1, (t - a) / (b - a))) * 100}%`; });
         const cur = ends().findIndex(([a, b]) => t >= a && t < b);
-        buttons.forEach((b, i) => b.setAttribute('aria-current', String(i === cur)));
-        time.textContent = `${fmt(t)} / ${fmt(dur)}`;
-        track.setAttribute('aria-valuenow', String(Math.round(t)));
+        parts.forEach((p, i) => p.btn.setAttribute('aria-current', String(i === cur)));
         player.classList.toggle('is-paused', v.paused);
       }
-      v.addEventListener('loadedmetadata', () => { dur = v.duration || dur; track.setAttribute('aria-valuemax', String(Math.round(dur))); draw(); });
+      v.addEventListener('loadedmetadata', () => { dur = v.duration || dur; draw(); });
       for (const e of ['timeupdate', 'play', 'pause', 'seeked']) v.addEventListener(e, draw);
       (function frame() { if (!v.paused) draw(); requestAnimationFrame(frame); })();
 
       player.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); toggle(); }));
       v.addEventListener('click', toggle);
-      const at = (x) => { const r = track.getBoundingClientRect(); return Math.max(0, Math.min(1, (x - r.left) / r.width)) * dur; };
-      let dragging = false;
-      track.addEventListener('pointerdown', (e) => { dragging = true; track.setPointerCapture(e.pointerId); seek(at(e.clientX)); });
-      track.addEventListener('pointermove', (e) => {
-        const t = at(e.clientX);
-        if (dragging) seek(t);
-        const ch = ends().find(([a, b]) => t >= a && t < b) ?? ends().at(-1);
-        tip.innerHTML = `<b>${fmt(t)}</b>${ch[2]}`;
-        tip.style.left = `${(t / dur) * 100}%`;
-      });
-      const stop = () => { dragging = false; };
-      track.addEventListener('pointerup', stop); track.addEventListener('pointercancel', stop);
       player.addEventListener('keydown', (e) => {
-        if (e.target.closest('.chapters')) return;
+        if (e.target.closest('.track')) return;
         if (e.key === ' ' || e.key === 'k') { e.preventDefault(); toggle(); }
         else if (e.key === 'ArrowRight') { e.preventDefault(); seek(v.currentTime + 5); }
         else if (e.key === 'ArrowLeft') { e.preventDefault(); seek(v.currentTime - 5); }
-        else if (e.key === 'f') document.getElementById('fs').click();
+        else if (e.key === 'f') fullscreen();
       });
       const fullscreen = () => {
         if (document.fullscreenElement) document.exitFullscreen();
         else if (player.requestFullscreen) player.requestFullscreen();
         else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
       };
-      document.getElementById('fs').addEventListener('click', fullscreen);
       // The window's lights, as in the portfolio: the green one stops calling once it has been used on
       // this visit, and the set keeps to the pointer's side of the window (a dead band in the middle),
       // each one coming in from its own edge and leaving back out toward it.
