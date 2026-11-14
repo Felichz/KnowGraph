@@ -50,7 +50,14 @@
     .note { margin-top: 14px; font-size: 14px; color: var(--t3); }
 
     /* the demo player */
-    .player { position: relative; margin: 36px auto 0; border-radius: 16px; border: 1px solid var(--line); background: var(--bg); overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.55); outline: none; }
+    /* The whole window always fits the viewport, with room to breathe: its width is capped so that the
+       bar, the 16:10 video and the controls (92px between them) leave --breath above and below. On a
+       tall screen the cap is above the column's width and changes nothing; on a short one the window
+       narrows, centered. Never under 360px, so a very short landscape screen scrolls instead. */
+    .player { --chrome: 92px; --breath: max(28px, 7vh); --breath: max(28px, 7svh);
+      width: min(100%, max(360px, calc((100vh - 2 * var(--breath) - var(--chrome)) * 1.6)));
+      width: min(100%, max(360px, calc((100svh - 2 * var(--breath) - var(--chrome)) * 1.6)));
+      position: relative; margin: 36px auto 0; border-radius: 16px; border: 1px solid var(--line); background: var(--bg); overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.55); outline: none; }
     .player:focus-visible { box-shadow: 0 0 0 3px var(--cyan), 0 40px 120px rgba(0,0,0,.55); }
     .player video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; background: var(--app); cursor: pointer; }
     /* The window around it, as the portfolio draws its previews (portfolio-felix: src/scripts/live.ts,
