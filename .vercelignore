@@ -1,6 +1,0 @@
-# The Vercel project only serves the static demo site in site/. The app itself runs locally
-# (desktop or dev server) with the user's own LLM, so nothing else is uploaded, and api/ in
-# particular must not be deployed as a serverless function.
-/*
-!/site
-!/vercel.json

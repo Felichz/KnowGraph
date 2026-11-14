@@ -2,11 +2,11 @@
 
 ## What knowgraph.medanolabs.com serves
 
-The Vercel project serves only the static demo page in `site/`: a walkthrough video, how the app works, and the links to the Windows release and the source. `vercel.json` publishes `site/` as is (no install, no build), and `.vercelignore` uploads nothing else, so `api/` is never deployed as a function.
+A Cloudflare Worker (`wrangler.jsonc`) serves only the static demo page in `site/`: a walkthrough video, how the app works, and the links to the Windows release and the source. `npm run deploy` publishes `site/` as is (no install, no build) and the Worker has no code of its own, so `api/` is never deployed as a function.
 
 There is no hosted app. Every AI feature needs a language model, and the project does not pay for one on behalf of visitors; people run KnowGraph locally (see the README) with their own provider or a local model.
 
-To update the page, edit `site/index.html` (and `site/media/`) and push to `main`. Preview it locally with any static server:
+To update the page, edit `site/index.html` (and `site/media/`) and run `npm run deploy` from `main`. Preview it locally with any static server:
 
 ```bash
 npx serve site
@@ -16,10 +16,10 @@ The video is rendered with HyperFrames from a composition that recreates the UI 
 
 ## Self-hosting the web build
 
-The web build still works on a server you control, with the gateway on the same origin. The handler in `api/ai/[...slug].js` mounts the gateway from `server/`, so a Vercel project of your own can serve both:
+The web build still works on a server you control, with the gateway on the same origin. The handler in `api/ai/[...slug].js` mounts the gateway from `server/`, so a serverless host such as Vercel can serve both:
 
 - Build command `npm run build`, output `dist/`.
-- Keep `api/ai/[...slug].js` (remove it from `.vercelignore`) and rewrite `/api/ai/:path*` to it; rewrite every other path to `/index.html` for the SPA routes.
+- Keep `api/ai/[...slug].js` and rewrite `/api/ai/:path*` to it; rewrite every other path to `/index.html` for the SPA routes.
 - Give the function a long `maxDuration` (evaluations stream for up to a few minutes).
 
 Visitors then bring their own key in **Settings → AI connections**: the key travels with each request and is never stored by the gateway. When deployed publicly the gateway only accepts HTTPS provider endpoints that resolve to public IPs (`ALLOW_PRIVATE_PROVIDER_URLS=false`), so local models are not reachable from a hosted deployment.

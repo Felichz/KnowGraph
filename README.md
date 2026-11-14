@@ -96,7 +96,7 @@ The gateway needs no configuration. Optional variables in `server/.env` (copy `s
 | `CORS_ALLOWED_ORIGINS` | Comma-separated origins allowed to call the gateway. |
 | `ALLOW_PRIVATE_PROVIDER_URLS` | Allows local or LAN endpoints. On by default outside production. |
 
-If you self-host the web build, `VITE_AI_API_URL` (root `.env.example`) points the frontend at a gateway on another origin; leave it empty when they share one. See [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md).
+If you self-host the web build, `VITE_AI_API_URL` (root `.env.example`) points the frontend at a gateway on another origin; leave it empty when they share one. See [docs/DEPLOY.md](docs/DEPLOY_VERCEL.md).
 
 ### Checks and builds
 
