@@ -28,7 +28,7 @@ server environment variables, never as `VITE_*` or in the repository.
 The health check for this deployment is:
 
 ```text
-https://know-graph.vercel.app/api/ai/status
+https://knowgraph.medanolabs.com/api/ai/status
 ```
 
 A `200` confirms the gateway is alive. `gateway.configured: false` is normal
@@ -47,7 +47,7 @@ VITE_AI_API_URL=https://TU-GATEWAY.example.com
 And on the external gateway add a concrete allowlist, for example:
 
 ```text
-CORS_ALLOWED_ORIGINS=https://know-graph.vercel.app
+CORS_ALLOWED_ORIGINS=https://knowgraph.medanolabs.com
 ```
 
 For one-off previews you can add more comma-separated origins. Never use
