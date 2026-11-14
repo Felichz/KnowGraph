@@ -70,6 +70,8 @@
     .lights--right { left: auto; right: 13px; }
     .lights-pair[data-side='left'] .lights--right, .lights-pair[data-side='right'] .lights--left { opacity: 0; pointer-events: none; }
     .light { position: relative; display: grid; place-items: center; width: 12px; height: 12px; padding: 0; border: 0; border-radius: 50%; background: var(--l); box-shadow: inset 0 0 0 .5px rgba(0,0,0,.2); color: rgba(0,0,0,.55); cursor: pointer; transition: scale .2s cubic-bezier(.2,.8,.2,1), background .3s; }
+    .light--close { --l: #ff5f57; }
+    .light--min { --l: #febc2e; }
     .light--zoom { --l: #28c840; }
     .light:disabled { --l: rgba(214,226,255,.16); box-shadow: none; cursor: default; }
     .light svg { width: 9px; height: 9px; opacity: 0; transition: opacity .15s; }
@@ -81,10 +83,15 @@
     @media (prefers-reduced-motion: reduce) {
       html:not(.lights-used) .lights:not([inert]) .light--zoom::after { animation: none; transform: scale(1.5); opacity: .6; }
     }
-    .player:fullscreen .win__bar { display: none; }
-    .player:fullscreen { display: flex; flex-direction: column; justify-content: center; border-radius: 0; }
-    .player:fullscreen .player__big { top: calc(50% + 12px); }
-    .player:fullscreen video { flex: 1; min-height: 0; height: 0; object-fit: contain; }
+    /* Maximized (the green light): the stage takes the screen and the window fills it, a small margin on
+       every side. Its bar and chapter strip stay, so the lights and the chapters still answer; the video
+       fills what's left, as large as fits. The green light turns into "restore" and red and yellow light
+       up to take it back, as in the portfolio. */
+    .stage:fullscreen { display: flex; padding: clamp(8px, 1.6vmin, 18px); background: var(--bg); }
+    .stage:fullscreen .player { width: 100%; height: 100%; margin: 0; display: flex; flex-direction: column; }
+    .stage:fullscreen .player video { flex: 1; min-height: 0; height: 0; aspect-ratio: auto; object-fit: contain; }
+    .light .g-un, .player.is-max .light .g-in { display: none; }
+    .player.is-max .light .g-un { display: block; }
     /* The chapters: a strip of segments right under the window's bar, which is also the video's progress.
        A segment is a button that jumps to its chapter; its name shows as a tooltip on hover or focus. */
     .player__bar { padding: 0 14px; border-bottom: 1px solid var(--line); background: var(--app); }
@@ -169,12 +176,14 @@
         </div>
         <p class="note">Windows installer · macOS and Linux run from source · MIT license</p>
 
+        <div class="stage" id="stage">
         <div class="player is-paused" id="player" tabindex="0" role="region" aria-label="Product demo, 49 seconds, no sound. Space plays or pauses, the arrow keys skip 5 seconds.">
-          <div class="win__bar">KnowGraph<span class="lights-pair" data-side="left"><span class="lights lights--left"><button class="light light--close" type="button" aria-label="Close" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><button class="light light--min" type="button" aria-label="Minimize" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button><button class="light light--zoom" type="button" data-fs aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6h9l-9 9zM18 18H9l9-9z" fill="currentColor" stroke="none"/></svg></button></span><span class="lights lights--right" inert><button class="light light--close" type="button" aria-label="Close" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><button class="light light--min" type="button" aria-label="Minimize" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button><button class="light light--zoom" type="button" data-fs aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6h9l-9 9zM18 18H9l9-9z" fill="currentColor" stroke="none"/></svg></button></span></span></div>
+          <div class="win__bar">KnowGraph<span class="lights-pair" data-side="left"><span class="lights lights--left"><button class="light light--close" type="button" aria-label="Close" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><button class="light light--min" type="button" aria-label="Minimize" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button><button class="light light--zoom" type="button" data-fs aria-label="Full screen"><svg class="g-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6h9l-9 9zM18 18H9l9-9z" fill="currentColor" stroke="none"/></svg><svg class="g-un" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M11.5 11.5H3.5l8-8zM12.5 12.5h8l-8 8z" fill="currentColor" stroke="none"/></svg></button></span><span class="lights lights--right" inert><button class="light light--close" type="button" aria-label="Close" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><button class="light light--min" type="button" aria-label="Minimize" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button><button class="light light--zoom" type="button" data-fs aria-label="Full screen"><svg class="g-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6h9l-9 9zM18 18H9l9-9z" fill="currentColor" stroke="none"/></svg><svg class="g-un" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M11.5 11.5H3.5l8-8zM12.5 12.5h8l-8 8z" fill="currentColor" stroke="none"/></svg></button></span></span></div>
           <div class="player__bar"><div class="track" id="track" role="group" aria-label="Chapters"><div class="track__segs" id="segs"></div><div class="track__tip" id="tip" aria-hidden="true"></div></div></div>
           <video id="pv" src="/media/knowgraph-demo.mp4" poster="/media/knowgraph-demo-poster.webp" muted loop playsinline preload="metadata"
             aria-label="A concept is picked on the map, explained in your own words, coached to 71, questioned with the mentor, revised to 105, and evaluated at 118 out of 120, and its cell on the map fills in; then a local model is connected through Ollama, and the progress is exported and restored from a backup file."></video>
           <button class="player__big" type="button" data-toggle aria-label="Play the demo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
+        </div>
         </div>
       </div>
 
@@ -299,9 +308,10 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
         else if (e.key === 'ArrowLeft') { e.preventDefault(); seek(v.currentTime - 5); }
         else if (e.key === 'f') fullscreen();
       });
+      const stage = document.getElementById('stage');
       const fullscreen = () => {
         if (document.fullscreenElement) document.exitFullscreen();
-        else if (player.requestFullscreen) player.requestFullscreen();
+        else if (stage.requestFullscreen) stage.requestFullscreen();
         else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
       };
       // The window's lights, as in the portfolio: the green one stops calling once it has been used on
@@ -313,6 +323,15 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
       };
       try { if (sessionStorage.getItem('lights-used')) used(); } catch {}
       player.querySelectorAll('[data-fs]').forEach((b) => b.addEventListener('click', () => { used(); fullscreen(); }));
+      // Maximized, red and yellow light up and take it back too; the green one becomes "restore".
+      player.querySelectorAll('.light--close, .light--min').forEach((b) => b.addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen(); }));
+      document.addEventListener('fullscreenchange', () => {
+        const max = document.fullscreenElement === stage;
+        player.classList.toggle('is-max', max);
+        player.querySelectorAll('.light--close, .light--min').forEach((b) => { b.disabled = !max; });
+        player.querySelectorAll('[data-fs]').forEach((b) => b.setAttribute('aria-label', max ? 'Restore the window' : 'Full screen'));
+        if (max) player.focus();
+      });
       const pair = player.querySelector('.lights-pair');
       const still = matchMedia('(prefers-reduced-motion: reduce)');
       const moveLights = (f) => {
