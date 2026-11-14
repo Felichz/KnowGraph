@@ -7,8 +7,8 @@ A study workspace for senior React and Rails interviews: 142 concepts in a depen
 There is no hosted version. The mentor, the coach and the grader all need a language model, and KnowGraph doesn't ship or pay for one: you run the app (as a desktop app or a local dev server) and connect your own provider, or a fully local model through Ollama or LM Studio. [knowgraph.medanolabs.com](https://knowgraph.medanolabs.com) is a demo page with a walkthrough video and the download links.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-demo-dark.webp">
-  <img src="docs/screenshots/knowgraph-demo-light.webp" alt="Recording of the KnowGraph Study screen. A sidebar has only two destinations, Study and Review, with a badge of cards due today. The screen opens on a single next step tinted in the concept's area color: 'Pick up where you left off: Controlled and uncontrolled forms', the draft's state and a score of 72 out of 120, one large Resume button and a quieter link to review the cards due today. Below it, 'Your map' is a heat grid with one row per focus area and one square cell per concept, filled with the area's color as concepts are mastered. The pointer moves over cells, whose tooltips name each concept with its score; a click on the State and data row focuses that area, its concept cards appear below, and a chip in the top bar clears the focus." width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/01-map-dark.webp">
+  <img src="docs/readme/01-map-light.webp" width="100%" alt="KnowGraph, screenshot in a browser window. Interview prep as a map of 142 concepts. Senior React and Rails concepts, linked by what you need to understand first. The map picks one next step and says why.">
 </picture>
 
 ## What it is
@@ -17,33 +17,20 @@ I built KnowGraph to prepare for my own senior interviews. The curriculum is two
 
 Every concept is studied along one path: **Read** the card (explanation, naive vs. senior code, pitfalls, sources, optional read-aloud), **Explain** it from memory with dictation and a coach that marks covered ideas when you pause, then **Evaluate**, with a Socratic **Mentor** one click away at any point. The evaluation: an LLM grades the explanation against a four-part rubric (accuracy, causality and trade-offs, application, completeness). Scores run from 0 to 120. Up to 100 measures coverage of the essential material; 101-120 is a separate excellence tier that only opens after full coverage, to push back on the grade inflation LLMs tend toward ([ADR 0006](docs/adr/0006-dual-tier-evaluation-scale-0-120.md)). Everything is local-first and bring-your-own-key. The app has two places, Study and Review: Study opens on one next step (resume what you started or the best next concept) above a heat grid where every concept is a cell that fills with its area's color as you master it, and Review runs flashcards on spaced repetition so worked concepts come back right before you would forget them.
 
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-card-dark.webp">
-        <img src="docs/screenshots/knowgraph-card-light.webp" alt="Study session on the Read stage for 'Controlled and uncontrolled forms'. The header is tinted in the State and data area color and shows the concept's heat cell, a score of 72 out of 120 and an 'Ask the mentor' button. Three steps run across the top: Read, Explain (with a Draft badge) and Evaluate (72/120). The reading column has a large summary sentence, a tinted 'why it matters' note, body text with inline code and a code sample; a side rail lists where the concept fits, what it requires, what it unlocks and a related interview question." width="100%">
-      </picture>
-      <br><sub>Study session: Read, Explain, Evaluate. The mentor is one click away.</sub>
-    </td>
-    <td width="50%" valign="top">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-graph-demo-dark.webp">
-        <img src="docs/screenshots/knowgraph-graph-demo-light.webp" alt="Recording of the dependency graph of the React curriculum, laid out in columns by stage with a mastered/total count over each column. Mastered concepts are tinted in their area color with a check, ready ones have a solid outline and blocked ones a dashed outline with a lock. As the pointer moves across concepts, each one lights its full chain of prerequisites and the concepts it unlocks while the rest dims; a side panel explains why the selected concept comes now, what it needs and what it unlocks, with a Study now button. The view then zooms out to the whole map and flies back to the best next concept; a minimap in the corner shows the whole curriculum." width="100%">
-      </picture>
-      <br><sub>Dependency graph. Hovering a concept lights its whole prerequisite chain.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/knowgraph-review-dark.webp">
-        <img src="docs/screenshots/knowgraph-review-light.webp" alt="Review: a flashcard for 'useRef, DOM and mutable values' at 64 out of 120, open over the Review screen. After revealing the answer it shows the key idea and the saved explanation, and the footer asks 'How well did you know it?' with Again, Hard, Good and Easy buttons (keys 1 to 4) that schedule the next review, plus a link to improve the explanation." width="50%">
-      </picture>
-      <br><sub>Review: reveal the answer, then rate it to schedule the next review.</sub>
-    </td>
-  </tr>
-</table>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/02-read-dark.webp">
+  <img src="docs/readme/02-read-light.webp" width="100%" alt="KnowGraph, screenshot in a browser window. Read the concept. Each card shows where it fits, what it requires, what it unlocks and the interview questions it answers.">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/03-explain-dark.webp">
+  <img src="docs/readme/03-explain-light.webp" width="100%" alt="KnowGraph, screenshot in a browser window. Explain it in your own words. Typed or dictated, from memory. Then an AI grades it against a rubric, from 0 to 120. Marked: 1, Your explanation, as you would give it in an interview. 2, When you pause, a coach estimates the score and points at the next gap. 3, The card’s essential ideas, marked as you cover them.">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/04-review-dark.webp">
+  <img src="docs/readme/04-review-light.webp" width="100%" alt="KnowGraph, screenshot in a browser window. Review it on the day it is due. Flashcards run on spaced repetition. Again, Hard, Good or Easy reschedules the card.">
+</picture>
 
 ## How it's built
 
