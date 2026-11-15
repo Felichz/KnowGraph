@@ -394,8 +394,8 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
           cover.getContext('2d').drawImage(v, 0, 0);
           Object.assign(cover.style, { left: `${v.offsetLeft}px`, top: `${v.offsetTop}px`, width: `${v.clientWidth}px`, height: `${v.clientHeight}px` });
           cover.hidden = false;
+          frozen = t;
         }
-        frozen = t;
         cover.dataset.playing = playing ? '1' : '0';
         v.poster = `/media/knowgraph-demo-poster-${name}.webp`;
         v.src = src;
@@ -406,12 +406,15 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
           // the cover goes once the new file's frame is on screen
           if (v.requestVideoFrameCallback) { v.requestVideoFrameCallback(shown); setTimeout(shown, 400); } else shown();
         };
+        // whatever happens to the new file, the cover never stays more than 3 seconds
+        setTimeout(shown, 3000);
         v.addEventListener('loadedmetadata', () => {
           if (id !== swap) return;
           // a chapter picked while the new file loads wins over the time it had
-          if (t > 0.01 && v.currentTime < 0.01) { v.addEventListener('seeked', ready, { once: true }); v.currentTime = t; }
-          else if (v.readyState >= 2) ready();
-          else v.addEventListener('loadeddata', ready, { once: true });
+          if (v.currentTime > 0.01) return ready();
+          // seeking loads the frame even when the file only preloads its metadata
+          v.addEventListener('seeked', ready, { once: true });
+          v.currentTime = t;
         }, { once: true });
       };
       edition();
