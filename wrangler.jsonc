@@ -1,13 +1,17 @@
 // KnowGraph demo site on Cloudflare Workers (static assets). Production: knowgraph.medanolabs.com
 // The site is the prebuilt `site/` folder: nothing to compile. Deploy: `npm run deploy`.
+// The videos go through site-worker/index.js, which answers byte ranges so the player can seek.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "knowgraph",
+  "main": "site-worker/index.js",
   "compatibility_date": "2026-11-01",
   "workers_dev": false,
   "preview_urls": false,
   "assets": {
-    "directory": "./site"
+    "directory": "./site",
+    "binding": "ASSETS",
+    "run_worker_first": ["/media/*.mp4"]
   },
   "routes": [{ "pattern": "knowgraph.medanolabs.com", "custom_domain": true }],
   "env": {

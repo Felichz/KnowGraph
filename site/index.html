@@ -10,7 +10,13 @@
   <meta property="og:title" content="KnowGraph" />
   <meta property="og:description" content="Read it. Explain it. Get it graded. Senior React and Rails interview prep that runs on your machine with your own LLM." />
   <meta property="og:image" content="https://knowgraph.medanolabs.com/media/knowgraph-demo-poster.webp" />
+  <meta name="theme-color" content="#F2F4F7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#07090D" media="(prefers-color-scheme: dark)" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <script>
+    // The theme the visitor picked on an earlier visit, set before the page paints (the button is at the end).
+    try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}
+  </script>
   <style>
     @font-face { font-family: 'Bricolage'; src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2'); font-weight: 200 800; font-display: swap; }
     @font-face { font-family: 'Figtree'; src: url('/fonts/figtree-latin-wght-normal.woff2') format('woff2'); font-weight: 300 900; font-display: swap; }
@@ -20,18 +26,40 @@
       --line: rgba(214,226,255,.10); --line-s: rgba(214,226,255,.18);
       --t1: #EEF1F6; --t2: #AEB6C4; --t3: #8A93A3; --cyan: #3DB9EE; --orange: #FFA347; --green: #4ED69B; --gold: #F5C451;
       --disp: 'Bricolage', system-ui, sans-serif; --ui: 'Figtree', system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace;
+      --glow1: rgba(61,185,238,.10); --glow2: rgba(255,163,71,.06); --win-shadow: 0 40px 120px rgba(0,0,0,.55); --primary-hover: #D9DEE7;
+      --light-off: rgba(214,226,255,.16); --seg: rgba(214,226,255,.22); --big: rgba(14,17,23,.82); --pre-bg: #080A0E; --pre: #C9D3E3; --code: rgba(255,248,230,.07);
       color-scheme: dark;
+    }
+    /* Light: by the system's setting unless dark was picked with the theme button, or when light was picked.
+       The app's light tokens (src/ui/theme/light.css), the ones the film's light edition uses. */
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme='dark']) {
+        --bg: #F2F4F7; --app: #F6F7F9; --s1: #FDFDFE; --s2: #ECEFF3; --s3: #E8EBF1;
+        --line: rgba(18,26,44,.12); --line-s: rgba(18,26,44,.20);
+        --t1: #12161D; --t2: #485061; --t3: #5A6375; --cyan: #0A7FAD; --orange: #C26A0C; --green: #0B7A50; --gold: #7A5500;
+        --glow1: rgba(10,135,184,.07); --glow2: rgba(194,106,12,.05); --win-shadow: 0 1px 2px rgba(48,36,20,.08), 0 40px 110px -20px rgba(48,36,20,.26); --primary-hover: #2B323F;
+        --light-off: rgba(18,26,44,.16); --seg: rgba(18,26,44,.16); --big: rgba(253,253,254,.92); --pre-bg: #E9ECF1; --pre: #2B3240; --code: rgba(58,46,28,.07);
+        color-scheme: light;
+      }
+    }
+    :root[data-theme='light'] {
+      --bg: #F2F4F7; --app: #F6F7F9; --s1: #FDFDFE; --s2: #ECEFF3; --s3: #E8EBF1;
+      --line: rgba(18,26,44,.12); --line-s: rgba(18,26,44,.20);
+      --t1: #12161D; --t2: #485061; --t3: #5A6375; --cyan: #0A7FAD; --orange: #C26A0C; --green: #0B7A50; --gold: #7A5500;
+      --glow1: rgba(10,135,184,.07); --glow2: rgba(194,106,12,.05); --win-shadow: 0 1px 2px rgba(48,36,20,.08), 0 40px 110px -20px rgba(48,36,20,.26); --primary-hover: #2B323F;
+      --light-off: rgba(18,26,44,.16); --seg: rgba(18,26,44,.16); --big: rgba(253,253,254,.92); --pre-bg: #E9ECF1; --pre: #2B3240; --code: rgba(58,46,28,.07);
+      color-scheme: light;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { background: var(--bg); }
     body { background: var(--bg); color: var(--t1); font-family: var(--ui); font-size: 18px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
     body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;
-      background: radial-gradient(900px 520px at 18% -4%, rgba(61,185,238,.10), transparent 70%), radial-gradient(800px 600px at 92% 40%, rgba(255,163,71,.06), transparent 70%); }
+      background: radial-gradient(900px 520px at 18% -4%, var(--glow1), transparent 70%), radial-gradient(800px 600px at 92% 40%, var(--glow2), transparent 70%); }
     a { color: inherit; }
     .wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
     header.top { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
     .brand { display: flex; align-items: center; gap: 12px; font-family: var(--disp); font-weight: 720; font-size: 22px; letter-spacing: -.02em; text-decoration: none; }
-    .glyph { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--t1); }
+    .glyph { color: var(--app); display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--t1); }
     .top nav { display: flex; gap: 22px; font-size: 16px; color: var(--t2); }
     .top nav a { text-decoration: none; }
     .top nav a:hover { color: var(--t1); }
@@ -44,7 +72,7 @@
     .ctas { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
     .btn { display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 24px; border-radius: 12px; font-weight: 650; font-size: 17px; text-decoration: none; border: 1px solid var(--line-s); }
     .btn--primary { background: var(--t1); color: var(--app); border-color: var(--t1); }
-    .btn--primary:hover { background: #D9DEE7; }
+    .btn--primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
     .btn:not(.btn--primary):hover { background: var(--s2); }
     .btn svg { width: 18px; height: 18px; }
     .note { margin-top: 14px; font-size: 14px; color: var(--t3); }
@@ -57,8 +85,8 @@
     .player { --chrome: 62px; --breath: max(28px, 7vh); --breath: max(28px, 7svh);
       width: min(100%, max(360px, calc((100vh - 2 * var(--breath) - var(--chrome)) * 1.6)));
       width: min(100%, max(360px, calc((100svh - 2 * var(--breath) - var(--chrome)) * 1.6)));
-      position: relative; margin: 36px auto 0; border-radius: 16px; border: 1px solid var(--line); background: var(--bg); overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.55); outline: none; }
-    .player:focus-visible { box-shadow: 0 0 0 3px var(--cyan), 0 40px 120px rgba(0,0,0,.55); }
+      position: relative; margin: 36px auto 0; border-radius: 16px; border: 1px solid var(--line); background: var(--bg); overflow: hidden; box-shadow: var(--win-shadow); outline: none; }
+    .player:focus-visible { box-shadow: 0 0 0 3px var(--cyan), var(--win-shadow); }
     .player video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; background: var(--app); cursor: pointer; }
     /* The window around it, as the portfolio draws its previews (portfolio-felix: src/scripts/live.ts,
        global.css): a bar with the app's name and the three lights. Red and yellow have nothing to do
@@ -73,7 +101,7 @@
     .light--close { --l: #ff5f57; }
     .light--min { --l: #febc2e; }
     .light--zoom { --l: #28c840; }
-    .light:disabled { --l: rgba(214,226,255,.16); box-shadow: none; cursor: default; }
+    .light:disabled { --l: var(--light-off); box-shadow: none; cursor: default; }
     .light svg { width: 9px; height: 9px; opacity: 0; transition: opacity .15s; }
     .lights:hover .light:not(:disabled) svg, .light:focus-visible svg { opacity: 1; }
     .light:not(:disabled):hover { scale: 1.15; }
@@ -98,15 +126,25 @@
     .track { position: relative; height: 24px; }
     .track__segs { display: flex; gap: 3px; height: 100%; }
     .seg { display: grid; align-items: center; min-width: 0; padding: 0; border: 0; background: none; cursor: pointer; }
-    .seg span { position: relative; display: block; height: 4px; border-radius: 2px; background: rgba(214,226,255,.22); overflow: hidden; transition: height .15s, border-radius .15s; }
+    .seg span { position: relative; display: block; height: 4px; border-radius: 2px; background: var(--seg); overflow: hidden; transition: height .15s, border-radius .15s; }
     .seg i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--cyan); }
     .seg:hover span, .seg:focus-visible span { height: 6px; border-radius: 3px; }
     .seg:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; border-radius: 4px; }
     .track__tip { position: absolute; top: calc(100% + 8px); z-index: 2; transform: translateX(-50%); padding: 5px 10px; border-radius: 8px; background: var(--s3); border: 1px solid var(--line-s); font-size: 13px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .12s; }
     .track__tip.on { opacity: 1; }
-    .player__big { position: absolute; left: 50%; top: calc(50% + 30px); width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 1px solid var(--line-s); background: rgba(14,17,23,.82); color: var(--t1); display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .player__big { position: absolute; left: 50%; top: calc(50% + 30px); width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 1px solid var(--line-s); background: var(--big); box-shadow: 0 10px 30px rgba(0,0,0,.18); color: var(--t1); display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s; }
     .player__big svg { width: 30px; height: 30px; margin-left: 4px; }
     .player.is-paused .player__big { opacity: 1; pointer-events: auto; }
+
+
+    /* The theme button: floating in the corner, over everything but a maximized film. */
+    .theme-toggle { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 40; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid var(--line-s); background: color-mix(in srgb, var(--s1) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--t2); box-shadow: var(--win-shadow); cursor: pointer; transition: color .15s, scale .2s cubic-bezier(.2,.8,.2,1); }
+    .theme-toggle:hover { color: var(--t1); scale: 1.06; }
+    .theme-toggle:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+    .theme-toggle[hidden] { display: none; }
+    .theme-toggle svg { width: 20px; height: 20px; }
+    .theme-toggle .i-sun, [data-theme='dark'] .theme-toggle .i-moon { display: none; }
+    [data-theme='dark'] .theme-toggle .i-sun { display: block; }
 
     section { padding: 88px 0 0; }
     h2 { font-family: var(--disp); font-size: clamp(30px, 4vw, 44px); line-height: 1.1; letter-spacing: -.03em; font-weight: 720; }
@@ -134,9 +172,9 @@
     .card p { margin-top: 8px; font-size: 16px; color: var(--t2); }
     .card .btn { margin-top: 16px; }
     .card + .card { margin-top: 16px; }
-    pre { margin-top: 14px; padding: 16px 18px; border-radius: 12px; background: #080A0E; border: 1px solid var(--line); font-family: var(--mono); font-size: 14.5px; line-height: 1.7; color: #C9D3E3; overflow-x: auto; }
+    pre { margin-top: 14px; padding: 16px 18px; border-radius: 12px; background: var(--pre-bg); border: 1px solid var(--line); font-family: var(--mono); font-size: 14.5px; line-height: 1.7; color: var(--pre); overflow-x: auto; }
     pre .c { color: var(--t3); }
-    code { font-family: var(--mono); font-size: .88em; padding: 1px 6px; border-radius: 5px; background: rgba(255,248,230,.07); }
+    code { font-family: var(--mono); font-size: .88em; padding: 1px 6px; border-radius: 5px; background: var(--code); }
 
     footer { margin-top: 96px; padding: 28px 0 40px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between; font-size: 15px; color: var(--t3); }
     footer a { color: var(--t2); }
@@ -153,7 +191,7 @@
   <div class="wrap">
     <header class="top">
       <a class="brand" href="/">
-        <span class="glyph"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0E1117" stroke-width="2.4" stroke-linecap="round"><circle cx="6" cy="18" r="2.4" fill="#0E1117"/><circle cx="18" cy="18" r="2.4" fill="#0E1117"/><circle cx="12" cy="6" r="2.4" fill="#0E1117"/><path d="M7.4 16 11 8M13 8l3.6 8"/></svg></span>
+        <span class="glyph"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="6" cy="18" r="2.4" fill="currentColor"/><circle cx="18" cy="18" r="2.4" fill="currentColor"/><circle cx="12" cy="6" r="2.4" fill="currentColor"/><path d="M7.4 16 11 8M13 8l3.6 8"/></svg></span>
         KnowGraph
       </a>
       <nav>
@@ -180,7 +218,7 @@
         <div class="player is-paused" id="player" tabindex="0" role="region" aria-label="Product demo, 49 seconds, no sound. Space plays or pauses, the arrow keys skip 5 seconds.">
           <div class="win__bar">KnowGraph<span class="lights-pair" data-side="left"><span class="lights lights--left"><button class="light light--close" type="button" aria-label="Close" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><button class="light light--min" type="button" aria-label="Minimize" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button><button class="light light--zoom" type="button" data-fs aria-label="Full screen"><svg class="g-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6h9l-9 9zM18 18H9l9-9z" fill="currentColor" stroke="none"/></svg><svg class="g-un" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M11.5 11.5H3.5l8-8zM12.5 12.5h8l-8 8z" fill="currentColor" stroke="none"/></svg></button></span><span class="lights lights--right" inert><button class="light light--close" type="button" aria-label="Close" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><button class="light light--min" type="button" aria-label="Minimize" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button><button class="light light--zoom" type="button" data-fs aria-label="Full screen"><svg class="g-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6h9l-9 9zM18 18H9l9-9z" fill="currentColor" stroke="none"/></svg><svg class="g-un" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M11.5 11.5H3.5l8-8zM12.5 12.5h8l-8 8z" fill="currentColor" stroke="none"/></svg></button></span></span></div>
           <div class="player__bar"><div class="track" id="track" role="group" aria-label="Chapters"><div class="track__segs" id="segs"></div><div class="track__tip" id="tip" aria-hidden="true"></div></div></div>
-          <video id="pv" src="/media/knowgraph-demo.mp4" poster="/media/knowgraph-demo-poster.webp" muted loop playsinline preload="metadata"
+          <video id="pv" src="/media/knowgraph-demo-dark.mp4" poster="/media/knowgraph-demo-poster.webp" width="1920" height="1200" muted loop playsinline preload="metadata"
             aria-label="A concept is picked on the map, explained in your own words, coached to 71, questioned with the mentor, revised to 105, and evaluated at 118 out of 120, and its cell on the map fills in; then a local model is connected through Ollama, and the progress is exported and restored from a backup file."></video>
           <button class="player__big" type="button" data-toggle aria-label="Play the demo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
         </div>
@@ -201,8 +239,8 @@
           <div class="step"><span class="n">Review</span><h3>Flashcards on spaced repetition</h3><p>Every concept you worked on becomes a card. Rate how well you knew it, and it comes back on the day it's due.</p></div>
         </div>
         <div class="shots">
-          <figure><img src="/media/knowgraph-card-dark.webp" alt="Study session on the Read stage: the concept's summary, a note on why it matters, body text with a code sample, and a side rail with what it requires and unlocks." loading="lazy" width="1600" height="1000" /><figcaption>The Read stage, with the mentor one click away</figcaption></figure>
-          <figure><img src="/media/knowgraph-review-dark.webp" alt="Review: a flashcard with its key idea and saved explanation, and Again, Hard, Good and Easy buttons that schedule the next review." loading="lazy" width="1600" height="1000" /><figcaption>Review: rate a card to schedule it</figcaption></figure>
+          <figure><picture><source media="(prefers-color-scheme: dark)" srcset="/media/knowgraph-card-dark.webp"><img src="/media/knowgraph-card-light.webp" alt="Study session on the Read stage: the concept's summary, a note on why it matters, body text with a code sample, and a side rail with what it requires and unlocks." loading="lazy" width="1600" height="1000" /></picture><figcaption>The Read stage, with the mentor one click away</figcaption></figure>
+          <figure><picture><source media="(prefers-color-scheme: dark)" srcset="/media/knowgraph-review-dark.webp"><img src="/media/knowgraph-review-light.webp" alt="Review: a flashcard with its key idea and saved explanation, and Again, Hard, Good and Easy buttons that schedule the next review." loading="lazy" width="1600" height="1000" /></picture><figcaption>Review: rate a card to schedule it</figcaption></figure>
         </div>
       </section>
 
@@ -245,8 +283,37 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
       <span><a href="https://github.com/Felichz/KnowGraph">GitHub</a> · <a href="https://felix.medanolabs.com/work/knowgraph/">Case study</a> · Built by <a href="https://felix.medanolabs.com/">Felix Andersson</a></span>
     </footer>
   </div>
+  <button class="theme-toggle" id="theme-toggle" type="button" hidden><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
   <script>
-    // The demo player: a strip of chapters (each segment jumps to its chapter, and names itself on hover),
+    // The theme: the system's setting until the visitor picks one with the floating button, and that pick is
+    // kept for later visits. Every picture with a dark source and the film follow it (a 'themechange' event).
+    (() => {
+      const root = document.documentElement;
+      const system = matchMedia('(prefers-color-scheme: dark)');
+      const btn = document.getElementById('theme-toggle');
+      const sources = [...document.querySelectorAll('source[media="(prefers-color-scheme: dark)"]')];
+      const metas = [...document.querySelectorAll('meta[name="theme-color"][media]')].map((m) => [m, m.media.includes('dark')]);
+      let picked = root.dataset.theme || null;
+      const apply = () => {
+        const dark = picked ? picked === 'dark' : system.matches;
+        root.dataset.theme = dark ? 'dark' : 'light';
+        sources.forEach((s) => { s.media = dark ? 'all' : 'not all'; });
+        metas.forEach(([m, forDark]) => { m.media = forDark === dark ? 'all' : 'not all'; });
+        btn.setAttribute('aria-label', dark ? 'Switch to the light theme' : 'Switch to the dark theme');
+        btn.title = btn.getAttribute('aria-label');
+        document.dispatchEvent(new Event('themechange'));
+      };
+      system.addEventListener('change', () => { if (!picked) apply(); });
+      btn.addEventListener('click', () => {
+        picked = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem('theme', picked); } catch {}
+        apply();
+      });
+      btn.hidden = false;
+      apply();
+    })();
+  </script>
+  <script>    // The demo player: a strip of chapters (each segment jumps to its chapter, and names itself on hover),
     // click to play or pause, the arrow keys to skip, and full screen from the window's green light.
     // It autoplays muted (no sound in the video) unless the visitor prefers reduced motion, and
     // pauses while it's off screen, unless the visitor paused it themselves.
@@ -261,6 +328,21 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
       const tip = document.getElementById('tip');
       let dur = 49;
       let userPaused = false;
+
+      // The edition follows the page's theme; switching it keeps the time and whether it was playing.
+      const edition = () => {
+        const name = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+        const src = `/media/knowgraph-demo-${name}.mp4`;
+        if (v.getAttribute('src') === src) return;
+        const t = v.currentTime, playing = !v.paused;
+        v.poster = `/media/knowgraph-demo-poster-${name}.webp`;
+        v.src = src;
+        // a chapter picked while the new file loads wins over the time it had
+        if (t) v.addEventListener('loadedmetadata', () => { if (v.currentTime < 0.01) v.currentTime = t; }, { once: true });
+        if (playing) v.play().catch(() => {});
+      };
+      edition();
+      document.addEventListener('themechange', edition);
       const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
       const ends = () => CHAPTERS.map((c, i) => [c[0], (CHAPTERS[i + 1] ?? [dur])[0], c[1]]);
 
