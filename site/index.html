@@ -143,7 +143,10 @@
 
 
     /* The theme button: floating in the corner, over everything but a maximized film. */
-    .theme-toggle { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 40; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid var(--line-s); background: color-mix(in srgb, var(--s1) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--t2); box-shadow: var(--win-shadow); cursor: pointer; transition: color .15s, scale .2s cubic-bezier(.2,.8,.2,1); }
+    .theme-toggle { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 40; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid var(--line-s); background: color-mix(in srgb, var(--s1) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--t2); box-shadow: var(--win-shadow); cursor: pointer; transition: opacity .2s ease, color .15s, scale .2s cubic-bezier(.2,.8,.2,1); }
+    .theme-toggle.is-away, .theme-toggle.is-out { opacity: 0; pointer-events: none; }
+    .theme-toggle[data-corner^='t'] { top: max(16px, env(safe-area-inset-top)); bottom: auto; }
+    .theme-toggle[data-corner$='l'] { left: max(16px, env(safe-area-inset-left)); right: auto; }
     .theme-toggle:hover { color: var(--t1); scale: 1.06; }
     .theme-toggle:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
     .theme-toggle[hidden] { display: none; }
@@ -316,6 +319,39 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
       });
       btn.hidden = false;
       apply();
+
+      // The button keeps to the corner of the window nearest the mouse: it fades out, moves there and fades
+      // back in, and fades out while the mouse is outside the window. On touch it stays in its corner.
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        let corner = 'br',
+          moving = 0;
+        const go = (c) => {
+          if (c === corner || btn.matches(':focus-visible')) return;
+          corner = c;
+          btn.classList.add('is-away');
+          clearTimeout(moving);
+          moving = setTimeout(() => {
+            btn.dataset.corner = corner;
+            btn.classList.remove('is-away');
+          }, 200);
+        };
+        addEventListener(
+          'pointermove',
+          (e) => {
+            if (e.pointerType !== 'mouse') return;
+            // near the middle line it stays where it is, so it doesn't flicker
+            const m = 40,
+              w = innerWidth / 2,
+              h = innerHeight / 2;
+            const v = Math.abs(e.clientY - h) < m ? corner[0] : e.clientY < h ? 't' : 'b';
+            const s = Math.abs(e.clientX - w) < m ? corner[1] : e.clientX < w ? 'l' : 'r';
+            btn.classList.remove('is-out');
+            go(v + s);
+          },
+          { passive: true }
+        );
+        document.documentElement.addEventListener('mouseleave', () => btn.classList.add('is-out'));
+      }
     })();
   </script>
   <script>    // The demo player: a strip of chapters (each segment jumps to its chapter, and names itself on hover),
