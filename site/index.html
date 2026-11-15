@@ -22,7 +22,7 @@
     @font-face { font-family: 'Figtree'; src: url('/fonts/figtree-latin-wght-normal.woff2') format('woff2'); font-weight: 300 900; font-display: swap; }
     @font-face { font-family: 'JetBrains Mono'; src: url('/fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2'); font-weight: 100 800; font-display: swap; }
     :root {
-      --bg: #07090D; --app: #0E1117; --s1: #151922; --s2: #1B202B; --s3: #232A37;
+      --bg: #07090D; --bg-flip: #F2F4F7; --app: #0E1117; --s1: #151922; --s2: #1B202B; --s3: #232A37;
       --line: rgba(214,226,255,.10); --line-s: rgba(214,226,255,.18);
       --t1: #EEF1F6; --t2: #AEB6C4; --t3: #8A93A3; --cyan: #3DB9EE; --orange: #FFA347; --green: #4ED69B; --gold: #F5C451;
       --disp: 'Bricolage', system-ui, sans-serif; --ui: 'Figtree', system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -34,7 +34,7 @@
        The app's light tokens (src/ui/theme/light.css), the ones the film's light edition uses. */
     @media (prefers-color-scheme: light) {
       :root:not([data-theme='dark']) {
-        --bg: #F2F4F7; --app: #F6F7F9; --s1: #FDFDFE; --s2: #ECEFF3; --s3: #E8EBF1;
+        --bg: #F2F4F7; --bg-flip: #07090D; --app: #F6F7F9; --s1: #FDFDFE; --s2: #ECEFF3; --s3: #E8EBF1;
         --line: rgba(18,26,44,.12); --line-s: rgba(18,26,44,.20);
         --t1: #12161D; --t2: #485061; --t3: #5A6375; --cyan: #0A7FAD; --orange: #C26A0C; --green: #0B7A50; --gold: #7A5500;
         --glow1: rgba(10,135,184,.07); --glow2: rgba(194,106,12,.05); --win-shadow: 0 1px 2px rgba(48,36,20,.08), 0 40px 110px -20px rgba(48,36,20,.26); --primary-hover: #2B323F;
@@ -43,7 +43,7 @@
       }
     }
     :root[data-theme='light'] {
-      --bg: #F2F4F7; --app: #F6F7F9; --s1: #FDFDFE; --s2: #ECEFF3; --s3: #E8EBF1;
+      --bg: #F2F4F7; --bg-flip: #07090D; --app: #F6F7F9; --s1: #FDFDFE; --s2: #ECEFF3; --s3: #E8EBF1;
       --line: rgba(18,26,44,.12); --line-s: rgba(18,26,44,.20);
       --t1: #12161D; --t2: #485061; --t3: #5A6375; --cyan: #0A7FAD; --orange: #C26A0C; --green: #0B7A50; --gold: #7A5500;
       --glow1: rgba(10,135,184,.07); --glow2: rgba(194,106,12,.05); --win-shadow: 0 1px 2px rgba(48,36,20,.08), 0 40px 110px -20px rgba(48,36,20,.26); --primary-hover: #2B323F;
@@ -120,7 +120,7 @@
        so the lights and the chapters still answer; the video fills what's left, as large as fits. The green
        light turns into "restore" and red and yellow light up to take it back, as in the portfolio. */
     html.max-lock { overflow: hidden; }
-    .stage.is-max::before { content: ''; position: fixed; inset: 0; z-index: 49; background: var(--bg); }
+    .stage.is-max::before { content: ''; position: fixed; inset: 0; z-index: 49; background: var(--bg-flip); } /* the opposite theme to the film, so its edges show */
     .player.is-max { position: fixed; z-index: 50; inset: clamp(8px, 1.6vmin, 18px); width: auto; height: auto; margin: 0; display: flex; flex-direction: column; }
     .player.is-max video { flex: 1; min-height: 0; height: 0; aspect-ratio: auto; object-fit: contain; }
     .light .g-un, .player.is-max .light .g-in { display: none; }
