@@ -88,6 +88,8 @@
       position: relative; margin: 36px auto 0; border-radius: 16px; border: 1px solid var(--line); background: var(--bg); overflow: hidden; box-shadow: var(--win-shadow); outline: none; }
     .player:focus-visible { box-shadow: 0 0 0 3px var(--cyan), var(--win-shadow); }
     .player video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; background: var(--app); cursor: pointer; }
+    /* the frame kept on screen while the film switches to the other theme's file (see edition()) */
+    .player__cover { position: absolute; object-fit: contain; background: var(--app); pointer-events: none; }
     /* The window around it, as the portfolio draws its previews (portfolio-felix: src/scripts/live.ts,
        global.css): a bar with the app's name and the three lights. Red and yellow have nothing to do
        here and stay grey; green goes full screen. There's a set in each corner and only the one on the
@@ -371,16 +373,46 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
       let userPaused = false;
 
       // The edition follows the page's theme; switching it keeps the time and whether it was playing.
+      // Switching keeps the picture and the time: the frame on screen stays (a canvas over the video) while
+      // the other file loads and seeks to the same time, and once that frame is on screen the film goes on from
+      // there, playing if it was. Until then the strip keeps the frozen time (now()).
+      const cover = document.createElement('canvas');
+      cover.className = 'player__cover';
+      cover.hidden = true;
+      v.after(cover);
+      let frozen = null, swap = 0;
+      const now = () => frozen ?? v.currentTime;
       const edition = () => {
         const name = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
         const src = `/media/knowgraph-demo-${name}.mp4`;
         if (v.getAttribute('src') === src) return;
-        const t = v.currentTime, playing = !v.paused;
+        const id = ++swap;
+        const t = now(), playing = frozen === null ? !v.paused : cover.dataset.playing === '1';
+        if (frozen === null && v.readyState >= 2) {
+          cover.width = v.videoWidth;
+          cover.height = v.videoHeight;
+          cover.getContext('2d').drawImage(v, 0, 0);
+          Object.assign(cover.style, { left: `${v.offsetLeft}px`, top: `${v.offsetTop}px`, width: `${v.clientWidth}px`, height: `${v.clientHeight}px` });
+          cover.hidden = false;
+        }
+        frozen = t;
+        cover.dataset.playing = playing ? '1' : '0';
         v.poster = `/media/knowgraph-demo-poster-${name}.webp`;
         v.src = src;
-        // a chapter picked while the new file loads wins over the time it had
-        if (t) v.addEventListener('loadedmetadata', () => { if (v.currentTime < 0.01) v.currentTime = t; }, { once: true });
-        if (playing) v.play().catch(() => {});
+        const shown = () => { if (id !== swap) return; frozen = null; cover.hidden = true; draw(); };
+        const ready = () => {
+          if (id !== swap) return;
+          if (playing && !userPaused) v.play().catch(() => {});
+          // the cover goes once the new file's frame is on screen
+          if (v.requestVideoFrameCallback) { v.requestVideoFrameCallback(shown); setTimeout(shown, 400); } else shown();
+        };
+        v.addEventListener('loadedmetadata', () => {
+          if (id !== swap) return;
+          // a chapter picked while the new file loads wins over the time it had
+          if (t > 0.01 && v.currentTime < 0.01) { v.addEventListener('seeked', ready, { once: true }); v.currentTime = t; }
+          else if (v.readyState >= 2) ready();
+          else v.addEventListener('loadeddata', ready, { once: true });
+        }, { once: true });
       };
       edition();
       document.addEventListener('themechange', edition);
@@ -410,9 +442,9 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
 
       const play = () => { userPaused = false; v.play().catch(() => {}); };
       const toggle = () => { if (v.paused) play(); else { userPaused = true; v.pause(); } };
-      const seek = (t) => { v.currentTime = Math.max(0, Math.min(dur - 0.05, t)); draw(); };
+      const seek = (t) => { frozen = null; cover.hidden = true; v.currentTime = Math.max(0, Math.min(dur - 0.05, t)); draw(); };
       function draw() {
-        const t = v.currentTime;
+        const t = now();
         ends().forEach(([a, b], i) => { parts[i].fill.style.width = `${Math.max(0, Math.min(1, (t - a) / (b - a))) * 100}%`; });
         const cur = ends().findIndex(([a, b]) => t >= a && t < b);
         parts.forEach((p, i) => p.btn.setAttribute('aria-current', String(i === cur)));
@@ -427,8 +459,8 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
       player.addEventListener('keydown', (e) => {
         if (e.target.closest('.track')) return;
         if (e.key === ' ' || e.key === 'k') { e.preventDefault(); toggle(); }
-        else if (e.key === 'ArrowRight') { e.preventDefault(); seek(v.currentTime + 5); }
-        else if (e.key === 'ArrowLeft') { e.preventDefault(); seek(v.currentTime - 5); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); seek(now() + 5); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); seek(now() - 5); }
         else if (e.key === 'f') { used(); maximize(!isMax); }
       });
       // Maximize, inside the page: the window goes fixed over a backdrop (CSS above). The stage keeps its
