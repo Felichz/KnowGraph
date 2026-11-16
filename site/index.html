@@ -88,8 +88,11 @@
       position: relative; margin: 36px auto 0; border-radius: 16px; border: 1px solid var(--line); background: var(--bg); overflow: hidden; box-shadow: var(--win-shadow); outline: none; }
     .player:focus-visible { box-shadow: 0 0 0 3px var(--cyan), var(--win-shadow); }
     .player video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; background: var(--app); cursor: pointer; }
-    /* the frame kept on screen while the film switches to the other theme's file (see edition()) */
-    .player__cover { position: absolute; object-fit: contain; background: var(--app); pointer-events: none; }
+    /* The two editions of the film play together; the dark one sits over the light one (the script keeps it on
+       the light one's box) and the theme shows it or not, so switching is instant and keeps the frame. */
+    .player .pv-dark { position: absolute; left: 0; top: var(--chrome); object-fit: contain; transition: opacity .18s ease; }
+    @media (prefers-color-scheme: light) { :root:not([data-theme='dark']) .player .pv-dark { opacity: 0; pointer-events: none; } }
+    :root[data-theme='light'] .player .pv-dark { opacity: 0; pointer-events: none; }
     /* The window around it, as the portfolio draws its previews (portfolio-felix: src/scripts/live.ts,
        global.css): a bar with the app's name and the three lights. Red and yellow have nothing to do
        here and stay grey; green goes full screen. There's a set in each corner and only the one on the
@@ -228,7 +231,8 @@
         <div class="player is-paused" id="player" tabindex="0" role="region" aria-label="Product demo, 49 seconds, no sound. Space plays or pauses, the arrow keys skip 5 seconds.">
           <div class="win__bar">KnowGraph<span class="lights-pair" data-side="left"><span class="lights lights--left"><button class="light light--close" type="button" aria-label="Close" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><button class="light light--min" type="button" aria-label="Minimize" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button><button class="light light--zoom" type="button" data-fs aria-label="Maximize"><svg class="g-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6h9l-9 9zM18 18H9l9-9z" fill="currentColor" stroke="none"/></svg><svg class="g-un" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M11.5 11.5H3.5l8-8zM12.5 12.5h8l-8 8z" fill="currentColor" stroke="none"/></svg></button></span><span class="lights lights--right" inert><button class="light light--close" type="button" aria-label="Close" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><button class="light light--min" type="button" aria-label="Minimize" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button><button class="light light--zoom" type="button" data-fs aria-label="Maximize"><svg class="g-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6h9l-9 9zM18 18H9l9-9z" fill="currentColor" stroke="none"/></svg><svg class="g-un" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M11.5 11.5H3.5l8-8zM12.5 12.5h8l-8 8z" fill="currentColor" stroke="none"/></svg></button></span></span></div>
           <div class="player__bar"><div class="track" id="track" role="group" aria-label="Chapters"><div class="track__segs" id="segs"></div><div class="track__tip" id="tip" aria-hidden="true"></div></div></div>
-          <video id="pv" src="/media/knowgraph-demo-dark.mp4" poster="/media/knowgraph-demo-poster.webp" width="1920" height="1200" muted loop playsinline preload="metadata"
+          <video id="pv-dark" class="pv-dark" src="/media/knowgraph-demo-dark.mp4" poster="/media/knowgraph-demo-poster-dark.webp" width="1920" height="1200" muted loop playsinline preload="auto" tabindex="-1" aria-hidden="true"></video>
+          <video id="pv" src="/media/knowgraph-demo-light.mp4" poster="/media/knowgraph-demo-poster-light.webp" width="1920" height="1200" muted loop playsinline preload="auto"
             aria-label="A concept is picked on the map, explained in your own words, coached to 71, questioned with the mentor, revised to 105, and evaluated at 118 out of 120, and its cell on the map fills in; then a local model is connected through Ollama, and the progress is exported and restored from a backup file."></video>
           <button class="player__big" type="button" data-toggle aria-label="Play the demo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
         </div>
@@ -372,53 +376,32 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
       let dur = 49;
       let userPaused = false;
 
-      // The edition follows the page's theme; switching it keeps the time and whether it was playing.
-      // Switching keeps the picture and the time: the frame on screen stays (a canvas over the video) while
-      // the other file loads and seeks to the same time, and once that frame is on screen the film goes on from
-      // there, playing if it was. Until then the strip keeps the frozen time (now()).
-      const cover = document.createElement('canvas');
-      cover.className = 'player__cover';
-      cover.hidden = true;
-      v.after(cover);
-      let frozen = null, swap = 0;
-      const now = () => frozen ?? v.currentTime;
-      const edition = () => {
-        const name = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
-        const src = `/media/knowgraph-demo-${name}.mp4`;
-        if (v.getAttribute('src') === src) return;
-        const id = ++swap;
-        const t = now(), playing = frozen === null ? !v.paused : cover.dataset.playing === '1';
-        if (frozen === null && v.readyState >= 2) {
-          cover.width = v.videoWidth;
-          cover.height = v.videoHeight;
-          cover.getContext('2d').drawImage(v, 0, 0);
-          Object.assign(cover.style, { left: `${v.offsetLeft}px`, top: `${v.offsetTop}px`, width: `${v.clientWidth}px`, height: `${v.clientHeight}px` });
-          cover.hidden = false;
-          frozen = t;
+      // Both editions load and play together, in step; the theme only decides which one shows (CSS above). The
+      // light one (v) is the clock: the dark one follows its play, pause and seeks, and while playing its speed
+      // is nudged so it stays within a frame or two of it.
+      const alt = document.getElementById('pv-dark');
+      const now = () => v.currentTime;
+      v.addEventListener('play', () => alt.play().catch(() => {}));
+      v.addEventListener('pause', () => alt.pause());
+      v.addEventListener('seeking', () => { alt.currentTime = v.currentTime; });
+      alt.addEventListener('click', () => toggle());
+      (function step() {
+        requestAnimationFrame(step);
+        // the light one's box, to the subpixel, inside the window's border
+        const r = v.getBoundingClientRect(), pr = player.getBoundingClientRect();
+        Object.assign(alt.style, { left: `${r.left - pr.left - player.clientLeft}px`, top: `${r.top - pr.top - player.clientTop}px`, width: `${r.width}px`, height: `${r.height}px` });
+        if (alt.readyState < 1 || alt.seeking) return;
+        let d = alt.currentTime - v.currentTime;
+        if (v.paused) {
+          if (!alt.paused) alt.pause();
+          if (Math.abs(d) > 0.02) alt.currentTime = v.currentTime;
+          return;
         }
-        cover.dataset.playing = playing ? '1' : '0';
-        v.poster = `/media/knowgraph-demo-poster-${name}.webp`;
-        v.src = src;
-        const shown = () => { if (id !== swap) return; frozen = null; cover.hidden = true; draw(); };
-        const ready = () => {
-          if (id !== swap) return;
-          if (playing && !userPaused) v.play().catch(() => {});
-          // the cover goes once the new file's frame is on screen
-          if (v.requestVideoFrameCallback) { v.requestVideoFrameCallback(shown); setTimeout(shown, 400); } else shown();
-        };
-        // whatever happens to the new file, the cover never stays more than 3 seconds
-        setTimeout(shown, 3000);
-        v.addEventListener('loadedmetadata', () => {
-          if (id !== swap) return;
-          // a chapter picked while the new file loads wins over the time it had
-          if (v.currentTime > 0.01) return ready();
-          // seeking loads the frame even when the file only preloads its metadata
-          v.addEventListener('seeked', ready, { once: true });
-          v.currentTime = t;
-        }, { once: true });
-      };
-      edition();
-      document.addEventListener('themechange', edition);
+        if (alt.paused) alt.play().catch(() => {});
+        if (Math.abs(d) > dur / 2) d -= Math.sign(d) * dur; // across the loop's seam
+        if (Math.abs(d) > 0.3) { alt.currentTime = v.currentTime; alt.playbackRate = 1; }
+        else alt.playbackRate = Math.min(1.1, Math.max(0.9, 1 - d * 2));
+      })();
       const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
       const ends = () => CHAPTERS.map((c, i) => [c[0], (CHAPTERS[i + 1] ?? [dur])[0], c[1]]);
 
@@ -445,7 +428,7 @@ npm run desktop:dev   <span class="c"># desktop app, starts the AI gateway</span
 
       const play = () => { userPaused = false; v.play().catch(() => {}); };
       const toggle = () => { if (v.paused) play(); else { userPaused = true; v.pause(); } };
-      const seek = (t) => { frozen = null; cover.hidden = true; v.currentTime = Math.max(0, Math.min(dur - 0.05, t)); draw(); };
+      const seek = (t) => { v.currentTime = Math.max(0, Math.min(dur - 0.05, t)); draw(); };
       function draw() {
         const t = now();
         ends().forEach(([a, b], i) => { parts[i].fill.style.width = `${Math.max(0, Math.min(1, (t - a) / (b - a))) * 100}%`; });
