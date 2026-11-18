@@ -123,7 +123,7 @@ To add a React concept, start in `src/reactGraph.js`, with sources in `src/react
 - [PRODUCT.md](PRODUCT.md) and [DESIGN.md](DESIGN.md): product intent and the design system (v4.2, the heat grid).
 - [specs/](specs/) and [AGENTS.md](AGENTS.md): one spec per UI iteration, latest [007, one obvious path](specs/007-obvious-path/design-spec.md), and the spec-driven workflow behind them.
 - [LLM learning experience plan](docs/LLM_LEARNING_EXPERIENCE_PLAN.md) and [headless API handoff guide](docs/PRESENTATION_HANDOFF_GUIDE.md).
-- [The desktop app](docs/DESKTOP_APP.md), and [the demo site and self-hosting](docs/DEPLOY_VERCEL.md).
+- [The desktop app](docs/DESKTOP_APP.md), and [the demo site and self-hosting](docs/DEPLOY.md).
 
 Progress lives in the app's local storage (the Electron profile, or the browser's for the dev server), so clearing it resets your progress unless you exported a backup from Settings.
 

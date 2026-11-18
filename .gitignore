@@ -30,3 +30,9 @@ tmp-*.png
 
 # Wrangler local state
 .wrangler/
+
+# Agent and editor tooling stays local
+.claude/
+.codex/
+.cursor/
+.specify/
