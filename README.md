@@ -1,10 +1,10 @@
 # KnowGraph
 
-A study workspace for senior React and Rails interviews: 142 concepts in a dependency graph, each studied by reading it, explaining it in your own words and having an LLM you bring grade the explanation. Open source, and it runs on your machine.
+A study workspace for senior React and Rails interviews. It organizes 142 concepts in a dependency graph; you study each one by reading it, explaining it in your own words and having an LLM of your choice grade the explanation. Open source; it runs on your machine.
 
 **[Download for Windows](https://github.com/Felichz/KnowGraph/releases/latest)** · [Demo video](https://knowgraph.medanolabs.com) · [Run from source](#run-it) · [Case study](https://felix.medanolabs.com/work/knowgraph/) · Author: [Felix Andersson](https://felix.medanolabs.com/)
 
-There is no hosted version. The mentor, the coach and the grader all need a language model, and KnowGraph doesn't ship or pay for one: you run the app (as a desktop app or a local dev server) and connect your own provider, or a fully local model through Ollama or LM Studio. [knowgraph.medanolabs.com](https://knowgraph.medanolabs.com) is a demo page with a walkthrough video and the download links.
+There is no hosted version. The mentor, coach and grader need a language model, and KnowGraph does not ship one: you run the app (desktop or local dev server) and connect your own provider, or a local model through Ollama or LM Studio. [knowgraph.medanolabs.com](https://knowgraph.medanolabs.com) is a demo page with a walkthrough video and the download links.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/readme/01-map-dark.webp">
@@ -13,9 +13,22 @@ There is no hosted version. The mentor, the coach and the grader all need a lang
 
 ## What it is
 
-I built KnowGraph to prepare for my own senior interviews. The curriculum is two graphs: React (101 concepts, 212 prerequisite links, 11 focus areas, 16 milestones, 4 seniority levels) and Rails (41 concepts, 54 links). A link means one concept gives you the mental model for the next; it suggests an order but never blocks you from studying something out of sequence. The interface is in English by default, with a Spanish version (EN / ES switcher; the curriculum and the AI answers follow the selected language), and still uses the project's working title, Learning Workspace.
+Built to prepare for senior interviews. The curriculum is two graphs:
 
-Every concept is studied along one path: **Read** the card (explanation, naive vs. senior code, pitfalls, sources, optional read-aloud), **Explain** it from memory with dictation and a coach that marks covered ideas when you pause, then **Evaluate**, with a Socratic **Mentor** one click away at any point. The evaluation: an LLM grades the explanation against a four-part rubric (accuracy, causality and trade-offs, application, completeness). Scores run from 0 to 120. Up to 100 measures coverage of the essential material; 101-120 is a separate excellence tier that only opens after full coverage, to push back on the grade inflation LLMs tend toward ([ADR 0006](docs/adr/0006-dual-tier-evaluation-scale-0-120.md)). Everything is local-first and bring-your-own-key. The app has two places, Study and Review: Study opens on one next step (resume what you started or the best next concept) above a heat grid where every concept is a cell that fills with its area's color as you master it, and Review runs flashcards on spaced repetition so worked concepts come back right before you would forget them.
+- **React:** 101 concepts, 212 prerequisite links, 11 focus areas, 16 milestones, 4 seniority levels.
+- **Rails:** 41 concepts, 54 links.
+
+A link means one concept provides the mental model for the next. It suggests an order but does not block studying out of sequence.
+
+Each concept follows one path, with a Socratic **Mentor** available at any step:
+
+1. **Read** the card: explanation, naive vs. senior code, pitfalls, sources, optional read-aloud.
+2. **Explain** it from memory, typed or dictated. When you pause, a coach marks the ideas you have covered.
+3. **Evaluate**: an LLM grades the explanation on a four-part rubric (accuracy, causality and trade-offs, application, completeness). Scores run from 0 to 120: up to 100 measures coverage of the essential material; 101-120 is a separate excellence tier that opens only after full coverage, to counter LLM grade inflation ([ADR 0006](docs/adr/0006-dual-tier-evaluation-scale-0-120.md)).
+
+The app has two areas. **Study** opens on one next step (resume what you started, or the next recommended concept) above a heat grid where each concept is a cell that fills with its area's color as you master it. **Review** runs flashcards on spaced repetition.
+
+Everything is local-first and bring-your-own-key. The interface is in English by default, with a Spanish version (EN / ES switcher; the curriculum and AI answers follow the selected language). The UI still uses the project's working title, Learning Workspace.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/readme/02-read-dark.webp">
@@ -34,12 +47,12 @@ Every concept is studied along one path: **Read** the card (explanation, naive v
 
 ## How it's built
 
-- **Headless core, React as the view.** `src/logic/learningController.js` is a framework-free store that React reads through `useSyncExternalStore` (`src/hooks/useController.js`). It replaced a single 2,642-line `App.jsx`, and its logic is tested in plain Node under `tests/logic/`. Files in the presentation layer (`src/ui/`) stay under 150 lines each. See [ADR 0005](docs/adr/0005-headless-state-machine-use-sync-external-store.md) and [ADR 0008](docs/adr/0008-strict-150-line-file-limit-and-ci-linter.md).
-- **Rendering JSON while it streams.** The evaluation is structured JSON streamed over SSE. On the gateway, `server/ai/partialJson.js` and `server/ai/streamBlocks.js` scan the incomplete JSON and emit finished fields and growing text leaves as separate events, so rubric bars and feedback fill in while the model is still writing. The score comes from a small request without reasoning, sent before the longer feedback request (`server/ai/evaluator.js`), and Zod validates every final object (`server/ai/schemas.js`). The browser reads the stream with `fetch` and a `ReadableStream` reader in `src/ai/client.js`.
-- **Bring-your-own-key gateway.** One Node handler (`server/index.js`) runs as a local process or as a child process of the Electron app (it can also be mounted as a serverless function, `api/ai/[...slug].js`, for self-hosting). The user's provider profile travels with each request, is validated with Zod and is never written to disk or logged. When deployed publicly the gateway only accepts HTTPS endpoints that resolve to public IPs (`server/ai/providers.js`). Any OpenAI-compatible Chat Completions endpoint works; the presets live in `shared/providerCatalog.js`. See ADRs [0001](docs/adr/0001-llm-provider-registry.md) to [0004](docs/adr/0004-user-owned-local-harness-and-desktop-electron.md).
-- **Local-first storage.** Attempts, drafts and live reviews are stored in IndexedDB through `idb` (`src/ai/learningStore.js`); preferences, provider connections and the flashcard review schedule sit in `localStorage`. There is no account and no remote database. A JSON backup exports and restores all of it, saved provider keys included (`src/ai/backup.js`).
-- **Work that outlives the screen.** `src/ai/backgroundTaskManager.js` keeps evaluations running after you leave the card, reports them in a global HUD with open and cancel actions (`src/ui/hud/TaskHud.jsx`), and syncs them across tabs with `BroadcastChannel`.
-- **Graph layout without D3.** `src/logic/topologicalLayout.js` ranks concepts with Kahn's algorithm (tolerating cycles), then runs eight barycenter sweeps to reduce edge crossings. The result is plain SVG with pan and zoom (`src/ui/graph/`).
+- **Headless core, React as the view.** `src/logic/learningController.js` is a framework-free store that React reads through `useSyncExternalStore` (`src/hooks/useController.js`). It replaced a single 2,642-line `App.jsx`; its logic is tested in plain Node under `tests/logic/`. Files in the presentation layer (`src/ui/`) stay under 150 lines. See [ADR 0005](docs/adr/0005-headless-state-machine-use-sync-external-store.md) and [ADR 0008](docs/adr/0008-strict-150-line-file-limit-and-ci-linter.md).
+- **Streaming partial JSON.** The evaluation is structured JSON streamed over SSE. On the gateway, `server/ai/partialJson.js` and `server/ai/streamBlocks.js` parse the incomplete JSON and emit finished fields and growing text leaves as separate events, so rubric bars and feedback render while the model is still writing. The score comes from a short request without reasoning, sent before the longer feedback request (`server/ai/evaluator.js`). Zod validates every final object (`server/ai/schemas.js`). The browser reads the stream with `fetch` and a `ReadableStream` reader in `src/ai/client.js`.
+- **Bring-your-own-key gateway.** One Node handler (`server/index.js`) runs as a local process or as a child process of the Electron app; it can also be mounted as a serverless function (`api/ai/[...slug].js`) for self-hosting. The user's provider profile travels with each request, is validated with Zod and is never written to disk or logged. When deployed publicly, the gateway only accepts HTTPS endpoints that resolve to public IPs (`server/ai/providers.js`). Any OpenAI-compatible Chat Completions endpoint works; presets are in `shared/providerCatalog.js`. See ADRs [0001](docs/adr/0001-llm-provider-registry.md) to [0004](docs/adr/0004-user-owned-local-harness-and-desktop-electron.md).
+- **Local-first storage.** Attempts, drafts and live reviews are stored in IndexedDB through `idb` (`src/ai/learningStore.js`); preferences, provider connections and the flashcard schedule are in `localStorage`. No account, no remote database. A JSON backup exports and restores all of it, including saved provider keys (`src/ai/backup.js`).
+- **Background evaluations.** `src/ai/backgroundTaskManager.js` keeps evaluations running after you leave the card, shows them in a global HUD with open and cancel actions (`src/ui/hud/TaskHud.jsx`), and syncs them across tabs with `BroadcastChannel`.
+- **Graph layout without D3.** `src/logic/topologicalLayout.js` ranks concepts with Kahn's algorithm (tolerating cycles), then runs eight barycenter sweeps to reduce edge crossings. The output is plain SVG with pan and zoom (`src/ui/graph/`).
 
 ## Stack
 
@@ -72,7 +85,7 @@ npm run dev                # http://localhost:5173, proxies /api/ai to the gatew
 
 ### Connect a model
 
-Open **Settings → AI connections** and add a provider: OpenAI, OpenRouter, Groq, Mistral, DeepSeek, MiniMax and the other presets, any OpenAI-compatible endpoint, or a local model through Ollama or LM Studio. The key stays on your machine and travels with each request to the local gateway; it is never written to disk by the gateway or logged. The map, the cards, the graph and Review work without a model; the mentor, the coach and the evaluation need one.
+Open **Settings → AI connections** and add a provider: OpenAI, OpenRouter, Groq, Mistral, DeepSeek, MiniMax and the other presets, any OpenAI-compatible endpoint, or a local model through Ollama or LM Studio. The key stays on your machine and is sent with each request to the local gateway, which does not store or log it. The map, cards, graph and Review work without a model; the mentor, coach and evaluation need one.
 
 The gateway needs no configuration. Optional variables in `server/.env` (copy `server/.env.example`):
 
@@ -83,7 +96,7 @@ The gateway needs no configuration. Optional variables in `server/.env` (copy `s
 | `CORS_ALLOWED_ORIGINS` | Comma-separated origins allowed to call the gateway. |
 | `ALLOW_PRIVATE_PROVIDER_URLS` | Allows local or LAN endpoints. On by default outside production. |
 
-If you self-host the web build, `VITE_AI_API_URL` (root `.env.example`) points the frontend at a gateway on another origin; leave it empty when they share one. See [docs/DEPLOY.md](docs/DEPLOY_VERCEL.md).
+If you self-host the web build, `VITE_AI_API_URL` (root `.env.example`) points the frontend at a gateway on another origin; leave it empty when they share one. See [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ### Checks and builds
 
@@ -115,7 +128,11 @@ specs/          product and design specs for each UI iteration
 docs/           guides and architecture decision records
 ```
 
-To add a React concept, start in `src/reactGraph.js`, with sources in `src/reactSources.js` and interview questions in `src/reactInterviewQuestions.js`; `npm run check` fails if a node is missing its explanation, code sample, steps, failure modes, HTTPS sources or valid prerequisites, or if its English text under `src/i18n/content/en/` is missing or out of date (`node scripts/i18n/extract-content.mjs` lists what to translate). Rails content lives in `src/lessons.js` and is registered in `src/logic/railsGraph.js`.
+To add content:
+
+- **React concept:** start in `src/reactGraph.js`, with sources in `src/reactSources.js` and interview questions in `src/reactInterviewQuestions.js`.
+- `npm run check` fails if a node is missing its explanation, code sample, steps, failure modes, HTTPS sources or valid prerequisites, or if its English text under `src/i18n/content/en/` is missing or out of date. `node scripts/i18n/extract-content.mjs` lists what to translate.
+- **Rails:** content lives in `src/lessons.js` and is registered in `src/logic/railsGraph.js`.
 
 ## Documentation
 
@@ -125,7 +142,7 @@ To add a React concept, start in `src/reactGraph.js`, with sources in `src/react
 - [LLM learning experience plan](docs/LLM_LEARNING_EXPERIENCE_PLAN.md) and [headless API handoff guide](docs/PRESENTATION_HANDOFF_GUIDE.md).
 - [The desktop app](docs/DESKTOP_APP.md), and [the demo site and self-hosting](docs/DEPLOY.md).
 
-Progress lives in the app's local storage (the Electron profile, or the browser's for the dev server), so clearing it resets your progress unless you exported a backup from Settings.
+Progress is kept in the app's local storage (the Electron profile, or the browser's for the dev server). Clearing it resets your progress unless you exported a backup from Settings.
 
 ## License
 
